@@ -42,8 +42,6 @@ class TMClassifier():
 		self.initialize = True
 		
 	def fit(self, X, Y, incremental=False):
-		number_of_examples = X.shape[0]
-
 		if self.initialize == True:
 			self.initialize = False
 			self.number_of_classes = int(np.max(Y) + 1)
@@ -58,10 +56,10 @@ class TMClassifier():
 				self.clause_banks[i][0].initialize_clauses()
 				self.clause_banks[i][1].initialize_clauses()
 
-		encoded_X = tmu.tools.encode(X, number_of_examples, self.number_of_ta_chunks, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_ta_chunks, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 		 
-		for e in range(number_of_examples):
+		for e in range(X.shape[0]):
 			target = Ym[e]
 
 			class_sum = np.dot(self.clause_banks[target][0].get_clause_weights(), self.clause_banks[target][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
@@ -87,12 +85,10 @@ class TMClassifier():
 			self.clause_banks[not_target][0].cb_type_ii_feedback(update_p, encoded_X[e,:])			
 		return
 
-	def predict(self, X):
-		number_of_examples = X.shape[0]
-		
-		encoded_X = tmu.tools.encode(X, number_of_examples, self.number_of_ta_chunks, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)	
-		Y = np.ascontiguousarray(np.zeros(number_of_examples, dtype=np.uint32))
-		for e in range(number_of_examples):
+	def predict(self, X):		
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_ta_chunks, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)	
+		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
+		for e in range(X.shape[0]):
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
