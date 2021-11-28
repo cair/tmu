@@ -28,5 +28,5 @@ from ._tools import ffi, lib
 def encode(X, number_of_examples, number_of_ta_chunks, dim_x, dim_y, dim_z, patch_dim_x, patch_dim_y, class_features):
 	Xm = np.ascontiguousarray(X.flatten()).astype(np.uint32)
 	encoded_X = np.ascontiguousarray(np.empty(int(number_of_examples * number_of_ta_chunks), dtype=np.uint32))
-	lib.tmu_encode(ffi.cast("unsigned int *", X.ctypes.data), ffi.cast("unsigned int *", encoded_X.ctypes.data), number_of_examples, dim_x, dim_y, dim_z, patch_dim_x, patch_dim_y, 1, class_features)
+	lib.tmu_encode(ffi.cast("unsigned int *", Xm.ctypes.data), ffi.cast("unsigned int *", encoded_X.ctypes.data), number_of_examples, dim_x, dim_y, dim_z, patch_dim_x, patch_dim_y, 1, class_features)
 	return np.ascontiguousarray(encoded_X.reshape((int(number_of_examples), number_of_ta_chunks)))
