@@ -188,7 +188,7 @@ static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_s
 	return(0);
 }
 
-void cb_type_i_feedback(unsigned int *ta_state, int *clause_weights, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int weighted_clauses, unsigned int boost_true_positive_feedback, unsigned int *Xi)
+void cb_type_i_feedback(unsigned int *ta_state, int *clause_weights, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int weighted_clauses, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *Xi)
 {
 	unsigned int filter;
 	if (((number_of_features) % 32) != 0) {
@@ -199,7 +199,7 @@ void cb_type_i_feedback(unsigned int *ta_state, int *clause_weights, unsigned in
 	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
 
 	for (int j = 0; j < number_of_clauses; ++j) {
-		if (((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) {
+		if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
 			continue;
 		}
 
@@ -242,7 +242,7 @@ void cb_type_i_feedback(unsigned int *ta_state, int *clause_weights, unsigned in
 	}
 }
 
-void cb_type_ii_feedback(unsigned int *ta_state, int *clause_weights, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int weighted_clauses, unsigned int *Xi)
+void cb_type_ii_feedback(unsigned int *ta_state, int *clause_weights, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int weighted_clauses, unsigned int *clause_active, unsigned int *Xi)
 {
 	unsigned int filter;
 	if (((number_of_features) % 32) != 0) {
@@ -253,7 +253,7 @@ void cb_type_ii_feedback(unsigned int *ta_state, int *clause_weights, unsigned i
 	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
 
 	for (int j = 0; j < number_of_clauses; j++) {
-		if (((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) {
+		if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
 			continue;
 		}
 

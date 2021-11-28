@@ -67,13 +67,15 @@ class ClauseBank():
 		lib.cb_calculate_clause_outputs_update(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
 		return self.clause_output
 
-	def cb_type_i_feedback(self, update_p, s, Xi, boost_true_positive_feedback=1):
+	def cb_type_i_feedback(self, update_p, s, boost_true_positive_feedback, clause_active, Xi):
 		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
-		lib.cb_type_i_feedback(self.cb_p, self.cw_p, self.ft_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, s, self.weighted_clauses, boost_true_positive_feedback, xi_p)
+		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+		lib.cb_type_i_feedback(self.cb_p, self.cw_p, self.ft_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, s, self.weighted_clauses, boost_true_positive_feedback, ca_p, xi_p)
 
-	def cb_type_ii_feedback(self, update_p, Xi):
+	def cb_type_ii_feedback(self, update_p, clause_active, Xi):
 		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
-		lib.cb_type_ii_feedback(self.cb_p, self.cw_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, self.weighted_clauses, xi_p)
+		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+		lib.cb_type_ii_feedback(self.cb_p, self.cw_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, self.weighted_clauses, ca_p, xi_p)
 
 	def get_clause_weights(self):
 		return self.clause_weights

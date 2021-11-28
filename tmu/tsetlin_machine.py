@@ -50,7 +50,7 @@ class TMClassifier():
 			self.number_of_patches = 1
 			self.clause_banks = []
 			for i in range(self.number_of_classes):
-				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
+				self.clause_banks.append((ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)))
 		elif incremental == False:
 			for i in range(self.number_of_classes):
 				self.clause_banks[i][0].initialize_clauses()
@@ -58,31 +58,35 @@ class TMClassifier():
 
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_ta_chunks, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
-		 
+		
+		clause_active = []
+		for i in range(self.number_of_classes):
+			clause_active.append((np.ascontiguousarray(np.random.choice(2, self.number_of_clauses//2, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32)), np.ascontiguousarray(np.random.choice(2, self.number_of_clauses//2, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))))
+
 		for e in range(X.shape[0]):
 			target = Ym[e]
 
-			class_sum = np.dot(self.clause_banks[target][0].get_clause_weights(), self.clause_banks[target][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
-			class_sum -= np.dot(self.clause_banks[target][1].get_clause_weights(), self.clause_banks[target][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+			class_sum = np.dot(clause_active[target][0] * self.clause_banks[target][0].get_clause_weights(), self.clause_banks[target][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+			class_sum -= np.dot(clause_active[target][1] * self.clause_banks[target][1].get_clause_weights(), self.clause_banks[target][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			self.clause_banks[target][0].cb_type_i_feedback(update_p, self.s, encoded_X[e,:], self.boost_true_positive_feedback)
-			self.clause_banks[target][1].cb_type_ii_feedback(update_p, encoded_X[e,:])
+			self.clause_banks[target][0].cb_type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target][0], encoded_X[e,:])
+			self.clause_banks[target][1].cb_type_ii_feedback(update_p, clause_active[target][1], encoded_X[e,:])
 
 			not_target = np.random.randint(self.number_of_classes)
 			while not_target == target:
 				not_target = np.random.randint(self.number_of_classes)
 
-			class_sum = np.dot(self.clause_banks[not_target][0].get_clause_weights(), self.clause_banks[not_target][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
-			class_sum -= np.dot(self.clause_banks[not_target][1].get_clause_weights(), self.clause_banks[not_target][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+			class_sum = np.dot(clause_active[not_target][0] * self.clause_banks[not_target][0].get_clause_weights(), self.clause_banks[not_target][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+			class_sum -= np.dot(clause_active[not_target][1] * self.clause_banks[not_target][1].get_clause_weights(), self.clause_banks[not_target][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			
 			update_p = (self.T + class_sum)/(2*self.T)
 		
-			self.clause_banks[not_target][1].cb_type_i_feedback(update_p, self.s, encoded_X[e,:], self.boost_true_positive_feedback)
-			self.clause_banks[not_target][0].cb_type_ii_feedback(update_p, encoded_X[e,:])			
+			self.clause_banks[not_target][1].cb_type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target][1], encoded_X[e,:])
+			self.clause_banks[not_target][0].cb_type_ii_feedback(update_p, clause_active[not_target][0], encoded_X[e,:])			
 		return
 
 	def predict(self, X):		
