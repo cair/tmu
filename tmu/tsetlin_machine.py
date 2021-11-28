@@ -27,8 +27,8 @@ import numpy as np
 
 from tmu.clause_bank import ClauseBank
 
-class TMBase():
-	def __init__(self, number_of_clauses, T, s, boost_true_positive_feedback, number_of_state_bits, weighted_clauses, clause_drop_p, literal_drop_p):
+class TMClassifier():
+	def __init__(self, number_of_clauses, T, s, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits = number_of_state_bits
 		self.T = int(T)
@@ -40,10 +40,6 @@ class TMBase():
 		self.literal_drop_p = literal_drop_p
 
 		self.initialize = True
-
-class TMClassifier(TMBase):
-	def __init__(self, number_of_clauses, T, s, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, boost_true_positive_feedback, number_of_state_bits, weighted_clauses, clause_drop_p, literal_drop_p)
 		
 	def fit(self, X, Y, incremental=False):
 		number_of_examples = X.shape[0]
