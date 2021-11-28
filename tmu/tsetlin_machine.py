@@ -53,26 +53,26 @@ class TMClassifier(TMBase):
 
 			self.number_of_classes = int(np.max(Y) + 1)
 
-			self.number_of_features = X.shape[1]*2
+			self.number_of_literals = X.shape[1]*2
 
-			self.number_of_ta_chunks = int((self.number_of_features-1)/32 + 1)
+			self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
 
 			self.number_of_patches = 1
 
 			self.clause_banks = []
 			for i in range(self.number_of_classes):
-				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
+				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
 		elif incremental == False:
 			self.clause_banks = []
 			for i in range(self.number_of_classes):
-				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
+				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
 
 		encoded_X = np.ascontiguousarray(np.empty(int(number_of_examples * self.number_of_ta_chunks), dtype=np.uint32))
 
 		Xm = np.ascontiguousarray(X.flatten()).astype(np.uint32)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
-		tmu.tools.encode(Xm, encoded_X, number_of_examples, self.number_of_features//2, 1, 1, self.number_of_features//2, 1, 0)
+		tmu.tools.encode(Xm, encoded_X, number_of_examples, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
 		
 		encoded_X = np.ascontiguousarray(encoded_X.reshape((int(number_of_examples), self.number_of_ta_chunks)))
 
@@ -121,7 +121,7 @@ class TMClassifier(TMBase):
 
 		Xm = np.ascontiguousarray(X.flatten()).astype(np.uint32)
 
-		tmu.tools.encode(Xm, encoded_X, number_of_examples, self.number_of_features//2, 1, 1, self.number_of_features//2, 1, 0)
+		tmu.tools.encode(Xm, encoded_X, number_of_examples, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
 
 		encoded_X = np.ascontiguousarray(encoded_X.reshape((int(number_of_examples), self.number_of_ta_chunks)))
 
