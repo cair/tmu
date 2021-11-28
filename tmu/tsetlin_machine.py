@@ -130,9 +130,9 @@ class TMClassifier(TMBase):
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
-				clause_output = self.clause_banks[i][0].calculate_clause_output_predict(encoded_X[e,:])		
+				clause_output = self.clause_banks[i][0].calculate_clause_outputs_predict(encoded_X[e,:])		
 				class_sum = clause_output.sum().astype(np.int32)
-				clause_output = self.clause_banks[i][1].calculate_clause_output_predict(encoded_X[e,:])		
+				clause_output = self.clause_banks[i][1].calculate_clause_outputs_predict(encoded_X[e,:])		
 				class_sum -= clause_output.sum().astype(np.int32)
 				
 				if class_sum > self.T:
