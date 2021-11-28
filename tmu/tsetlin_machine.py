@@ -21,10 +21,11 @@
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
 
-from ._tm import ffi, lib
 import tmu.tools
 
 import numpy as np
+
+from tmu.clause_bank import ClauseBank
 
 class TMBase():
 	def __init__(self, number_of_clauses, T, s, boost_true_positive_feedback, number_of_state_bits, weighted_clauses, clause_drop_p, literal_drop_p):
@@ -40,18 +41,6 @@ class TMBase():
 
 		self.initialize = True
 
-	def ta_action(self, data_class, clause, ta):
-		ta_chunk = ta // 32
-		chunk_pos = ta % 32
-
-		polarity = clause >= self.number_of_clauses//2
-		clause_pos = clause % (self.number_of_clauses//2)
-
-		pos = int(clause_pos * self.number_of_ta_chunks * self.number_of_state_bits + ta_chunk * self.number_of_state_bits + self.number_of_state_bits-1)
-
-		return (self.clause_banks[data_class, int(polarity), pos] & (1 << chunk_pos)) > 0
-
-
 class TMClassifier(TMBase):
 	def __init__(self, number_of_clauses, T, s, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		super().__init__(number_of_clauses, T, s, boost_true_positive_feedback, number_of_state_bits, weighted_clauses, clause_drop_p, literal_drop_p)
@@ -66,24 +55,17 @@ class TMClassifier(TMBase):
 
 			self.number_of_features = X.shape[1]*2
 
-			self.number_of_patches = 1
 			self.number_of_ta_chunks = int((self.number_of_features-1)/32 + 1)
-			self.clause_banks = np.empty((int(self.number_of_classes), int(self.number_of_clauses), int(self.number_of_ta_chunks), int(self.number_of_state_bits)), dtype=np.uint32)
-			self.clause_banks[:,:,:,0:self.number_of_state_bits-1] = np.uint32(~0)
-			self.clause_banks[:,:,:,self.number_of_state_bits-1] = 0
 
-			self.clause_banks = np.ascontiguousarray(self.clause_banks.reshape(int(self.number_of_classes), 2, int(self.number_of_clauses // 2 * self.number_of_ta_chunks * self.number_of_state_bits)))
-			self.clause_weights = np.ascontiguousarray(np.empty((int(self.number_of_classes), int(self.number_of_clauses)), dtype=np.int32))
-			self.feedback_to_ta = np.ascontiguousarray(np.empty((int(self.number_of_ta_chunks)), dtype=np.uint32))
-			self.output_one_patches = np.ascontiguousarray(np.empty((int(1)), dtype=np.uint32))
-			self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
+			self.number_of_patches = 1
+
+			self.clause_banks = []
+			for i in range(self.number_of_classes):
+				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
 		elif incremental == False:
-			self.clause_banks = np.empty((int(self.number_of_classes), int(self.number_of_clauses), int(self.number_of_ta_chunks), int(self.number_of_state_bits)), dtype=np.uint32)
-			self.clause_banks[:,:,:,0:self.number_of_state_bits-1] = np.uint32(~0)
-			self.clause_banks[:,:,:,self.number_of_state_bits-1] = 0
-
-			self.clause_banks = np.ascontiguousarray(self.clause_banks.reshape(int(self.number_of_classes), 2, int(self.number_of_clauses // 2 * self.number_of_ta_chunks * self.number_of_state_bits)))
-			self.clause_weights = np.ascontiguousarray(np.empty((int(self.number_of_classes), int(self.number_of_clauses)), dtype=np.int32))
+			self.clause_banks = []
+			for i in range(self.number_of_classes):
+				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
 
 		encoded_X = np.ascontiguousarray(np.empty(int(number_of_examples * self.number_of_ta_chunks), dtype=np.uint32))
 
@@ -94,21 +76,13 @@ class TMClassifier(TMBase):
 		
 		encoded_X = np.ascontiguousarray(encoded_X.reshape((int(number_of_examples), self.number_of_ta_chunks)))
 
-		co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
-		o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
-		ft_p = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)
-
 		for e in range(number_of_examples):
 			target = Ym[e]
 
-			xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
-			
-			cb_p_1 = ffi.cast("unsigned int *", self.clause_banks[target,0,:].ctypes.data)
-			lib.cb_calculate_clause_outputs_update(cb_p_1, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, co_p, xi_p)
-			class_sum = self.clause_output.sum().astype(np.int32)
-			cb_p_2 = ffi.cast("unsigned int *", self.clause_banks[target,1,:].ctypes.data)
-			lib.cb_calculate_clause_outputs_update(cb_p_2, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, co_p, xi_p)
-			class_sum -= self.clause_output.sum().astype(np.int32)
+			clause_output = self.clause_banks[target][0].calculate_clause_output_update(encoded_X[e,:])		
+			class_sum = clause_output.sum().astype(np.int32)
+			clause_output = self.clause_banks[target][1].calculate_clause_output_update(encoded_X[e,:])		
+			class_sum -= clause_output.sum().astype(np.int32)
 					
 			if class_sum > self.T:
 				class_sum = self.T
@@ -117,22 +91,18 @@ class TMClassifier(TMBase):
 
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			cw_1_p= ffi.cast("int *", self.clause_weights[target,:self.number_of_clauses//2].ctypes.data)
-			lib.cb_type_i_feedback(cb_p_1, cw_1_p, ft_p, o1p_p, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, update_p, self.s, self.weighted_clauses, self.boost_true_positive_feedback, xi_p)
-			cw_2_p= ffi.cast("int *", self.clause_weights[target,self.number_of_clauses//2:].ctypes.data)
-			lib.cb_type_ii_feedback(cb_p_2, cw_2_p, o1p_p, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, update_p, self.weighted_clauses, xi_p)
-			
+			self.clause_banks[target][0].cb_type_i_feedback(update_p, self.s, encoded_X[e,:], self.boost_true_positive_feedback)
+			self.clause_banks[target][1].cb_type_ii_feedback(update_p, encoded_X[e,:])
+
 			not_target = np.random.randint(self.number_of_classes)
 			while not_target == target:
 				not_target = np.random.randint(self.number_of_classes)
 
-			cb_p_1 = ffi.cast("unsigned int *", self.clause_banks[not_target,0,:].ctypes.data)
-			lib.cb_calculate_clause_outputs_update(cb_p_1, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, co_p, xi_p)
-			class_sum = self.clause_output.sum().astype(np.int32)
-			cb_p_2 = ffi.cast("unsigned int *", self.clause_banks[not_target,1,:].ctypes.data)
-			lib.cb_calculate_clause_outputs_update(cb_p_2, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, co_p, xi_p)
-			class_sum -= self.clause_output.sum().astype(np.int32)
-				
+			clause_output = self.clause_banks[not_target][0].calculate_clause_output_update(encoded_X[e,:])		
+			class_sum = clause_output.sum().astype(np.int32)
+			clause_output = self.clause_banks[not_target][1].calculate_clause_output_update(encoded_X[e,:])		
+			class_sum -= clause_output.sum().astype(np.int32)
+
 			if class_sum > self.T:
 				class_sum = self.T
 			elif class_sum < -self.T:
@@ -140,11 +110,8 @@ class TMClassifier(TMBase):
 
 			update_p = (self.T + class_sum)/(2*self.T)
 		
-			cw_1_p= ffi.cast("int *", self.clause_weights[not_target,:self.number_of_clauses//2].ctypes.data)
-			lib.cb_type_i_feedback(cb_p_2, cw_2_p, ft_p, o1p_p, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, update_p, self.s, self.weighted_clauses, self.boost_true_positive_feedback, xi_p)
-			cw_2_p= ffi.cast("int *", self.clause_weights[not_target,self.number_of_clauses//2:].ctypes.data)
-			lib.cb_type_ii_feedback(cb_p_1, cw_1_p, o1p_p, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, update_p, self.weighted_clauses, xi_p)
-			
+			self.clause_banks[not_target][1].cb_type_i_feedback(update_p, self.s, encoded_X[e,:], self.boost_true_positive_feedback)
+			self.clause_banks[not_target][0].cb_type_ii_feedback(update_p, encoded_X[e,:])			
 		return
 
 	def predict(self, X):
@@ -159,22 +126,14 @@ class TMClassifier(TMBase):
 		encoded_X = np.ascontiguousarray(encoded_X.reshape((int(number_of_examples), self.number_of_ta_chunks)))
 
 		Y = np.ascontiguousarray(np.zeros(number_of_examples, dtype=np.uint32))
-
-		co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
-
 		for e in range(number_of_examples):
-			xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
-
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
-				cb_p_1 = ffi.cast("unsigned int *", self.clause_banks[i,0,:].ctypes.data)
-				lib.cb_calculate_clause_outputs_predict(cb_p_1, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, co_p, xi_p)
-				class_sum = self.clause_output.sum().astype(np.int32)
-				
-				cb_p_2 = ffi.cast("unsigned int *", self.clause_banks[i,1,:].ctypes.data)
-				lib.cb_calculate_clause_outputs_predict(cb_p_2, self.number_of_clauses//2, self.number_of_features, self.number_of_state_bits, self.number_of_patches, co_p, xi_p)
-				class_sum -= self.clause_output.sum().astype(np.int32)
+				clause_output = self.clause_banks[i][0].calculate_clause_output_predict(encoded_X[e,:])		
+				class_sum = clause_output.sum().astype(np.int32)
+				clause_output = self.clause_banks[i][1].calculate_clause_output_predict(encoded_X[e,:])		
+				class_sum -= clause_output.sum().astype(np.int32)
 				
 				if class_sum > self.T:
 					class_sum = self.T
@@ -186,3 +145,10 @@ class TMClassifier(TMBase):
 					max_class = i
 			Y[e] = max_class
 		return Y
+
+	def ta_action(self, data_class, clause, ta):
+		polarity = clause >= self.number_of_clauses//2
+		clause_pos = clause % (self.number_of_clauses//2)
+		return self.clause_banks[data_class][polarity].ta_action(clause_pos, ta)
+
+	
