@@ -54,7 +54,7 @@ class ClauseBank():
 		self.clause_bank[:,:,0:self.number_of_state_bits-1] = np.uint32(~0)
 		self.clause_bank[:,:,self.number_of_state_bits-1] = 0
 		self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape((self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits)))
-
+		self.clause_weights[:] = 1
 		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
 	def calculate_clause_outputs_predict(self, Xi):
@@ -74,6 +74,9 @@ class ClauseBank():
 	def cb_type_ii_feedback(self, update_p, Xi):
 		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
 		lib.cb_type_ii_feedback(self.cb_p, self.cw_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, self.weighted_clauses, xi_p)
+
+	def get_clause_weights(self):
+		return self.clause_weights
 
 	def ta_action(self, clause, ta):
 		ta_chunk = ta // 32

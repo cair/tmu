@@ -61,17 +61,15 @@ class TMClassifier(TMBase):
 			for i in range(self.number_of_classes):
 				self.clause_banks[i][0].initialize_clauses()
 				self.clause_banks[i][1].initialize_clauses()
-				
+
 		encoded_X = tmu.tools.encode(X, number_of_examples, self.number_of_ta_chunks, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 		 
 		for e in range(number_of_examples):
 			target = Ym[e]
 
-			clause_output = self.clause_banks[target][0].calculate_clause_outputs_update(encoded_X[e,:])		
-			class_sum = clause_output.sum().astype(np.int32)
-			clause_output = self.clause_banks[target][1].calculate_clause_outputs_update(encoded_X[e,:])		
-			class_sum -= clause_output.sum().astype(np.int32)
+			class_sum = np.dot(self.clause_banks[target][0].get_clause_weights(), self.clause_banks[target][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+			class_sum -= np.dot(self.clause_banks[target][1].get_clause_weights(), self.clause_banks[target][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
 					
 			if class_sum > self.T:
 				class_sum = self.T
@@ -87,11 +85,9 @@ class TMClassifier(TMBase):
 			while not_target == target:
 				not_target = np.random.randint(self.number_of_classes)
 
-			clause_output = self.clause_banks[not_target][0].calculate_clause_outputs_update(encoded_X[e,:])		
-			class_sum = clause_output.sum().astype(np.int32)
-			clause_output = self.clause_banks[not_target][1].calculate_clause_outputs_update(encoded_X[e,:])		
-			class_sum -= clause_output.sum().astype(np.int32)
-
+			class_sum = np.dot(self.clause_banks[not_target][0].get_clause_weights(), self.clause_banks[not_target][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+			class_sum -= np.dot(self.clause_banks[not_target][1].get_clause_weights(), self.clause_banks[not_target][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+	
 			if class_sum > self.T:
 				class_sum = self.T
 			elif class_sum < -self.T:
@@ -112,10 +108,8 @@ class TMClassifier(TMBase):
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
-				clause_output = self.clause_banks[i][0].calculate_clause_outputs_predict(encoded_X[e,:])		
-				class_sum = clause_output.sum().astype(np.int32)
-				clause_output = self.clause_banks[i][1].calculate_clause_outputs_predict(encoded_X[e,:])		
-				class_sum -= clause_output.sum().astype(np.int32)
+				class_sum = np.dot(self.clause_banks[i][0].get_clause_weights(), self.clause_banks[i][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+				class_sum -= np.dot(self.clause_banks[i][1].get_clause_weights(), self.clause_banks[i][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
 				
 				if class_sum > self.T:
 					class_sum = self.T
