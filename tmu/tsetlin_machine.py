@@ -70,11 +70,7 @@ class TMClassifier(TMBase):
 
 			class_sum = np.dot(self.clause_banks[target][0].get_clause_weights(), self.clause_banks[target][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
 			class_sum -= np.dot(self.clause_banks[target][1].get_clause_weights(), self.clause_banks[target][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
-					
-			if class_sum > self.T:
-				class_sum = self.T
-			elif class_sum < -self.T:
-				class_sum = -self.T
+			class_sum = np.clip(class_sum, -self.T, self.T)
 
 			update_p = (self.T - class_sum)/(2*self.T)
 
@@ -87,12 +83,8 @@ class TMClassifier(TMBase):
 
 			class_sum = np.dot(self.clause_banks[not_target][0].get_clause_weights(), self.clause_banks[not_target][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
 			class_sum -= np.dot(self.clause_banks[not_target][1].get_clause_weights(), self.clause_banks[not_target][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
-	
-			if class_sum > self.T:
-				class_sum = self.T
-			elif class_sum < -self.T:
-				class_sum = -self.T
-
+			class_sum = np.clip(class_sum, -self.T, self.T)
+			
 			update_p = (self.T + class_sum)/(2*self.T)
 		
 			self.clause_banks[not_target][1].cb_type_i_feedback(update_p, self.s, encoded_X[e,:], self.boost_true_positive_feedback)
@@ -110,12 +102,7 @@ class TMClassifier(TMBase):
 			for i in range(self.number_of_classes):
 				class_sum = np.dot(self.clause_banks[i][0].get_clause_weights(), self.clause_banks[i][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
 				class_sum -= np.dot(self.clause_banks[i][1].get_clause_weights(), self.clause_banks[i][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
-				
-				if class_sum > self.T:
-					class_sum = self.T
-				elif class_sum < -self.T:
-					class_sum = -self.T
-
+				class_sum = np.clip(class_sum, -self.T, self.T)
 				if class_sum > max_class_sum:
 					max_class_sum = class_sum
 					max_class = i
