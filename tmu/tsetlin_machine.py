@@ -50,15 +50,10 @@ class TMClassifier(TMBase):
 
 		if self.initialize == True:
 			self.initialize = False
-
 			self.number_of_classes = int(np.max(Y) + 1)
-
 			self.number_of_literals = X.shape[1]*2
-
 			self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
-
 			self.number_of_patches = 1
-
 			self.clause_banks = []
 			for i in range(self.number_of_classes):
 				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
@@ -67,15 +62,9 @@ class TMClassifier(TMBase):
 			for i in range(self.number_of_classes):
 				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
 
-		encoded_X = np.ascontiguousarray(np.empty(int(number_of_examples * self.number_of_ta_chunks), dtype=np.uint32))
-
-		Xm = np.ascontiguousarray(X.flatten()).astype(np.uint32)
+		encoded_X = tmu.tools.encode(X, number_of_examples, self.number_of_ta_chunks, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
-
-		tmu.tools.encode(Xm, encoded_X, number_of_examples, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
-		
-		encoded_X = np.ascontiguousarray(encoded_X.reshape((int(number_of_examples), self.number_of_ta_chunks)))
-
+		 
 		for e in range(number_of_examples):
 			target = Ym[e]
 
@@ -117,14 +106,7 @@ class TMClassifier(TMBase):
 	def predict(self, X):
 		number_of_examples = X.shape[0]
 		
-		encoded_X = np.ascontiguousarray(np.empty(int(number_of_examples * self.number_of_patches * self.number_of_ta_chunks), dtype=np.uint32))
-
-		Xm = np.ascontiguousarray(X.flatten()).astype(np.uint32)
-
-		tmu.tools.encode(Xm, encoded_X, number_of_examples, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
-
-		encoded_X = np.ascontiguousarray(encoded_X.reshape((int(number_of_examples), self.number_of_ta_chunks)))
-
+		encoded_X = tmu.tools.encode(X, number_of_examples, self.number_of_ta_chunks, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)	
 		Y = np.ascontiguousarray(np.zeros(number_of_examples, dtype=np.uint32))
 		for e in range(number_of_examples):
 			max_class_sum = -self.T
