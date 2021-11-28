@@ -47,23 +47,20 @@ class TMClassifier():
 			self.initialize = False
 			self.number_of_classes = int(np.max(Y) + 1)
 
-			self.dim_x = X.shape[1]
 			if len(X.shape) == 2:
-				self.dim_y = 1
-				self.dim_z = 1
+				self.dim = (X.shape[1], 1 ,1)
 			elif len(X.shape) == 3:
-				self.dim_y = X.shape[2]
-				self.dim_z = 1
+				self.dim = (X.shape[1], X.shape[2], 1)
 			elif len(X.shape) == 4:
-				self.dim_z = X.shape[3]
+				self.dim = (X.shape[1], X.shape[2], X.shape[3])
 
 			if self.patch_dim == None:
 				self.patch_dim = (X.shape[1], 1)
 
-			self.number_of_features = int(self.patch_dim[0]*self.patch_dim[1]*self.dim_z + (self.dim_x - self.patch_dim[0]) + (self.dim_y - self.patch_dim[1]))
+			self.number_of_features = int(self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1]))
 			self.number_of_literals = self.number_of_features*2
 			
-			self.number_of_patches = int((self.dim_x - self.patch_dim[0] + 1)*(self.dim_y - self.patch_dim[1] + 1))
+			self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1)*(self.dim[1] - self.patch_dim[1] + 1))
 			self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
 
 			self.clause_banks = []
@@ -74,7 +71,7 @@ class TMClassifier():
 				self.clause_banks[i][0].initialize_clauses()
 				self.clause_banks[i][1].initialize_clauses()
 
-		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim_x, self.dim_y, self.dim_z, self.patch_dim[0], self.patch_dim[1], 0)
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 		
 		clause_active = []
@@ -108,7 +105,7 @@ class TMClassifier():
 		return
 
 	def predict(self, X):
-		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim_x, self.dim_y, self.dim_z, self.patch_dim[0], self.patch_dim[1], 0)
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
