@@ -58,10 +58,10 @@ class TMClassifier(TMBase):
 			for i in range(self.number_of_classes):
 				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
 		elif incremental == False:
-			self.clause_banks = []
 			for i in range(self.number_of_classes):
-				self.clause_banks.append([ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses), ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.weighted_clauses)])
-
+				self.clause_banks[i][0].initialize_clauses()
+				self.clause_banks[i][1].initialize_clauses()
+				
 		encoded_X = tmu.tools.encode(X, number_of_examples, self.number_of_ta_chunks, self.number_of_literals//2, 1, 1, self.number_of_literals//2, 1, 0)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 		 
