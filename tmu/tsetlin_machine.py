@@ -79,9 +79,9 @@ class TMClassifier(TMBase):
 		for e in range(number_of_examples):
 			target = Ym[e]
 
-			clause_output = self.clause_banks[target][0].calculate_clause_output_update(encoded_X[e,:])		
+			clause_output = self.clause_banks[target][0].calculate_clause_outputs_update(encoded_X[e,:])		
 			class_sum = clause_output.sum().astype(np.int32)
-			clause_output = self.clause_banks[target][1].calculate_clause_output_update(encoded_X[e,:])		
+			clause_output = self.clause_banks[target][1].calculate_clause_outputs_update(encoded_X[e,:])		
 			class_sum -= clause_output.sum().astype(np.int32)
 					
 			if class_sum > self.T:
@@ -98,9 +98,9 @@ class TMClassifier(TMBase):
 			while not_target == target:
 				not_target = np.random.randint(self.number_of_classes)
 
-			clause_output = self.clause_banks[not_target][0].calculate_clause_output_update(encoded_X[e,:])		
+			clause_output = self.clause_banks[not_target][0].calculate_clause_outputs_update(encoded_X[e,:])		
 			class_sum = clause_output.sum().astype(np.int32)
-			clause_output = self.clause_banks[not_target][1].calculate_clause_output_update(encoded_X[e,:])		
+			clause_output = self.clause_banks[not_target][1].calculate_clause_outputs_update(encoded_X[e,:])		
 			class_sum -= clause_output.sum().astype(np.int32)
 
 			if class_sum > self.T:

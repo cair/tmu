@@ -57,12 +57,12 @@ class ClauseBank():
 
 		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
-	def calculate_clause_output_predict(self, Xi):
+	def calculate_clause_outputs_predict(self, Xi):
 		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
 		lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
 		return self.clause_output
 
-	def calculate_clause_output_update(self, Xi):
+	def calculate_clause_outputs_update(self, Xi):
 		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
 		lib.cb_calculate_clause_outputs_update(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
 		return self.clause_output
