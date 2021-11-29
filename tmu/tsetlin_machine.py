@@ -192,6 +192,7 @@ class TMCoalescedClassifier():
 			target = Ym[e]
 
 			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+
 			class_sum = np.dot(clause_active * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
@@ -206,7 +207,6 @@ class TMCoalescedClassifier():
 			while not_target == target:
 				not_target = np.random.randint(self.number_of_classes)
 
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
 			class_sum = np.dot(clause_active * self.weight_banks[not_target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			
@@ -224,8 +224,9 @@ class TMCoalescedClassifier():
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
 			max_class = 0
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
 			for i in range(self.number_of_classes):
-				class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
 				if class_sum > max_class_sum:
 					max_class_sum = class_sum
