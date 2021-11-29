@@ -26,7 +26,7 @@ ffibuilder = FFI()
 
 ffibuilder.cdef("""
     void wb_type_i_feedback(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active);
-    void wb_type_ii_feedback(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active);
+    void wb_type_ii_feedback(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active, unsigned int negative_weights);
 """)
 
 ffibuilder.set_source("tmu._wb",  # name of the output C extension
