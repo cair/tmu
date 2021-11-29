@@ -92,8 +92,8 @@ class TMClassifier():
 			update_p = (self.T - class_sum)/(2*self.T)
 
 			if self.weighted_clauses:
-				self.weight_banks[target][0].type_i_feedback(positive_clause_outputs, update_p, clause_active[target][0])
-				self.weight_banks[target][1].type_ii_feedback(negative_clause_outputs, update_p, clause_active[target][1], False)
+				self.weight_banks[target][0].increment(positive_clause_outputs, update_p, clause_active[target][0])
+				self.weight_banks[target][1].decrement(negative_clause_outputs, update_p, clause_active[target][1], False)
 
 			self.clause_banks[target][0].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target][0], encoded_X[e,:])
 			self.clause_banks[target][1].type_ii_feedback(update_p, clause_active[target][1], encoded_X[e,:])
@@ -111,8 +111,8 @@ class TMClassifier():
 			update_p = (self.T + class_sum)/(2*self.T)
 		
 			if self.weighted_clauses:
-				self.weight_banks[not_target][1].type_i_feedback(negative_clause_outputs, update_p, clause_active[not_target][1])
-				self.weight_banks[not_target][0].type_ii_feedback(positive_clause_outputs, update_p, clause_active[not_target][0], False)			
+				self.weight_banks[not_target][1].increment(negative_clause_outputs, update_p, clause_active[not_target][1])
+				self.weight_banks[not_target][0].decrement(positive_clause_outputs, update_p, clause_active[not_target][0], False)			
 
 			self.clause_banks[not_target][1].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target][1], encoded_X[e,:])
 			self.clause_banks[not_target][0].type_ii_feedback(update_p, clause_active[not_target][0], encoded_X[e,:])			
@@ -201,7 +201,7 @@ class TMCoalescedClassifier():
 			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), encoded_X[e,:])
 			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), encoded_X[e,:])
 
-			self.weight_banks[target].type_i_feedback(clause_outputs, update_p, clause_active)
+			self.weight_banks[target].increment(clause_outputs, update_p, clause_active)
 
 			not_target = np.random.randint(self.number_of_classes)
 			while not_target == target:
@@ -215,7 +215,7 @@ class TMCoalescedClassifier():
 			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), encoded_X[e,:])
 			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), encoded_X[e,:])
 
-			self.weight_banks[not_target].type_ii_feedback(clause_outputs, update_p, clause_active, True)
+			self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active, True)
 		return
 
 	def predict(self, X):
