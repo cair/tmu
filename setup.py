@@ -17,6 +17,6 @@ setup(
 
     setup_requires=["cffi>=1.0.0"],
     packages=find_packages(),
-    cffi_modules=["./tmu/clause_bank_extension_build.py:ffibuilder", "./tmu/tools_extension_build.py:ffibuilder"],
+    cffi_modules=["./tmu/clause_bank_extension_build.py:ffibuilder", "./tmu/tools_extension_build.py:ffibuilder", "./tmu/weight_bank_extension_build.py:ffibuilder", ],
     install_requires=["cffi>=1.0.0"],
 )

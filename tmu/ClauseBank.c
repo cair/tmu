@@ -188,7 +188,7 @@ static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_s
 	return(0);
 }
 
-void cb_type_i_feedback(unsigned int *ta_state, int *clause_weights, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int weighted_clauses, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *Xi)
+void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *Xi)
 {
 	unsigned int filter;
 	if (((number_of_features) % 32) != 0) {
@@ -214,11 +214,6 @@ void cb_type_i_feedback(unsigned int *ta_state, int *clause_weights, unsigned in
 
 		if (clause_output) {
 			// Type Ia Feedback
-
-			if (weighted_clauses) {
-				clause_weights[j]++;
-			}
-
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int ta_pos = k*number_of_state_bits;
 
@@ -242,7 +237,7 @@ void cb_type_i_feedback(unsigned int *ta_state, int *clause_weights, unsigned in
 	}
 }
 
-void cb_type_ii_feedback(unsigned int *ta_state, int *clause_weights, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int weighted_clauses, unsigned int *clause_active, unsigned int *Xi)
+void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *Xi)
 {
 	unsigned int filter;
 	if (((number_of_features) % 32) != 0) {
@@ -264,10 +259,6 @@ void cb_type_ii_feedback(unsigned int *ta_state, int *clause_weights, unsigned i
 		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 
 		if (clause_output) {				
-			if (weighted_clauses && clause_weights[j] > 1) {
-				clause_weights[j]--;
-			}
-
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int ta_pos = k*number_of_state_bits;
 				cb_inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
