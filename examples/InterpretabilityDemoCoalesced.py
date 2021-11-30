@@ -22,7 +22,7 @@ for i in range(20):
 
 print("ACCURACY:", 100*(tm.predict(X_test) == Y_test).mean())
 
-print("\nCLAUSES\n")
+print("\nCLAUSES:\n")
 
 for j in range(clauses):
 	print("Clause #%d: " % (j), end=' ')
