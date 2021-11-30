@@ -36,4 +36,4 @@ for j in range(clauses):
 	print(" ∧ ".join(l))
 
 	for i in range(2):
-		print("\tClass: %d Weight:%+2d " % (i, tm.get_weight(i, j)))
+		print("\tClass: %d Weight: %+2d " % (i, tm.get_weight(i, j)))
