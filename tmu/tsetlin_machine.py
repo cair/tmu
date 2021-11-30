@@ -134,10 +134,11 @@ class TMClassifier():
 			Y[e] = max_class
 		return Y
 
-	def ta_action(self, data_class, clause, ta):
-		polarity = clause >= self.number_of_clauses//2
-		clause_pos = clause % (self.number_of_clauses//2)
-		return self.clause_banks[data_class][polarity].ta_action(clause_pos, ta)
+	def get_weight(self, the_class, polarity, clause):
+		return self.weight_banks[the_class][polarity].get_weights()[clause]
+
+	def get_action(self, the_class, polarity, clause, ta):
+		return self.clause_banks[the_class][polarity].ta_action(clause, ta)
 
 class TMCoalescedClassifier():
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
@@ -234,5 +235,8 @@ class TMCoalescedClassifier():
 			Y[e] = max_class
 		return Y
 
-	def ta_action(self, clause, ta):
+	def get_weight(self, the_class, clause):
+		return self.weight_banks[the_class].get_weights()[clause]
+
+	def get_action(self, clause, ta):
 		return self.clause_bank.ta_action(clause, ta)

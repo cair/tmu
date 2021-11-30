@@ -14,24 +14,17 @@ Y_test = np.logical_xor(X_test[:,0], X_test[:,1]).astype(dtype=np.uint32)
 
 tm = TMClassifier(10, 15, 3.0, boost_true_positive_feedback=0)
 
-start = time()
 for i in range(20):
 	tm.fit(X_train, Y_train, incremental=True)
-stop = time()
 
-print(stop - start)
-
-start = time()
 print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
-stop = time()
-print(stop - start)
 
 print("\nClass 0 Positive Clauses:\n")
-for j in range(0, 10, 2):
-	print("Clause #%d: " % (j), end=' ')
+for j in range(5):
+	print("Clause #%d (%d): " % (j, tm.get_weight(0, 0, j)), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.ta_action(0, j, k) == 1:
+		if tm.get_action(0, 0, j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
@@ -39,11 +32,11 @@ for j in range(0, 10, 2):
 	print(" ∧ ".join(l))
 
 print("\nClass 0 Negative Clauses:\n")
-for j in range(1, 10, 2):
-	print("Clause #%d: " % (j), end=' ')
+for j in range(5):
+	print("Clause #%d (%d): " % (j, tm.get_weight(0, 1, j)), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.ta_action(0, j, k) == 1:
+		if tm.get_action(0, 1, j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
@@ -51,11 +44,11 @@ for j in range(1, 10, 2):
 	print(" ∧ ".join(l))
 
 print("\nClass 1 Positive Clauses:\n")
-for j in range(0, 10, 2):
-	print("Clause #%d: " % (j), end=' ')
+for j in range(5):
+	print("Clause #%d (%d): " % (j, tm.get_weight(1, 0, j)), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.ta_action(1, j, k) == 1:
+		if tm.get_action(1, 0, j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
@@ -63,11 +56,11 @@ for j in range(0, 10, 2):
 	print(" ∧ ".join(l))
 
 print("\nClass 1 Negative Clauses:\n")
-for j in range(1, 10, 2):
-	print("Clause #%d: " % (j), end=' ')
+for j in range(5):
+	print("Clause #%d (%d): " % (j, tm.get_weight(1, 1, j)), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.ta_action(1, j, k) == 1:
+		if tm.get_action(1, 1, j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
