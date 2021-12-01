@@ -442,11 +442,11 @@ class TMRegressor():
 
 	def predict(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
-		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.int32))
+		Y = np.ascontiguousarray(np.zeros(X.shape[0]))
 		for e in range(X.shape[0]):
 			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
-			y_pred = np.dot(self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
-			Y[e] = y_pred * (self.max_y - self.min_y)/(self.T) + self.min_y
+			pred_y = np.dot(self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
+			Y[e] = 1.0*pred_y * (self.max_y - self.min_y)/(self.T) + self.min_y
 		return Y
 
 	def transform(self, X):
