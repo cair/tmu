@@ -136,7 +136,7 @@ class TMClassifier():
 
 	def transform(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
-		transformed_X = np.empty((X.shape[0], self.number_of_classes, 2, self.number_of_clauses//2), np.dtype=np.uint32)
+		transformed_X = np.empty((X.shape[0], self.number_of_classes, 2, self.number_of_clauses//2), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			for i in range(self.number_of_classes):
 				transformed_X[e,i,0,:] = self.clause_banks[i][0].calculate_clause_outputs_update(encoded_X[e,:])
@@ -246,7 +246,7 @@ class TMCoalescedClassifier():
 
 	def transform(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
-		transformed_X = np.empty((X.shape[0], self.number_of_clauses), np.dtype=np.uint32)
+		transformed_X = np.empty((X.shape[0], self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
 		return transformed_X
@@ -363,7 +363,7 @@ class TMOneVsOneClassifier():
 
 	def transform(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
-		transformed_X = np.empty((X.shape[0], self.number_of_clauses), np.dtype=np.uint32)
+		transformed_X = np.empty((X.shape[0], self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
 		return transformed_X
@@ -422,24 +422,22 @@ class TMRegressor():
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 		for e in range(X.shape[0]):
-			target = Ym[e]
-
 			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
 
-			pred_y = np.dot(clause_active * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
+			pred_y = np.dot(clause_active * self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
 			pred_y = np.clip(pred_y, 0, self.T)
 			prediction_error = pred_y - encoded_Y[e]; 
 
-			update_p = (1.0*prediction_error/tm->T)**2
+			update_p = (1.0*prediction_error/self.T)**2
 
 			if pred_y < encoded_Y[e]:
-				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), encoded_X[e,:])
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active, encoded_X[e,:])
 				if self.weighted_clauses:
 					self.weight_bank.increment(clause_outputs, update_p, clause_active)
-			elif pred_y > encoded_Y[e];
-				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), encoded_X[e,:])
+			elif pred_y > encoded_Y[e]:
+				self.clause_bank.type_ii_feedback(update_p, clause_active, encoded_X[e,:])
 				if self.weighted_clauses:
-					self.weight_banks.decrement(clause_outputs, update_p, clause_active, False)
+					self.weight_bank.decrement(clause_outputs, update_p, clause_active, False)
 		return
 
 	def predict(self, X):
@@ -447,19 +445,19 @@ class TMRegressor():
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.int32))
 		for e in range(X.shape[0]):
 			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
-			y_pred = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
+			y_pred = np.dot(self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
 			Y[e] = y_pred * (self.max_y - self.min_y)/(self.T) + self.min_y
 		return Y
 
 	def transform(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
-		transformed_X = np.empty((X.shape[0], self.number_of_clauses), np.dtype=np.uint32)
+		transformed_X = np.empty((X.shape[0], self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
 		return transformed_X
 
-	def get_weight(self, the_class, clause):
-		return self.weight_banks[the_class].get_weights()[clause]
+	def get_weight(self, clause):
+		return self.weight_bank.get_weights()[clause]
 
 	def get_action(self, clause, ta):
 		return self.clause_bank.ta_action(clause, ta)
