@@ -10,7 +10,7 @@ from tmu.tsetlin_machine import TMOneVsOneClassifier
 X_train = np.where(X_train.reshape((X_train.shape[0], 28*28)) > 75, 1, 0) 
 X_test = np.where(X_test.reshape((X_test.shape[0], 28*28)) > 75, 1, 0) 
 
-tm = TMOneVsOneClassifier(20000, 50*100, 10.0, weighted_clauses=True)
+tm = TMOneVsOneClassifier(20000, 1500, 10.0, weighted_clauses=True)
 
 print("\nAccuracy over 60 epochs:\n")
 for i in range(60):
