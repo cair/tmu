@@ -373,3 +373,93 @@ class TMOneVsOneClassifier():
 
 	def get_action(self, clause, ta):
 		return self.clause_bank.ta_action(clause, ta)
+
+class TMRegressor():
+	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		self.number_of_clauses = number_of_clauses
+		self.number_of_state_bits = number_of_state_bits
+		self.T = int(T)
+		self.s = s
+		self.patch_dim = patch_dim
+		self.boost_true_positive_feedback = boost_true_positive_feedback
+		self.weighted_clauses = weighted_clauses
+
+		self.clause_drop_p = clause_drop_p
+		self.literal_drop_p = literal_drop_p
+
+		self.initialized = False
+
+	def initialize(self, X, Y):
+		self.max_y = np.max(Y)
+		self.min_y = np.min(Y)
+
+		if len(X.shape) == 2:
+			self.dim = (X.shape[1], 1 ,1)
+		elif len(X.shape) == 3:
+			self.dim = (X.shape[1], X.shape[2], 1)
+		elif len(X.shape) == 4:
+			self.dim = (X.shape[1], X.shape[2], X.shape[3])
+
+		if self.patch_dim == None:
+			self.patch_dim = (X.shape[1], 1)
+
+		self.number_of_features = int(self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1]))
+		self.number_of_literals = self.number_of_features*2
+		
+		self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1)*(self.dim[1] - self.patch_dim[1] + 1))
+		self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
+
+		self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
+		self.weight_bank = WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
+		
+	def fit(self, X, Y, incremental=False):
+		if self.initialized == False or incremental == False:
+			self.initialize(X, Y)
+			self.initialized = True
+
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		encoded_Y = np.ascontiguousarray(((Y - self.min_y)/(self.max_y - self.min_y)*self.T).astype(np.int32))
+
+		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
+		for e in range(X.shape[0]):
+			target = Ym[e]
+
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+
+			pred_y = np.dot(clause_active * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
+			pred_y = np.clip(pred_y, 0, self.T)
+			prediction_error = pred_y - encoded_Y[e]; 
+
+			update_p = (1.0*prediction_error/tm->T)**2
+
+			if pred_y < encoded_Y[e]:
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), encoded_X[e,:])
+				if self.weighted_clauses:
+					self.weight_bank.increment(clause_outputs, update_p, clause_active)
+			elif pred_y > encoded_Y[e];
+				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), encoded_X[e,:])
+				if self.weighted_clauses:
+					self.weight_banks.decrement(clause_outputs, update_p, clause_active, False)
+		return
+
+	def predict(self, X):
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.int32))
+		for e in range(X.shape[0]):
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+			y_pred = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
+			Y[e] = y_pred * (self.max_y - self.min_y)/(self.T) + self.min_y
+		return Y
+
+	def transform(self, X):
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		transformed_X = np.empty((X.shape[0], self.number_of_clauses), np.dtype=np.uint32)
+		for e in range(X.shape[0]):
+			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+		return transformed_X
+
+	def get_weight(self, the_class, clause):
+		return self.weight_banks[the_class].get_weights()[clause]
+
+	def get_action(self, clause, ta):
+		return self.clause_bank.ta_action(clause, ta)
