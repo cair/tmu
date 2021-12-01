@@ -1,7 +1,7 @@
 import numpy as np
 from time import time
+from keras.datasets import fashion_mnist
 import cv2
-from keras.datasets import *
 
 from tmu.tsetlin_machine import TMOneVsOneClassifier
 
