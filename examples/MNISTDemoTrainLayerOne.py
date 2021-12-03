@@ -32,8 +32,8 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 
 tm = TMCoalescedClassifier(clauses, T, s, patch_dim=(3, 3), weighted_clauses=True)
 
-print("\nAccuracy over 250 epochs:\n")
-for i in range(3):
+print("\nAccuracy over 10 epochs:\n")
+for i in range(10):
 	start_training = time()
 	tm.fit(X_train, Y_train)
 	stop_training = time()
