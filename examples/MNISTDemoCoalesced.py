@@ -15,7 +15,7 @@ tm = TMCoalescedClassifier(20000, 50*100, 10.0, weighted_clauses=True)
 print("\nAccuracy over 60 epochs:\n")
 for i in range(60):
         start_training = time()
-        tm.fit(X_train, Y_train, incremental=True)
+        tm.fit(X_train, Y_train)
         stop_training = time()
 
         start_testing = time()
