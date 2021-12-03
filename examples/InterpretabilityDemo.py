@@ -15,7 +15,7 @@ Y_test = np.logical_xor(X_test[:,0], X_test[:,1]).astype(dtype=np.uint32)
 tm = TMClassifier(10, 15, 3.0, boost_true_positive_feedback=0)
 
 for i in range(20):
-	tm.fit(X_train, Y_train, incremental=True)
+	tm.fit(X_train, Y_train)
 
 print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
 
