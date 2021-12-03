@@ -68,8 +68,8 @@ class TMClassifier():
 			self.weight_banks.append((WeightBank(np.ones(self.number_of_clauses//2).astype(np.int32)), WeightBank(np.ones(self.number_of_clauses//2).astype(np.int32))))
 			self.clause_banks.append((ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches), ClauseBank(self.number_of_clauses//2, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)))
 		
-	def fit(self, X, Y, incremental=False):
-		if self.initialized == False or incremental == False:
+	def fit(self, X, Y):
+		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
 
@@ -188,8 +188,8 @@ class TMCoalescedClassifier():
 		for i in range(self.number_of_classes):
 			self.weight_banks.append(WeightBank(np.ones(self.number_of_clauses).astype(np.int32)))
 		
-	def fit(self, X, Y, incremental=False):
-		if self.initialized == False or incremental == False:
+	def fit(self, X, Y):
+		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
 
@@ -251,6 +251,13 @@ class TMCoalescedClassifier():
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
 		return transformed_X
 
+	def transform_patchwise(self, X):
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		transformed_X = np.empty((X.shape[0], self.number_of_clauses*self.number_of_patches), dtype=np.uint32)
+		for e in range(X.shape[0]):
+			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_patchwise(encoded_X[e,:])
+		return transformed_X.reshape((X.shape[0], self.number_of_clauses, self.number_of_patches))
+
 	def get_weight(self, the_class, clause):
 		return self.weight_banks[the_class].get_weights()[clause]
 
@@ -297,8 +304,8 @@ class TMOneVsOneClassifier():
 		for i in range(self.number_of_outputs):
 			self.weight_banks.append(WeightBank(np.ones(self.number_of_clauses).astype(np.int32)))
 		
-	def fit(self, X, Y, incremental=False):
-		if self.initialized == False or incremental == False:
+	def fit(self, X, Y):
+		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
 
@@ -412,8 +419,8 @@ class TMRegressor():
 		self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
 		self.weight_bank = WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
 		
-	def fit(self, X, Y, incremental=False):
-		if self.initialized == False or incremental == False:
+	def fit(self, X, Y):
+		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
 
@@ -444,7 +451,7 @@ class TMRegressor():
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		Y = np.ascontiguousarray(np.zeros(X.shape[0]))
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X[e,:])
 			pred_y = np.dot(self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
 			Y[e] = 1.0*pred_y * (self.max_y - self.min_y)/(self.T) + self.min_y
 		return Y

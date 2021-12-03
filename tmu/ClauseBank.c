@@ -158,6 +158,28 @@ static inline unsigned int cb_calculate_clause_output_update(unsigned int *ta_st
 	return(0);
 }
 
+static inline void cb_calculate_clause_output_patchwise(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *output, unsigned int *Xi)
+{
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		output[patch] = 1;
+		for (int k = 0; k < number_of_ta_chunks-1; k++) {
+			unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+			output[patch] = output[patch] && (ta_state[pos] & Xi[patch*number_of_ta_chunks + k]) == ta_state[pos];
+
+			if (!output[patch]) {
+				break;
+			}
+		}
+
+		unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+		output[patch] = output[patch] &&
+			(ta_state[pos] & Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] & filter) ==
+			(ta_state[pos] & filter);
+	}
+
+	return;
+}
+
 static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
 {
 	for (int patch = 0; patch < number_of_patches; ++patch) {
@@ -304,4 +326,20 @@ void cb_calculate_clause_outputs_update(unsigned int *ta_state, int number_of_cl
 	}
 }
 
+void cb_calculate_clause_outputs_patchwise(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)
+{
+	unsigned int filter;
+	if (((number_of_features) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_features) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+
+	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+
+	for (int j = 0; j < number_of_clauses; j++) {
+		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
+		cb_calculate_clause_output_patchwise(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, &clause_output[j*number_of_patches], Xi);
+	}
+}
 
