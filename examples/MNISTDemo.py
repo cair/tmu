@@ -15,7 +15,7 @@ tm = TMClassifier(2000, 50, 10.0)
 print("\nAccuracy over 250 epochs:\n")
 for i in range(250):
 	start_training = time()
-	tm.fit(X_train, Y_train, incremental=True)
+	tm.fit(X_train, Y_train)
 	stop_training = time()
 
 	start_testing = time()
