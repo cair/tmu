@@ -125,8 +125,8 @@ class TMClassifier():
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
-				class_sum = np.dot(self.weight_banks[i][0].get_weights(), self.clause_banks[i][0].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
-				class_sum -= np.dot(self.weight_banks[i][1].get_weights(), self.clause_banks[i][1].calculate_clause_outputs_update(encoded_X[e,:])).astype(np.int32)
+				class_sum = np.dot(self.weight_banks[i][0].get_weights(), self.clause_banks[i][0].calculate_clause_outputs_predict(encoded_X[e,:])).astype(np.int32)
+				class_sum -= np.dot(self.weight_banks[i][1].get_weights(), self.clause_banks[i][1].calculate_clause_outputs_predict(encoded_X[e,:])).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
 				if class_sum > max_class_sum:
 					max_class_sum = class_sum
@@ -234,7 +234,7 @@ class TMCoalescedClassifier():
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
 			max_class = 0
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X[e,:])
 			for i in range(self.number_of_classes):
 				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
@@ -344,7 +344,7 @@ class TMOneVsOneClassifier():
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
 
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X[e,:])
 
 			max_class_sum = -self.T*self.number_of_classes
 			max_class = 0
