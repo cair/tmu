@@ -38,7 +38,7 @@ for e in range(ensembles):
 
         for i in range(epochs):
                 start_training = time()
-                tm.fit(X_train, Y_train, incremental=True)
+                tm.fit(X_train, Y_train)
                 stop_training = time()
 
                 start_testing = time()
