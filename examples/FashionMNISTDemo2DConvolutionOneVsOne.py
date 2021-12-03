@@ -20,7 +20,7 @@ tm = TMOneVsOneClassifier(20000, 1500, 5.0, (10, 10), weighted_clauses=True)
 print("\nAccuracy over 30 epochs:\n")
 for i in range(30):
 	start = time()
-	tm.fit(X_train, Y_train, incremental=True)
+	tm.fit(X_train, Y_train)
 	stop = time()
 	
 	result = 100*(tm.predict(X_test) == Y_test).mean()
