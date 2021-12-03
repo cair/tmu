@@ -23,7 +23,7 @@ for i in range(25):
 
 	start = time()
 	for e in range(30):
-		tm.fit(X_train, Y_train, incremental=True)
+		tm.fit(X_train, Y_train)
 	stop = time()
 	tm_results = np.append(tm_results, np.sqrt(((tm.predict(X_test) - Y_test)**2).mean()))
 
