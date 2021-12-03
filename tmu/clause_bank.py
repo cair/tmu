@@ -37,6 +37,9 @@ class ClauseBank():
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 		self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
 
+		self.clause_output_patchwise = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
+		self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
+
 		self.feedback_to_ta = np.ascontiguousarray(np.empty((self.number_of_ta_chunks), dtype=np.uint32))
 		self.ft_p = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)
 
@@ -61,6 +64,11 @@ class ClauseBank():
 		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
 		lib.cb_calculate_clause_outputs_update(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
 		return self.clause_output
+
+	def calculate_clause_outputs_patchwise(self, Xi):
+		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
+		lib.cb_calculate_clause_outputs_patchwise(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.cop_p, xi_p)
+		return self.clause_output_patchwise
 
 	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, clause_active, Xi):
 		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
