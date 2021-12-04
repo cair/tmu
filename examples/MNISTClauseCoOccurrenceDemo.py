@@ -7,7 +7,7 @@ from tmu.tsetlin_machine import TMCoalescedClassifier
 
 np.set_printoptions(threshold=np.inf, linewidth=250)
 
-clauses = 64
+clauses = 32
 T = int(clauses*0.75)
 s = 5.0
 patch_size = 3
