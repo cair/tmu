@@ -37,6 +37,8 @@ for i in range(3):
 	start_training = time()
 	tm.fit(X_train, Y_train)
 	stop_training = time()
+
+	print(tm.clause_co_occurrence(X_test, percentage=True).toarray())
 	
 	start_testing = time()
 	result = 100*(tm.predict(X_test) == Y_test).mean()

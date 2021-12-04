@@ -37,10 +37,10 @@ class TMBasis():
 	def clause_co_occurrence(self, X, percentage=False):
 		clause_outputs = csr_matrix(self.transform(X))
 		if percentage:
-			return clause_outputs.transpose().dot(clause_outputs) / clause_outputs.sum(axis=0)
+			return clause_outputs.transpose().dot(clause_outputs).multiply(1.0/clause_outputs.sum(axis=0))
 		else:
 			return clause_outputs.transpose().dot(clause_outputs)
-			
+
 class TMClassifier(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
