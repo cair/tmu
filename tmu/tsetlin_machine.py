@@ -153,7 +153,7 @@ class TMClassifier(TMBasis):
 		for e in range(X.shape[0]):
 			for i in range(self.number_of_classes):
 				transformed_X[e,i,0,:] = self.clause_banks[i][0].calculate_clause_outputs_update(encoded_X[e,:])
-				transformed_X[e,i,1,:] = self.clause_banks[i][0].calculate_clause_outputs_update(encoded_X[e,:])
+				transformed_X[e,i,1,:] = self.clause_banks[i][1].calculate_clause_outputs_update(encoded_X[e,:])
 		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses))
 
 	def transform_patchwise(self, X):
@@ -166,7 +166,7 @@ class TMClassifier(TMBasis):
 		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses, self.number_of_patches))
 
 	def clause_precision(self, the_class, polarity, X, Y):
-		clause_outputs = self.transform(X).reshape(X.shape[0], self.number_of_classes, 2, self.number_of_clauses//2)[:,the_class, polarity]
+		clause_outputs = self.transform(X).reshape(X.shape[0], self.number_of_classes, 2, self.number_of_clauses//2)[:,the_class, polarity,:]
 		if polarity == 0:
 			true_positive_clause_outputs = clause_outputs[Y==the_class].sum(axis=0)
 			false_positive_clause_outputs = clause_outputs[Y!=the_class].sum(axis=0)
@@ -176,8 +176,11 @@ class TMClassifier(TMBasis):
 		return np.where(true_positive_clause_outputs + false_positive_clause_outputs == 0, 0, true_positive_clause_outputs/(true_positive_clause_outputs + false_positive_clause_outputs))
 
 	def clause_recall(self, the_class, polarity, X, Y):
-		clause_outputs = self.transform(X).reshape(X.shape[0], self.number_of_classes, 2, self.number_of_clauses//2)[:,the_class, polarity]
-		true_positive_clause_outputs = clause_outputs[Y==the_class].sum(axis=0)
+		clause_outputs = self.transform(X).reshape(X.shape[0], self.number_of_classes, 2, self.number_of_clauses//2)[:,the_class, polarity,:]
+		if polarity == 0:
+			true_positive_clause_outputs = clause_outputs[Y==the_class].sum(axis=0)
+		else:
+			true_positive_clause_outputs = clause_outputs[Y!=the_class].sum(axis=0)
 		return true_positive_clause_outputs / Y[Y==the_class].shape[0]
 
 	def get_weight(self, the_class, polarity, clause):

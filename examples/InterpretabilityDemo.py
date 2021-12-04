@@ -20,8 +20,12 @@ for i in range(20):
 print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
 
 print("\nClass 0 Positive Clauses:\n")
+
+precision = tm.clause_precision(0, 0, X_test, Y_test)
+recall = tm.clause_recall(0, 0, X_test, Y_test)
+
 for j in range(5):
-	print("Clause #%d (%d): " % (j, tm.get_weight(0, 0, j)), end=' ')
+	print("Clause #%d (%d) %.2f/%.2f: " % (j, tm.get_weight(0, 0, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
 		if tm.get_action(0, 0, j, k) == 1:
@@ -32,8 +36,12 @@ for j in range(5):
 	print(" ∧ ".join(l))
 
 print("\nClass 0 Negative Clauses:\n")
+
+precision = tm.clause_precision(0, 1, X_test, Y_test)
+recall = tm.clause_recall(0, 1, X_test, Y_test)
+
 for j in range(5):
-	print("Clause #%d (%d): " % (j, tm.get_weight(0, 1, j)), end=' ')
+	print("Clause #%d (%d) %.2f/%.2f: " % (j, tm.get_weight(0, 1, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
 		if tm.get_action(0, 1, j, k) == 1:
@@ -44,8 +52,12 @@ for j in range(5):
 	print(" ∧ ".join(l))
 
 print("\nClass 1 Positive Clauses:\n")
+
+precision = tm.clause_precision(1, 0, X_test, Y_test)
+recall = tm.clause_recall(1, 0, X_test, Y_test)
+
 for j in range(5):
-	print("Clause #%d (%d): " % (j, tm.get_weight(1, 0, j)), end=' ')
+	print("Clause #%d (%d) %.2f/%.2f: " % (j, tm.get_weight(1, 0, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
 		if tm.get_action(1, 0, j, k) == 1:
@@ -56,8 +68,12 @@ for j in range(5):
 	print(" ∧ ".join(l))
 
 print("\nClass 1 Negative Clauses:\n")
+
+precision = tm.clause_precision(1, 1, X_test, Y_test)
+recall = tm.clause_recall(1, 1, X_test, Y_test)
+
 for j in range(5):
-	print("Clause #%d (%d): " % (j, tm.get_weight(1, 1, j)), end=' ')
+	print("Clause #%d (%d) %.2f/%.2f: " % (j, tm.get_weight(1, 1, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
 		if tm.get_action(1, 1, j, k) == 1:
