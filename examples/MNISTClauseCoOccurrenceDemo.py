@@ -43,4 +43,5 @@ for i in range(3):
 	stop_testing = time()
 	print("#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
 
+print()
 print(tm.clause_co_occurrence(X_test).toarray())
