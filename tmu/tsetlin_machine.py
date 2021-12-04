@@ -28,7 +28,20 @@ import numpy as np
 from tmu.clause_bank import ClauseBank
 from tmu.weight_bank import WeightBank
 
-class TMClassifier():
+from scipy.sparse import csr_matrix
+
+class TMBasis():
+	def __init__(self):
+		None
+
+	def clause_co_occurrence(self, X):
+		clause_outputs = csr_matrix(self.transform(X))
+		return clause_outputs.transpose().dot(clause_outputs)
+
+##		clause_outputs = self.transform(X)
+##		return np.dot(clause_outputs.transpose(), clause_outputs)
+
+class TMClassifier(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits = number_of_state_bits
@@ -158,7 +171,7 @@ class TMClassifier():
 	def get_action(self, the_class, polarity, clause, ta):
 		return self.clause_banks[the_class][polarity].ta_action(clause, ta)
 
-class TMCoalescedClassifier():
+class TMCoalescedClassifier(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits = number_of_state_bits
@@ -273,7 +286,7 @@ class TMCoalescedClassifier():
 	def get_action(self, clause, ta):
 		return self.clause_bank.ta_action(clause, ta)
 
-class TMOneVsOneClassifier():
+class TMOneVsOneClassifier(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits = number_of_state_bits
@@ -397,7 +410,7 @@ class TMOneVsOneClassifier():
 	def get_action(self, clause, ta):
 		return self.clause_bank.ta_action(clause, ta)
 
-class TMRegressor():
+class TMRegressor(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits = number_of_state_bits
