@@ -5,7 +5,7 @@ from keras.datasets import mnist
 
 from tmu.tsetlin_machine import TMOneVsOneClassifier
 
-np.set_printoptions(threshold=np.inf, linewidth=250, precision=2)
+np.set_printoptions(threshold=np.inf, linewidth=250, precision=2, suppress=True)
 
 clauses = 32
 T = int(clauses*0.75)
@@ -32,13 +32,11 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 
 tm = TMOneVsOneClassifier(clauses, T, s, patch_dim=(3, 3), weighted_clauses=True)
 
-print("\nAccuracy over 3 epochs:\n")
-for i in range(3):
+print("\nAccuracy over 10 epochs:\n")
+for i in range(10):
 	start_training = time()
 	tm.fit(X_train, Y_train)
 	stop_training = time()
-
-	print(tm.clause_co_occurrence(X_test, percentage=True).toarray())
 
 	start_testing = time()
 	result = 100*(tm.predict(X_test) == Y_test).mean()
