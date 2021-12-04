@@ -5,7 +5,7 @@ from keras.datasets import mnist
 
 from tmu.tsetlin_machine import TMOneVsOneClassifier
 
-np.set_printoptions(threshold=np.inf, linewidth=250)
+np.set_printoptions(threshold=np.inf, linewidth=250, precision=2)
 
 clauses = 32
 T = int(clauses*0.75)
@@ -39,7 +39,7 @@ for i in range(3):
 	stop_training = time()
 
 	print(tm.clause_co_occurrence(X_test, percentage=True).toarray())
-	
+
 	start_testing = time()
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
