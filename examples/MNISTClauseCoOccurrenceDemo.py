@@ -3,7 +3,7 @@ from time import time
 
 from keras.datasets import mnist
 
-from tmu.tsetlin_machine import TMCoalescedClassifier
+from tmu.tsetlin_machine import TMOneVsOneClassifier
 
 np.set_printoptions(threshold=np.inf, linewidth=250)
 
@@ -30,7 +30,7 @@ for z in range(resolution):
 X_train = X_train.reshape((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], resolution))
 X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], resolution))
 
-tm = TMCoalescedClassifier(clauses, T, s, patch_dim=(3, 3), weighted_clauses=True)
+tm = TMOneVsOneClassifier(clauses, T, s, patch_dim=(3, 3), weighted_clauses=True)
 
 print("\nAccuracy over 3 epochs:\n")
 for i in range(3):
@@ -44,4 +44,4 @@ for i in range(3):
 	print("#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
 
 print()
-print(tm.clause_co_occurrence(X_test).toarray())
+print(tm.clause_co_occurrence(X_test, percentage=True).toarray())
