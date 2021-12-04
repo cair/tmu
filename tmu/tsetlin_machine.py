@@ -143,6 +143,15 @@ class TMClassifier():
 				transformed_X[e,i,1,:] = self.clause_banks[i][0].calculate_clause_outputs_update(encoded_X[e,:])
 		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses))
 
+	def transform_patchwise(self, X):
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		transformed_X = np.empty((X.shape[0], self.number_of_classes, 2, self.number_of_clauses//2*self.number_of_patches), dtype=np.uint32)
+		for e in range(X.shape[0]):
+			for i in range(self.number_of_classes):
+				transformed_X[e,i,0,:] = self.clause_bank[i][0].calculate_clause_outputs_patchwise(encoded_X[e,:])
+				transformed_X[e,i,1,:] = self.clause_bank[i][1].calculate_clause_outputs_patchwise(encoded_X[e,:])
+		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses, self.number_of_patches))
+
 	def get_weight(self, the_class, polarity, clause):
 		return self.weight_banks[the_class][polarity].get_weights()[clause]
 
@@ -375,6 +384,13 @@ class TMOneVsOneClassifier():
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
 		return transformed_X
 
+	def transform_patchwise(self, X):
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		transformed_X = np.empty((X.shape[0], self.number_of_clauses*self.number_of_patches), dtype=np.uint32)
+		for e in range(X.shape[0]):
+			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_patchwise(encoded_X[e,:])
+		return transformed_X.reshape((X.shape[0], self.number_of_clauses, self.number_of_patches))
+	
 	def get_weight(self, output, clause):
 		return self.weight_banks[output].get_weights()[clause]
 
@@ -462,6 +478,13 @@ class TMRegressor():
 		for e in range(X.shape[0]):
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
 		return transformed_X
+
+	def transform_patchwise(self, X):
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		transformed_X = np.empty((X.shape[0], self.number_of_clauses*self.number_of_patches), dtype=np.uint32)
+		for e in range(X.shape[0]):
+			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_patchwise(encoded_X[e,:])
+		return transformed_X.reshape((X.shape[0], self.number_of_clauses, self.number_of_patches))
 
 	def get_weight(self, clause):
 		return self.weight_bank.get_weights()[clause]
