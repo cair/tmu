@@ -3,7 +3,7 @@ from time import time
 
 from keras.datasets import mnist
 
-from tmu.tsetlin_machine import TMCoalescedClassifier
+from tmu.tsetlin_machine import TMClassifier
 
 np.set_printoptions(threshold=np.inf, linewidth=250, precision=2, suppress=True)
 
@@ -30,7 +30,7 @@ for z in range(resolution):
 X_train = X_train.reshape((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], resolution))
 X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], resolution))
 
-tm = TMCoalescedClassifier(clauses, T, s, patch_dim=(3, 3), weighted_clauses=True)
+tm = TMClassifier(clauses, T, s, patch_dim=(3, 3), weighted_clauses=True)
 
 print("\nAccuracy over 250 epochs:\n")
 for i in range(250):
@@ -40,8 +40,8 @@ for i in range(250):
 
 	print(tm.clause_co_occurrence(X_test, percentage=True).toarray())
 
-	print(tm.clause_precision(0, True, X_test, Y_test))
-	print(tm.clause_recall(0, True, X_test, Y_test))
+	print(tm.clause_precision(0, 1, X_test, Y_test))
+	print(tm.clause_recall(0, 1, X_test, Y_test))
 
 	start_testing = time()
 	result = 100*(tm.predict(X_test) == Y_test).mean()
