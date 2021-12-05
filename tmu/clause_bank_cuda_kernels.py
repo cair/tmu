@@ -197,9 +197,9 @@ code_clause_feedback = """
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
 						// Generate random bit values
 						unsigned int feedback_to_ta = 0;
-						for (int b = 0; b < INT_SIZE; ++b) {
+						for (int b = 0; b < 32; ++b) {
 							if (curand_uniform(localState) <= 1.0/s) {
-								la_feedback |= (1 << b);
+								feedback_to_ta |= (1 << b);
 							}
 						}
 
