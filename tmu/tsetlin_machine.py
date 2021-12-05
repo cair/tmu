@@ -148,7 +148,7 @@ class TMClassifier(TMBasis):
 			update_p = (self.T + class_sum)/(2*self.T)
 		
 			if self.weighted_clauses:
-				self.weight_banks[not_target].decrement(positive_clause_outputs, update_p, clause_active[not_target], False)			
+				self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active[not_target], False)			
 
 			self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, encoded_X[e,:])
 			self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, encoded_X[e,:])			
