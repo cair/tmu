@@ -192,18 +192,19 @@ code_clause_feedback = """
 
 				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 
-				if (clause_output) {
-					// Type Ia Feedback
-					for (int k = 0; k < number_of_ta_chunks; ++k) {
-						// Generate random bit values
-						unsigned int feedback_to_ta = 0;
-						for (int b = 0; b < 32; ++b) {
-							if (curand_uniform(&localState) <= 1.0/s) {
-								feedback_to_ta |= (1 << b);
-							}
+				for (int k = 0; k < number_of_ta_chunks; ++k) {
+					// Generate random bit values
+					unsigned int feedback_to_ta = 0;
+					for (int b = 0; b < 32; ++b) {
+						if (curand_uniform(&localState) <= 1.0/s) {
+							feedback_to_ta |= (1 << b);
 						}
+					}
 
-						unsigned int ta_pos = k*number_of_state_bits;
+					unsigned int ta_pos = k*number_of_state_bits;
+
+					if (clause_output) {
+						// Type Ia Feedback
 
 						if (boost_true_positive_feedback == 1) {
 			 				inc(&ta_state[clause_pos + ta_pos], Xi[clause_patch*number_of_ta_chunks + k], number_of_state_bits);
@@ -211,14 +212,10 @@ code_clause_feedback = """
 							inc(&ta_state[clause_pos + ta_pos], Xi[clause_patch*number_of_ta_chunks + k] & (~feedback_to_ta), number_of_state_bits);
 						}
 
-			 			dec(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta, number_of_state_bits);
-					}
-				} else {
-					// Type Ib Feedback
+		 				dec(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta, number_of_state_bits);
+					} else {
+						// Type Ib Feedback
 						
-					for (int k = 0; k < number_of_ta_chunks; ++k) {
-						unsigned int ta_pos = k*number_of_state_bits;
-
 						dec(&ta_state[clause_pos + ta_pos], feedback_to_ta, number_of_state_bits);
 					}
 				}
@@ -254,7 +251,7 @@ code_clause_feedback = """
 
 				unsigned int clause_output;
 				unsigned int clause_patch;
-				calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 
 				if (clause_output) {				
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
