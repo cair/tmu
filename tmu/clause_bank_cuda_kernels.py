@@ -127,7 +127,7 @@ code_clause_feedback = """
 		}
 
 		/* Calculate the output of each clause using the actions of each Tsetline Automaton. */
-		__device__ inline void calculate_clause_output_feedback(unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+		__device__ inline void calculate_clause_output_feedback(curandState *localState, unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
 		{
 			int output_one_patches_count = 0;
 			for (int patch = 0; patch < number_of_patches; ++patch) {
@@ -190,7 +190,7 @@ code_clause_feedback = """
 				unsigned int clause_output;
 				unsigned int clause_patch;
 
-				calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 
 				if (clause_output) {
 					// Type Ia Feedback
