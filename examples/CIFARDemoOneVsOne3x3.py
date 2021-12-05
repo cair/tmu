@@ -8,7 +8,7 @@ import cv2
 from tmu.tsetlin_machine import TMOneVsOneClassifier
 
 clauses = 80000
-T = int(clauses*0.75)
+T = int(clauses//10*0.75)
 s = 10.0 
 patch_size = 3
 resolution = 8
