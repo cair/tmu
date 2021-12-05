@@ -42,7 +42,6 @@ for j in range(clauses):
 	print(" ∧ ".join(l))
 
 	for i in range(2):
-		print(i, j, tm.get_weight(i, j), int(tm.get_weight(i, j) < 0))
 		print("\tC:%d W:%+2d P:%.2f R:%.2f" % (i, tm.get_weight(i, j), precision[i][int(tm.get_weight(i, j) < 0)][j], recall[i][int(tm.get_weight(i, j) < 0)][j]))
 
 print("\nClause Co-Occurence Matrix:\n")
