@@ -62,6 +62,10 @@ class ClauseBankCUDA():
 		mod = SourceModule(kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
 		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
 		self.calculate_clause_outputs_predict_gpu.prepare("PiiiiPPi")
+
+		mod = SourceModule(kernels.code_calculate_clause_outputs_update, no_extern_c=True)
+		self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
+		self.calculate_clause_outputs_update_gpu.prepare("PiiiiPPi")
 		
 		self.initialize_clauses()
 
@@ -75,20 +79,15 @@ class ClauseBankCUDA():
 		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
 	def calculate_clause_outputs_predict(self, e):
-		#xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
-		#lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
-		
-
 		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
-
 		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
-
 		return self.clause_output
 
 	def calculate_clause_outputs_update(self, Xi):
-		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
-		lib.cb_calculate_clause_outputs_update(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
+		self.calculate_clause_outputs_update_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+		cuda.Context.synchronize()
+		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output
 
 	def calculate_clause_outputs_patchwise(self, Xi):

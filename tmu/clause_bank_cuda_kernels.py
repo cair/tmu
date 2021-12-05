@@ -76,3 +76,55 @@ code_calculate_clause_outputs_predict = """
 		}
 	}
 """
+
+code_calculate_clause_outputs_update = """
+	#include <curand_kernel.h>
+
+	extern "C"
+    {
+		__device__ inline unsigned int calculate_clause_output_update(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+		{
+			for (int patch = 0; patch < number_of_patches; ++patch) {
+				unsigned int output = 1;
+				for (int k = 0; k < number_of_ta_chunks-1; k++) {
+					unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+					output = output && (ta_state[pos] & Xi[patch*number_of_ta_chunks + k]) == ta_state[pos];
+
+					if (!output) {
+						break;
+					}
+				}
+
+				unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+				output = output &&
+					(ta_state[pos] & Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] & filter) ==
+					(ta_state[pos] & filter);
+
+				if (output) {
+					return(1);
+				}
+			}
+
+			return(0);
+		}
+
+		__global__ void calculate_clause_outputs_update(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *X, int e)
+		{
+			int index = blockIdx.x * blockDim.x + threadIdx.x;
+			int stride = blockDim.x * gridDim.x;
+
+			unsigned int filter;
+			if (((number_of_features) % 32) != 0) {
+				filter  = (~(0xffffffff << ((number_of_features) % 32)));
+			} else {
+				filter = 0xffffffff;
+			}
+			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+
+			for (int j = index; j < number_of_clauses; j += stride) {
+				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
+				clause_output[j] = calculate_clause_output_update(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, &X[e*(number_of_ta_chunks*number_of_patches)]);
+			}
+		}
+	}
+"""

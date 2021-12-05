@@ -261,15 +261,20 @@ class TMCoalescedClassifier(TMBasis):
 			self.initialized = True
 
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		if self.platform == 'CUDA':
+			self.clause_bank.copy_X(encoded_X)
+
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
-
 		for e in range(X.shape[0]):
 			target = Ym[e]
 
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
-
+			if self.platform == 'CUDA':
+				clause_outputs = self.clause_bank.calculate_clause_outputs_update(e)
+			else:
+				clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+			
 			class_sum = np.dot(clause_active * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
@@ -296,9 +301,7 @@ class TMCoalescedClassifier(TMBasis):
 	def predict(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		if self.platform == 'CUDA':
-			print("Copying")
 			self.clause_bank.copy_X(encoded_X)
-			print("Finished")
 
 		start_time = time()		
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
