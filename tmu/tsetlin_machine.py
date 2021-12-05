@@ -387,7 +387,7 @@ class TMOneVsOneClassifier(TMBasis):
 	
 	def clause_precision(self, the_class, positive_polarity, X, Y):
 		clause_outputs = self.transform(X)
-		precision = np.zeros((self.number_of_clauses, self.number_of_classes - 1))
+		precision = np.zeros((self.number_of_classes - 1, self.number_of_clauses))
 		for i in range(self.number_of_classes - 1):
 			output = the_class * (self.number_of_classes - 1) + i
 			weights = self.weight_banks[output].get_weights()
@@ -396,18 +396,30 @@ class TMOneVsOneClassifier(TMBasis):
 				true_positive_clause_outputs = positive_clause_outputs[Y==the_class].sum(axis=0)
 				false_positive_clause_outputs = positive_clause_outputs[Y!=the_class].sum(axis=0)
 				precision[i] = np.where(true_positive_clause_outputs + false_positive_clause_outputs == 0, 0, true_positive_clause_outputs/(true_positive_clause_outputs + false_positive_clause_outputs))
+			else:
+				positive_clause_outputs = (weights < 0)[:,np.newaxis].transpose() * clause_outputs
+				true_positive_clause_outputs = positive_clause_outputs[Y!=the_class].sum(axis=0)
+				false_positive_clause_outputs = positive_clause_outputs[Y==the_class].sum(axis=0)
+				precision[i] = np.where(true_positive_clause_outputs + false_positive_clause_outputs == 0, 0, true_positive_clause_outputs/(true_positive_clause_outputs + false_positive_clause_outputs))
+	
 		return precision
 
 	def clause_recall(self, the_class, positive_polarity, X, Y):
 		clause_outputs = self.transform(X)
-		max_recall = np.zeros(self.number_of_clauses)
-		for output in range(the_class * (self.number_of_classes - 1), (the_class+1) * (self.number_of_classes-1)):
+		recall = np.zeros((self.number_of_classes - 1, self.number_of_clauses))
+		for i in range(self.number_of_classes - 1):
+			output = the_class * (self.number_of_classes - 1) + i
 			weights = self.weight_banks[output].get_weights()
-			positive_clause_outputs = (weights > 0)[:,np.newaxis].transpose() * clause_outputs
-			true_positive_clause_outputs = positive_clause_outputs[Y==the_class].sum(axis=0)
-			recall = true_positive_clause_outputs / Y[Y==the_class].shape[0]
-			max_recall = np.maximum(max_recall, recall)
-		return max_recall
+			if positive_polarity:
+				positive_clause_outputs = (weights >= 0)[:,np.newaxis].transpose() * clause_outputs
+				true_positive_clause_outputs = positive_clause_outputs[Y==the_class].sum(axis=0)
+				recall[i] =	true_positive_clause_outputs / Y[Y==the_class].shape[0]
+
+			else:
+				positive_clause_outputs = (weights < 0)[:,np.newaxis].transpose() * clause_outputs
+				true_positive_clause_outputs = positive_clause_outputs[Y!=the_class].sum(axis=0)
+				recall[i] = true_positive_clause_outputs / Y[Y!=the_class].shape[0]
+		return recall
 
 	def get_weight(self, output, clause):
 		return self.weight_banks[output].get_weights()[clause]

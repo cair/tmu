@@ -17,12 +17,21 @@ Y_test = np.logical_xor(X_test[:,0], X_test[:,1]).astype(dtype=np.uint32)
 
 tm = TMOneVsOneClassifier(clauses, T, s, boost_true_positive_feedback=0)
 
-for i in range(200):
+for i in range(20):
 	tm.fit(X_train, Y_train)
 
-print("ACCURACY:", 100*(tm.predict(X_test) == Y_test).mean())
+precision = []
+recall = []
+for i in range(2):
+	precision.append((tm.clause_precision(i, 0, X_test, Y_test), tm.clause_precision(i, 1, X_test, Y_test)))
+	recall.append((tm.clause_recall(i, 0, X_test, Y_test), tm.clause_recall(i, 1, X_test, Y_test)))
 
-print("\nCLAUSES:\n")
+print(precision)
+print(recall)
+
+print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
+
+print("\nClauses:\n")
 
 for j in range(clauses):
 	print("Clause #%d: " % (j), end=' ')
