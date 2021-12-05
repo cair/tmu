@@ -64,6 +64,7 @@ class ClauseBankCUDA():
 		self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape((self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits)))
 		self.clause_bank_gpu = cuda.mem_alloc(self.clause_bank.nbytes)
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
+		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
 	def calculate_clause_outputs_predict(self, Xi):
 		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
