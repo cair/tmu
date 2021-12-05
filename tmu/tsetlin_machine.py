@@ -387,15 +387,16 @@ class TMOneVsOneClassifier(TMBasis):
 	
 	def clause_precision(self, the_class, positive_polarity, X, Y):
 		clause_outputs = self.transform(X)
-		max_precision = np.zeros(self.number_of_clauses)
-		for output in range(the_class * (self.number_of_classes - 1), (the_class+1) * (self.number_of_classes-1)):
+		precision = np.zeros((self.number_of_clauses, self.number_of_classes - 1))
+		for i in range(self.number_of_classes - 1):
+			output = the_class * (self.number_of_classes - 1) + i
 			weights = self.weight_banks[output].get_weights()
-			positive_clause_outputs = (weights > 0)[:,np.newaxis].transpose() * clause_outputs
-			true_positive_clause_outputs = positive_clause_outputs[Y==the_class].sum(axis=0)
-			false_positive_clause_outputs = positive_clause_outputs[Y!=the_class].sum(axis=0)
-			precision = np.where(true_positive_clause_outputs + false_positive_clause_outputs == 0, 0, true_positive_clause_outputs/(true_positive_clause_outputs + false_positive_clause_outputs))
-			max_precision = np.maximum(max_precision, precision)
-		return max_precision
+			if positive_polarity:
+				positive_clause_outputs = (weights >= 0)[:,np.newaxis].transpose() * clause_outputs
+				true_positive_clause_outputs = positive_clause_outputs[Y==the_class].sum(axis=0)
+				false_positive_clause_outputs = positive_clause_outputs[Y!=the_class].sum(axis=0)
+				precision[i] = np.where(true_positive_clause_outputs + false_positive_clause_outputs == 0, 0, true_positive_clause_outputs/(true_positive_clause_outputs + false_positive_clause_outputs))
+		return precision
 
 	def clause_recall(self, the_class, positive_polarity, X, Y):
 		clause_outputs = self.transform(X)
