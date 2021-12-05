@@ -230,7 +230,7 @@ class TMClassifier(TMBasis):
 		if polarity == 0:
 			return self.clause_banks[the_class].set_ta_state(clause, ta, state)
 		else:
-			return self.clause_banks[the_class].set_ta_state(self.number_of_clauses//2 + clause, state)
+			return self.clause_banks[the_class].set_ta_state(self.number_of_clauses//2 + clause, ta, state)
 
 class TMCoalescedClassifier(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
