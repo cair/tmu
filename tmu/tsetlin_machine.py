@@ -25,7 +25,6 @@ import tmu.tools
 import sys
 import numpy as np
 from tmu.clause_bank import ClauseBank
-from tmu.clause_bank_cuda import ClauseBankCUDA
 from tmu.weight_bank import WeightBank
 from scipy.sparse import csr_matrix
 
@@ -244,6 +243,7 @@ class TMCoalescedClassifier(TMBasis):
 		if self.platform == 'CPU':
 			self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
 		elif self.platform == 'CUDA':
+			from tmu.clause_bank_cuda import ClauseBankCUDA
 			self.clause_bank = ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
 		else:
 			print("Unknown Platform")
