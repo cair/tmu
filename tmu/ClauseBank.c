@@ -289,12 +289,8 @@ void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patche
 	}
 }
 
-void cb_calculate_clause_outputs_predict(void *ta_state_p, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, void *clause_output_p, void *Xi_p)
+void cb_calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)
 {
-	unsigned int *ta_state = (unsigned int *)ta_state_p;
-	unsigned int *clause_output = (unsigned int *)clause_output_p;
-	unsigned int *Xi = (unsigned int *)Xi_p;
-
 	unsigned int filter;
 	if (((number_of_features) % 32) != 0) {
 		filter  = (~(0xffffffff << ((number_of_features) % 32)));

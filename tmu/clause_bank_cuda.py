@@ -30,6 +30,8 @@ import pycuda.driver as cuda
 import pycuda.autoinit
 from pycuda.compiler import SourceModule
 
+import tmu.clause_bank_cuda_kernels as kernels
+
 class ClauseBankCUDA():
 	def __init__(self, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches):
 		print("Platform: CUDA")
@@ -60,7 +62,8 @@ class ClauseBankCUDA():
 		self.clause_bank[:,:,0:self.number_of_state_bits-1] = np.uint32(~0)
 		self.clause_bank[:,:,self.number_of_state_bits-1] = 0
 		self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape((self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits)))
-		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
+		self.clause_bank_gpu = cuda.mem_alloc(self.clause_bank.nbytes)
+		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 
 	def calculate_clause_outputs_predict(self, Xi):
 		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
