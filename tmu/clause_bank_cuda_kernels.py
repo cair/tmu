@@ -26,9 +26,9 @@ code_calculate_clause_outputs_predict = """
 
 	extern "C"
     {
-		__device__ inline unsigned int calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, unsigned int *Xi)
+		__device__ inline unsigned int calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
 		{
-			for (int patch = 0; patch < NUMBER_OF_PATCHES; ++patch) {
+			for (int patch = 0; patch < number_of_patches; ++patch) {
 				unsigned int output = 1;
 				unsigned int all_exclude = 1;
 				for (int k = 0; k < number_of_ta_chunks-1; k++) {
@@ -56,22 +56,22 @@ code_calculate_clause_outputs_predict = """
 			return(0);
 		}
 
-		__global__ void calculate_clause_outputs_predict(unsigned int *ta_state, unsigned int *clause_output, unsigned int *X, int e)
+		__global__ void calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
 
 			unsigned int filter;
-			if (((NUMBER_OF_LITERALS) % 32) != 0) {
-				filter  = (~(0xffffffff << ((NUMBER_OF_LITERALS) % 32)));
+			if (((number_of_literals) % 32) != 0) {
+				filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 			} else {
 				filter = 0xffffffff;
 			}
-			unsigned int number_of_ta_chunks = (NUMBER_OF_LITERALS-1)/32 + 1;
+			unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
-			for (int j = index; j < NUMBER_OF_CLAUSES; j += stride) {
-				unsigned int clause_pos = j*number_of_ta_chunks*NUMBER_OF_STATE_BITS;
-				clause_output[j] = calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, NUMBER_OF_STATE_BITS, filter, &X[e*(number_of_ta_chunks*NUMBER_OF_PATCHES)]);
+			for (int j = index; j < number_of_clauses; j += stride) {
+				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
+				clause_output[j] = calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, &X[e*(number_of_ta_chunks*number_of_patches)]);
 			}
 		}
 	}
@@ -162,7 +162,7 @@ code_clause_feedback = """
 			}
 		}
 
-		__global__ void type_i_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *X, int e)
+		__global__ void type_i_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -171,12 +171,12 @@ code_clause_feedback = """
 			curandState localState = state[index];
 
 			unsigned int filter;
-			if (((number_of_features) % 32) != 0) {
-				filter  = (~(0xffffffff << ((number_of_features) % 32)));
+			if (((number_of_literals) % 32) != 0) {
+				filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 			} else {
 				filter = 0xffffffff;
 			}
-			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+			unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
@@ -215,7 +215,7 @@ code_clause_feedback = """
 		 				dec(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta, number_of_state_bits);
 					} else {
 						// Type Ib Feedback
-
+						
 						dec(&ta_state[clause_pos + ta_pos], feedback_to_ta, number_of_state_bits);
 					}
 				}
@@ -224,7 +224,7 @@ code_clause_feedback = """
 			state[index] = localState;
 		}
 
-		__global__ void type_ii_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *X, int e)
+		__global__ void type_ii_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -233,12 +233,12 @@ code_clause_feedback = """
 			curandState localState = state[index];
 
 			unsigned int filter;
-			if (((number_of_features) % 32) != 0) {
-				filter  = (~(0xffffffff << ((number_of_features) % 32)));
+			if (((number_of_literals) % 32) != 0) {
+				filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 			} else {
 				filter = 0xffffffff;
 			}
-			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+			unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
@@ -297,18 +297,18 @@ code_calculate_clause_outputs_update = """
 			return(0);
 		}
 
-		__global__ void calculate_clause_outputs_update(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *X, int e)
+		__global__ void calculate_clause_outputs_update(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
 
 			unsigned int filter;
-			if (((number_of_features) % 32) != 0) {
-				filter  = (~(0xffffffff << ((number_of_features) % 32)));
+			if (((number_of_literals) % 32) != 0) {
+				filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 			} else {
 				filter = 0xffffffff;
 			}
-			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+			unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 			for (int j = index; j < number_of_clauses; j += stride) {
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
