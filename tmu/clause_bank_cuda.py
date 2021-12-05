@@ -55,6 +55,9 @@ class ClauseBankCUDA():
 		self.output_one_patches = np.ascontiguousarray(np.empty(self.number_of_patches, dtype=np.uint32))
 		self.o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
 
+		mod = SourceModule(kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
+		self.calculate_clause_outputs_predict = mod.get_function("calculate_clause_outputs_predict")
+
 		self.initialize_clauses()
 
 	def initialize_clauses(self):
