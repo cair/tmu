@@ -239,6 +239,15 @@ class TMCoalescedClassifier(TMBasis):
 		super().initialize(X, self.patch_dim)
 
 		self.number_of_classes = int(np.max(Y) + 1)
+	
+		if self.platform == 'CPU':
+			self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
+		elif self.platform == 'CUDA':
+			from tmu.clause_bank_cuda import ClauseBankCUDA
+			self.clause_bank = ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, X, Y)
+		else:
+			print("Unknown Platform")
+			sys.exit(-1)
 
 		self.weight_banks = []
 		for i in range(self.number_of_classes):
