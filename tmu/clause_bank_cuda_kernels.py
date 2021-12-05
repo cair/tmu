@@ -170,8 +170,6 @@ code_clause_feedback = """
 			/* Copy state to local memory for efficiency */  
 			curandState localState = state[index];
 
-			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
-
 			unsigned int filter;
 			if (((number_of_features) % 32) != 0) {
 				filter  = (~(0xffffffff << ((number_of_features) % 32)));
@@ -179,6 +177,8 @@ code_clause_feedback = """
 				filter = 0xffffffff;
 			}
 			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+
+			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
 			for (int j = index; j < number_of_clauses; j += stride) {
 				if ((curand_uniform(localState) > update_p) || (!clause_active[j])) {
@@ -235,8 +235,6 @@ code_clause_feedback = """
 			/* Copy state to local memory for efficiency */  
 			curandState localState = state[index];
 
-			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
-
 			unsigned int filter;
 			if (((number_of_features) % 32) != 0) {
 				filter  = (~(0xffffffff << ((number_of_features) % 32)));
@@ -244,6 +242,8 @@ code_clause_feedback = """
 				filter = 0xffffffff;
 			}
 			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+
+			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
 			for (int j = index; j < number_of_clauses; j += stride) {
 				if ((curand_uniform(localState) > update_p) || (!clause_active[j])) {
