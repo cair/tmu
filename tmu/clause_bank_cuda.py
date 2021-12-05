@@ -30,6 +30,8 @@ import pycuda.driver as cuda
 import pycuda.autoinit
 from pycuda.compiler import SourceModule
 
+g = curandom.XORWOWRandomNumberGenerator() 
+
 import tmu.clause_bank_cuda_kernels as kernels
 
 class ClauseBankCUDA():
