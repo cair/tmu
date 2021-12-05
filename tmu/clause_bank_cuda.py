@@ -61,7 +61,7 @@ class ClauseBankCUDA():
 
 		mod = SourceModule(kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
 		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
-		self.calculate_clause_outputs_predict_gpu.prepare("PiiiiPP")
+		self.calculate_clause_outputs_predict_gpu.prepare("PiiiiPPi")
 		
 		self.initialize_clauses()
 
