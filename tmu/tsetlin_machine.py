@@ -22,20 +22,20 @@
 # https://arxiv.org/abs/1905.09688
 
 import tmu.tools
-
+import sys
 import numpy as np
-
 from tmu.clause_bank import ClauseBank
+from tmu.clause_bank_cuda import ClauseBankCUDA
 from tmu.weight_bank import WeightBank
-
 from scipy.sparse import csr_matrix
 
 class TMBasis():
-	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits = number_of_state_bits
 		self.T = int(T)
 		self.s = s
+		self.platform = platform
 		self.patch_dim = patch_dim
 		self.boost_true_positive_feedback = boost_true_positive_feedback
 		self.weighted_clauses = weighted_clauses
@@ -233,15 +233,22 @@ class TMClassifier(TMBasis):
 			return self.clause_banks[the_class].set_ta_state(self.number_of_clauses//2 + clause, ta, state)
 
 class TMCoalescedClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		super().initialize(X, self.patch_dim)
 
 		self.number_of_classes = int(np.max(Y) + 1)
 
-		self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
+		if self.platform == 'CPU':
+			self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
+		elif self.platform == 'CUDA':
+			self.clause_bank = ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
+		else:
+			print("Unknown Platform")
+			sys.exit(-1)
+
 		self.weight_banks = []
 		for i in range(self.number_of_classes):
 			self.weight_banks.append(WeightBank(np.ones(self.number_of_clauses).astype(np.int32)))
