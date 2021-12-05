@@ -25,7 +25,13 @@ recall = []
 for i in range(2):
 	precision.append((tm.clause_precision(i, 0, X_test, Y_test), tm.clause_precision(i, 1, X_test, Y_test)))
 	recall.append((tm.clause_recall(i, 0, X_test, Y_test), tm.clause_recall(i, 1, X_test, Y_test)))
-	
+
+for j in range(4):
+	for k in range(number_of_features*2):
+		print(tm.get_ta_state(j, k))
+		tm.set_ta_state(j, k, 255)
+		print(tm.get_ta_state(j, k))
+
 print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
 
 print("\nClauses:\n")
@@ -34,7 +40,7 @@ for j in range(clauses):
 	print("Clause #%d " % (j), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_action(j, k) == 1:
+		if tm.get_ta_action(j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:

@@ -80,10 +80,35 @@ class ClauseBank():
 		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		lib.cb_type_ii_feedback(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, ca_p, xi_p)
 
-	def ta_action(self, clause, ta):
+	def get_ta_action(self, clause, ta):
 		ta_chunk = ta // 32
 		chunk_pos = ta % 32
 
 		pos = int(clause * self.number_of_ta_chunks * self.number_of_state_bits + ta_chunk * self.number_of_state_bits + self.number_of_state_bits-1)
 
 		return (self.clause_bank[pos] & (1 << chunk_pos)) > 0
+
+	def get_ta_state(self, clause, ta):
+		ta_chunk = ta // 32
+		chunk_pos = ta % 32
+
+		pos = int(clause * self.number_of_ta_chunks * self.number_of_state_bits + ta_chunk * self.number_of_state_bits)
+
+		state = 0
+		for b in range(self.number_of_state_bits):
+			if self.clause_bank[pos + b] & (1 << chunk_pos) > 0:
+				state |= (1 << b)
+		
+		return state
+
+	def set_ta_state(self, clause, ta, state):
+		ta_chunk = ta // 32
+		chunk_pos = ta % 32
+
+		pos = int(clause * self.number_of_ta_chunks * self.number_of_state_bits + ta_chunk * self.number_of_state_bits)
+
+		for b in range(self.number_of_state_bits):
+			if state & (1 << b) > 0:
+				self.clause_bank[pos + b] |= (1 << chunk_pos)
+			else:
+				self.clause_bank[pos + b] &= (1 << chunk_pos)

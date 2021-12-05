@@ -83,8 +83,14 @@ class TMBasis():
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_patchwise(encoded_X[e,:])
 		return transformed_X.reshape((X.shape[0], self.number_of_clauses, self.number_of_patches))
 
-	def get_action(self, clause, ta):
-		return self.clause_bank.ta_action(clause, ta)
+	def get_ta_action(self, clause, ta):
+		return self.clause_bank.get_ta_action(clause, ta)
+
+	def get_ta_state(self, clause, ta):
+		return self.clause_bank.get_ta_state(clause, ta)
+
+	def set_ta_state(self, clause, ta, state):
+		return self.clause_bank.set_ta_state(clause, ta, state)
 
 class TMClassifier(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
@@ -202,11 +208,29 @@ class TMClassifier(TMBasis):
 		else:
 			return self.weight_banks[the_class].get_weights()[self.number_of_clauses//2 + clause]
 
-	def get_action(self, the_class, polarity, clause, ta):
+	def set_weight(self, the_class, polarity, clause, weight):
 		if polarity == 0:
-			return self.clause_banks[the_class].ta_action(clause, ta)
+			self.weight_banks[the_class].get_weights()[clause] = weight
 		else:
-			return self.clause_banks[the_class].ta_action(self.number_of_clauses//2 + clause, ta)
+			self.weight_banks[the_class].get_weights()[self.number_of_clauses//2 + clause] = weight
+
+	def get_ta_action(self, the_class, polarity, clause, ta):
+		if polarity == 0:
+			return self.clause_banks[the_class].get_ta_action(clause, ta)
+		else:
+			return self.clause_banks[the_class].get_ta_action(self.number_of_clauses//2 + clause, ta)
+
+	def get_ta_state(self, the_class, polarity, clause, ta):
+		if polarity == 0:
+			return self.clause_banks[the_class].get_ta_state(clause, ta)
+		else:
+			return self.clause_banks[the_class].get_ta_state(self.number_of_clauses//2 + clause, ta)
+
+	def set_ta_state(self, the_class, polarity, clause, ta, state):
+		if polarity == 0:
+			return self.clause_banks[the_class].set_ta_state(clause, ta, state)
+		else:
+			return self.clause_banks[the_class].set_ta_state(self.number_of_clauses//2 + clause, state)
 
 class TMCoalescedClassifier(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
@@ -306,6 +330,9 @@ class TMCoalescedClassifier(TMBasis):
 
 	def get_weight(self, the_class, clause):
 		return self.weight_banks[the_class].get_weights()[clause]
+
+	def set_weight(self, the_class, clause, weight):
+		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMOneVsOneClassifier(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
@@ -416,7 +443,6 @@ class TMOneVsOneClassifier(TMBasis):
 				positive_clause_outputs = (weights >= 0)[:,np.newaxis].transpose() * clause_outputs
 				true_positive_clause_outputs = positive_clause_outputs[Y==the_class].sum(axis=0)
 				recall[i] =	true_positive_clause_outputs / Y[Y==the_class].shape[0]
-
 			else:
 				positive_clause_outputs = (weights < 0)[:,np.newaxis].transpose() * clause_outputs
 				true_positive_clause_outputs = positive_clause_outputs[Y==other_class].sum(axis=0)
@@ -425,6 +451,9 @@ class TMOneVsOneClassifier(TMBasis):
 
 	def get_weight(self, output, clause):
 		return self.weight_banks[output].get_weights()[clause]
+
+	def set_weight(self, output, weight):
+		self.weight_banks[output].get_weights()[output] = weight
 
 class TMRegressor(TMBasis):
 	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
@@ -480,3 +509,7 @@ class TMRegressor(TMBasis):
 
 	def get_weight(self, clause):
 		return self.weight_bank.get_weights()[clause]
+
+	def set_weight(self, clause, weight):
+		self.weight_banks.get_weights()[clause] = weight
+
