@@ -240,15 +240,6 @@ class TMCoalescedClassifier(TMBasis):
 
 		self.number_of_classes = int(np.max(Y) + 1)
 
-		if self.platform == 'CPU':
-			self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
-		elif self.platform == 'CUDA':
-			from tmu.clause_bank_cuda import ClauseBankCUDA
-			self.clause_bank = ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
-		else:
-			print("Unknown Platform")
-			sys.exit(-1)
-
 		self.weight_banks = []
 		for i in range(self.number_of_classes):
 			self.weight_banks.append(WeightBank(np.ones(self.number_of_clauses).astype(np.int32)))
@@ -260,7 +251,7 @@ class TMCoalescedClassifier(TMBasis):
 
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
-		
+
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 
 		for e in range(X.shape[0]):
@@ -293,11 +284,21 @@ class TMCoalescedClassifier(TMBasis):
 
 	def predict(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		if self.platform == 'GPU':
+			print("Copying")
+			encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
+			cuda.memcpy_htod(encoded_X_gpu, encoded_X)
+			print("Finished")
+
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
 			max_class = 0
-			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X[e,:])
+			if self.platform == 'GPU':
+				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(gpu_encoded_X, e)
+			else:
+				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X[e,:])
+			
 			for i in range(self.number_of_classes):
 				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)

@@ -33,7 +33,7 @@ from pycuda.compiler import SourceModule
 import tmu.clause_bank_cuda_kernels as kernels
 
 class ClauseBankCUDA():
-	def __init__(self, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches):
+	def __init__(self, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, X, Y):
 		print("Platform: CUDA")
 
 		self.number_of_clauses = int(number_of_clauses)
@@ -70,9 +70,10 @@ class ClauseBankCUDA():
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
-	def calculate_clause_outputs_predict(self, Xi):
-		xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
-		lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
+	def calculate_clause_outputs_predict(self, X, e):
+		#xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
+		#lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
+		
 		return self.clause_output
 
 	def calculate_clause_outputs_update(self, Xi):
