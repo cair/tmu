@@ -312,9 +312,7 @@ class TMCoalescedClassifier(TMBasis):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		if self.platform == 'CUDA':
 			self.clause_bank.copy_X(encoded_X)
-			#self.clause_bank.copy_clause_bank()
 
-		start_time = time()		
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
@@ -331,8 +329,6 @@ class TMCoalescedClassifier(TMBasis):
 					max_class_sum = class_sum
 					max_class = i
 			Y[e] = max_class
-		stop_time = time()
-		print(stop_time - start_time)
 		return Y
 
 	def clause_precision(self, the_class, positive_polarity, X, Y):
