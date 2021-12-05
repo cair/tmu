@@ -160,10 +160,10 @@ class TMClassifier(TMBasis):
 				not_target = np.random.randint(self.number_of_classes)
 
 			if self.platform == 'CUDA':
-				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(e)
+				clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(e)
 			else:
-				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(encoded_X[e,:])
-			class_sum = np.dot(clause_active[target] * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
+				clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(encoded_X[e,:])
+			class_sum = np.dot(clause_active[not_target] * self.weight_banks[not_target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
 			update_p = (self.T + class_sum)/(2*self.T)
