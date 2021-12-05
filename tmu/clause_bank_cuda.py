@@ -70,7 +70,7 @@ class ClauseBankCUDA():
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
-	def calculate_clause_outputs_predict(self, X, e):
+	def calculate_clause_outputs_predict(self, e):
 		#xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
 		#lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
 		
@@ -121,4 +121,8 @@ class ClauseBankCUDA():
 				self.clause_bank[pos + b] |= (1 << chunk_pos)
 			else:
 				self.clause_bank[pos + b] &= (1 << chunk_pos)
+
+	def copy_X(self, encoded_X):
+		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
+		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
 
