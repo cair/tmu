@@ -127,7 +127,7 @@ code_clause_feedback = """
 		}
 
 		/* Calculate the output of each clause using the actions of each Tsetline Automaton. */
-		__device__ inline void cb_calculate_clause_output_feedback(unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+		__device__ inline void calculate_clause_output_feedback(unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
 		{
 			int output_one_patches_count = 0;
 			for (int patch = 0; patch < number_of_patches; ++patch) {
@@ -155,17 +155,22 @@ code_clause_feedback = """
 			if (output_one_patches_count > 0) {
 				*clause_output = 1;
 
-				int patch_id = fast_rand() % output_one_patches_count;
+				int patch_id = curand(localState) % output_one_patches_count;
 		 		*clause_patch = output_one_patches[patch_id];
 			} else {
 				*clause_output = 0;
 			}
 		}
 
-		__global__ cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *Xi)
+		__global__ type_i_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
+
+			/* Copy state to local memory for efficiency */  
+			curandState localState = state[index];
+
+			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
 			unsigned int filter;
 			if (((number_of_features) % 32) != 0) {
@@ -176,7 +181,7 @@ code_clause_feedback = """
 			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
 
 			for (int j = index; j < number_of_clauses; j += stride) {
-				if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
+				if ((curand_uniform(localState) > update_p) || (!clause_active[j])) {
 					continue;
 				}
 
@@ -185,22 +190,28 @@ code_clause_feedback = """
 				unsigned int clause_output;
 				unsigned int clause_patch;
 
-				cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
-
-				cb_initialize_random_streams(feedback_to_ta, number_of_features, number_of_ta_chunks, s);
+				calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 
 				if (clause_output) {
 					// Type Ia Feedback
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
+						// Generate random bit values
+						unsigned int feedback_to_ta = 0;
+						for (int b = 0; b < INT_SIZE; ++b) {
+							if (curand_uniform(localState) <= 1.0/s) {
+								la_feedback |= (1 << b);
+							}
+						}
+
 						unsigned int ta_pos = k*number_of_state_bits;
 
 						if (boost_true_positive_feedback == 1) {
-			 				cb_inc(&ta_state[clause_pos + ta_pos], Xi[clause_patch*number_of_ta_chunks + k], number_of_state_bits);
+			 				inc(&ta_state[clause_pos + ta_pos], Xi[clause_patch*number_of_ta_chunks + k], number_of_state_bits);
 						} else {
-							cb_inc(&ta_state[clause_pos + ta_pos], Xi[clause_patch*number_of_ta_chunks + k] & (~feedback_to_ta[k]), number_of_state_bits);
+							inc(&ta_state[clause_pos + ta_pos], Xi[clause_patch*number_of_ta_chunks + k] & (~feedback_to_ta), number_of_state_bits);
 						}
 
-			 			cb_dec(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta[k], number_of_state_bits);
+			 			dec(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta, number_of_state_bits);
 					}
 				} else {
 					// Type Ib Feedback
@@ -208,16 +219,23 @@ code_clause_feedback = """
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
 						unsigned int ta_pos = k*number_of_state_bits;
 
-						cb_dec(&ta_state[clause_pos + ta_pos], feedback_to_ta[k], number_of_state_bits);
+						dec(&ta_state[clause_pos + ta_pos], feedback_to_ta, number_of_state_bits);
 					}
 				}
 			}
+
+			state[index] = localState;
 		}
 
-		__global__ cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *Xi)
+		__global__ type_ii_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
+
+			/* Copy state to local memory for efficiency */  
+			curandState localState = state[index];
+
+			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
 			unsigned int filter;
 			if (((number_of_features) % 32) != 0) {
@@ -228,7 +246,7 @@ code_clause_feedback = """
 			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
 
 			for (int j = index; j < number_of_clauses; j += stride) {
-				if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
+				if ((curand_uniform(localState) > update_p) || (!clause_active[j])) {
 					continue;
 				}
 
@@ -236,15 +254,17 @@ code_clause_feedback = """
 
 				unsigned int clause_output;
 				unsigned int clause_patch;
-				cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+				calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 
 				if (clause_output) {				
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
 						unsigned int ta_pos = k*number_of_state_bits;
-						cb_inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
+						inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
 					}
 				}
 			}
+
+			state[index] = localState;
 		}
     }
 """

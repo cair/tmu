@@ -58,6 +58,7 @@ class ClauseBankCUDA():
 
 		self.output_one_patches = np.ascontiguousarray(np.empty(self.number_of_patches, dtype=np.uint32))
 		self.o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
+		self.output_one_patches_gpu = cuda.mem_alloc(self.output_one_patches.nbytes)
 
 		mod = SourceModule(kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
 		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
@@ -66,6 +67,12 @@ class ClauseBankCUDA():
 		mod = SourceModule(kernels.code_calculate_clause_outputs_update, no_extern_c=True)
 		self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
 		self.calculate_clause_outputs_update_gpu.prepare("PiiiiPPi")
+
+		mod = SourceModule(kernels.code_clause_feedback, no_extern_c=True)
+		self.type_i_feedback_gpu = mod.get_function("type_i_feedback")
+		self.type_i_feedback_gpu.prepare("PPPiiiiffiPPi")
+		self.type_ii_feedback_gpu = mod.get_function("type_ii_feedback")
+		self.type_ii_feedback_gpu.prepare("PPPiiiifPPi")
 		
 		self.initialize_clauses()
 
