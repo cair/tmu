@@ -36,6 +36,9 @@ class ClauseBankCUDA():
 	def __init__(self, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, X, Y):
 		print("Platform: CUDA")
 
+		self.grid = (16*13,1,1)
+		self.block = (128,1,1)
+
 		self.number_of_clauses = int(number_of_clauses)
 		self.number_of_literals = int(number_of_literals)
 		self.number_of_state_bits = int(number_of_state_bits)
@@ -45,6 +48,7 @@ class ClauseBankCUDA():
 
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 		self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
+		self.clause_output_gpu = cuda.mem_alloc(self.clause_output.nbytes)
 
 		self.clause_output_patchwise = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
 		self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
@@ -74,6 +78,9 @@ class ClauseBankCUDA():
 		#xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
 		#lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
 		
+		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+		cuda.Context.synchronize()
+
 		return self.clause_output
 
 	def calculate_clause_outputs_update(self, Xi):
@@ -125,4 +132,5 @@ class ClauseBankCUDA():
 	def copy_X(self, encoded_X):
 		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
 		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
+		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 
