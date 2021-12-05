@@ -298,6 +298,7 @@ class TMCoalescedClassifier(TMBasis):
 			self.clause_bank.copy_X(encoded_X)
 			print("Finished")
 
+		start_time = time()		
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
@@ -314,6 +315,8 @@ class TMCoalescedClassifier(TMBasis):
 					max_class_sum = class_sum
 					max_class = i
 			Y[e] = max_class
+		stop_time = time()
+		print(stop_time - start_time)
 		return Y
 
 	def clause_precision(self, the_class, positive_polarity, X, Y):
