@@ -108,7 +108,7 @@ class ClauseBankCUDA():
 
 	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, clause_active, e):
 		cuda.memcpy_htod(self.clause_active_gpu, clause_active)
-		self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.output_one_patches_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, s, boost_true_positive_feedback, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
+		self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.output_one_patches_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, np.float32(update_p), np.float32(s), boost_true_positive_feedback, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
 		#xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
 		#ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
