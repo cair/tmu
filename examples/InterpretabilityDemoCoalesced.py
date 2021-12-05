@@ -20,6 +20,8 @@ tm = TMCoalescedClassifier(clauses, T, s, platform='CUDA', boost_true_positive_f
 for i in range(20):
 	tm.fit(X_train, Y_train)
 
+gtt
+
 precision = []
 recall = []
 for i in range(2):

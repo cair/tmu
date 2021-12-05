@@ -77,6 +77,178 @@ code_calculate_clause_outputs_predict = """
 	}
 """
 
+code_clause_feedback = """
+	#include <curand_kernel.h>
+
+	extern "C"
+    {
+    	// Increment the states of each of those 32 Tsetlin Automata flagged in the active bit vector.
+		__device__ inline void inc(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
+		{
+			unsigned int carry, carry_next;
+
+			carry = active;
+			for (int b = 0; b < number_of_state_bits; ++b) {
+				if (carry == 0)
+					break;
+
+				carry_next = ta_state[b] & carry; // Sets carry bits (overflow) passing on to next bit
+				ta_state[b] = ta_state[b] ^ carry; // Performs increments with XOR
+				carry = carry_next;
+			}
+
+			if (carry > 0) {
+				for (int b = 0; b < number_of_state_bits; ++b) {
+					ta_state[b] |= carry;
+				}
+			} 	
+		}
+
+		// Decrement the states of each of those 32 Tsetlin Automata flagged in the active bit vector.
+		__device__ inline void dec(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
+		{
+			unsigned int carry, carry_next;
+
+			carry = active;
+			for (int b = 0; b < number_of_state_bits; ++b) {
+				if (carry == 0)
+					break;
+
+				carry_next = (~ta_state[b]) & carry; // Sets carry bits (overflow) passing on to next bit
+				ta_state[b] = ta_state[b] ^ carry; // Performs increments with XOR
+				carry = carry_next;
+			}
+
+			if (carry > 0) {
+				for (int b = 0; b < number_of_state_bits; ++b) {
+					ta_state[b] &= ~carry;
+				}
+			} 
+		}
+
+		/* Calculate the output of each clause using the actions of each Tsetline Automaton. */
+		__device__ inline void cb_calculate_clause_output_feedback(unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+		{
+			int output_one_patches_count = 0;
+			for (int patch = 0; patch < number_of_patches; ++patch) {
+				unsigned int output = 1;
+				for (int k = 0; k < number_of_ta_chunks-1; k++) {
+					unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+					output = output && (ta_state[pos] & Xi[patch*number_of_ta_chunks + k]) == ta_state[pos];
+
+					if (!output) {
+						break;
+					}
+				}
+
+				unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+				output = output &&
+					(ta_state[pos] & Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] & filter) ==
+					(ta_state[pos] & filter);
+
+				if (output) {
+					output_one_patches[output_one_patches_count] = patch;
+					output_one_patches_count++;
+				}
+			}
+
+			if (output_one_patches_count > 0) {
+				*clause_output = 1;
+
+				int patch_id = fast_rand() % output_one_patches_count;
+		 		*clause_patch = output_one_patches[patch_id];
+			} else {
+				*clause_output = 0;
+			}
+		}
+
+		__global__ cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *Xi)
+		{
+			int index = blockIdx.x * blockDim.x + threadIdx.x;
+			int stride = blockDim.x * gridDim.x;
+
+			unsigned int filter;
+			if (((number_of_features) % 32) != 0) {
+				filter  = (~(0xffffffff << ((number_of_features) % 32)));
+			} else {
+				filter = 0xffffffff;
+			}
+			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+
+			for (int j = index; j < number_of_clauses; j += stride) {
+				if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
+					continue;
+				}
+
+				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
+
+				unsigned int clause_output;
+				unsigned int clause_patch;
+
+				cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+
+				cb_initialize_random_streams(feedback_to_ta, number_of_features, number_of_ta_chunks, s);
+
+				if (clause_output) {
+					// Type Ia Feedback
+					for (int k = 0; k < number_of_ta_chunks; ++k) {
+						unsigned int ta_pos = k*number_of_state_bits;
+
+						if (boost_true_positive_feedback == 1) {
+			 				cb_inc(&ta_state[clause_pos + ta_pos], Xi[clause_patch*number_of_ta_chunks + k], number_of_state_bits);
+						} else {
+							cb_inc(&ta_state[clause_pos + ta_pos], Xi[clause_patch*number_of_ta_chunks + k] & (~feedback_to_ta[k]), number_of_state_bits);
+						}
+
+			 			cb_dec(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta[k], number_of_state_bits);
+					}
+				} else {
+					// Type Ib Feedback
+						
+					for (int k = 0; k < number_of_ta_chunks; ++k) {
+						unsigned int ta_pos = k*number_of_state_bits;
+
+						cb_dec(&ta_state[clause_pos + ta_pos], feedback_to_ta[k], number_of_state_bits);
+					}
+				}
+			}
+		}
+
+		__global__ cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *Xi)
+		{
+			int index = blockIdx.x * blockDim.x + threadIdx.x;
+			int stride = blockDim.x * gridDim.x;
+
+			unsigned int filter;
+			if (((number_of_features) % 32) != 0) {
+				filter  = (~(0xffffffff << ((number_of_features) % 32)));
+			} else {
+				filter = 0xffffffff;
+			}
+			unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+
+			for (int j = index; j < number_of_clauses; j += stride) {
+				if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
+					continue;
+				}
+
+				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
+
+				unsigned int clause_output;
+				unsigned int clause_patch;
+				cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+
+				if (clause_output) {				
+					for (int k = 0; k < number_of_ta_chunks; ++k) {
+						unsigned int ta_pos = k*number_of_state_bits;
+						cb_inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
+					}
+				}
+			}
+		}
+    }
+"""
+
 code_calculate_clause_outputs_update = """
 	#include <curand_kernel.h>
 
