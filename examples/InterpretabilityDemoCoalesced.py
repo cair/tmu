@@ -17,15 +17,21 @@ Y_test = np.logical_xor(X_test[:,0], X_test[:,1]).astype(dtype=np.uint32)
 
 tm = TMCoalescedClassifier(clauses, T, s, boost_true_positive_feedback=0)
 
-for i in range(200):
+for i in range(20):
 	tm.fit(X_train, Y_train)
 
-print("ACCURACY:", 100*(tm.predict(X_test) == Y_test).mean())
+precision = []
+recall = []
+for i in range(2):
+	precision.append((tm.clause_precision(i, 0, X_test, Y_test), tm.clause_precision(i, 1, X_test, Y_test)))
+	recall.append((tm.clause_recall(i, 0, X_test, Y_test), tm.clause_recall(i, 1, X_test, Y_test)))
+	
+print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
 
-print("\nCLAUSES:\n")
+print("\nClauses:\n")
 
 for j in range(clauses):
-	print("Clause #%d: " % (j), end=' ')
+	print("Clause #%d " % (j), end=' ')
 	l = []
 	for k in range(number_of_features*2):
 		if tm.get_action(j, k) == 1:
@@ -36,4 +42,8 @@ for j in range(clauses):
 	print(" ∧ ".join(l))
 
 	for i in range(2):
-		print("\tClass: %d Weight: %+2d " % (i, tm.get_weight(i, j)))
+		print(i, j, tm.get_weight(i, j), int(tm.get_weight(i, j) < 0))
+		print("\tC:%d W:%+2d P:%.2f R:%.2f" % (i, tm.get_weight(i, j), precision[i][int(tm.get_weight(i, j) < 0)][j], recall[i][int(tm.get_weight(i, j) < 0)][j]))
+
+print("\nClause Co-Occurence Matrix:\n")
+print(tm.clause_co_occurrence(X_test, percentage=True).toarray())
