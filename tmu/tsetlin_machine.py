@@ -303,7 +303,7 @@ class TMCoalescedClassifier(TMBasis):
 			max_class_sum = -self.T
 			max_class = 0
 			if self.platform == 'CUDA':
-				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(e, self.get)
+				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(e)
 			else:
 				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X[e,:])
 			
