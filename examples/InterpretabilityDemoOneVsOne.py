@@ -33,7 +33,7 @@ for j in range(clauses):
 	print("Clause #%d " % (j), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_action(j, k) == 1:
+		if tm.get_ta_action(j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
