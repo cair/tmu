@@ -107,6 +107,7 @@ class TMClassifier(TMBasis):
 		for i in range(self.number_of_classes):
 			self.weight_banks.append(WeightBank(np.concatenate((np.ones(self.number_of_clauses//2, dtype=np.int32), -1*np.ones(self.number_of_clauses//2, dtype=np.int32)))))
 			if self.platform == 'CUDA':
+				from tmu.clause_bank_cuda import ClauseBankCUDA
 				self.clause_banks.append(ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, X, Y))
 			elif self.platform == 'CPU':
 				self.clause_banks.append(ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches))
