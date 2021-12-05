@@ -28,6 +28,8 @@ from tmu.clause_bank import ClauseBank
 from tmu.weight_bank import WeightBank
 from scipy.sparse import csr_matrix
 
+from time import time
+
 class TMBasis():
 	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
