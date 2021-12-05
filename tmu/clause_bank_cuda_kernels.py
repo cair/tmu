@@ -71,7 +71,7 @@ code_calculate_clause_outputs_predict = """
 
 			for (int j = index; j < number_of_clauses; j += stride) {
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
-				clause_output[j] = calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, &X[example*(number_of_ta_chunks*number_of_patches)]);
+				clause_output[j] = calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, &X[e*(number_of_ta_chunks*number_of_patches)]);
 			}
 		}
 	}
