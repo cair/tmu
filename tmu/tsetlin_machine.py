@@ -282,8 +282,13 @@ class TMCoalescedClassifier(TMBasis):
 
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), encoded_X[e,:])
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), encoded_X[e,:])
+			if self.platform == 'CUDA':
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), e)
+				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), e)
+			else:
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), encoded_X[e,:])
+				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), encoded_X[e,:])
+	
 			self.weight_banks[target].increment(clause_outputs, update_p, clause_active, True)
 
 			not_target = np.random.randint(self.number_of_classes)
@@ -295,8 +300,13 @@ class TMCoalescedClassifier(TMBasis):
 			
 			update_p = (self.T + class_sum)/(2*self.T)
 		
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), encoded_X[e,:])
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), encoded_X[e,:])
+			if self.platform == 'CUDA':
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), e)
+				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), e)
+			else:
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), encoded_X[e,:])
+				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), encoded_X[e,:])
+	
 			self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active, True)
 		return
 
