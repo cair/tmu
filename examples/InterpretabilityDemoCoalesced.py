@@ -20,12 +20,6 @@ tm = TMCoalescedClassifier(clauses, T, s, boost_true_positive_feedback=0)
 for i in range(20):
 	tm.fit(X_train, Y_train)
 
-for j in range(4):
-	for k in range(number_of_features*2):
-		print(tm.get_ta_state(j, k))
-		tm.set_ta_state(j, k, 255)
-		print(tm.get_ta_state(j, k))
-
 precision = []
 recall = []
 for i in range(2):
