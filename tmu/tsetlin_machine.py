@@ -303,7 +303,6 @@ class TMCoalescedClassifier(TMBasis):
 	def clause_precision(self, the_class, positive_polarity, X, Y):
 		clause_outputs = self.transform(X)
 		weights = self.weight_banks[the_class].get_weights()
-
 		if positive_polarity == 0:
 			positive_clause_outputs = (weights >= 0)[:,np.newaxis].transpose() * clause_outputs
 			true_positive_clause_outputs = clause_outputs[Y==the_class].sum(axis=0)
