@@ -106,7 +106,14 @@ class TMClassifier(TMBasis):
 		self.weight_banks = []
 		for i in range(self.number_of_classes):
 			self.weight_banks.append(WeightBank(np.concatenate((np.ones(self.number_of_clauses//2, dtype=np.int32), -1*np.ones(self.number_of_clauses//2, dtype=np.int32)))))
-			self.clause_banks.append(ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches))
+			if platform == 'CUDA':
+				self.clause_banks.append(ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, X, Y))
+			elif platform == 'CPU':
+				self.clause_banks.append(ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches))
+			else:
+				print("Unknown Platform")
+				sys.exit(-1)
+
 		self.positive_clauses = np.concatenate((np.ones(self.number_of_clauses//2, dtype=np.int32), np.zeros(self.number_of_clauses//2, dtype=np.int32)))
 		self.negative_clauses = np.concatenate((np.zeros(self.number_of_clauses//2, dtype=np.int32), np.ones(self.number_of_clauses//2, dtype=np.int32)))
 
@@ -116,8 +123,10 @@ class TMClassifier(TMBasis):
 			self.initialized = True
 
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		if self.platform == 'CUDA':
+			self.clause_bank.copy_X(encoded_X)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
-		
+	
 		clause_active = []
 		for i in range(self.number_of_classes):
 			clause_active.append(np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32)))
@@ -125,7 +134,10 @@ class TMClassifier(TMBasis):
 		for e in range(X.shape[0]):
 			target = Ym[e]
 
-			clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(encoded_X[e,:])
+			if platform == 'CUDA':
+				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(e)
+			else:
+				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(encoded_X[e,:])
 			class_sum = np.dot(clause_active[target] * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
@@ -134,14 +146,21 @@ class TMClassifier(TMBasis):
 			if self.weighted_clauses:
 				self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
 
-			self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, encoded_X[e,:])
-			self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, encoded_X[e,:])
-
+			if platform == 'CUDA':
+				self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, e)
+				self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, e)
+			else:
+				self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, encoded_X[e,:])
+				self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, encoded_X[e,:])
+	
 			not_target = np.random.randint(self.number_of_classes)
 			while not_target == target:
 				not_target = np.random.randint(self.number_of_classes)
 
-			clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(encoded_X[e,:])
+			if platform == 'CUDA':
+				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(e)
+			else:
+				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(encoded_X[e,:])
 			class_sum = np.dot(clause_active[target] * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
@@ -150,18 +169,28 @@ class TMClassifier(TMBasis):
 			if self.weighted_clauses:
 				self.weight_banks[not_target].decrement(positive_clause_outputs, update_p, clause_active[not_target], False)			
 
-			self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, encoded_X[e,:])
-			self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, encoded_X[e,:])			
+			if platform == 'CUDA':
+				self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, e)
+				self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, e)
+			else:
+				self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, encoded_X[e,:])
+				self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, encoded_X[e,:])			
 		return
 
 	def predict(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		if self.platform == 'CUDA':
+			self.clause_bank.copy_X(encoded_X)
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
+
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
-				class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(encoded_X[e,:])).astype(np.int32)
+				if platform == 'CUDA':
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(e)).astype(np.int32)
+				else:
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(encoded_X[e,:])).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
 				if class_sum > max_class_sum:
 					max_class_sum = class_sum
