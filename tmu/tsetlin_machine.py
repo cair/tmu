@@ -293,7 +293,7 @@ class TMCoalescedClassifier(TMBasis):
 
 	def predict(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
-		if self.platform == 'GPU':
+		if self.platform == 'CUDA':
 			print("Copying")
 			encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
 			cuda.memcpy_htod(encoded_X_gpu, encoded_X)
@@ -303,7 +303,7 @@ class TMCoalescedClassifier(TMBasis):
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
 			max_class = 0
-			if self.platform == 'GPU':
+			if self.platform == 'CUDA':
 				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(gpu_encoded_X, e)
 			else:
 				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X[e,:])
