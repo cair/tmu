@@ -75,7 +75,7 @@ class ClauseBankCUDA():
 
 		mod = SourceModule(parameters + kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
 		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
-		self.calculate_clause_outputs_predict_gpu.prepare("PiiiiPPi")
+		self.calculate_clause_outputs_predict_gpu.prepare("PiiiPPi")
 
 		mod = SourceModule(kernels.code_calculate_clause_outputs_update, no_extern_c=True)
 		self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
@@ -99,7 +99,7 @@ class ClauseBankCUDA():
 		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
 	def calculate_clause_outputs_predict(self, e):
-		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
 		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output

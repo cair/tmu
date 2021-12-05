@@ -26,9 +26,9 @@ code_calculate_clause_outputs_predict = """
 
 	extern "C"
     {
-		__device__ inline unsigned int calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+		__device__ inline unsigned int calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, unsigned int *Xi)
 		{
-			for (int patch = 0; patch < number_of_patches; ++patch) {
+			for (int patch = 0; patch < NUMBER_OF_PATCHES; ++patch) {
 				unsigned int output = 1;
 				unsigned int all_exclude = 1;
 				for (int k = 0; k < number_of_ta_chunks-1; k++) {
@@ -56,7 +56,7 @@ code_calculate_clause_outputs_predict = """
 			return(0);
 		}
 
-		__global__ void calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *X, int e)
+		__global__ void calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, unsigned int *clause_output, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -71,7 +71,7 @@ code_calculate_clause_outputs_predict = """
 
 			for (int j = index; j < number_of_clauses; j += stride) {
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
-				clause_output[j] = calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, &X[e*(number_of_ta_chunks*number_of_patches)]);
+				clause_output[j] = calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &X[e*(number_of_ta_chunks*NUMBER_OF_PATCHES)]);
 			}
 		}
 	}
@@ -215,7 +215,7 @@ code_clause_feedback = """
 		 				dec(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta, number_of_state_bits);
 					} else {
 						// Type Ib Feedback
-						
+
 						dec(&ta_state[clause_pos + ta_pos], feedback_to_ta, number_of_state_bits);
 					}
 				}
