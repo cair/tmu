@@ -73,7 +73,7 @@ class ClauseBankCUDA():
 
 		mod = SourceModule(parameters + kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
 		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
-		self.calculate_clause_outputs_predict_gpu.prepare("PiiiPPi")
+		self.calculate_clause_outputs_predict_gpu.prepare("PPPi")
 
 		mod = SourceModule(kernels.code_calculate_clause_outputs_update, no_extern_c=True)
 		self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
