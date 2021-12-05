@@ -125,7 +125,8 @@ class TMClassifier(TMBasis):
 
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		if self.platform == 'CUDA':
-			self.clause_bank.copy_X(encoded_X)
+			for i in range(self.number_of_classes):
+				self.clause_banks[i].copy_X(encoded_X)
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 	
 		clause_active = []
@@ -181,7 +182,8 @@ class TMClassifier(TMBasis):
 	def predict(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		if self.platform == 'CUDA':
-			self.clause_bank.copy_X(encoded_X)
+			for i in range(self.number_of_classes):
+				self.clause_banks[i].copy_X(encoded_X)
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
 
 		for e in range(X.shape[0]):
