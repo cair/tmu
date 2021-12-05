@@ -82,7 +82,7 @@ class ClauseBankCUDA():
 		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
 
-		#cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
+		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 
 		return self.clause_output
 
