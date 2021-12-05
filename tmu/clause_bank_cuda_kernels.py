@@ -181,7 +181,7 @@ code_clause_feedback = """
 			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
 			for (int j = index; j < number_of_clauses; j += stride) {
-				if ((curand_uniform(localState) > update_p) || (!clause_active[j])) {
+				if ((curand_uniform(&localState) > update_p) || (!clause_active[j])) {
 					continue;
 				}
 
@@ -198,7 +198,7 @@ code_clause_feedback = """
 						// Generate random bit values
 						unsigned int feedback_to_ta = 0;
 						for (int b = 0; b < 32; ++b) {
-							if (curand_uniform(localState) <= 1.0/s) {
+							if (curand_uniform(&localState) <= 1.0/s) {
 								feedback_to_ta |= (1 << b);
 							}
 						}
@@ -246,7 +246,7 @@ code_clause_feedback = """
 			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
 			for (int j = index; j < number_of_clauses; j += stride) {
-				if ((curand_uniform(localState) > update_p) || (!clause_active[j])) {
+				if ((curand_uniform(&localState) > update_p) || (!clause_active[j])) {
 					continue;
 				}
 
