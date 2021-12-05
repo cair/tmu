@@ -106,9 +106,9 @@ class TMClassifier(TMBasis):
 		self.weight_banks = []
 		for i in range(self.number_of_classes):
 			self.weight_banks.append(WeightBank(np.concatenate((np.ones(self.number_of_clauses//2, dtype=np.int32), -1*np.ones(self.number_of_clauses//2, dtype=np.int32)))))
-			if platform == 'CUDA':
+			if self.platform == 'CUDA':
 				self.clause_banks.append(ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, X, Y))
-			elif platform == 'CPU':
+			elif self.platform == 'CPU':
 				self.clause_banks.append(ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches))
 			else:
 				print("Unknown Platform")
@@ -134,7 +134,7 @@ class TMClassifier(TMBasis):
 		for e in range(X.shape[0]):
 			target = Ym[e]
 
-			if platform == 'CUDA':
+			if self.platform == 'CUDA':
 				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(e)
 			else:
 				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(encoded_X[e,:])
@@ -146,7 +146,7 @@ class TMClassifier(TMBasis):
 			if self.weighted_clauses:
 				self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
 
-			if platform == 'CUDA':
+			if self.platform == 'CUDA':
 				self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, e)
 				self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, e)
 			else:
@@ -157,7 +157,7 @@ class TMClassifier(TMBasis):
 			while not_target == target:
 				not_target = np.random.randint(self.number_of_classes)
 
-			if platform == 'CUDA':
+			if self.platform == 'CUDA':
 				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(e)
 			else:
 				clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(encoded_X[e,:])
@@ -169,7 +169,7 @@ class TMClassifier(TMBasis):
 			if self.weighted_clauses:
 				self.weight_banks[not_target].decrement(positive_clause_outputs, update_p, clause_active[not_target], False)			
 
-			if platform == 'CUDA':
+			if self.platform == 'CUDA':
 				self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, e)
 				self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, e)
 			else:
@@ -187,7 +187,7 @@ class TMClassifier(TMBasis):
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
-				if platform == 'CUDA':
+				if self.platform == 'CUDA':
 					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(e)).astype(np.int32)
 				else:
 					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(encoded_X[e,:])).astype(np.int32)
