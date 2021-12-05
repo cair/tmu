@@ -97,7 +97,7 @@ class ClauseBankCUDA():
 		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
 	def calculate_clause_outputs_predict(self, e):
-		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
 		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output
