@@ -134,5 +134,7 @@ class ClauseBankCUDA():
 	def copy_X(self, encoded_X):
 		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
 		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
+
+	def copy_clause_bank(self):
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 
