@@ -38,7 +38,7 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 f = open("cifar10_1vs1_%.1f_%d_%d_%d.txt" % (s, clauses, T,  patch_size), "w+")
 
 for e in range(ensembles):
-        tm = TMOneVsOneClassifier(clauses, T, s, (patch_size, patch_size), number_of_state_bits=number_of_state_bits)
+        tm = TMOneVsOneClassifier(clauses, T, s, (patch_size, patch_size), platform='CUDA', number_of_state_bits=number_of_state_bits)
 
         for i in range(epochs):
                 start_training = time()
