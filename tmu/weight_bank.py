@@ -32,10 +32,10 @@ class WeightBank():
 		self.weights = np.ascontiguousarray(weights, dtype=np.int32)
 		self.cw_p = ffi.cast("int *", self.weights.ctypes.data)
 
-	def increment(self, clause_output, update_p, clause_active):
+	def increment(self, clause_output, update_p, clause_active, positive_weights):
 		co_p = ffi.cast("unsigned int *", clause_output.ctypes.data)
 		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
-		lib.wb_increment(self.cw_p, self.number_of_clauses, co_p, update_p, ca_p)
+		lib.wb_increment(self.cw_p, self.number_of_clauses, co_p, update_p, ca_p, int(positive_weights))
 
 	def decrement(self, clause_output, update_p, clause_active, negative_weights):
 		co_p = ffi.cast("unsigned int *", clause_output.ctypes.data)

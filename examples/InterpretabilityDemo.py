@@ -19,13 +19,15 @@ for i in range(20):
 
 print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
 
+np.set_printoptions(threshold=np.inf, linewidth=200, precision=2, suppress=True)
+
 print("\nClass 0 Positive Clauses:\n")
 
 precision = tm.clause_precision(0, 0, X_test, Y_test)
 recall = tm.clause_recall(0, 0, X_test, Y_test)
 
 for j in range(5):
-	print("Clause #%d (%d) %.2f/%.2f: " % (j, tm.get_weight(0, 0, j), precision[j], recall[j]), end=' ')
+	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 0, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
 		if tm.get_action(0, 0, j, k) == 1:
@@ -41,7 +43,7 @@ precision = tm.clause_precision(0, 1, X_test, Y_test)
 recall = tm.clause_recall(0, 1, X_test, Y_test)
 
 for j in range(5):
-	print("Clause #%d (%d) %.2f/%.2f: " % (j, tm.get_weight(0, 1, j), precision[j], recall[j]), end=' ')
+	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 1, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
 		if tm.get_action(0, 1, j, k) == 1:
@@ -57,7 +59,7 @@ precision = tm.clause_precision(1, 0, X_test, Y_test)
 recall = tm.clause_recall(1, 0, X_test, Y_test)
 
 for j in range(5):
-	print("Clause #%d (%d) %.2f/%.2f: " % (j, tm.get_weight(1, 0, j), precision[j], recall[j]), end=' ')
+	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 0, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
 		if tm.get_action(1, 0, j, k) == 1:
@@ -73,7 +75,7 @@ precision = tm.clause_precision(1, 1, X_test, Y_test)
 recall = tm.clause_recall(1, 1, X_test, Y_test)
 
 for j in range(5):
-	print("Clause #%d (%d) %.2f/%.2f: " % (j, tm.get_weight(1, 1, j), precision[j], recall[j]), end=' ')
+	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 1, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
 		if tm.get_action(1, 1, j, k) == 1:
@@ -82,3 +84,6 @@ for j in range(5):
 			else:
 				l.append("¬x%d" % (k-number_of_features))
 	print(" ∧ ".join(l))
+
+print()
+print(tm.clause_co_occurrence(X_test, percentage=True).toarray())

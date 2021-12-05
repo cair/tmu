@@ -25,6 +25,6 @@ https://arxiv.org/abs/1905.09688
 
 */
 
-void wb_increment(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active);
+void wb_increment(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active, unsigned int positive_weights);
 
 void wb_decrement(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active, unsigned int negative_weights);
