@@ -369,7 +369,7 @@ class TMCoalescedClassifier(TMBasis):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMOneVsOneClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		super().__init__(number_of_clauses, T, s, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
