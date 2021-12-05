@@ -268,7 +268,7 @@ class TMCoalescedClassifier(TMBasis):
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 		for e in range(X.shape[0]):
-			self.clause_bank.copy_clause_bank()
+			#self.clause_bank.copy_clause_bank()
 
 			target = Ym[e]
 
@@ -314,7 +314,7 @@ class TMCoalescedClassifier(TMBasis):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		if self.platform == 'CUDA':
 			self.clause_bank.copy_X(encoded_X)
-			self.clause_bank.copy_clause_bank()
+			#self.clause_bank.copy_clause_bank()
 
 		start_time = time()		
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
