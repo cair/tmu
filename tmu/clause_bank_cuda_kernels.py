@@ -26,7 +26,7 @@ code_calculate_clause_outputs_predict = """
 
 	extern "C"
     {
-		__device__ inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+		__device__ inline unsigned int calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
 		{
 			for (int patch = 0; patch < number_of_patches; ++patch) {
 				unsigned int output = 1;
