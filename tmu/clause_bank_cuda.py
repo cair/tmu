@@ -56,8 +56,8 @@ class ClauseBankCUDA():
 		self.o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
 
 		mod = SourceModule(kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
-		self.calculate_clause_outputs_predict = mod.get_function("calculate_clause_outputs_predict")
-		self.calculate_clause_outputs_predict.prepare("PiiiiPP")
+		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
+		self.calculate_clause_outputs_predict_gpu.prepare("PiiiiPP")
 		
 		self.initialize_clauses()
 
