@@ -64,7 +64,7 @@ class ClauseBankCUDA():
 
 		self.clause_active_gpu = cuda.mem_alloc(self.clause_output.nbytes)
 
-		mod = SourceModule(parameters + kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
+		mod = SourceModule(kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
 		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
 		self.calculate_clause_outputs_predict_gpu.prepare("PiiiiPPi")
 
