@@ -30,7 +30,7 @@ for j in range(5):
 	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 0, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_action(0, 0, j, k) == 1:
+		if tm.get_ta_action(0, 0, j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
@@ -46,7 +46,7 @@ for j in range(5):
 	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 1, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_action(0, 1, j, k) == 1:
+		if tm.get_ta_action(0, 1, j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
@@ -62,7 +62,7 @@ for j in range(5):
 	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 0, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_action(1, 0, j, k) == 1:
+		if tm.get_ta_action(1, 0, j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
@@ -78,7 +78,7 @@ for j in range(5):
 	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 1, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_action(1, 1, j, k) == 1:
+		if tm.get_ta_action(1, 1, j, k) == 1:
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
