@@ -25,6 +25,11 @@ from ._cb import ffi, lib
 
 import numpy as np
 
+import pycuda.curandom as curandom
+import pycuda.driver as cuda
+import pycuda.autoinit
+from pycuda.compiler import SourceModule
+
 class ClauseBankCUDA():
 	def __init__(self, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches):
 		print("Platform: CUDA")
