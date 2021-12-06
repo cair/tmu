@@ -22,6 +22,8 @@
 # https://arxiv.org/abs/1905.09688
 
 code_calculate_clause_outputs_predict = """
+	#include <curand_kernel.h>
+
 	extern "C"
     {
 		__device__ inline unsigned int calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
@@ -152,8 +154,8 @@ code_clause_feedback = """
 
 			if (output_one_patches_count > 0) {
 				*clause_output = 1;
-				unsigned int r2 = curand(localState);
-				unsigned int patch_id = r2 % output_one_patches_count;
+
+				unsigned int patch_id = curand(localState) % output_one_patches_count;
 		 		*clause_patch = output_one_patches[patch_id];
 			} else {
 				*clause_output = 0;
@@ -227,6 +229,10 @@ code_clause_feedback = """
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
 
+			if (index == 0) {
+				printf("Clauses: %d Literals: %d State bits: %d Patches: %d Update p: %.2f Example:%d\\n", number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, update_p, example);
+			}
+
 			/* Copy state to local memory for efficiency */  
 			curandState localState = state[index];
 
@@ -241,8 +247,7 @@ code_clause_feedback = """
 			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
 			for (int j = index; j < number_of_clauses; j += stride) {
-				float r1 = curand_uniform(&localState);
-				if ((r1 > update_p) || (!clause_active[j])) {
+				if ((curand_uniform(&localState) > update_p) || (!clause_active[j])) {
 					continue;
 				}
 
