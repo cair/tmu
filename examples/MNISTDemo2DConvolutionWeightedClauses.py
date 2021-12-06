@@ -18,6 +18,7 @@ for i in range(30):
 	tm.fit(X_train, Y_train)
 	stop = time()
 	
-	result = 100*(tm.predict(X_test) == Y_test).mean()
-	
-	print("#%d Accuracy: %.2f%% (%.2fs)" % (i+1, result, stop-start))
+	result_gpu = 100*(tm.predict_gpu(X_test) == Y_test).mean()
+	print("#%d Accuracy GPU: %.2f%% (%.2fs)" % (i+1, result_gpu, stop-start))
+	result_cpu = 100*(tm.predict_cpu(X_test) == Y_test).mean()
+	print("#%d Accuracy CPU: %.2f%% (%.2fs)" % (i+1, result_gpu, stop-start))

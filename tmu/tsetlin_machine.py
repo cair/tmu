@@ -183,7 +183,7 @@ class TMClassifier(TMBasis):
 				self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, encoded_X[e,:])
 		return
 
-	def predict(self, X):
+	def predict_cpu(self, X):
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		if self.platform == 'CUDA':
 			for i in range(self.number_of_classes):
@@ -194,9 +194,31 @@ class TMClassifier(TMBasis):
 			max_class = 0
 			for i in range(self.number_of_classes):
 				if self.platform == 'CUDA':
-					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(e)).astype(np.int32)
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict_cpu(e)).astype(np.int32)
 				else:
-					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(encoded_X[e,:])).astype(np.int32)
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict_cpu(encoded_X[e,:])).astype(np.int32)
+				class_sum = np.clip(class_sum, -self.T, self.T)
+				if class_sum > max_class_sum:
+					max_class_sum = class_sum
+					max_class = i
+			Y[e] = max_class
+		return Y
+
+	def predict_gpu(self, X):
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		if self.platform == 'CUDA':
+			for i in range(self.number_of_classes):
+				self.clause_banks[i].copy_X(encoded_X)
+
+		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
+		for e in range(X.shape[0]):
+			max_class_sum = -self.T
+			max_class = 0
+			for i in range(self.number_of_classes):
+				if self.platform == 'CUDA':
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict_gpu(e)).astype(np.int32)
+				else:
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict_gpu(encoded_X[e,:])).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
 				if class_sum > max_class_sum:
 					max_class_sum = class_sum
