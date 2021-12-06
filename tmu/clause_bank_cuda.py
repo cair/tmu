@@ -131,6 +131,8 @@ class ClauseBankCUDA():
 		#ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		#lib.cb_type_ii_feedback(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, ca_p, xi_p)
 
+		print(self.clause_bank.shape)
+		print(clause_active)
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 		cuda.memcpy_htod(self.clause_active_gpu, np.ascontiguousarray(clause_active))
 		self.type_ii_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.output_one_patches_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
