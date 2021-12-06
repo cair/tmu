@@ -101,7 +101,7 @@ class ClauseBankCUDA():
 		#cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output
 
-	def calculate_clause_outputs_predict_gpu(self, e):
+	def calculate_clause_outputs_predict(self, e):
 		#xi_p = ffi.cast("unsigned int *", self.encoded_X[e,:].ctypes.data)
 		#lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
 

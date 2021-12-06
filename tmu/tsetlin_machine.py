@@ -216,9 +216,9 @@ class TMClassifier(TMBasis):
 			max_class = 0
 			for i in range(self.number_of_classes):
 				if self.platform == 'CUDA':
-					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict_gpu(e)).astype(np.int32)
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(e)).astype(np.int32)
 				else:
-					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict_gpu(encoded_X[e,:])).astype(np.int32)
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(encoded_X[e,:])).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
 				if class_sum > max_class_sum:
 					max_class_sum = class_sum
@@ -398,9 +398,9 @@ class TMCoalescedClassifier(TMBasis):
 			max_class_sum = -self.T
 			max_class = 0
 			if self.platform == 'CUDA':
-				clause_outputs = self.clause_bank.calculate_clause_outputs_predict_gpu(e)
+				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(e)
 			else:
-				clause_outputs = self.clause_bank.calculate_clause_outputs_predict_gpu(encoded_X[e,:])
+				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X[e,:])
 			
 			for i in range(self.number_of_classes):
 				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
