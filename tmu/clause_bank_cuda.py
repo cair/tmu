@@ -48,15 +48,7 @@ class ClauseBankCUDA():
 
 		self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
 
-		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
-		self.clause_output_gpu = cuda.mem_alloc(self.clause_output.nbytes)
-
 		self.clause_output_patchwise = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
-
-		self.output_one_patches = np.ascontiguousarray(np.empty(self.number_of_patches, dtype=np.uint32))
-		self.output_one_patches_gpu = cuda.mem_alloc(self.output_one_patches.nbytes)
-
-		self.clause_active_gpu = cuda.mem_alloc(self.clause_output.nbytes)
 
 		mod = SourceModule(kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
 		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
@@ -74,6 +66,7 @@ class ClauseBankCUDA():
 		
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 		self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
+		self.clause_output_gpu = cuda.mem_alloc(self.clause_output.nbytes)
 
 		self.clause_output_patchwise = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
 		self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
@@ -83,7 +76,10 @@ class ClauseBankCUDA():
 
 		self.output_one_patches = np.ascontiguousarray(np.empty(self.number_of_patches, dtype=np.uint32))
 		self.o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
-	
+		self.output_one_patches_gpu = cuda.mem_alloc(self.output_one_patches.nbytes)
+
+		self.clause_active_gpu = cuda.mem_alloc(self.clause_output.nbytes)
+
 		self.initialize_clauses()
 
 	def initialize_clauses(self):
@@ -136,11 +132,11 @@ class ClauseBankCUDA():
 		#lib.cb_type_ii_feedback(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, ca_p, xi_p)
 
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
-		cuda.memcpy_htod(self.clause_active_gpu, clause_active)
+		cuda.memcpy_htod(self.clause_active_gpu, np.ascontiguousarray(clause_active))
 		self.type_ii_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.output_one_patches_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
 		cuda.memcpy_dtoh(self.clause_bank, self.clause_bank_gpu)
-		
+
 	def get_ta_action(self, clause, ta):
 		ta_chunk = ta // 32
 		chunk_pos = ta % 32
