@@ -230,7 +230,7 @@ code_clause_feedback = """
 			int stride = blockDim.x * gridDim.x;
 
 			if (index == 0) {
-				printf("Clauses: %d Literals: %d State bits: %d Patches: %d Update p: %.2f Example:%d\\n", number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, update_p, example);
+				printf("Clauses: %d Literals: %d State bits: %d Patches: %d Update p: %.2f Example:%d\\n", number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, update_p, e);
 			}
 
 			/* Copy state to local memory for efficiency */  
