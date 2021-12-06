@@ -129,7 +129,7 @@ code_clause_feedback = """
 		/* Calculate the output of each clause using the actions of each Tsetline Automaton. */
 		__device__ inline void calculate_clause_output_feedback(curandState *localState, unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
 		{		
-			int output_one_patches_count = 0;
+			unsigned int output_one_patches_count = 0;
 			for (int patch = 0; patch < number_of_patches; ++patch) {
 				unsigned int output = 1;
 				for (int k = 0; k < number_of_ta_chunks-1; k++) {
@@ -155,7 +155,7 @@ code_clause_feedback = """
 			if (output_one_patches_count > 0) {
 				*clause_output = 1;
 
-				int patch_id = curand(localState) % output_one_patches_count;
+				unsigned int patch_id = curand(localState) % output_one_patches_count;
 		 		*clause_patch = output_one_patches[patch_id];
 			} else {
 				*clause_output = 0;
