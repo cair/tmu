@@ -245,7 +245,7 @@ code_clause_feedback = """
 			float r1 = curand_uniform(&localState);
 			unsigned int r2 = curand(&localState);
 			printf("U: %.2f\\n", r1);
-			printf("R: %u\\n", r2);
+			//printf("R: %u\\n", r2);
 			
 			for (int j = index; j < number_of_clauses; j += stride) {
 				if ((curand_uniform(&localState) > update_p) || (!clause_active[j])) {
