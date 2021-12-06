@@ -155,7 +155,7 @@ code_clause_feedback = """
 			if (output_one_patches_count > 0) {
 				*clause_output = 1;
 
-				unsigned int patch_id = curand(localState) % output_one_patches_count;
+				unsigned int patch_id = ((unsigned int)curand(localState)) % output_one_patches_count;
 		 		*clause_patch = output_one_patches[patch_id];
 			} else {
 				*clause_output = 0;
@@ -246,7 +246,7 @@ code_clause_feedback = """
 			//printf("R: %d\\n", curand(&localState));
 			
 			for (int j = index; j < number_of_clauses; j += stride) {
-				if ((curand_uniform(&localState) > update_p) || (!clause_active[j])) {
+				if ((((float)curand_uniform(&localState)) > update_p) || (!clause_active[j])) {
 					continue;
 				}
 
