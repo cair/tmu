@@ -10,7 +10,7 @@ from tmu.tsetlin_machine import TMCoalescedClassifier
 X_train = np.where(X_train >= 75, 1, 0) 
 X_test = np.where(X_test >= 75, 1, 0) 
 
-tm = TMCoalescedClassifier(20000//4, 50*100//4, 5.0, platform='CUDA', patch_dim=(10, 10), weighted_clauses=True)
+tm = TMCoalescedClassifier(20000//10, 50*100//10, 5.0, platform='CUDA', patch_dim=(10, 10), weighted_clauses=True)
 
 print("\nAccuracy over 30 epochs:\n")
 for i in range(30):
