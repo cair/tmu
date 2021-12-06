@@ -242,11 +242,8 @@ code_clause_feedback = """
 
 			unsigned int *Xi = &X[e*(number_of_ta_chunks*number_of_patches)];
 
-			printf("111\\n");
-			printf("U: %.2f\\n", curand_uniform(&localState));
-			printf("222\\n");
-			printf("R: %d\\n", curand(&localState));
-			printf("333\\n");
+			//printf("U: %.2f\\n", curand_uniform(&localState));
+			//printf("R: %d\\n", curand(&localState));
 			
 			for (int j = index; j < number_of_clauses; j += stride) {
 				if ((curand_uniform(&localState) > update_p) || (!clause_active[j])) {
