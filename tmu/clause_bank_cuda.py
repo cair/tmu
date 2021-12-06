@@ -146,7 +146,7 @@ class ClauseBankCUDA():
 		#lib.cb_type_ii_feedback(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, ca_p, xi_p)
 
 		xi_p = ffi.cast("unsigned int *", self.encoded_X[e,:].ctypes.data)
-		lib.cb_calculate_clause_outputs_patches(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, co_p, cp_p, xi_p)
+		lib.cb_clause_outputs_patches(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, co_p, cp_p, xi_p)
 
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 		cuda.memcpy_htod(self.clause_active_gpu, np.ascontiguousarray(clause_active))
