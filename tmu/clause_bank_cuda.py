@@ -39,6 +39,8 @@ class ClauseBankCUDA():
 		self.grid = (16*13,1,1)
 		self.block = (128,1,1)
 
+		print("Platform: CUDA")
+
 		self.number_of_clauses = int(number_of_clauses)
 		self.number_of_literals = int(number_of_literals)
 		self.number_of_state_bits = int(number_of_state_bits)
@@ -70,6 +72,18 @@ class ClauseBankCUDA():
 		self.type_ii_feedback_gpu = mod.get_function("type_ii_feedback")
 		self.type_ii_feedback_gpu.prepare("PPPiiiifPPi")
 		
+		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
+		self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
+
+		self.clause_output_patchwise = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
+		self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
+
+		self.feedback_to_ta = np.ascontiguousarray(np.empty((self.number_of_ta_chunks), dtype=np.uint32))
+		self.ft_p = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)
+
+		self.output_one_patches = np.ascontiguousarray(np.empty(self.number_of_patches, dtype=np.uint32))
+		self.o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
+	
 		self.initialize_clauses()
 
 	def initialize_clauses(self):
@@ -82,15 +96,21 @@ class ClauseBankCUDA():
 		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
 	def calculate_clause_outputs_predict(self, e):
-		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
-		cuda.Context.synchronize()
-		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
+		xi_p = ffi.cast("unsigned int *", self.encoded_X[e,:].ctypes.data)
+		lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
+
+		#self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+		#cuda.Context.synchronize()
+		#cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output
 
 	def calculate_clause_outputs_update(self, e):
-		self.calculate_clause_outputs_update_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
-		cuda.Context.synchronize()
-		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
+		xi_p = ffi.cast("unsigned int *", self.encoded_X[e,:].ctypes.data)
+		lib.cb_calculate_clause_outputs_update(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, xi_p)
+		
+		#self.calculate_clause_outputs_update_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+		#cuda.Context.synchronize()
+		#cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output
 
 	def calculate_clause_outputs_patchwise(self, Xi):
@@ -99,14 +119,23 @@ class ClauseBankCUDA():
 		return self.clause_output_patchwise
 
 	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, clause_active, e):
-		cuda.memcpy_htod(self.clause_active_gpu, clause_active)
-		self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.output_one_patches_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, s, boost_true_positive_feedback, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
-		cuda.Context.synchronize()
+		xi_p = ffi.cast("unsigned int *", self.encoded_X[e,:].ctypes.data)
+		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+		lib.cb_type_i_feedback(self.cb_p, self.ft_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, s, boost_true_positive_feedback, ca_p, xi_p)
+
+		#cuda.memcpy_htod(self.clause_active_gpu, clause_active)
+		#self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.output_one_patches_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, s, boost_true_positive_feedback, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
+		#cuda.Context.synchronize()
 
 	def type_ii_feedback(self, update_p, clause_active, e):
-		cuda.memcpy_htod(self.clause_active_gpu, clause_active)
-		self.type_ii_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.output_one_patches_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
-		cuda.Context.synchronize()
+		xi_p = ffi.cast("unsigned int *", self.encoded_X[e,:].ctypes.data)
+
+		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+		lib.cb_type_ii_feedback(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, ca_p, xi_p)
+
+		#cuda.memcpy_htod(self.clause_active_gpu, clause_active)
+		#self.type_ii_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.output_one_patches_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
+		#cuda.Context.synchronize()
 
 	def get_ta_action(self, clause, ta):
 		ta_chunk = ta // 32
@@ -135,5 +164,6 @@ class ClauseBankCUDA():
 				self.clause_bank[pos + b] &= (1 << chunk_pos)
 
 	def copy_X(self, encoded_X):
+		self.encoded_X = encoded_X
 		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
 		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
