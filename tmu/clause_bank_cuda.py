@@ -36,8 +36,8 @@ import tmu.clause_bank_cuda_kernels as kernels
 
 class ClauseBankCUDA():
 	def __init__(self, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, X, Y):
-		self.grid = (1,1,1)#(16*13,1,1)
-		self.block = (1,1,1)#(128,1,1)
+		self.grid = (16*13,1,1)
+		self.block = (128,1,1)
 
 		print("Platform: CUDA")
 
