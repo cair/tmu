@@ -484,9 +484,7 @@ class TMRegressor(TMBasis):
 		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
-		if self.initialized == False:
-			self.initialize(X, Y)
-			self.initialized = True
+		super().initialize(X, self.patch_dim)
 
 		self.max_y = np.max(Y)
 		self.min_y = np.min(Y)
@@ -499,6 +497,8 @@ class TMRegressor(TMBasis):
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
+			
+		self.weight_bank = WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
 
 	def fit(self, X, Y):
 		if self.initialized == False:
