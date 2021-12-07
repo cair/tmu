@@ -60,11 +60,15 @@ class ClauseBankCUDA():
 		self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
 		self.calculate_clause_outputs_update_gpu.prepare("PiiiiPPi")
 
-		mod = SourceModule(kernels.code_clause_feedback, no_extern_c=True)
+		parameters = """
+			NUMBER_OF_PATCHES %d
+			""" % (self.number_of_patches)
+
+		mod = SourceModule(parameters + kernels.code_clause_feedback, no_extern_c=True)
 		self.type_i_feedback_gpu = mod.get_function("type_i_feedback")
-		self.type_i_feedback_gpu.prepare("PPPiiiiffiPPi")
+		self.type_i_feedback_gpu.prepare("PPiiiiffiPPi")
 		self.type_ii_feedback_gpu = mod.get_function("type_ii_feedback")
-		self.type_ii_feedback_gpu.prepare("PPPiiiifPPPPiP")
+		self.type_ii_feedback_gpu.prepare("PPiiiifPPPPiP")
 
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 		self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
