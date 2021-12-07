@@ -30,7 +30,7 @@ for z in range(resolution):
 X_train = X_train.reshape((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], resolution))
 X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], resolution))
 
-tm = TMCoalescedClassifier(clauses, T, s, patch_dim=(3, 3), weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, s, platform='CUDA', patch_dim=(3, 3), weighted_clauses=True)
 
 print("\nAccuracy over 10 epochs:\n")
 for i in range(1):
