@@ -10,7 +10,7 @@ from tmu.tsetlin_machine import TMClassifier
 X_train = np.where(X_train >= 75, 1, 0) 
 X_test = np.where(X_test >= 75, 1, 0) 
 
-tm = TMClassifier(80000, 10000, 5.0, platform='CUDA', patch_dim=(10, 10), weighted_clauses=True)
+tm = TMClassifier(8000, 10000, 5.0, platform='CUDA', patch_dim=(10, 10), weighted_clauses=True)
 
 print("\nAccuracy over 250 epochs:\n")
 for i in range(250):
