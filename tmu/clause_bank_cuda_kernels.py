@@ -229,9 +229,9 @@ code_clause_feedback = """
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
 
-			if (index == 0) {
-				printf("Clauses: %d Literals: %d State bits: %d Patches: %d Update p: %.2f Example:%d\\n", number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, update_p, e);
-			}
+			//if (index == 0) {
+			//	printf("Clauses: %d Literals: %d State bits: %d Patches: %d Update p: %.2f Example:%d\\n", number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, update_p, e);
+			//}
 
 			/* Copy state to local memory for efficiency */  
 			curandState localState = state[index];
