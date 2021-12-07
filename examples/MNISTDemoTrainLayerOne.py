@@ -7,7 +7,7 @@ from tmu.tsetlin_machine import TMCoalescedClassifier
 
 import copy
 
-clauses = 256
+clauses = 64
 T = int(clauses*0.75)
 s = 5.0
 patch_size = 3
@@ -33,7 +33,7 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 tm = TMCoalescedClassifier(clauses, T, s, patch_dim=(3, 3), weighted_clauses=True)
 
 print("\nAccuracy over 10 epochs:\n")
-for i in range(10):
+for i in range(1):
 	start_training = time()
 	tm.fit(X_train, Y_train)
 	stop_training = time()
