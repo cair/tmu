@@ -3,14 +3,14 @@ from time import time
 
 from keras.datasets import mnist
 
-from tmu.tsetlin_machine import TMOneVsOneClassifier
+from tmu.tsetlin_machine import TMClassifier
 
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 
 X_train = np.where(X_train >= 75, 1, 0) 
 X_test = np.where(X_test >= 75, 1, 0) 
 
-tm = TMOneVsOneClassifier(80000//20, 10000//20, 5.0, platform='CUDA', patch_dim=(10, 10), weighted_clauses=True)
+tm = TMClassifier(250, int(250*0.75), 5.0, platform='CPU', patch_dim=(10, 10), weighted_clauses=True)
 
 print("\nAccuracy over 250 epochs:\n")
 for i in range(250):
