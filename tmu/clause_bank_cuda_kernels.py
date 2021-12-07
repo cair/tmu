@@ -155,7 +155,7 @@ code_clause_feedback = """
 			if (output_one_patches_count > 0) {
 				*clause_output = 1;
 				unsigned int patch_id = curand(localState) % output_one_patches_count;
-				printf("%d %d %d\\n", output_one_patches_count, patch_id, output_one_patches[patch_id]);
+				//printf("%d %d %d\\n", output_one_patches_count, patch_id, output_one_patches[patch_id]);
 		 		*clause_patch = output_one_patches[patch_id];
 			} else {
 				*clause_output = 0;
@@ -260,7 +260,8 @@ code_clause_feedback = """
 				if (clause_output_test) {				
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
 						unsigned int ta_pos = k*number_of_state_bits;
-						inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch[j]*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
+						//inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch[j]*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
+						inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch_test*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
 					}
 				}
 			}
