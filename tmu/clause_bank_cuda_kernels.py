@@ -224,7 +224,7 @@ code_clause_feedback = """
 			state[index] = localState;
 		}
 
-		__global__ void type_ii_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *X, int e)
+		__global__ void type_ii_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *clause_output, unsigned int *clause_patch, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -253,14 +253,14 @@ code_clause_feedback = """
 
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
 
-				unsigned int clause_output;
-				unsigned int clause_patch;
-				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+				//unsigned int clause_output;
+				//unsigned int clause_patch;
+				//calculate_clause_output_feedback(&localState, &ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 
-				if (clause_output) {				
+				if (clause_output[j]) {				
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
 						unsigned int ta_pos = k*number_of_state_bits;
-						inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
+						inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch[j]*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
 					}
 				}
 			}
