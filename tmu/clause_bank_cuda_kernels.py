@@ -105,7 +105,7 @@ code_clause_feedback = """
 		}
 
 		// Decrement the states of each of those 32 Tsetlin Automata flagged in the active bit vector.
-		__device__ void dec(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
+		__device__ inline void dec(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
 		{
 			unsigned int carry, carry_next;
 
@@ -127,7 +127,7 @@ code_clause_feedback = """
 		}
 
 		/* Calculate the output of each clause using the actions of each Tsetline Automaton. */
-		__device__ void calculate_clause_output_feedback(curandState *localState, unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, unsigned int *Xi, unsigned int random_integer)
+		__device__ inline void calculate_clause_output_feedback(curandState *localState, unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, unsigned int *Xi, unsigned int random_integer)
 		{	
 			unsigned int output_one_patches[NUMBER_OF_PATCHES];
 

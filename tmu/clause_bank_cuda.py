@@ -61,7 +61,7 @@ class ClauseBankCUDA():
 		self.calculate_clause_outputs_update_gpu.prepare("PiiiiPPi")
 
 		parameters = """
-			NUMBER_OF_PATCHES %d
+			#define NUMBER_OF_PATCHES %d
 			""" % (self.number_of_patches)
 
 		mod = SourceModule(parameters + kernels.code_clause_feedback, no_extern_c=True)
