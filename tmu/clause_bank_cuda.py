@@ -55,17 +55,17 @@ class ClauseBankCUDA():
 			""" % (self.number_of_patches)
 
 		mod = SourceModule(parameters + kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
-		self.calculate_clause_outputs_predict = mod.get_function("calculate_clause_outputs_predict")
+		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
 		self.calculate_clause_outputs_predict_gpu.prepare("PiiiPPi")
 
 		mod = SourceModule(parameters + kernels.code_calculate_clause_outputs_update, no_extern_c=True)
-		self.calculate_clause_outputs_update = mod.get_function("calculate_clause_outputs_update")
+		self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
 		self.calculate_clause_outputs_update_gpu.prepare("PiiiPPi")
 
 		mod = SourceModule(parameters + kernels.code_clause_feedback, no_extern_c=True)
-		self.type_i_feedback = mod.get_function("type_i_feedback")
+		self.type_i_feedback_gpu = mod.get_function("type_i_feedback")
 		self.type_i_feedback_gpu.prepare("PPiiiffiPPi")
-		self.type_ii_feedback = mod.get_function("type_ii_feedback")
+		self.type_ii_feedback_gpu = mod.get_function("type_ii_feedback")
 		self.type_ii_feedback_gpu.prepare("PPiiifPPi")
 
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
