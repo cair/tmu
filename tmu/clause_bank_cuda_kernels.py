@@ -156,7 +156,7 @@ code_clause_feedback = """
 
 			if (output_one_patches_count > 0) {
 				*clause_output = 1;
-				int patch_id = curand(&localState) % output_one_patches_count;
+				int patch_id = curand(localState) % output_one_patches_count;
 		 		*clause_patch = output_one_patches[patch_id];
 			} else {
 				*clause_output = 0;
@@ -190,7 +190,6 @@ code_clause_feedback = """
 
 				unsigned int clause_output;
 				unsigned int clause_patch;
-
 				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, Xi, 0);
 
 				for (int k = 0; k < number_of_ta_chunks; ++k) {
