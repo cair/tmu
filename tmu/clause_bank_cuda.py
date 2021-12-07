@@ -149,7 +149,7 @@ class ClauseBankCUDA():
 		#ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		#lib.cb_type_ii_feedback(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, ca_p, xi_p)
 
-		random_integers = np.random.randint(4294967295, size=self.number_of_clauses, dtype=np.uint32)
+		random_integers = np.random.randint(32767, size=self.number_of_clauses, dtype=np.uint32)
 
 		ri_p = ffi.cast("unsigned int *", random_integers.ctypes.data)
 		xi_p = ffi.cast("unsigned int *", self.encoded_X[e,:].ctypes.data)
