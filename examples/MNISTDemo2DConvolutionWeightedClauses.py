@@ -12,8 +12,8 @@ X_test = np.where(X_test >= 75, 1, 0)
 
 tm = TMCoalescedClassifier(2500, 3125, 10.0, platform='CUDA', patch_dim=(10, 10), weighted_clauses=True)
 
-print("\nAccuracy over 30 epochs:\n")
-for i in range(30):
+print("\nAccuracy over 250 epochs:\n")
+for i in range(250):
 	start = time()
 	tm.fit(X_train, Y_train)
 	stop = time()
