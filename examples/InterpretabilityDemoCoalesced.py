@@ -20,8 +20,6 @@ tm = TMCoalescedClassifier(clauses, T, s, platform='CPU', boost_true_positive_fe
 for i in range(20):
 	tm.fit(X_train, Y_train)
 
-print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
-
 precision = []
 recall = []
 for i in range(2):
