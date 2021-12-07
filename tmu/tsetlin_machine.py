@@ -81,7 +81,7 @@ class TMBasis():
 		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		transformed_X = np.empty((X.shape[0], self.number_of_clauses*self.number_of_patches), dtype=np.uint32)
 		for e in range(X.shape[0]):
-			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_patchwise(encoded_X[e,:])
+			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_patchwise(encoded_X, e)
 		return transformed_X.reshape((X.shape[0], self.number_of_clauses, self.number_of_patches))
 
 	def get_ta_action(self, clause, ta):
@@ -193,7 +193,7 @@ class TMClassifier(TMBasis):
 		transformed_X = np.empty((X.shape[0], self.number_of_classes, self.number_of_clauses//2*self.number_of_patches), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			for i in range(self.number_of_classes):
-				transformed_X[e,i,:] = self.clause_bank[i].calculate_clause_outputs_patchwise(encoded_X[e,:])
+				transformed_X[e,i,:] = self.clause_bank[i].calculate_clause_outputs_patchwise(encoded_X, e)
 		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses, self.number_of_patches))
 
 	def clause_precision(self, the_class, polarity, X, Y):
