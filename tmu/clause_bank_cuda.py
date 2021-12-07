@@ -46,6 +46,8 @@ class ClauseBankCUDA():
 		self.number_of_state_bits = int(number_of_state_bits)
 		self.number_of_patches = int(number_of_patches)
 
+		print("Number of patches:", self.number_of_patches)
+
 		self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
 
 		self.clause_output_patchwise = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
