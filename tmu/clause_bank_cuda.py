@@ -68,11 +68,11 @@ class ClauseBankCUDA():
 
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 		self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
-		self.clause_output_gpu = cuda.mem_alloc(self.clause_output.nbytes)
+		self.clause_output_gpu = cuda.mem_alloc(self.clause_output.nbytes*4)
 
 		self.clause_patch = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 		self.cp_p = ffi.cast("unsigned int *", self.clause_patch.ctypes.data)
-		self.clause_patch_gpu = cuda.mem_alloc(self.clause_patch.nbytes)
+		self.clause_patch_gpu = cuda.mem_alloc(self.clause_patch.nbytes*4)
 
 		self.clause_output_patchwise = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
 		self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
@@ -82,11 +82,11 @@ class ClauseBankCUDA():
 
 		self.output_one_patches = np.ascontiguousarray(np.empty(self.number_of_patches, dtype=np.uint32))
 		self.o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
-		self.output_one_patches_gpu = cuda.mem_alloc(self.output_one_patches.nbytes)
+		self.output_one_patches_gpu = cuda.mem_alloc(self.output_one_patches.nbytes*4)
 
-		self.clause_active_gpu = cuda.mem_alloc(self.clause_output.nbytes)
+		self.clause_active_gpu = cuda.mem_alloc(self.clause_output.nbytes*4)
 
-		self.random_integers_gpu = cuda.mem_alloc(self.number_of_clauses*4)
+		self.random_integers_gpu = cuda.mem_alloc(self.number_of_clauses*4*4)
 
 		self.initialize_clauses()
 
@@ -95,7 +95,7 @@ class ClauseBankCUDA():
 		self.clause_bank[:,:,0:self.number_of_state_bits-1] = np.uint32(~0)
 		self.clause_bank[:,:,self.number_of_state_bits-1] = 0
 		self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape((self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits)))
-		self.clause_bank_gpu = cuda.mem_alloc(self.clause_bank.nbytes)
+		self.clause_bank_gpu = cuda.mem_alloc(self.clause_bank.nbytes*4)
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 		self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
@@ -192,5 +192,5 @@ class ClauseBankCUDA():
 
 	def copy_X(self, encoded_X):
 		self.encoded_X = encoded_X
-		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
+		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes*4)
 		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
