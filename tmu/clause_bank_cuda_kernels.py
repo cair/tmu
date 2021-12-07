@@ -191,7 +191,7 @@ code_clause_feedback = """
 				unsigned int clause_output;
 				unsigned int clause_patch;
 
-				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, Xi, 0);
+				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, Xi, 0);
 
 				for (int k = 0; k < number_of_ta_chunks; ++k) {
 					// Generate random bit values
@@ -232,8 +232,6 @@ code_clause_feedback = """
 
 			curandState localState = state[index];
 
-			unsigned int output_one_patches[NUMBER_OF_PATCHES];
-
 			unsigned int filter;
 			if (((number_of_literals) % 32) != 0) {
 				filter  = (~(0xffffffff << ((number_of_literals) % 32)));
@@ -253,7 +251,7 @@ code_clause_feedback = """
 
 				unsigned int clause_output_test;
 				unsigned int clause_patch_test;
-				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], output_one_patches, &clause_output_test, &clause_patch_test, number_of_ta_chunks, number_of_state_bits, filter, Xi, random_integers[j]);
+				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], &clause_output_test, &clause_patch_test, number_of_ta_chunks, number_of_state_bits, filter, Xi, random_integers[j]);
 
 				if (clause_output_test) {				
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
