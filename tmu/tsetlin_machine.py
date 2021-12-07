@@ -181,11 +181,11 @@ class TMClassifier(TMBasis):
 		return Y
 
 	def transform(self, X):
-		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		encoded_X = self.clause_banks[0].prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
 		transformed_X = np.empty((X.shape[0], self.number_of_classes, self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			for i in range(self.number_of_classes):
-				transformed_X[e,i,:] = self.clause_banks[i].calculate_clause_outputs_update(encoded_X[e,:])
+				transformed_X[e,i,:] = self.clause_banks[i].calculate_clause_outputs_update(encoded_X, e)
 		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses))
 
 	def transform_patchwise(self, X):
