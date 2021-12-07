@@ -491,20 +491,26 @@ class TMRegressor(TMBasis):
 		self.max_y = np.max(Y)
 		self.min_y = np.min(Y)
 
-		self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
-		self.weight_bank = WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
-		
+		if self.platform == 'CPU':
+			self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
+		elif self.platform == 'CUDA':
+			from tmu.clause_bank_cuda import ClauseBankCUDA
+			self.clause_bank = ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, X, Y)
+		else:
+			print("Unknown Platform")
+			sys.exit(-1)
+
 	def fit(self, X, Y):
 		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
 
-		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
 		encoded_Y = np.ascontiguousarray(((Y - self.min_y)/(self.max_y - self.min_y)*self.T).astype(np.int32))
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X, e)
 
 			pred_y = np.dot(clause_active * self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
 			pred_y = np.clip(pred_y, 0, self.T)
@@ -513,20 +519,20 @@ class TMRegressor(TMBasis):
 			update_p = (1.0*prediction_error/self.T)**2
 
 			if pred_y < encoded_Y[e]:
-				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active, encoded_X[e,:])
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active, encoded_X, e)
 				if self.weighted_clauses:
 					self.weight_bank.increment(clause_outputs, update_p, clause_active, False)
 			elif pred_y > encoded_Y[e]:
-				self.clause_bank.type_ii_feedback(update_p, clause_active, encoded_X[e,:])
+				self.clause_bank.type_ii_feedback(update_p, clause_active, encoded_X, e)
 				if self.weighted_clauses:
 					self.weight_bank.decrement(clause_outputs, update_p, clause_active, False)
 		return
 
 	def predict(self, X):
-		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
 		Y = np.ascontiguousarray(np.zeros(X.shape[0]))
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X[e,:])
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, e)
 			pred_y = np.dot(self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
 			Y[e] = 1.0*pred_y * (self.max_y - self.min_y)/(self.T) + self.min_y
 		return Y
