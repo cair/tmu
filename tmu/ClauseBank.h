@@ -25,8 +25,6 @@ https://arxiv.org/abs/1905.09688
 
 */
 
-void cb_clause_outputs_patches(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *clause_patch, unsigned int *Xi, unsigned int *random_integers);
-
 void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *Xi);
 
 void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *Xi);

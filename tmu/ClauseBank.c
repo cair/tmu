@@ -359,23 +359,6 @@ void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patche
 	}
 }
 
-void cb_clause_outputs_patches(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *clause_patch, unsigned int *Xi, unsigned int *random_integers)
-{
-	unsigned int filter;
-	if (((number_of_features) % 32) != 0) {
-		filter  = (~(0xffffffff << ((number_of_features) % 32)));
-	} else {
-		filter = 0xffffffff;
-	}
-	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
-
-	for (int j = 0; j < number_of_clauses; j++) {
-		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
-
-		cb_calculate_clause_output_feedback_test(&ta_state[clause_pos], output_one_patches, &clause_output[j], &clause_patch[j], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi, random_integers[j]);
-	}
-}
-
 void cb_calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)
 {
 	unsigned int filter;
