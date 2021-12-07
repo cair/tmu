@@ -223,7 +223,7 @@ code_clause_feedback = """
 			state[index] = localState;
 		}
 
-		__global__ void type_ii_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *clause_output, unsigned int *X, int e, unsigned int *random_integers)
+		__global__ void type_ii_feedback(curandState *state, unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *clause_output, unsigned int *clause_patch, unsigned int *X, int e, unsigned int *random_integers)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
