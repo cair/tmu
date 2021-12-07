@@ -149,14 +149,16 @@ class ClauseBankCUDA():
 		#ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		#lib.cb_type_ii_feedback(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, ca_p, xi_p)
 
+		random_integers = np.random.randint(4294967295, size=self.number_of_clauses, dtype=np.uint32)
+
+		ri_p = ffi.cast("unsigned int *", random_integers.ctypes.data)
 		xi_p = ffi.cast("unsigned int *", self.encoded_X[e,:].ctypes.data)
-		lib.cb_clause_outputs_patches(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, self.cp_p, xi_p)
+		lib.cb_clause_outputs_patches(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.co_p, self.cp_p, xi_p, ri_p)
 
 		cuda.memcpy_htod(self.clause_output_gpu, self.clause_output)
 		cuda.memcpy_htod(self.clause_patch_gpu, self.clause_patch)
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 		cuda.memcpy_htod(self.clause_active_gpu, np.ascontiguousarray(clause_active))
-		random_integers = np.random.randint(4294967295, size=self.number_of_clauses, dtype=np.uint32)
 		cuda.memcpy_htod(self.random_integers_gpu, random_integers)
 		self.type_ii_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.output_one_patches_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, self.clause_active_gpu, self.clause_output_gpu, self.clause_patch_gpu, self.encoded_X_gpu, np.int32(e), self.random_integers_gpu)
 		cuda.Context.synchronize()
