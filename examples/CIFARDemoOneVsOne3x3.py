@@ -35,7 +35,7 @@ for z in range(resolution):
 X_train = X_train.reshape((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], 3*resolution))
 X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], 3*resolution))
 
-f = open("cifar10_1vs1_%.1f_%d_%d_%d.txt" % (s, clauses, T,  patch_size), "w+")
+f = open("cifar10_1vs1_3x3_%.1f_%d_%d_%d.txt" % (s, clauses, T,  patch_size), "w+")
 
 for e in range(ensembles):
         tm = TMOneVsOneClassifier(clauses, T, s, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits=number_of_state_bits)
