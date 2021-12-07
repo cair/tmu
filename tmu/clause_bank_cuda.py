@@ -56,17 +56,17 @@ class ClauseBankCUDA():
 
 		mod = SourceModule(parameters + kernels.code_calculate_clause_outputs_predict, no_extern_c=True)
 		self.calculate_clause_outputs_predict = mod.get_function("calculate_clause_outputs_predict")
-		self.calculate_clause_outputs_predict.prepare("PiiiPPi")
+		self.calculate_clause_outputs_predict_gpu.prepare("PiiiPPi")
 
 		mod = SourceModule(parameters + kernels.code_calculate_clause_outputs_update, no_extern_c=True)
 		self.calculate_clause_outputs_update = mod.get_function("calculate_clause_outputs_update")
-		self.calculate_clause_outputs_update.prepare("PiiiPPi")
+		self.calculate_clause_outputs_update_gpu.prepare("PiiiPPi")
 
 		mod = SourceModule(parameters + kernels.code_clause_feedback, no_extern_c=True)
 		self.type_i_feedback = mod.get_function("type_i_feedback")
-		self.type_i_feedback.prepare("PPiiiffiPPi")
+		self.type_i_feedback_gpu.prepare("PPiiiffiPPi")
 		self.type_ii_feedback = mod.get_function("type_ii_feedback")
-		self.type_ii_feedback.prepare("PPiiifPPi")
+		self.type_ii_feedback_gpu.prepare("PPiiifPPi")
 
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 		self.clause_output_gpu = cuda.mem_alloc(self.clause_output.nbytes)
@@ -86,13 +86,13 @@ class ClauseBankCUDA():
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 
 	def calculate_clause_outputs_predict(self, e):
-		self.calculate_clause_outputs_predict.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
 		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output
 
 	def calculate_clause_outputs_update(self, e):	
-		self.calculate_clause_outputs_update.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+		self.calculate_clause_outputs_update_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
 		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output
@@ -104,12 +104,12 @@ class ClauseBankCUDA():
 
 	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, clause_active, e):
 		cuda.memcpy_htod(self.clause_active_gpu, clause_active)
-		self.type_i_feedback.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, s, boost_true_positive_feedback, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
+		self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, s, boost_true_positive_feedback, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
 
 	def type_ii_feedback(self, update_p, clause_active, e):
 		cuda.memcpy_htod(self.clause_active_gpu, np.ascontiguousarray(clause_active))
-		self.type_ii_feedback.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
+		self.type_ii_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
 		cuda.Context.synchronize()
 
 	def get_ta_action(self, clause, ta):
