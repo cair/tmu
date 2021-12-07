@@ -74,7 +74,7 @@ class TMBasis():
 		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
 		transformed_X = np.empty((X.shape[0], self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
-			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
+			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X, e)
 		return transformed_X
 
 	def transform_patchwise(self, X):
