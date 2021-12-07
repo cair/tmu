@@ -71,7 +71,7 @@ class TMBasis():
 			return clause_outputs.transpose().dot(clause_outputs)
 
 	def transform(self, X):
-		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
 		transformed_X = np.empty((X.shape[0], self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X[e,:])
