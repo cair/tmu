@@ -98,6 +98,41 @@ static inline void cb_dec(unsigned int *ta_state, unsigned int active, int numbe
 
 /* Calculate the output of each clause using the actions of each Tsetline Automaton. */
 static inline void cb_calculate_clause_output_feedback(unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+{		
+	int output_one_patches_count = 0;
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		unsigned int output = 1;
+		for (int k = 0; k < number_of_ta_chunks-1; k++) {
+			unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+			output = output && (ta_state[pos] & Xi[patch*number_of_ta_chunks + k]) == ta_state[pos];
+
+			if (!output) {
+				break;
+			}
+		}
+
+		unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+		output = output &&
+			(ta_state[pos] & Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] & filter) ==
+			(ta_state[pos] & filter);
+
+		if (output) {
+			output_one_patches[output_one_patches_count] = patch;
+			output_one_patches_count++;
+		}
+	}
+
+	if (output_one_patches_count > 0) {
+		*clause_output = 1;
+		unsigned int patch_id = fast_rand() % output_one_patches_count;
+ 		*clause_patch = output_one_patches[patch_id];
+	} else {
+		*clause_output = 0;
+	}
+}
+
+/* Calculate the output of each clause using the actions of each Tsetline Automaton. */
+static inline void cb_calculate_clause_output_feedback_old(unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
 {
 	int output_one_patches_count = 0;
 	for (int patch = 0; patch < number_of_patches; ++patch) {
