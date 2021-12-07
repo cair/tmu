@@ -22,8 +22,6 @@ for i in range(20):
 
 print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
 
-gtt
-
 precision = []
 recall = []
 for i in range(2):
