@@ -105,7 +105,7 @@ code_clause_feedback = """
 		}
 
 		// Decrement the states of each of those 32 Tsetlin Automata flagged in the active bit vector.
-		__device__ inline void dec(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
+		__device__ void dec(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
 		{
 			unsigned int carry, carry_next;
 
@@ -127,7 +127,7 @@ code_clause_feedback = """
 		}
 
 		/* Calculate the output of each clause using the actions of each Tsetline Automaton. */
-		__device__ inline void calculate_clause_output_feedback(curandState *localState, unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi, unsigned int random_integer)
+		__device__ void calculate_clause_output_feedback(curandState *localState, unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi, unsigned int random_integer)
 		{		
 			int output_one_patches_count = 0;
 			for (int patch = 0; patch < number_of_patches; ++patch) {
@@ -154,7 +154,7 @@ code_clause_feedback = """
 
 			if (output_one_patches_count > 0) {
 				*clause_output = 1;
-				unsigned int patch_id = random_integer % output_one_patches_count;
+				int patch_id = random_integer % output_one_patches_count;
 		 		*clause_patch = output_one_patches[patch_id];
 			} else {
 				*clause_output = 0;
@@ -259,8 +259,8 @@ code_clause_feedback = """
 				if (clause_output_test) {				
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
 						unsigned int ta_pos = k*number_of_state_bits;
-						inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch[j]*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
-						//inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch_test*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
+						//inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch[j]*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
+						inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch_test*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
 					}
 				}
 			}
