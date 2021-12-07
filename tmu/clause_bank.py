@@ -105,3 +105,6 @@ class ClauseBank():
 				self.clause_bank[pos + b] |= (1 << chunk_pos)
 			else:
 				self.clause_bank[pos + b] &= (1 << chunk_pos)
+
+	def prepare_X(self, encoded_X):
+		return encoded_X

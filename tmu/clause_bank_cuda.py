@@ -39,8 +39,6 @@ class ClauseBankCUDA():
 		self.grid = (16*13,1,1)
 		self.block = (128,1,1)
 
-		print("Platform: CUDA")
-
 		self.number_of_clauses = int(number_of_clauses)
 		self.number_of_literals = int(number_of_literals)
 		self.number_of_state_bits = int(number_of_state_bits)
@@ -85,14 +83,14 @@ class ClauseBankCUDA():
 		self.clause_bank_gpu = cuda.mem_alloc(self.clause_bank.nbytes)
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 
-	def calculate_clause_outputs_predict(self, e):
-		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+	def calculate_clause_outputs_predict(self, encoded_X, e):
+		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, encoded_X, np.int32(e))
 		cuda.Context.synchronize()
 		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output
 
-	def calculate_clause_outputs_update(self, e):	
-		self.calculate_clause_outputs_update_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, self.encoded_X_gpu, np.int32(e))
+	def calculate_clause_outputs_update(self, encoded_X, e):	
+		self.calculate_clause_outputs_update_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, encoded_X, np.int32(e))
 		cuda.Context.synchronize()
 		cuda.memcpy_dtoh(self.clause_output, self.clause_output_gpu)
 		return self.clause_output
@@ -102,14 +100,14 @@ class ClauseBankCUDA():
 		lib.cb_calculate_clause_outputs_patchwise(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.cop_p, xi_p)
 		return self.clause_output_patchwise
 
-	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, clause_active, e):
+	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, clause_active, encoded_X, e):
 		cuda.memcpy_htod(self.clause_active_gpu, clause_active)
-		self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, s, boost_true_positive_feedback, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
+		self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, s, boost_true_positive_feedback, self.clause_active_gpu, encoded_X, np.int32(e))
 		cuda.Context.synchronize()
 
-	def type_ii_feedback(self, update_p, clause_active, e):
+	def type_ii_feedback(self, update_p, clause_active, encoded_X, e):
 		cuda.memcpy_htod(self.clause_active_gpu, np.ascontiguousarray(clause_active))
-		self.type_ii_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, self.clause_active_gpu, self.encoded_X_gpu, np.int32(e))
+		self.type_ii_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, self.clause_active_gpu, encoded_X, np.int32(e))
 		cuda.Context.synchronize()
 
 	def get_ta_action(self, clause, ta):
@@ -138,6 +136,7 @@ class ClauseBankCUDA():
 			else:
 				self.clause_bank[pos + b] &= (1 << chunk_pos)
 
-	def copy_X(self, encoded_X):
-		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
-		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
+	def prepare_X(self, encoded_X):
+		encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
+		cuda.memcpy_htod(encoded_X_gpu, encoded_X)
+		return encoded_X_gpu
