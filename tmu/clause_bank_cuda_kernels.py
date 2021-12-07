@@ -155,7 +155,7 @@ code_clause_feedback = """
 			if (output_one_patches_count > 0) {
 				*clause_output = 1;
 				unsigned int patch_id = curand(localState) % output_one_patches_count;
-				printf("%d %d\\n", output_one_patches_count, patch_id, output_one_patches[patch_id]);
+				printf("%d %d %d\\n", output_one_patches_count, patch_id, output_one_patches[patch_id]);
 		 		*clause_patch = output_one_patches[patch_id];
 			} else {
 				*clause_output = 0;
