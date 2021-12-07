@@ -189,7 +189,7 @@ code_clause_feedback = """
 				unsigned int clause_output;
 				unsigned int clause_patch;
 
-				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi, 0);
 
 				for (int k = 0; k < number_of_ta_chunks; ++k) {
 					// Generate random bit values
