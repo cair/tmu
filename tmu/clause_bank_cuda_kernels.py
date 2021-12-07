@@ -26,9 +26,9 @@ code_calculate_clause_outputs_predict = """
 
 	extern "C"
     {
-		__device__ inline unsigned int calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+		__device__ inline unsigned int calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, unsigned int *Xi)
 		{
-			for (int patch = 0; patch < number_of_patches; ++patch) {
+			for (int patch = 0; patch < NUMBER_OF_PATCHES; ++patch) {
 				unsigned int output = 1;
 				unsigned int all_exclude = 1;
 				for (int k = 0; k < number_of_ta_chunks-1; k++) {
@@ -56,7 +56,7 @@ code_calculate_clause_outputs_predict = """
 			return(0);
 		}
 
-		__global__ void calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *X, int e)
+		__global__ void calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *clause_output, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -71,7 +71,7 @@ code_calculate_clause_outputs_predict = """
 
 			for (int j = index; j < number_of_clauses; j += stride) {
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
-				clause_output[j] = calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, &X[e*(number_of_ta_chunks*number_of_patches)]);
+				clause_output[j] = calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &X[e*(number_of_ta_chunks*NUMBER_OF_PATCHES)]);
 			}
 		}
 	}
@@ -225,7 +225,7 @@ code_clause_feedback = """
 			state[index] = localState;
 		}
 
-		__global__ void type_ii_feedback(curandState *state, unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, float update_p, unsigned int *clause_active, unsigned int *clause_output, unsigned int *clause_patch, unsigned int *X, int e, unsigned int *random_integers)
+		__global__ void type_ii_feedback(curandState *state, unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, float update_p, unsigned int *clause_active, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -249,15 +249,14 @@ code_clause_feedback = """
 
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
 
-				unsigned int clause_output_test;
-				unsigned int clause_patch_test;
-				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], &clause_output_test, &clause_patch_test, number_of_ta_chunks, number_of_state_bits, filter, Xi, random_integers[j]);
+				unsigned int clause_output;
+				unsigned int clause_patch;
+				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, Xi, random_integers[j]);
 
-				if (clause_output_test) {				
+				if (clause_output) {				
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
 						unsigned int ta_pos = k*number_of_state_bits;
-						//inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch[j]*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
-						inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch_test*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
+						inc(&ta_state[clause_pos + ta_pos], (~Xi[clause_patch*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
 					}
 				}
 			}
@@ -272,9 +271,9 @@ code_calculate_clause_outputs_update = """
 
 	extern "C"
     {
-		__device__ inline unsigned int calculate_clause_output_update(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+		__device__ inline unsigned int calculate_clause_output_update(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, unsigned int *Xi)
 		{
-			for (int patch = 0; patch < number_of_patches; ++patch) {
+			for (int patch = 0; patch < NUMBER_OF_PATCHES; ++patch) {
 				unsigned int output = 1;
 				for (int k = 0; k < number_of_ta_chunks-1; k++) {
 					unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
@@ -298,7 +297,7 @@ code_calculate_clause_outputs_update = """
 			return(0);
 		}
 
-		__global__ void calculate_clause_outputs_update(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *X, int e)
+		__global__ void calculate_clause_outputs_update(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *clause_output, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -313,7 +312,7 @@ code_calculate_clause_outputs_update = """
 
 			for (int j = index; j < number_of_clauses; j += stride) {
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
-				clause_output[j] = calculate_clause_output_update(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, &X[e*(number_of_ta_chunks*number_of_patches)]);
+				clause_output[j] = calculate_clause_output_update(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &X[e*(number_of_ta_chunks*NUMBER_OF_PATCHES)]);
 			}
 		}
 	}
