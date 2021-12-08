@@ -17,14 +17,6 @@ tm = TMClassifier(10, 15, 3.0, platform='CUDA', boost_true_positive_feedback=0)
 for i in range(20):
 	tm.fit(X_train, Y_train)
 
-for i in range(2):
-	for p in range(2):
-		for j in range(5):
-			for k in range(number_of_features*2):
-				print(tm.get_ta_state(i, p, j, k), end=' ')
-				tm.set_ta_state(i, p, j, k, 255)
-				print("->", tm.get_ta_state(i, p, j, k))
-
 print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
 
 np.set_printoptions(threshold=np.inf, linewidth=200, precision=2, suppress=True)
