@@ -82,6 +82,12 @@ class ClauseBankCUDA():
 		self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape((self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits)))
 		self.clause_bank_gpu = cuda.mem_alloc(self.clause_bank.nbytes)
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
+		self.clause_bank_synchronized = True
+
+	def synchronize_clause_bank(self):
+		if !self.clause_bank_synchronized:
+			cuda.memcpy_dtoh(self.clause_ban, self.clause_bank_gpu)
+			self.clause_bank_synchronized = True
 
 	def calculate_clause_outputs_predict(self, encoded_X, e):
 		self.calculate_clause_outputs_predict_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_output_gpu, encoded_X, np.int32(e))
@@ -104,19 +110,23 @@ class ClauseBankCUDA():
 		cuda.memcpy_htod(self.clause_active_gpu, clause_active)
 		self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, s, boost_true_positive_feedback, self.clause_active_gpu, encoded_X, np.int32(e))
 		cuda.Context.synchronize()
+		self.clause_bank_synchronized = False
 
 	def type_ii_feedback(self, update_p, clause_active, encoded_X, e):
 		cuda.memcpy_htod(self.clause_active_gpu, np.ascontiguousarray(clause_active))
 		self.type_ii_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, self.clause_active_gpu, encoded_X, np.int32(e))
 		cuda.Context.synchronize()
+		self.clause_bank_synchronized = False
 
 	def get_ta_action(self, clause, ta):
+		self.synchronize_clause_bank()
 		ta_chunk = ta // 32
 		chunk_pos = ta % 32
 		pos = int(clause * self.number_of_ta_chunks * self.number_of_state_bits + ta_chunk * self.number_of_state_bits + self.number_of_state_bits-1)
 		return (self.clause_bank[pos] & (1 << chunk_pos)) > 0
 
 	def get_ta_state(self, clause, ta):
+		self.synchronize_clause_bank()
 		ta_chunk = ta // 32
 		chunk_pos = ta % 32
 		pos = int(clause * self.number_of_ta_chunks * self.number_of_state_bits + ta_chunk * self.number_of_state_bits)
@@ -127,6 +137,7 @@ class ClauseBankCUDA():
 		return state
 
 	def set_ta_state(self, clause, ta, state):
+		self.synchronize_clause_bank()
 		ta_chunk = ta // 32
 		chunk_pos = ta % 32
 		pos = int(clause * self.number_of_ta_chunks * self.number_of_state_bits + ta_chunk * self.number_of_state_bits)
@@ -135,6 +146,7 @@ class ClauseBankCUDA():
 				self.clause_bank[pos + b] |= (1 << chunk_pos)
 			else:
 				self.clause_bank[pos + b] &= (1 << chunk_pos)
+		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 
 	def prepare_X(self, encoded_X):
 		encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
