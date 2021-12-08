@@ -15,10 +15,16 @@ Y_train = np.where(np.random.rand(5000) <= noise, 1-Y_train, Y_train) # Adds noi
 X_test = np.random.randint(0, 2, size=(5000, number_of_features), dtype=np.uint32)
 Y_test = np.logical_xor(X_test[:,0], X_test[:,1]).astype(dtype=np.uint32)
 
-tm = TMCoalescedClassifier(clauses, T, s, platform='CUDA', boost_true_positive_feedback=0)
+tm = TMCoalescedClassifier(clauses, T, s, platform='CPU', boost_true_positive_feedback=0)
 
 for i in range(20):
 	tm.fit(X_train, Y_train)
+
+for j in range(clauses):
+	for k in range(number_of_features*2):
+		print(tm.get_ta_state(j, k), end=' ')
+		tm.set_ta_state(j, k, 255)
+		print("->", tm.get_ta_state(j, k))
 
 precision = []
 recall = []
