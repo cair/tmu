@@ -85,7 +85,7 @@ class ClauseBankCUDA():
 		self.clause_bank_synchronized = True
 
 	def synchronize_clause_bank(self):
-		if !self.clause_bank_synchronized:
+		if not self.clause_bank_synchronized:
 			cuda.memcpy_dtoh(self.clause_ban, self.clause_bank_gpu)
 			self.clause_bank_synchronized = True
 
