@@ -86,7 +86,7 @@ class ClauseBankCUDA():
 
 	def synchronize_clause_bank(self):
 		if not self.clause_bank_synchronized:
-			cuda.memcpy_dtoh(self.clause_ban, self.clause_bank_gpu)
+			cuda.memcpy_dtoh(self.clause_bank, self.clause_bank_gpu)
 			self.clause_bank_synchronized = True
 
 	def calculate_clause_outputs_predict(self, encoded_X, e):
