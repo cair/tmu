@@ -44,6 +44,9 @@ class TMBasis():
 		self.clause_drop_p = clause_drop_p
 		self.literal_drop_p = literal_drop_p
 
+		self.X_train = np.zeros(0, dtype=np.uint32)
+		self.X_test = np.zeros(0, dtype=np.uint32)
+
 		self.initialized = False
 
 	def initialize(self, X, patch_dim):
@@ -126,7 +129,10 @@ class TMClassifier(TMBasis):
 			self.initialize(X, Y)
 			self.initialized = True
 
-		encoded_X = self.clause_banks[0].prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+		if not np.array_equal(self.X_train, X):
+			self.encoded_X_train = self.clause_banks[0].prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.X_train = X.copy()
+
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 		
 		clause_active = []
@@ -136,7 +142,7 @@ class TMClassifier(TMBasis):
 		for e in range(X.shape[0]):
 			target = Ym[e]
 			
-			clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(encoded_X, e)
+			clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(self.encoded_X_train, e)
 			class_sum = np.dot(clause_active[target] * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
@@ -144,14 +150,14 @@ class TMClassifier(TMBasis):
 
 			if self.weighted_clauses:
 				self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
-			self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, encoded_X, e)
-			self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, encoded_X, e)
+			self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, self.encoded_X_train, e)
+			self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, self.encoded_X_train, e)
 
 			not_target = np.random.randint(self.number_of_classes)
 			while not_target == target:
 				not_target = np.random.randint(self.number_of_classes)
 
-			clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(encoded_X, e)
+			clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(self.encoded_X_train, e)
 			class_sum = np.dot(clause_active[not_target] * self.weight_banks[not_target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
@@ -159,20 +165,22 @@ class TMClassifier(TMBasis):
 		
 			if self.weighted_clauses:
 				self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active[not_target], False)			
-			self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, encoded_X, e)
-			self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, encoded_X, e)
+			self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, self.encoded_X_train, e)
+			self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, self.encoded_X_train, e)
 		
 		return
 
-	def predict(self, X):		
-		encoded_X = self.clause_banks[0].prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+	def predict(self, X):
+		if not np.array_equal(self.X_test, X):
+			self.encoded_X_test = self.clause_banks[0].prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.X_test = X.copy()
 
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
-				class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(encoded_X, e)).astype(np.int32)
+				class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test, e)).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
 				if class_sum > max_class_sum:
 					max_class_sum = class_sum
@@ -271,7 +279,9 @@ class TMCoalescedClassifier(TMBasis):
 			self.initialize(X, Y)
 			self.initialized = True
 
-		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+		if not np.array_equal(self.X_train, X):
+			self.encoded_X_train = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.X_train = X.copy()
 
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
@@ -279,14 +289,14 @@ class TMCoalescedClassifier(TMBasis):
 		for e in range(X.shape[0]):
 			target = Ym[e]
 
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X, e)
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.encoded_X_train, e)
 			
 			class_sum = np.dot(clause_active * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), encoded_X, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), encoded_X, e)
+			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), self.encoded_X_train, e)
 			self.weight_banks[target].increment(clause_outputs, update_p, clause_active, True)
 
 			not_target = np.random.randint(self.number_of_classes)
@@ -297,20 +307,22 @@ class TMCoalescedClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T + class_sum)/(2*self.T)
 		
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), encoded_X, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), encoded_X, e)
+			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), self.encoded_X_train, e)
 			
 			self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active, True)
 		return
 
-	def predict(self, X):		
-		encoded_X =	self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+	def predict(self, X):
+		if not np.array_equal(self.X_test, X):
+			self.encoded_X_test = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.X_test = X.copy()
 
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
 			max_class = 0
-			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, e)			
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(self.encoded_X_test, e)			
 			for i in range(self.number_of_classes):
 				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
@@ -381,12 +393,15 @@ class TMOneVsOneClassifier(TMBasis):
 			self.initialize(X, Y)
 			self.initialized = True
 
-		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+		if not np.array_equal(self.X_train, X):
+			self.encoded_X_train = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.X_train = X.copy()
+
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 		
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X, e)
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.encoded_X_train, e)
 			
 			target = Ym[e]
 			not_target = np.random.randint(self.number_of_classes)
@@ -399,8 +414,8 @@ class TMOneVsOneClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[output].get_weights() >= 0), encoded_X, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() < 0), encoded_X, e)
+			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[output].get_weights() >= 0), self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() < 0), self.encoded_X_train, e)
 			self.weight_banks[output].increment(clause_outputs, update_p, clause_active, True)
 
 			output = not_target * (self.number_of_classes-1) + target - (target > not_target)
@@ -409,17 +424,20 @@ class TMOneVsOneClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T + class_sum)/(2*self.T)
 		
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[output].get_weights() < 0), encoded_X, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() >= 0), encoded_X, e)
+			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[output].get_weights() < 0), self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() >= 0), self.encoded_X_train, e)
 			self.weight_banks[output].decrement(clause_outputs, update_p, clause_active, True)
 		return
 
 	def predict(self, X):
-		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+		if not np.array_equal(self.X_test, X):
+			self.encoded_X_test = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.X_test = X.copy()
+
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
 
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, e)
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(self.encoded_X_test, e)
 
 			max_class_sum = -self.T*self.number_of_classes
 			max_class = 0
@@ -505,12 +523,14 @@ class TMRegressor(TMBasis):
 			self.initialize(X, Y)
 			self.initialized = True
 
-		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
-		encoded_Y = np.ascontiguousarray(((Y - self.min_y)/(self.max_y - self.min_y)*self.T).astype(np.int32))
+		if not np.array_equal(self.X_train, X):
+			self.encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.encoded_Y = np.ascontiguousarray(((Y - self.min_y)/(self.max_y - self.min_y)*self.T).astype(np.int32))
+			self.X_train = X.copy()
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(encoded_X, e)
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.encoded_X_train, e)
 
 			pred_y = np.dot(clause_active * self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
 			pred_y = np.clip(pred_y, 0, self.T)
@@ -519,20 +539,23 @@ class TMRegressor(TMBasis):
 			update_p = (1.0*prediction_error/self.T)**2
 
 			if pred_y < encoded_Y[e]:
-				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active, encoded_X, e)
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active, self.encoded_X_train, e)
 				if self.weighted_clauses:
 					self.weight_bank.increment(clause_outputs, update_p, clause_active, False)
 			elif pred_y > encoded_Y[e]:
-				self.clause_bank.type_ii_feedback(update_p, clause_active, encoded_X, e)
+				self.clause_bank.type_ii_feedback(update_p, clause_active, self.encoded_X_train, e)
 				if self.weighted_clauses:
 					self.weight_bank.decrement(clause_outputs, update_p, clause_active, False)
 		return
 
 	def predict(self, X):
-		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+		if not np.array_equal(self.X_test, X):
+			self.encoded_X_test = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.X_test = X.copy()
+
 		Y = np.ascontiguousarray(np.zeros(X.shape[0]))
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, e)
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(self.encoded_X_test, e)
 			pred_y = np.dot(self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
 			Y[e] = 1.0*pred_y * (self.max_y - self.min_y)/(self.T) + self.min_y
 		return Y
