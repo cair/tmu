@@ -88,13 +88,8 @@ class TMBasis():
 		return transformed_X.reshape((X.shape[0], self.number_of_clauses, self.number_of_patches))
 
 	def literal_clause_frequency(self):
-		literal_frequency = np.zeros(self.number_of_literals, dtype=np.uint32)
-		for j in range(self.number_of_clauses):
-			for k in range(self.number_of_literals):
-				if self.get_ta_action(j, k) == 1:
-					literal_frequency[k] += 1
-		return literal_frequency
-
+		return self.clause_bank.calculate_literal_clause_frequency()
+	
 	def get_ta_action(self, clause, ta):
 		return self.clause_bank.get_ta_action(clause, ta)
 
@@ -142,11 +137,29 @@ class TMClassifier(TMBasis):
 			self.X_train = X.copy()
 
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
-		
+
 		clause_active = []
 		for i in range(self.number_of_classes):
-			clause_active.append(np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32)))
+		 	# Clauses are dropped based on their weights
+			class_clause_active = np.ascontiguousarray(np.ones(self.number_of_clauses, dtype=np.int32))
+			clause_score = np.abs(self.weight_banks[i].get_weights())
+			deactivate = np.random.choice(np.arange(self.number_of_clauses), size=int(self.number_of_clauses*self.clause_drop_p), p = clause_score / clause_score.sum())
+			for d in range(deactivate.shape[0]):
+				class_clause_active[deactivate[d]] = 0
+			clause_active.append(class_clause_active)
+
+		# Literals are dropped based on their frequency
 		literal_active = (np.zeros(self.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
+		literal_clause_frequency = self.literal_clause_frequency()
+		if literal_clause_frequency.sum() > 0:
+			deactivate = np.random.choice(np.arange(self.number_of_literals), size=int(self.number_of_literals*self.literal_drop_p), p = literal_clause_frequency / literal_clause_frequency.sum())
+		else:
+			deactivate = np.random.choice(np.arange(self.number_of_literals), size=int(self.number_of_literals*self.literal_drop_p))
+		for d in range(deactivate.shape[0]):
+			ta_chunk = deactivate[d] // 32
+			chunk_pos = deactivate[d] % 32
+			literal_active[ta_chunk] &= (~(1 << chunk_pos))
+		literal_active = literal_active.astype(np.uint32)
 
 		for e in range(X.shape[0]):
 			target = Ym[e]
@@ -216,11 +229,7 @@ class TMClassifier(TMBasis):
 	def literal_clause_frequency(self):
 		literal_frequency = np.zeros(self.number_of_literals, dtype=np.uint32)
 		for i in range(self.number_of_classes):
-			for p in range(2):
-				for j in range(self.number_of_clauses//2):
-					for k in range(self.number_of_literals):
-						if self.get_ta_action(i, p, j, k) == 1:
-							literal_frequency[k] += 1
+			literal_frequency += self.clause_banks[i].calculate_literal_clause_frequency()
 		return literal_frequency
 
 	def clause_precision(self, the_class, polarity, X, Y):

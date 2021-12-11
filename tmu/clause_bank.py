@@ -46,6 +46,9 @@ class ClauseBank():
 		self.output_one_patches = np.ascontiguousarray(np.empty(self.number_of_patches, dtype=np.uint32))
 		self.o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
 
+		self.literal_clause_count = np.ascontiguousarray(np.empty((int(self.number_of_literals)), dtype=np.uint32))
+		self.lcc_p = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)
+
 		self.initialize_clauses()
 
 	def initialize_clauses(self):
@@ -83,6 +86,10 @@ class ClauseBank():
 		la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
 		lib.cb_type_ii_feedback(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, update_p, ca_p, la_p, xi_p)
 
+	def calculate_literal_clause_frequency(self):
+		lib.cb_calculate_literal_frequency(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.lcc_p)
+		return self.literal_clause_count
+		
 	def get_ta_action(self, clause, ta):
 		ta_chunk = ta // 32
 		chunk_pos = ta % 32

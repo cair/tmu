@@ -340,3 +340,22 @@ void cb_calculate_clause_outputs_patchwise(unsigned int *ta_state, int number_of
 	}
 }
 
+void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, unsigned int *literal_count)
+{
+	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+
+	for (int k = 0; k < number_of_features; k++) {
+		literal_count[k] = 0;
+	}
+	
+	for (int j = 0; j < number_of_clauses; j++) {
+		for (int k = 0; k < number_of_features; k++) {
+			unsigned int ta_chunk = k / 32;
+			unsigned int chunk_pos = k % 32;
+			unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits-1;
+			if ((ta_state[pos] & (1 << chunk_pos)) > 0) {
+				literal_count[k] += 1;
+			}
+		}
+	}
+}
