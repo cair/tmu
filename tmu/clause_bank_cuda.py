@@ -56,7 +56,7 @@ class ClauseBankCUDA():
 		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
 		self.calculate_clause_outputs_predict_gpu.prepare("PiiiPPi")
 		self.calculate_literal_frequency_gpu = mod.get_function("calculate_literal_frequency")
-		self.calculate_literal_frequency_gpu.prepare(PiiiP)
+		self.calculate_literal_frequency_gpu.prepare("PiiiP")
 
 		mod = SourceModule(parameters + kernels.code_calculate_clause_outputs_update, no_extern_c=True)
 		self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
