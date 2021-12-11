@@ -14,12 +14,12 @@ b = Binarizer(max_bits_per_feature = 10)
 b.fit(X)
 X_transformed = b.transform(X)
 
-tm = TMRegressor(1000, 500*10, 2.75, platform='CPU', weighted_clauses=True)
-
 print("\nRMSD over 25 runs:\n")
 tm_results = np.empty(0)
 for i in range(25):
 	X_train, X_test, Y_train, Y_test = train_test_split(X_transformed, Y)
+
+	tm = TMRegressor(1000, 500*10, 2.75, platform='CPU', weighted_clauses=True)
 
 	start = time()
 	for e in range(30):
