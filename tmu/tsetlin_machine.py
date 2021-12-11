@@ -77,7 +77,7 @@ class TMBasis():
 		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
 		transformed_X = np.empty((X.shape[0], self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
-			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_update(encoded_X, e)
+			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_predict(encoded_X, e)
 		return transformed_X
 
 	def transform_patchwise(self, X):
@@ -86,6 +86,14 @@ class TMBasis():
 		for e in range(X.shape[0]):
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_patchwise(encoded_X, e)
 		return transformed_X.reshape((X.shape[0], self.number_of_clauses, self.number_of_patches))
+
+	def literal_clause_frequency(self):
+		literal_frequency = np.zeros(self.number_of_literals, dtype=np.uint32)
+		for j in range(self.number_of_clauses):
+			for k in range(self.number_of_literals):
+				if self.get_ta_action(j, k) == 1:
+					literal_frequency[k] += 1
+		return literal_frequency
 
 	def get_ta_action(self, clause, ta):
 		return self.clause_bank.get_ta_action(clause, ta)
@@ -138,11 +146,12 @@ class TMClassifier(TMBasis):
 		clause_active = []
 		for i in range(self.number_of_classes):
 			clause_active.append(np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32)))
+		literal_active = (np.zeros(self.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
 
 		for e in range(X.shape[0]):
 			target = Ym[e]
 			
-			clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(self.encoded_X_train, e)
+			clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 			class_sum = np.dot(clause_active[target] * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
@@ -150,14 +159,14 @@ class TMClassifier(TMBasis):
 
 			if self.weighted_clauses:
 				self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
-			self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, self.encoded_X_train, e)
-			self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, self.encoded_X_train, e)
+			self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
+			self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
 
 			not_target = np.random.randint(self.number_of_classes)
 			while not_target == target:
 				not_target = np.random.randint(self.number_of_classes)
 
-			clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(self.encoded_X_train, e)
+			clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 			class_sum = np.dot(clause_active[not_target] * self.weight_banks[not_target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
@@ -165,8 +174,8 @@ class TMClassifier(TMBasis):
 		
 			if self.weighted_clauses:
 				self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active[not_target], False)			
-			self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, self.encoded_X_train, e)
-			self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, self.encoded_X_train, e)
+			self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
+			self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
 		
 		return
 
@@ -193,7 +202,7 @@ class TMClassifier(TMBasis):
 		transformed_X = np.empty((X.shape[0], self.number_of_classes, self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			for i in range(self.number_of_classes):
-				transformed_X[e,i,:] = self.clause_banks[i].calculate_clause_outputs_update(encoded_X, e)
+				transformed_X[e,i,:] = self.clause_banks[i].calculate_clause_outputs_predict(encoded_X, e)
 		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses))
 
 	def transform_patchwise(self, X):
@@ -203,6 +212,16 @@ class TMClassifier(TMBasis):
 			for i in range(self.number_of_classes):
 				transformed_X[e,i,:] = self.clause_bank[i].calculate_clause_outputs_patchwise(encoded_X, e)
 		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses, self.number_of_patches))
+
+	def literal_clause_frequency(self):
+		literal_frequency = np.zeros(self.number_of_literals, dtype=np.uint32)
+		for i in range(self.number_of_classes):
+			for p in range(2):
+				for j in range(self.number_of_clauses//2):
+					for k in range(self.number_of_literals):
+						if self.get_ta_action(i, p, j, k) == 1:
+							literal_frequency[k] += 1
+		return literal_frequency
 
 	def clause_precision(self, the_class, polarity, X, Y):
 		clause_outputs = self.transform(X).reshape(X.shape[0], self.number_of_classes, 2, self.number_of_clauses//2)[:,the_class, polarity,:]
@@ -286,17 +305,18 @@ class TMCoalescedClassifier(TMBasis):
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
+		literal_active = (np.zeros(self.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
 		for e in range(X.shape[0]):
 			target = Ym[e]
 
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.encoded_X_train, e)
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 			
 			class_sum = np.dot(clause_active * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), self.encoded_X_train, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), self.encoded_X_train, e)
+			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), literal_active, self.encoded_X_train, e)
 			self.weight_banks[target].increment(clause_outputs, update_p, clause_active, True)
 
 			not_target = np.random.randint(self.number_of_classes)
@@ -307,8 +327,8 @@ class TMCoalescedClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T + class_sum)/(2*self.T)
 		
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), self.encoded_X_train, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), self.encoded_X_train, e)
+			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train, e)
 			
 			self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active, True)
 		return
@@ -400,8 +420,9 @@ class TMOneVsOneClassifier(TMBasis):
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 		
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
+		literal_active = (np.zeros(self.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.encoded_X_train, e)
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 			
 			target = Ym[e]
 			not_target = np.random.randint(self.number_of_classes)
@@ -414,8 +435,8 @@ class TMOneVsOneClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[output].get_weights() >= 0), self.encoded_X_train, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() < 0), self.encoded_X_train, e)
+			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[output].get_weights() >= 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() < 0), literal_active, self.encoded_X_train, e)
 			self.weight_banks[output].increment(clause_outputs, update_p, clause_active, True)
 
 			output = not_target * (self.number_of_classes-1) + target - (target > not_target)
@@ -424,8 +445,8 @@ class TMOneVsOneClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T + class_sum)/(2*self.T)
 		
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[output].get_weights() < 0), self.encoded_X_train, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() >= 0), self.encoded_X_train, e)
+			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[output].get_weights() < 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() >= 0), literal_active, self.encoded_X_train, e)
 			self.weight_banks[output].decrement(clause_outputs, update_p, clause_active, True)
 		return
 
@@ -529,8 +550,9 @@ class TMRegressor(TMBasis):
 			self.X_train = X.copy()
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
+		literal_active = (np.zeros(self.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
 		for e in range(X.shape[0]):
-			clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.encoded_X_train, e)
+			clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 
 			pred_y = np.dot(clause_active * self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
 			pred_y = np.clip(pred_y, 0, self.T)
@@ -539,13 +561,13 @@ class TMRegressor(TMBasis):
 			update_p = (1.0*prediction_error/self.T)**2
 
 			if pred_y < encoded_Y[e]:
-				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active, self.encoded_X_train, e)
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active, literal_active, self.encoded_X_train, e)
 				if self.weighted_clauses:
-					self.weight_bank.increment(clause_outputs, update_p, clause_active, False)
+					self.weight_bank.increment(clause_outputs, update_p, clause_active, literal_active, False)
 			elif pred_y > encoded_Y[e]:
-				self.clause_bank.type_ii_feedback(update_p, clause_active, self.encoded_X_train, e)
+				self.clause_bank.type_ii_feedback(update_p, clause_active, literal_active, self.encoded_X_train, e)
 				if self.weighted_clauses:
-					self.weight_bank.decrement(clause_outputs, update_p, clause_active, False)
+					self.weight_bank.decrement(clause_outputs, update_p, clause_active, literal_active, False)
 		return
 
 	def predict(self, X):
