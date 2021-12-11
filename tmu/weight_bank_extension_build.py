@@ -34,8 +34,7 @@ ffibuilder.set_source("tmu._wb",  # name of the output C extension
     #include "./tmu/WeightBank.h"
 """,
     include_dirs=['.'],
-    sources=['./tmu/WeightBank.c'],   # includes pi.c as additional sources
-    libraries=['m'])    # on Unix, link with the math library
+    sources=['./tmu/WeightBank.c'])    # on Unix, link with the math library
 
 if __name__ == "__main__":
     ffibuilder.compile(verbose=True)
