@@ -88,7 +88,7 @@ code_calculate_clause_outputs_predict = """
 				
 				literal_clause_count[k] = 0;
 				for (int j = 0; j < number_of_clauses; j++) {
-					unsigned int pos = clause * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits-1;
+					unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits-1;
 					literal_clause_count[k] += (ta_state[pos] & (1 << chunk_pos)) > 0;
 				}
 			}
