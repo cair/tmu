@@ -33,8 +33,7 @@ ffibuilder.set_source("tmu._tools",  # name of the output C extension
     #include "./tmu/Tools.h"
 """,
     include_dirs=['.'],
-    sources=['./tmu/Tools.c'],   
-    libraries=['m'])
+    sources=['./tmu/Tools.c'])
 
 if __name__ == "__main__":
     ffibuilder.compile(verbose=True)
