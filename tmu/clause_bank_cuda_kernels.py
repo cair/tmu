@@ -74,6 +74,25 @@ code_calculate_clause_outputs_predict = """
 				clause_output[j] = calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &X[e*(number_of_ta_chunks*NUMBER_OF_PATCHES)]);
 			}
 		}
+
+		__global__ void calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *literal_clause_count)
+		{
+			int index = blockIdx.x * blockDim.x + threadIdx.x;
+			int stride = blockDim.x * gridDim.x;
+
+			unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+			for (int k = index; k < number_of_literals; k += stride) {
+				unsigned int ta_chunk = k / 32;
+				unsigned int chunk_pos = k % 32;
+				
+				literal_clause_count[k] = 0;
+				for (int j = 0; j < number_of_clauses; j++) {
+					unsigned int pos = clause * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits-1;
+					literal_clause_count[k] += (ta_state[pos] & (1 << chunk_pos)) > 0;
+				}
+			}
+		}
 	}
 """
 
