@@ -12,8 +12,8 @@ setup(
     author='Ole-Christoffer Granmo',
     author_email='ole.granmo@uia.no',
     license='MIT',
-    description='Implements the Tsetlin Machine, Coalesced Tsetlin Machine, Convolutional Tsetlin Machine, Regression Tsetlin Machine, and Weighted Tsetlin Machine, with support for continuous features and drop clause.',
-    long_description='Implements the Tsetlin Machine, Coalesced Tsetlin Machine, Convolutional Tsetlin Machine, Regression Tsetlin Machine, and Weighted Tsetlin Machine, with support for continuous features and drop clause.',
+    description='Implements the Tsetlin Machine, Coalesced Tsetlin Machine, Convolutional Tsetlin Machine, Regression Tsetlin Machine, and Weighted Tsetlin Machine, with support for continuous features and drop clause. TMU is written in Python with wrappers for C and CUDA-based clause evaluation and updating.',
+    long_description='Implements the Tsetlin Machine, Coalesced Tsetlin Machine, Convolutional Tsetlin Machine, Regression Tsetlin Machine, and Weighted Tsetlin Machine, with support for continuous features and drop clause. TMU is written in Python with wrappers for C and CUDA-based clause evaluation and updating.',
 
     setup_requires=["cffi>=1.0.0"],
     packages=find_packages(),
