@@ -106,7 +106,7 @@ selected_features = SKB.get_support(indices=True)
 X_train = SKB.transform(X_train)
 X_test = SKB.transform(X_test)
 
-tm = TMClassifier(10000, 8000, 5.0, weighted_clauses=True, clause_drop_p=0.75)
+tm = TMClassifier(10000, 8000, 5.0, platform='CUDA', weighted_clauses=True, clause_drop_p=0.75)
 
 print("\nAccuracy over 40 epochs:\n")
 for i in range(40):
