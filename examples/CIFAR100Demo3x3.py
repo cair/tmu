@@ -38,7 +38,7 @@ for e in range(ensembles):
         tm = TMClassifier(clauses, T, s, platform='CUDA', literal_drop_p=literal_drop_p)
         for i in range(epochs):
                 start_training = time()
-                tm.fit(X_train, Y_train, epochs=1, incremental=True)
+                tm.fit(X_train, Y_train)
                 stop_training = time()
 
                 start_testing = time()
