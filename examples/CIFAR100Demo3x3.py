@@ -1,4 +1,4 @@
-from tmu.tsetlin_machine import TMClassifier
+from tmu.tsetlin_machine import TMCoalescedClassifier
 import numpy as np
 from time import time
 
@@ -6,7 +6,7 @@ from keras.datasets import cifar100
 
 import cv2
 
-clauses = 8000
+clauses = 80000
 T = int(clauses*0.75)
 s = 10.0 
 patch_size = 3
@@ -35,7 +35,7 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 
 f = open("cifar100_%.1f_%d_%d_%d_%.2f.txt" % (s, clauses, T,  patch_size, literal_drop_p), "w+")
 for e in range(ensembles):
-        tm = TMClassifier(clauses, T, s, platform='CUDA', literal_drop_p=literal_drop_p)
+        tm = TMCoalescedClassifier(clauses, T, s, platform='CUDA', literal_drop_p=literal_drop_p)
         for i in range(epochs):
                 start_training = time()
                 tm.fit(X_train, Y_train)
