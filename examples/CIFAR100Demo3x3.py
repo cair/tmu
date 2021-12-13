@@ -6,8 +6,8 @@ from keras.datasets import cifar100
 
 import cv2
 
-clauses = 80000
-T = int(clauses//10*0.75)
+clauses = 8000
+T = int(clauses*0.75)
 s = 10.0 
 patch_size = 3
 resolution = 16
