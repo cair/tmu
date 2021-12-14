@@ -10,7 +10,7 @@ clauses = 80000
 T = int(clauses//10*0.75)
 s = 10.0 
 patch_size = 3
-resolution = 16
+resolution = 8
 number_of_state_bits = 9
 literal_drop_p = 0.0
 
