@@ -352,7 +352,7 @@ class TMCoalescedClassifier(TMBasis):
 				if not_target != target:
 					class_sum = np.dot(clause_active * self.weight_banks[not_target].get_weights(), clause_outputs).astype(np.int32)
 					class_sum = np.clip(class_sum, -self.T, self.T)
-					update_p = 1.0*(self.T + class_sum)/(2*self.T)*(1.0/(self.number_of_clauses-1))
+					update_p = 1.0*(self.T + class_sum)/(2*self.T)*(1.0/(self.number_of_classes-1))
 				
 					self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train, e)
 					self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train, e)
