@@ -300,7 +300,7 @@ class TMCoalescedClassifier(TMBasis):
 
 		self.weight_banks = []
 		for i in range(self.number_of_classes):
-			self.weight_banks.append(WeightBank(np.ones(self.number_of_clauses).astype(np.int32)))
+			self.weight_banks.append(WeightBank(np.random.choice([-1,1], size=self.number_of_clauses).astype(np.int32)))
 		
 	def fit(self, X, Y):
 		if self.initialized == False:
