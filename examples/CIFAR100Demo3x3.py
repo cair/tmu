@@ -2,6 +2,9 @@ from tmu.tsetlin_machine import TMCoalescedClassifier
 import numpy as np
 from time import time
 
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 from keras.datasets import cifar100
 
 import cv2
@@ -33,7 +36,7 @@ for z in range(resolution):
 X_train = X_train.reshape((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], 3*resolution))
 X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], 3*resolution))
 
-f = open("cifar100_%.1f_%d_%d_%d_%.2f.txt" % (s, clauses, T,  patch_size, literal_drop_p), "w+")
+f = open("cifar100_%.1f_%d_%d_%d_%.2f_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution), "w+")
 for e in range(ensembles):
         tm = TMCoalescedClassifier(clauses, T, s, platform='CPU', weighted_clauses=True, literal_drop_p=literal_drop_p)
         for i in range(epochs):
