@@ -39,7 +39,7 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 f = open("cifar10_%.1f_%d_%d_%d_%d_%.2f_%.2f.txt" % (s, clauses, T,  patch_size, resolution, clause_drop_p, literal_drop_p), "w+")
 
 for e in range(ensembles):
-        tm = TMCoalescedClassifier(clauses, T, s, weighted_clauses=True, platform='CPU', clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, patch_dim=(patch_size, patch_size), number_of_state_bits=number_of_state_bits)
+        tm = TMCoalescedClassifier(clauses, T, s, weighted_clauses=True, platform='CUDA', clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, patch_dim=(patch_size, patch_size), number_of_state_bits=number_of_state_bits)
 
         for i in range(epochs):
                 start_training = time()
