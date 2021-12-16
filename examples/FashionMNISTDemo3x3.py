@@ -6,8 +6,8 @@ from keras.datasets import fashion_mnist
 
 import cv2
 
-clauses = 2048
-T = int(clauses//10*0.75)
+clauses = 2500
+T = int(clauses*0.75)
 s = 80.0
 patch_size = 3
 resolution = 8
