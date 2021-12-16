@@ -8,7 +8,7 @@ import cv2
 
 clauses = 2500
 T = int(clauses*0.75)
-s = 10.0
+s = 5.0
 patch_size = 3
 resolution = 8
 number_of_state_bits = 8
@@ -33,7 +33,7 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 
 f = open("fashion10_%.1f_%d_%d_%d_%d.txt" % (s, clauses, T,  patch_size, resolution), "w+")
 
-tm = TMCoalescedClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, s, patch_dim=(patch_size, patch_size), platform='CPU', weighted_clauses=True)
 for i in range(epochs):
         start_training = time()
         tm.fit(X_train, Y_train)
