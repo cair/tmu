@@ -7,8 +7,8 @@ from keras.datasets import cifar10
 import cv2
 
 clauses = 2500
-T = int(clauses//10*0.75)
-s = 160.0 
+T = int(clauses*0.75)
+s = 5.0 
 patch_size = 3
 resolution = 8
 number_of_state_bits = 8
