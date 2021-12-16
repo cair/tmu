@@ -6,7 +6,7 @@ from keras.datasets import fashion_mnist
 
 import cv2
 
-clauses = 512
+clauses = 1024
 T = int(clauses//10*0.75)
 s = 10.0
 patch_size = 3
