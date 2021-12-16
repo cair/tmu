@@ -6,7 +6,7 @@ from keras.datasets import cifar10
 
 import cv2
 
-clauses = 2048
+clauses = 2500
 T = int(clauses//10*0.75)
 s = 160.0 
 patch_size = 3
