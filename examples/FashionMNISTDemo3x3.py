@@ -1,4 +1,4 @@
-from tmu.tsetlin_machine import TMClassifier
+from tmu.tsetlin_machine import TMCoalescedClassifier
 import numpy as np
 from time import time
 
@@ -6,7 +6,7 @@ from keras.datasets import fashion_mnist
 
 import cv2
 
-clauses = 128
+clauses = 512
 T = int(clauses//10*0.75)
 s = 10.0
 patch_size = 3
@@ -33,7 +33,7 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 
 f = open("fashion10_%.1f_%d_%d_%d_%d.txt" % (s, clauses, T,  patch_size, resolution), "w+")
 
-tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
 for i in range(epochs):
         start_training = time()
         tm.fit(X_train, Y_train)
