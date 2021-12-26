@@ -25,13 +25,28 @@ from ._cb import ffi, lib
 
 import numpy as np
 
-class ClauseBank():
-	def __init__(self, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches):
-		self.number_of_clauses = int(number_of_clauses)
-		self.number_of_literals = int(number_of_literals)
-		self.number_of_state_bits = int(number_of_state_bits)
-		self.number_of_patches = int(number_of_patches)
+import tmu.tools
 
+class ClauseBank():
+	def __init__(self, X, number_of_clauses, number_of_state_bits, patch_dim):
+		self.number_of_clauses = int(number_of_clauses)
+		self.number_of_state_bits = int(number_of_state_bits)
+		self.patch_dim = patch_dim
+
+		if len(X.shape) == 2:
+			self.dim = (X.shape[1], 1, 1)
+		elif len(X.shape) == 3:
+			self.dim = (X.shape[1], X.shape[2], 1)
+		elif len(X.shape) == 4:
+			self.dim = (X.shape[1], X.shape[2], X.shape[3])
+
+		if self.patch_dim == None:
+			self.patch_dim = (self.dim[0]*self.dim[1]*self.dim[2], 1)
+
+		self.number_of_features = int(self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1]))
+		self.number_of_literals = self.number_of_features*2
+		
+		self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1)*(self.dim[1] - self.patch_dim[1] + 1))
 		self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
 
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
@@ -116,5 +131,5 @@ class ClauseBank():
 			else:
 				self.clause_bank[pos + b] &= (1 << chunk_pos)
 
-	def prepare_X(self, encoded_X):
-		return encoded_X
+	def prepare_X(self, X):		
+		return tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)

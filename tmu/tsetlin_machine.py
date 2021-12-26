@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Ole-Christoffer Granmo
+# Copyright (c) 2022 Ole-Christoffer Granmo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -49,23 +49,6 @@ class TMBasis():
 
 		self.initialized = False
 
-	def initialize(self, X, patch_dim):
-		if len(X.shape) == 2:
-			self.dim = (X.shape[1], 1 ,1)
-		elif len(X.shape) == 3:
-			self.dim = (X.shape[1], X.shape[2], 1)
-		elif len(X.shape) == 4:
-			self.dim = (X.shape[1], X.shape[2], X.shape[3])
-
-		if self.patch_dim == None:
-			self.patch_dim = (X.shape[1], 1)
-
-		self.number_of_features = int(self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1]))
-		self.number_of_literals = self.number_of_features*2
-		
-		self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1)*(self.dim[1] - self.patch_dim[1] + 1))
-		self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
-
 	def clause_co_occurrence(self, X, percentage=False):
 		clause_outputs = csr_matrix(self.transform(X))
 		if percentage:
@@ -74,14 +57,14 @@ class TMBasis():
 			return clause_outputs.transpose().dot(clause_outputs)
 
 	def transform(self, X):
-		encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+		encoded_X = self.clause_bank.prepare_X(X)
 		transformed_X = np.empty((X.shape[0], self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_predict(encoded_X, e)
 		return transformed_X
 
 	def transform_patchwise(self, X):
-		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+		encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.clause_bank.number_of_ta_chunks, self.dim, self.patch_dim, 0)
 		transformed_X = np.empty((X.shape[0], self.number_of_clauses*self.number_of_patches), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			transformed_X[e,:] = self.clause_bank.calculate_clause_outputs_patchwise(encoded_X, e)
@@ -104,8 +87,6 @@ class TMClassifier(TMBasis):
 		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
-		super().initialize(X, self.patch_dim)
-
 		self.number_of_classes = int(np.max(Y) + 1)
 
 		self.weight_banks = []
@@ -115,11 +96,11 @@ class TMClassifier(TMBasis):
 		self.clause_banks = []
 		if self.platform == 'CPU':
 			for i in range(self.number_of_classes):
-				self.clause_banks.append(ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches))
+				self.clause_banks.append(ClauseBank(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim))
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
 			for i in range(self.number_of_classes):
-				self.clause_banks.append(ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, X, Y))
+				self.clause_banks.append(ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim))
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
@@ -133,7 +114,7 @@ class TMClassifier(TMBasis):
 			self.initialized = True
 
 		if not np.array_equal(self.X_train, X):
-			self.encoded_X_train = self.clause_banks[0].prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.encoded_X_train = self.clause_banks[0].prepare_X(X)
 			self.X_train = X.copy()
 
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
@@ -149,12 +130,12 @@ class TMClassifier(TMBasis):
 			clause_active.append(class_clause_active)
 
 		# Literals are dropped based on their frequency
-		literal_active = (np.zeros(self.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
+		literal_active = (np.zeros(self.clause_banks[0].number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
 		literal_clause_frequency = self.literal_clause_frequency()
 		if literal_clause_frequency.sum() > 0:
-			deactivate = np.random.choice(np.arange(self.number_of_literals), size=int(self.number_of_literals*self.literal_drop_p), p = literal_clause_frequency / literal_clause_frequency.sum())
+			deactivate = np.random.choice(np.arange(self.clause_banks[0].number_of_literals), size=int(self.clause_banks[0].number_of_literals*self.literal_drop_p), p = literal_clause_frequency / literal_clause_frequency.sum())
 		else:
-			deactivate = np.random.choice(np.arange(self.number_of_literals), size=int(self.number_of_literals*self.literal_drop_p))
+			deactivate = np.random.choice(np.arange(self.clause_banks[0].number_of_literals), size=int(self.clause_banks[0].number_of_literals*self.literal_drop_p))
 		for d in range(deactivate.shape[0]):
 			ta_chunk = deactivate[d] // 32
 			chunk_pos = deactivate[d] % 32
@@ -194,7 +175,7 @@ class TMClassifier(TMBasis):
 
 	def predict(self, X):
 		if not np.array_equal(self.X_test, X):
-			self.encoded_X_test = self.clause_banks[0].prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.encoded_X_test = self.clause_banks[0].prepare_X(X)
 			self.X_test = X.copy()
 
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
@@ -211,7 +192,7 @@ class TMClassifier(TMBasis):
 		return Y
 
 	def transform(self, X):
-		encoded_X = self.clause_banks[0].prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+		encoded_X = self.clause_banks[0].prepare_X(X)
 		transformed_X = np.empty((X.shape[0], self.number_of_classes, self.number_of_clauses), dtype=np.uint32)
 		for e in range(X.shape[0]):
 			for i in range(self.number_of_classes):
@@ -227,7 +208,7 @@ class TMClassifier(TMBasis):
 		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses, self.number_of_patches))
 
 	def literal_clause_frequency(self):
-		literal_frequency = np.zeros(self.number_of_literals, dtype=np.uint32)
+		literal_frequency = np.zeros(self.clause_banks[0].number_of_literals, dtype=np.uint32)
 		for i in range(self.number_of_classes):
 			literal_frequency += self.clause_banks[i].calculate_literal_clause_frequency()
 		return literal_frequency
@@ -285,15 +266,13 @@ class TMCoalescedClassifier(TMBasis):
 		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
-		super().initialize(X, self.patch_dim)
-
 		self.number_of_classes = int(np.max(Y) + 1)
 	
 		if self.platform == 'CPU':
-			self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
+			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
-			self.clause_bank = ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, X, Y)
+			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
@@ -308,7 +287,7 @@ class TMCoalescedClassifier(TMBasis):
 			self.initialized = True
 
 		if not np.array_equal(self.X_train, X):
-			self.encoded_X_train = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.encoded_X_train = self.clause_bank.prepare_X(X)
 			self.X_train = X.copy()
 
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
@@ -323,12 +302,12 @@ class TMCoalescedClassifier(TMBasis):
 			clause_active[deactivate[d]] = 0
 
 		# Literals are dropped based on their frequency
-		literal_active = (np.zeros(self.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
+		literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
 		literal_clause_frequency = self.literal_clause_frequency()
 		if literal_clause_frequency.sum() > 0:
-			deactivate = np.random.choice(np.arange(self.number_of_literals), size=int(self.number_of_literals*self.literal_drop_p), p = literal_clause_frequency / literal_clause_frequency.sum())
+			deactivate = np.random.choice(np.arange(self.clause_bank.number_of_literals), size=int(self.clause_bank.number_of_literals*self.literal_drop_p), p = literal_clause_frequency / literal_clause_frequency.sum())
 		else:
-			deactivate = np.random.choice(np.arange(self.number_of_literals), size=int(self.number_of_literals*self.literal_drop_p))
+			deactivate = np.random.choice(np.arange(self.clause_bank.number_of_literals), size=int(self.clause_bank.number_of_literals*self.literal_drop_p))
 		for d in range(deactivate.shape[0]):
 			ta_chunk = deactivate[d] // 32
 			chunk_pos = deactivate[d] % 32
@@ -364,7 +343,7 @@ class TMCoalescedClassifier(TMBasis):
 
 	def predict(self, X):
 		if not np.array_equal(self.X_test, X):
-			self.encoded_X_test = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.encoded_X_test = self.clause_bank.prepare_X(X)
 			self.X_test = X.copy()
 
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
@@ -419,16 +398,14 @@ class TMOneVsOneClassifier(TMBasis):
 		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
-		super().initialize(X, self.patch_dim)
-
 		self.number_of_classes = int(np.max(Y) + 1)
 		self.number_of_outputs = self.number_of_classes * (self.number_of_classes-1)
 
 		if self.platform == 'CPU':
-			self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
+			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
-			self.clause_bank = ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, X, Y)
+			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
@@ -443,13 +420,13 @@ class TMOneVsOneClassifier(TMBasis):
 			self.initialized = True
 
 		if not np.array_equal(self.X_train, X):
-			self.encoded_X_train = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.encoded_X_train = self.clause_bank.prepare_X(X)
 			self.X_train = X.copy()
 
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 		
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
-		literal_active = (np.zeros(self.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
+		literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
 		for e in range(X.shape[0]):
 			clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 			
@@ -481,7 +458,7 @@ class TMOneVsOneClassifier(TMBasis):
 
 	def predict(self, X):
 		if not np.array_equal(self.X_test, X):
-			self.encoded_X_test = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.encoded_X_test = self.clause_bank.prepare_X(X)
 			self.X_test = X.copy()
 
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
@@ -552,16 +529,14 @@ class TMRegressor(TMBasis):
 		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
-		super().initialize(X, self.patch_dim)
-
 		self.max_y = np.max(Y)
 		self.min_y = np.min(Y)
 
 		if self.platform == 'CPU':
-			self.clause_bank = ClauseBank(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches)
+			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
-			self.clause_bank = ClauseBankCUDA(self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, X, Y)
+			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
@@ -574,12 +549,12 @@ class TMRegressor(TMBasis):
 			self.initialized = True
 
 		if not np.array_equal(self.X_train, X):
-			self.encoded_X = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
-			self.encoded_Y = np.ascontiguousarray(((Y - self.min_y)/(self.max_y - self.min_y)*self.T).astype(np.int32))
+			self.encoded_X_train = self.clause_bank.prepare_X(X)
 			self.X_train = X.copy()
+		encoded_Y = np.ascontiguousarray(((Y - self.min_y)/(self.max_y - self.min_y)*self.T).astype(np.int32))
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
-		literal_active = (np.zeros(self.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
+		literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
 		for e in range(X.shape[0]):
 			clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 
@@ -592,16 +567,16 @@ class TMRegressor(TMBasis):
 			if pred_y < encoded_Y[e]:
 				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active, literal_active, self.encoded_X_train, e)
 				if self.weighted_clauses:
-					self.weight_bank.increment(clause_outputs, update_p, clause_active, literal_active, False)
+					self.weight_bank.increment(clause_outputs, update_p, clause_active, False)
 			elif pred_y > encoded_Y[e]:
 				self.clause_bank.type_ii_feedback(update_p, clause_active, literal_active, self.encoded_X_train, e)
 				if self.weighted_clauses:
-					self.weight_bank.decrement(clause_outputs, update_p, clause_active, literal_active, False)
+					self.weight_bank.decrement(clause_outputs, update_p, clause_active, False)
 		return
 
 	def predict(self, X):
 		if not np.array_equal(self.X_test, X):
-			self.encoded_X_test = self.clause_bank.prepare_X(tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0))
+			self.encoded_X_test = self.clause_bank.prepare_X(X)
 			self.X_test = X.copy()
 
 		Y = np.ascontiguousarray(np.zeros(X.shape[0]))
