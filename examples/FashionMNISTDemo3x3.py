@@ -12,6 +12,7 @@ s = 10.0
 patch_size = 3
 resolution = 8
 number_of_state_bits = 8
+clause_drop_p = 0.0
 
 epochs = 250
 
@@ -31,9 +32,9 @@ for z in range(resolution):
 X_train = X_train.reshape((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], resolution))
 X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], resolution))
 
-f = open("fashion10_%.1f_%d_%d_%d_%d.txt" % (s, clauses, T,  patch_size, resolution), "w+")
+f = open("fashion10_%.1f_%d_%d_%d_%d_%.2f.txt" % (s, clauses, T,  patch_size, resolution, clause_drop_p), "w+")
 
-tm = TMCoalescedClassifier(clauses, T, s, patch_dim=(patch_size, patch_size), platform='CPU', weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, s, clause_drop_p=clause_drop_p, patch_dim=(patch_size, patch_size), platform='CPU', weighted_clauses=True)
 for i in range(epochs):
         start_training = time()
         tm.fit(X_train, Y_train)
