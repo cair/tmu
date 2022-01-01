@@ -1,7 +1,7 @@
 from tmu.tsetlin_machine import TMMultiChannelClassifier
 import numpy as np 
 
-number_of_and_components = 3
+number_of_and_components = 2
 clauses = 4
 T = 15*2
 global_T = ((number_of_and_components*T,T), (T,number_of_and_components*T))
@@ -9,9 +9,9 @@ s = (3.1, 2.1)
 number_of_features = 4
 noise = 0.1
 
-examples = 10000
+examples = 20000
 
-epochs = 50
+epochs = 25
 
 X_train = np.random.randint(0, 2, size=(number_of_and_components, examples, number_of_features), dtype=np.uint32)
 Y_train = np.ones(examples)
