@@ -489,8 +489,8 @@ class TMMultiChannelClassifier(TMBasis):
 				local_class_sum[c] = np.dot(clause_active * self.weight_banks[not_target].get_weights(), clause_outputs[c]).astype(np.int32)
 				local_class_sum[c] = np.clip(local_class_sum[c], -self.T, self.T)
 				global_class_sum += local_class_sum[c]
-			global_class_sum = np.clip(global_class_sum, -self.global_T[target][0], self.global_T[target][1])
-			global_update_p = 1.0*(self.global_T[target][0] + global_class_sum)/(self.global_T[target][0]+self.global_T[target][1])
+			global_class_sum = np.clip(global_class_sum, -self.global_T[not_target][0], self.global_T[not_target][1])
+			global_update_p = 1.0*(self.global_T[not_target][0] + global_class_sum)/(self.global_T[not_target][0]+self.global_T[not_target][1])
 
 			for c in range(X.shape[0]):
 				local_update_p = 1.0*(self.T + local_class_sum[c])/(2*self.T)
