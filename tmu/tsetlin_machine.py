@@ -475,7 +475,7 @@ class TMMultiChannelClassifier(TMBasis):
 
 			for c in range(X.shape[0]):
 				local_update_p = 1.0*(self.T - local_class_sum[c])/(2*self.T)
-				update_p = local_update_p * global_update_p
+				update_p = np.minimum(local_update_p, global_update_p)
 				self.clause_bank.type_i_feedback(update_p, self.s[target], self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), literal_active, self.encoded_X_train[c], e)
 				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), literal_active, self.encoded_X_train[c], e)
 				self.weight_banks[target].increment(clause_outputs[c], update_p, clause_active, True)
@@ -494,7 +494,7 @@ class TMMultiChannelClassifier(TMBasis):
 
 			for c in range(X.shape[0]):
 				local_update_p = 1.0*(self.T + local_class_sum[c])/(2*self.T)
-				update_p = local_update_p * global_update_p
+				update_p = np.minimum(local_update_p, global_update_p)
 				self.clause_bank.type_i_feedback(update_p, self.s[not_target], self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train[c], e)
 				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train[c], e)
 				self.weight_banks[not_target].decrement(clause_outputs[c], update_p, clause_active, True)
