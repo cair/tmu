@@ -31,6 +31,7 @@ ffibuilder.cdef("""
     void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, unsigned int *literal_count);
     void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi);
     void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi);
+    void cb_type_iii_feedback(unsigned int *ta_state, unsigned int *ind_state, unsigned int *clause_and_target, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits_ta, int number_of_state_bits_ind, int number_of_patches, float update_p, float d, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi, unsigned int target);
     """)
 
 ffibuilder.set_source("tmu._cb",  # name of the output C extension
