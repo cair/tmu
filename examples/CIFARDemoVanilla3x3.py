@@ -39,11 +39,11 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 f = open("cifar10_%.1f_%d_%d_%d_%d_%.2f_%.2f.txt" % (s, clauses, T,  patch_size, resolution, clause_drop_p, literal_drop_p), "w+")
 
 for e in range(ensembles):
-        tm = TMClassifier(clauses, T, s, weighted_clauses=True, platform='CPU', clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, patch_dim=(patch_size, patch_size), number_of_state_bits=number_of_state_bits)
+        tm = TMClassifier(clauses, T, s, weighted_clauses=True, platform='CPU', clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits)
 
         for i in range(epochs):
                 start_training = time()
-                tm.fit(X_train, Y_train)
+                tm.fit(X_train, Y_train, type_iii_feedback=True)
                 stop_training = time()
 
                 start_testing = time()
@@ -51,7 +51,7 @@ for e in range(ensembles):
                 stop_testing = time()
 
                 result_train = 100*(tm.predict(X_train) == Y_train).mean()
-                print("%d %d %.2f %.2f %.2f %.2f" % (e, i, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
-                print("%d %d %.2f %.2f %.2f %.2f" % (e, i, result_train, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
+                print("%d %d %.2f %.2f %d %.2f %.2f" % (e, i, result_train, result_test, tm.literal_clause_frequency().sum(), stop_training-start_training, stop_testing-start_testing))
+                print("%d %d %.2f %.2f %d %.2f %.2f" % (e, i, result_train, result_test, tm.literal_clause_frequency().sum(), stop_training-start_training, stop_testing-start_testing), file=f)
                 f.flush()
 f.close()
