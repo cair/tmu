@@ -84,7 +84,7 @@ class TMBasis():
 		return self.clause_bank.set_ta_state(clause, ta, state)
 
 class TMClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
@@ -109,7 +109,7 @@ class TMClassifier(TMBasis):
 		self.positive_clauses = np.concatenate((np.ones(self.number_of_clauses//2, dtype=np.int32), np.zeros(self.number_of_clauses//2, dtype=np.int32)))
 		self.negative_clauses = np.concatenate((np.zeros(self.number_of_clauses//2, dtype=np.int32), np.ones(self.number_of_clauses//2, dtype=np.int32)))
 
-	def fit(self, X, Y):
+	def fit(self, X, Y, type_iii_feedback=False):
 		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
