@@ -53,6 +53,9 @@ class ClauseBank():
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 		self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
 
+		self.clause_and_target = np.ascontiguousarray(np.zeros((int(self.number_of_clauses*self.number_of_ta_chunks)), dtype=np.uint32))
+		self.ct_p = ffi.cast("unsigned int *", self.clause_and_target.ctypes.data)
+
 		self.clause_output_patchwise = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
 		self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
 
