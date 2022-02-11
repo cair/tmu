@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2021 Ole-Christoffer Granmo
+Copyright (c) 2022 Ole-Christoffer Granmo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -104,7 +104,7 @@ static inline void cb_calculate_clause_output_feedback(unsigned int *ta_state, u
 		unsigned int output = 1;
 		for (int k = 0; k < number_of_ta_chunks-1; k++) {
 			unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
-			output = output && (ta_state[pos] & (Xi[patch*number_of_ta_chunks + k] | (!literal_active[k]))) == ta_state[pos];
+			output = output && (ta_state[pos] & (Xi[patch*number_of_ta_chunks + k] | (~literal_active[k]))) == ta_state[pos];
 
 			if (!output) {
 				break;
@@ -113,7 +113,7 @@ static inline void cb_calculate_clause_output_feedback(unsigned int *ta_state, u
 
 		unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
 		output = output &&
-			(ta_state[pos] & (Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] | (!literal_active[number_of_ta_chunks - 1])) & filter) ==
+			(ta_state[pos] & (Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] | (~literal_active[number_of_ta_chunks - 1])) & filter) ==
 			(ta_state[pos] & filter);
 
 		if (output) {
@@ -193,7 +193,7 @@ static inline unsigned int cb_calculate_clause_output_update(unsigned int *ta_st
 		unsigned int output = 1;
 		for (int k = 0; k < number_of_ta_chunks-1; k++) {
 			unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
-			output = output && (ta_state[pos] & (Xi[patch*number_of_ta_chunks + k] | (!literal_active[k]))) == ta_state[pos];
+			output = output && (ta_state[pos] & (Xi[patch*number_of_ta_chunks + k] | (~literal_active[k]))) == ta_state[pos];
 
 			if (!output) {
 				break;
@@ -202,7 +202,7 @@ static inline unsigned int cb_calculate_clause_output_update(unsigned int *ta_st
 
 		unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
 		output = output &&
-			(ta_state[pos] & (Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] | (!literal_active[number_of_ta_chunks - 1])) & filter) ==
+			(ta_state[pos] & (Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] | (~literal_active[number_of_ta_chunks - 1])) & filter) ==
 			(ta_state[pos] & filter);
 
 		if (output) {
