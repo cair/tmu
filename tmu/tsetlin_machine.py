@@ -157,7 +157,7 @@ class TMClassifier(TMBasis):
 				self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
 			self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
 			self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
-			if type_iii:
+			if type_iii_feedback:
 				self.clause_banks[target].type_iii_feedback(update_p, self.d, clause_active[target]*self.positive_clauses, literal_active, self.encoded_X_train, e, 1)
 				self.clause_banks[target].type_iii_feedback(update_p, self.d, clause_active[target]*self.negative_clauses, literal_active, self.encoded_X_train, e, 0)
 
@@ -175,7 +175,7 @@ class TMClassifier(TMBasis):
 				self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active[not_target], False)			
 			self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
 			self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
-			if type_iii:
+			if type_iii_feedback:
 				self.clause_banks[not_target].type_iii_feedback(update_p, self.d, clause_active[not_target]*self.negative_clauses, literal_active, self.encoded_X_train, e, 1)
 				self.clause_banks[not_target].type_iii_feedback(update_p, self.d, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e, 0)
 		return
