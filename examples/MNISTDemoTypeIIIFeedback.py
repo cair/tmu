@@ -19,7 +19,7 @@ number_of_features = 28*28
 print("\nAccuracy over 250 epochs:\n")
 for i in range(250):
         start_training = time()
-        tm.fit(X_train, Y_train, type_iii=True)
+        tm.fit(X_train, Y_train, type_iii_feedback=True)
         stop_training = time()
 
         start_testing = time()
