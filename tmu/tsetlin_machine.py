@@ -31,9 +31,10 @@ from sys import maxsize
 from time import time
 
 class TMBasis():
-	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
-		self.number_of_state_bits = number_of_state_bits
+		self.number_of_state_bits_ta = number_of_state_bits_ta
+		self.number_of_state_bits_ind = number_of_state_bits_ind
 		self.T = int(T)
 		self.s = s
 		self.platform = platform
@@ -83,8 +84,8 @@ class TMBasis():
 		return self.clause_bank.set_ta_state(clause, ta, state)
 
 class TMClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -96,11 +97,11 @@ class TMClassifier(TMBasis):
 		self.clause_banks = []
 		if self.platform == 'CPU':
 			for i in range(self.number_of_classes):
-				self.clause_banks.append(ClauseBank(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim))
+				self.clause_banks.append(ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim))
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
 			for i in range(self.number_of_classes):
-				self.clause_banks.append(ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim))
+				self.clause_banks.append(ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim))
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
@@ -155,6 +156,9 @@ class TMClassifier(TMBasis):
 				self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
 			self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
 			self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
+			if type_iii:
+				self.clause_banks[target].type_iii_feedback(update_p, self.d, clause_active[target]*self.positive_clauses, literal_active, self.encoded_X_train, e, 1)
+				self.clause_banks[target].type_iii_feedback(update_p, self.d, clause_active[target]*self.negative_clauses, literal_active, self.encoded_X_train, e, 0)
 
 			not_target = np.random.randint(self.number_of_classes)
 			while not_target == target:
@@ -170,7 +174,9 @@ class TMClassifier(TMBasis):
 				self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active[not_target], False)			
 			self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
 			self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
-		
+			if type_iii:
+				self.clause_banks[not_target].type_iii_feedback(update_p, self.d, clause_active[not_target]*self.negative_clauses, literal_active, self.encoded_X_train, e, 1)
+				self.clause_banks[not_target].type_iii_feedback(update_p, self.d, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e, 0)
 		return
 
 	def predict(self, X):
@@ -262,17 +268,17 @@ class TMClassifier(TMBasis):
 			return self.clause_banks[the_class].set_ta_state(self.number_of_clauses//2 + clause, ta, state)
 
 class TMCoalescedClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
 	
 		if self.platform == 'CPU':
-			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
+			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim)
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
-			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
+			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
@@ -394,18 +400,18 @@ class TMCoalescedClassifier(TMBasis):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMMultiChannelClassifier(TMBasis):
-	def __init__(self, number_of_clauses, global_T, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, global_T, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 		self.global_T = global_T
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
 	
 		if self.platform == 'CPU':
-			self.clause_bank = ClauseBank(X[0], self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
+			self.clause_bank = ClauseBank(X[0], self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim)
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
-			self.clause_bank = ClauseBankCUDA(X[0], self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
+			self.clause_bank = ClauseBankCUDA(X[0], self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
@@ -564,18 +570,18 @@ class TMMultiChannelClassifier(TMBasis):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMOneVsOneClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
 		self.number_of_outputs = self.number_of_classes * (self.number_of_classes-1)
 
 		if self.platform == 'CPU':
-			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
+			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim)
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
-			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
+			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
@@ -695,18 +701,18 @@ class TMOneVsOneClassifier(TMBasis):
 		self.weight_banks[output].get_weights()[output] = weight
 
 class TMRegressor(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.max_y = np.max(Y)
 		self.min_y = np.min(Y)
 
 		if self.platform == 'CPU':
-			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
+			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim)
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
-			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits, self.patch_dim)
+			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
 		else:
 			print("Unknown Platform")
 			sys.exit(-1)
