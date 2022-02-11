@@ -132,6 +132,61 @@ static inline void cb_calculate_clause_output_feedback(unsigned int *ta_state, u
 	}
 }
 
+/* Calculate the output of each clause using the actions of each Tsetline Automaton. */
+static inline int cb_calculate_clause_output_single_false_literal(unsigned int *ta_state, unsigned int *candidate_offending_literals, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *literal_active, unsigned int *Xi)
+{
+	int offending_literals_count = 0;
+	int offending_literal_id = 0;
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		unsigned int max_one_offending_literal = 1;
+		unsigned int already_one_offending_literal = 0;
+
+		for (int k = 0; k < number_of_ta_chunks-1; k++) {
+			unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+			unsigned int offending_literals = (ta_state[pos] & (Xi[patch*number_of_ta_chunks + k] | (~literal_active[k]))) ^ ta_state[pos];
+			if ((offending_literals & (offending_literals - 1)) > 0) {
+				max_one_offending_literal = 0;
+				break;
+			} else if (offending_literals != 0) {
+				if (!already_one_offending_literal) {
+					already_one_offending_literal = 1;
+					offending_literal_id = log2(offending_literals);
+				} else {
+					max_one_offending_literal = 0;
+					break;
+				}
+			}
+		}
+
+		unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+		unsigned int offending_literals = (ta_state[pos] & (Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] | (~literal_active[number_of_ta_chunks - 1])) & filter) ^ (ta_state[pos] & filter);
+		if ((offending_literals & (offending_literals - 1)) > 0) {
+			max_one_offending_literal = 0;
+			break;
+		} else if (offending_literals != 0) {
+			if (!already_one_offending_literal) {
+				already_one_offending_literal = 1;
+				offending_literal_id = log2(offending_literals);
+			} else {
+				max_one_offending_literal = 0;
+				break;
+			}
+		}
+
+		if (max_one_offending_literal && already_one_offending_literal) {
+			candidate_offending_literals[offending_literals_count] = offending_literal_id;
+			offending_literals_count++;
+		}
+	}
+
+	if (offending_literals_count > 0) {
+		int offending_literal_pos = fast_rand() % offending_literals_count;
+ 		return(candidate_offending_literals[offending_literal_pos]);
+	} else {
+		return(-1);
+	}
+}
+
 static inline unsigned int cb_calculate_clause_output_update(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *literal_active, unsigned int *Xi)
 {
 	for (int patch = 0; patch < number_of_patches; ++patch) {
