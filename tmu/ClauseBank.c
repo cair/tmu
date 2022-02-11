@@ -314,7 +314,7 @@ void cb_type_iii_feedback(unsigned int *ta_state, unsigned int *ind_state, unsig
 
 		if (clause_output) {
 			if (target) {
-				if (((float)fast_rand())/((float)FAST_RAND_MAX) <= d) {
+				if (((float)fast_rand())/((float)FAST_RAND_MAX) <= (1.0 - 1.0/d)) {
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
 						unsigned int ind_pos = k*number_of_state_bits_ind;
 						cb_inc(&ind_state[clause_pos_ind + ind_pos], literal_active[k] & clause_and_target[j*number_of_ta_chunks + k] & Xi[clause_patch*number_of_ta_chunks + k], number_of_state_bits_ind);
