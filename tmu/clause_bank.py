@@ -111,7 +111,7 @@ class ClauseBank():
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
 		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
-		lib.cb_type_iii_feedback(self.cb_p, self.cbi_p, self.ft_p, self.ct_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.number_of_patches, update_p, d, ca_p, la_p, xi_p, target)
+		lib.cb_type_iii_feedback(self.cb_p, self.cbi_p, self.ct_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.number_of_patches, update_p, d, ca_p, la_p, xi_p, target)
 
 	def calculate_literal_clause_frequency(self):
 		lib.cb_calculate_literal_frequency(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.lcc_p)
