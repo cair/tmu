@@ -31,12 +31,13 @@ from sys import maxsize
 from time import time
 
 class TMBasis():
-	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, d=200.0, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits_ta = number_of_state_bits_ta
 		self.number_of_state_bits_ind = number_of_state_bits_ind
 		self.T = int(T)
 		self.s = s
+		self.d = d
 		self.platform = platform
 		self.patch_dim = patch_dim
 		self.boost_true_positive_feedback = boost_true_positive_feedback
@@ -84,8 +85,8 @@ class TMBasis():
 		return self.clause_bank.set_ta_state(clause, ta, state)
 
 class TMClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, d=200.0, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, d=200.0, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
