@@ -86,7 +86,7 @@ class TMBasis():
 
 class TMClassifier(TMBasis):
 	def __init__(self, number_of_clauses, T, s, d=200.0, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, d=200.0, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+		super().__init__(number_of_clauses, T, s, d=d, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
