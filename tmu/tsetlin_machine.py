@@ -269,8 +269,8 @@ class TMClassifier(TMBasis):
 			return self.clause_banks[the_class].set_ta_state(self.number_of_clauses//2 + clause, ta, state)
 
 class TMCoalescedClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, d=200.0, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, d=d, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -288,7 +288,7 @@ class TMCoalescedClassifier(TMBasis):
 		for i in range(self.number_of_classes):
 			self.weight_banks.append(WeightBank(np.random.choice([-1,1], size=self.number_of_clauses).astype(np.int32)))
 		
-	def fit(self, X, Y):
+	def fit(self, X, Y, type_iii_feedback=False):
 		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
@@ -333,6 +333,9 @@ class TMCoalescedClassifier(TMBasis):
 			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), literal_active, self.encoded_X_train, e)
 			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), literal_active, self.encoded_X_train, e)
 			self.weight_banks[target].increment(clause_outputs, update_p, clause_active, True)
+			if type_iii_feedback:
+				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[target].get_weights() >= 0), literal_active, self.encoded_X_train, e, 1)
+				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[target].get_weights() < 0), literal_active, self.encoded_X_train, e, 0)
 
 			not_target = np.random.randint(self.number_of_classes)
 			while not_target == target:
@@ -344,7 +347,10 @@ class TMCoalescedClassifier(TMBasis):
 		
 			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train, e)
 			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train, e)
-			
+			if type_iii_feedback:
+				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train, e, 1)
+				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train, e, 0)
+	
 			self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active, True)
 		return
 
