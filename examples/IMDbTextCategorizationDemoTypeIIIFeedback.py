@@ -106,12 +106,12 @@ selected_features = SKB.get_support(indices=True)
 X_train = SKB.transform(X_train)
 X_test = SKB.transform(X_test)
 
-tm = TMClassifier(10000, 8000, 5.0, platform='CPU', weighted_clauses=True, clause_drop_p=0.75)
+tm = TMClassifier(10000, 8000, 5.0, platform='CPU', type_iii_feedback=True, weighted_clauses=True, clause_drop_p=0.75)
 
 print("\nAccuracy over 250 epochs:\n")
 for i in range(250):
 	start_training = time()
-	tm.fit(X_train, Y_train, type_iii_feedback=True)
+	tm.fit(X_train, Y_train)
 	stop_training = time()
 
 	start_testing = time()
