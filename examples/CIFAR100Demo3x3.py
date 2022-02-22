@@ -7,8 +7,6 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 from keras.datasets import cifar100
 
-import cv2
-
 clauses = 80000
 T = int(clauses//10*0.75)
 s = 10.0 
