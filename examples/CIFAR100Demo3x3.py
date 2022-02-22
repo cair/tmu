@@ -14,7 +14,6 @@ T = int(clauses//10*0.75)
 s = 10.0 
 patch_size = 3
 resolution = 8
-number_of_state_bits = 9
 literal_drop_p = 0.0
 
 epochs = 250
@@ -38,7 +37,7 @@ X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.sh
 
 f = open("cifar100_%.1f_%d_%d_%d_%.2f_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution), "w+")
 for e in range(ensembles):
-        tm = TMCoalescedClassifier(clauses, T, s, platform='CPU', weighted_clauses=True, literal_drop_p=literal_drop_p)
+        tm = TMCoalescedClassifier(clauses, T, s, platform='CUDA', focused_negative_sampling=True, weighted_clauses=True, literal_drop_p=literal_drop_p)
         for i in range(epochs):
                 start_training = time()
                 tm.fit(X_train, Y_train)
