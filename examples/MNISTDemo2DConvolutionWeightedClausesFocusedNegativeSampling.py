@@ -3,7 +3,7 @@ from time import time
 
 from keras.datasets import mnist
 
-from tmu.tsetlin_machine import TMCoalecedClassifier
+from tmu.tsetlin_machine import TMCoalescedClassifier
 
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 
