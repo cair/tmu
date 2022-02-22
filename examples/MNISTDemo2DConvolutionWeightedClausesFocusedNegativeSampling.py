@@ -22,4 +22,4 @@ for i in range(250):
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
 
-    print("#%d Accuracy: %.2f%% Literals: %d Training: %.2fs Testing: %.2fs" % (i+1, result, tm.literal_clause_frequency().sum(), stop_training-start_training, stop_testing-start_testing))
+	print("#%d Accuracy: %.2f%% Literals: %d Training: %.2fs Testing: %.2fs" % (i+1, result, tm.literal_clause_frequency().sum(), stop_training-start_training, stop_testing-start_testing))
