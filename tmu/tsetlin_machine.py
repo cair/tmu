@@ -288,7 +288,7 @@ class TMCoalescedClassifier(TMBasis):
 		for i in range(self.number_of_classes):
 			self.weight_banks.append(WeightBank(np.random.choice([-1,1], size=self.number_of_clauses).astype(np.int32)))
 		
-	def fit(self, X, Y, type_iii_feedback=False):
+	def fit(self, X, Y, type_iii_feedback=False, focused_negative_sampling=False):
 		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
@@ -321,6 +321,7 @@ class TMCoalescedClassifier(TMBasis):
 			literal_active[ta_chunk] &= (~(1 << chunk_pos))
 		literal_active = literal_active.astype(np.uint32)
 
+		update_ps = np.empty(self.number_of_classes)
 		for e in range(X.shape[0]):
 			target = Ym[e]
 
@@ -330,24 +331,38 @@ class TMCoalescedClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T - class_sum)/(2*self.T)
 
+			type_iii_feedback_selection = np.random.choice(2)
+
 			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), literal_active, self.encoded_X_train, e)
 			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), literal_active, self.encoded_X_train, e)
 			self.weight_banks[target].increment(clause_outputs, update_p, clause_active, True)
-			if type_iii_feedback:
+			if type_iii_feedback and type_iii_feedback_selection == 0:
 				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[target].get_weights() >= 0), literal_active, self.encoded_X_train, e, 1)
 				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[target].get_weights() < 0), literal_active, self.encoded_X_train, e, 0)
 
-			not_target = np.random.randint(self.number_of_classes)
-			while not_target == target:
+			for i in range(self.number_of_classes):
+				if i == target:
+					update_ps[i] = 0.0
+				else:
+					update_ps[i] = np.dot(clause_active * self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
+					update_ps[i] = np.clip(update_ps[i], -self.T, self.T)
+					update_ps[i] = 1.0*(self.T + update_ps[i])/(2*self.T)
+
+			if update_ps.sum() == 0:
+				continue
+
+			if focused_negative_sampling:
+				not_target = np.random.choice(self.number_of_classes, p=update_ps/update_ps.sum())
+				update_p = update_ps[not_target] 
+			else: 
 				not_target = np.random.randint(self.number_of_classes)
-			
-			class_sum = np.dot(clause_active * self.weight_banks[not_target].get_weights(), clause_outputs).astype(np.int32)
-			class_sum = np.clip(class_sum, -self.T, self.T)
-			update_p = 1.0*(self.T + class_sum)/(2*self.T)
+				while not_target == target:
+					not_target = np.random.randint(self.number_of_classes)
+				update_p = update_ps[not_target]
 		
 			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train, e)
 			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train, e)
-			if type_iii_feedback:
+			if type_iii_feedback and type_iii_feedback_selection == 1:
 				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train, e, 1)
 				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train, e, 0)
 	
