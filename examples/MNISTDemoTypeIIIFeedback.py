@@ -13,7 +13,7 @@ T = number_of_clauses*2.5
 X_train = np.where(X_train.reshape((X_train.shape[0], 28*28)) > 75, 1, 0) 
 X_test = np.where(X_test.reshape((X_test.shape[0], 28*28)) > 75, 1, 0) 
 
-tm = TMClassifier(number_of_clauses, T, 10.0, d=200.0, type_iii_feedback=True, number_of_state_bits_ta=8, number_of_state_bits_ind=8, platform='CPU', weighted_clauses=True, focused_negative_sampling=True)
+tm = TMClassifier(number_of_clauses, T, 10.0, d=200.0, type_iii_feedback=True, number_of_state_bits_ta=8, number_of_state_bits_ind=8, platform='CPU', weighted_clauses=True)
 
 f = open("cifar100_%.1f_%d_%d_%d_%.2f_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution), "w+")
 
