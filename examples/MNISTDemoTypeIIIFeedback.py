@@ -13,9 +13,9 @@ T = number_of_clauses*2.5
 X_train = np.where(X_train.reshape((X_train.shape[0], 28*28)) > 75, 1, 0) 
 X_test = np.where(X_test.reshape((X_test.shape[0], 28*28)) > 75, 1, 0) 
 
-tm = TMClassifier(number_of_clauses, T, 10.0, d=200.0, type_iii_feedback=True, number_of_state_bits_ta=8, number_of_state_bits_ind=8, platform='CPU', weighted_clauses=True)
+tm = TMClassifier(number_of_clauses, T, 10.0, d=200.0, type_iii_feedback=True, number_of_state_bits_ta=8, number_of_state_bits_ind=8, platform='CPU', weighted_clauses=True, focused_negative_sampling=True)
 
-number_of_features = 28*28
+f = open("cifar100_%.1f_%d_%d_%d_%.2f_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution), "w+")
 
 print("\nAccuracy over 250 epochs:\n")
 for i in range(250):
@@ -24,7 +24,15 @@ for i in range(250):
         stop_training = time()
 
         start_testing = time()
-        result = 100*(tm.predict(X_test) == Y_test).mean()
+        result_test = 100*(tm.predict(X_test) == Y_test).mean()
         stop_testing = time()
 
-        print("#%d Accuracy: %.2f%% Literals: %d Training: %.2fs Testing: %.2fs" % (i+1, result, tm.literal_clause_frequency().sum(), stop_training-start_training, stop_testing-start_testing))
+        start_testing = time()
+        result_train = 100*(tm.predict(X_train) == Y_train).mean()
+        stop_testing = time()
+
+        print("#%d Training Accuracy: %.2f%% Testing Accuracy: %.2f%% Literals: %d Training: %.2fs Testing: %.2fs" % (i+1, result_train, result_test, tm.literal_clause_frequency().sum(), stop_training-start_training, stop_testing-start_testing))
+
+        print("%d %.2f %.2f %d %.2f %.2f" % (i, result_train, result_test, tm.literal_clause_frequency().sum(), stop_training-start_training, stop_testing-start_testing), file=f)
+        f.flush()
+f.close()
