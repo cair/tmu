@@ -31,7 +31,7 @@ from sys import maxsize
 from time import time
 
 class TMBasis():
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, d=200.0, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, output_normalization=False, d=200.0, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits_ta = number_of_state_bits_ta
 		self.number_of_state_bits_ind = number_of_state_bits_ind
@@ -39,6 +39,7 @@ class TMBasis():
 		self.s = s
 		self.type_iii_feedback = type_iii_feedback
 		self.focused_negative_sampling= focused_negative_sampling
+		self.output_normalization = output_normalization
 		self.d = d
 		self.platform = platform
 		self.patch_dim = patch_dim
@@ -112,7 +113,7 @@ class TMClassifier(TMBasis):
 		self.positive_clauses = np.concatenate((np.ones(self.number_of_clauses//2, dtype=np.int32), np.zeros(self.number_of_clauses//2, dtype=np.int32)))
 		self.negative_clauses = np.concatenate((np.zeros(self.number_of_clauses//2, dtype=np.int32), np.ones(self.number_of_clauses//2, dtype=np.int32)))
 
-	def fit(self, X, Y):
+	def fit(self, X, Y, shuffle=True):
 		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
@@ -146,7 +147,11 @@ class TMClassifier(TMBasis):
 			literal_active[ta_chunk] &= (~(1 << chunk_pos))
 		literal_active = literal_active.astype(np.uint32)
 
-		for e in range(X.shape[0]):
+		shuffled_index = np.arange(X.shape[0])
+		if shuffle:
+			np.random.shuffle(shuffled_index)
+
+		for e in shuffled_index:
 			target = Ym[e]
 			
 			clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
@@ -271,8 +276,8 @@ class TMClassifier(TMBasis):
 			return self.clause_banks[the_class].set_ta_state(self.number_of_clauses//2 + clause, ta, state)
 
 class TMCoalescedClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, d=200.0, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, d=d, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, output_normalization=False, d=200.0, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_normalization=output_normalization, d=d, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -290,7 +295,7 @@ class TMCoalescedClassifier(TMBasis):
 		for i in range(self.number_of_classes):
 			self.weight_banks.append(WeightBank(np.random.choice([-1,1], size=self.number_of_clauses).astype(np.int32)))
 		
-	def fit(self, X, Y):
+	def fit(self, X, Y, shuffle=True):
 		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
@@ -324,7 +329,11 @@ class TMCoalescedClassifier(TMBasis):
 		literal_active = literal_active.astype(np.uint32)
 
 		update_ps = np.empty(self.number_of_classes)
-		for e in range(X.shape[0]):
+		shuffled_index = np.arange(X.shape[0])
+		if shuffle:
+			np.random.shuffle(shuffled_index)
+
+		for e in shuffled_index:
 			target = Ym[e]
 
 			clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
