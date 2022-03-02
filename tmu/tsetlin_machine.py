@@ -329,6 +329,7 @@ class TMCoalescedClassifier(TMBasis):
 		literal_active = literal_active.astype(np.uint32)
 
 		update_ps = np.empty(self.number_of_classes)
+
 		shuffled_index = np.arange(X.shape[0])
 		if shuffle:
 			np.random.shuffle(shuffled_index)
@@ -386,6 +387,7 @@ class TMCoalescedClassifier(TMBasis):
 			self.X_test = X.copy()
 
 		Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
+
 		for e in range(X.shape[0]):
 			max_class_sum = -self.T
 			max_class = 0
@@ -462,7 +464,7 @@ class TMMultiChannelClassifier(TMBasis):
 		self.encoded_X_train = {}
 		self.encoded_X_test = {}
 
-	def fit(self, X, Y):
+	def fit(self, X, Y, shuffle=True):
 		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
@@ -497,7 +499,12 @@ class TMMultiChannelClassifier(TMBasis):
 		literal_active = literal_active.astype(np.uint32)
 
 		local_class_sum = np.empty(X.shape[0], dtype=np.int32)
-		for e in range(X.shape[1]):
+
+		shuffled_index = np.arange(X.shape[1])
+		if shuffle:
+			np.random.shuffle(shuffled_index)
+
+		for e in shuffled_index:
 			target = Ym[e]
 
 			clause_outputs = []
@@ -546,6 +553,7 @@ class TMMultiChannelClassifier(TMBasis):
 				self.X_test[c] = X[c].copy()
 
 		Y = np.ascontiguousarray(np.zeros(X.shape[1], dtype=np.uint32))
+
 		for e in range(X.shape[1]):
 			max_class_sum = -maxsize
 			max_class = 0
@@ -623,7 +631,7 @@ class TMOneVsOneClassifier(TMBasis):
 		for i in range(self.number_of_outputs):
 			self.weight_banks.append(WeightBank(np.ones(self.number_of_clauses).astype(np.int32)))
 		
-	def fit(self, X, Y):
+	def fit(self, X, Y, shuffle=True):
 		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
@@ -636,7 +644,12 @@ class TMOneVsOneClassifier(TMBasis):
 		
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 		literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
-		for e in range(X.shape[0]):
+		
+		shuffled_index = np.arange(X.shape[0])
+		if shuffle:
+			np.random.shuffle(shuffled_index)
+
+		for e in shuffled_index:
 			clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 			
 			target = Ym[e]
@@ -752,7 +765,7 @@ class TMRegressor(TMBasis):
 			
 		self.weight_bank = WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
 
-	def fit(self, X, Y):
+	def fit(self, X, Y, shuffle=True):
 		if self.initialized == False:
 			self.initialize(X, Y)
 			self.initialized = True
@@ -764,7 +777,12 @@ class TMRegressor(TMBasis):
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 		literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
-		for e in range(X.shape[0]):
+		
+		shuffled_index = np.arange(X.shape[0])
+		if shuffle:
+			np.random.shuffle(shuffled_index)
+
+		for e in shuffled_index:
 			clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 
 			pred_y = np.dot(clause_active * self.weight_bank.get_weights(), clause_outputs).astype(np.int32)
