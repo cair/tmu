@@ -69,7 +69,7 @@ Y_train_0 = Y_train[Y_train==0]
 X_train_1 = X_train[Y_train==1]
 Y_train_1 = Y_train[Y_train==1]
 
-print("Number of target words:", Y_train_1.shape)
+print("Number of target words:", Y_train_1.shape[0])
 
 X_train = np.zeros((examples, number_of_features-1), dtype=np.uint32)
 Y_train = np.zeros(examples, dtype=np.uint32)
