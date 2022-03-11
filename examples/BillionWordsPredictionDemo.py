@@ -62,10 +62,15 @@ X_csr = X_csc.tocsr()
 
 X_train, X_test, Y_train, Y_test = train_test_split(X_csr, Y, test_size=0.5)
 
+print("Creating contexts")
+
 X_train_0 = X_train[Y_train==0]
 Y_train_0 = Y_train[Y_train==0]
 X_train_1 = X_train[Y_train==1]
 Y_train_1 = Y_train[Y_train==1]
+
+print("Number of target words:", Y_train_1.shape)
+
 X_train = np.zeros((examples, number_of_features-1), dtype=np.uint32)
 Y_train = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
@@ -93,23 +98,6 @@ for i in range(examples):
 		for c in range(context_size):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])].toarray())
 		Y_test[i] = 0
-
-print("Number of target words:", Y_train_1.shape)
-
-print("Creating contexts")
-
-X = np.zeros((examples, number_of_features-1), dtype=np.uint32)
-Y = np.zeros(examples, dtype=np.uint32)
-for i in range(examples):
-	if np.random.rand() <= 0.5:
-		for c in range(context_size):
-			X[i] = np.logical_or(X[i], X_1[np.random.randint(X_1.shape[0]),:].toarray())
-		Y[i] = 1
-	else:
-		for c in range(context_size):
-			X[i] = np.logical_or(X[i], X_0[np.random.randint(X_0.shape[0]),:].toarray())
-		Y[i] = 0
-
 
 tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
 
