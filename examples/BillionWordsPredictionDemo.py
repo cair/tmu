@@ -5,11 +5,11 @@ from sklearn.feature_selection import chi2
 from keras.datasets import imdb
 from time import time
 from sklearn.feature_extraction.text import CountVectorizer
-
+from sklearn.model_selection import train_test_split
 from tmu.tsetlin_machine import TMClassifier
 import pickle
 
-target_word = 'scary'#'comedy'#'romance'#"scary"
+target_word = 'comedy'#'comedy'#'romance'#"scary"
 
 examples = 10000
 context_size = 25
@@ -29,55 +29,60 @@ INDEX_FROM=2
 #f.close()
 
 #vectorizer_X = CountVectorizer(max_features=NUM_WORDS, binary=True)
-#X_train = vectorizer_X.fit_transform(sentences)
+#X = vectorizer_X.fit_transform(sentences)
 
 #f_vectorizer_X = open("vectorizer_X.pickle", "wb")
 #pickle.dump(vectorizer_X, f_vectorizer_X, protocol=4)
 #f_vectorizer_X.close()
 
+print("Loading Vectorizer")
 f_vectorizer_X = open("vectorizer_X.pickle", "rb")
 vectorizer_X = pickle.load(f_vectorizer_X)
 f_vectorizer_X.close()
 
-#f_X_train = open("X_train.pickle", "wb")
-#pickle.dump(X_train, f_X_train, protocol=4)
-#f_X_train.close()
+#f_X = open("X.pickle", "wb")
+#pickle.dump(X, f_X, protocol=4)
+#f_X.close()
 
-f_X_train = open("X_train.pickle", "rb")
-X_train = pickle.load(f_X_train)
-f_X_train.close()
+print("Loading Data")
+f_X = open("X.pickle", "rb")
+X_csr = pickle.load(f_X)
+f_X.close()
+
+X_csc = X_csr.tocsc()
 
 feature_names = vectorizer_X.get_feature_names_out()
 number_of_features = vectorizer_X.get_feature_names_out().shape[0]
 target_id = vectorizer_X.vocabulary_[target_word]
-Y_train = np.copy(X_train[:,target_id])
-X_train[:,target_id] = 0
+Y = X_csc[:,target_id].toarray().reshape(X_csc.shape[0])
+cols = np.arange(number_of_features) != target_id
+X_csc = X_csc[:,cols] 
+
+X_csr = X_csc.tocsr()
+
+X_train, X_test, Y_train, Y_test = train_test_split(X_csr, Y, test_size=0.5)
 
 X_train_0 = X_train[Y_train==0]
 Y_train_0 = Y_train[Y_train==0]
 X_train_1 = X_train[Y_train==1]
 Y_train_1 = Y_train[Y_train==1]
-X_train = np.zeros((examples, number_of_features), dtype=np.uint32)
+X_train = np.zeros((examples, number_of_features-1), dtype=np.uint32)
 Y_train = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
 	if np.random.rand() <= 0.5:
 		for c in range(context_size):
-			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0])].toarray())
+			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0]),:].toarray())
 		Y_train[i] = 1
 	else:
 		for c in range(context_size):
-			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0])].toarray())
+			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0]),:].toarray())
 		Y_train[i] = 0
-
-X_test = vectorizer_X.transform(testing_documents).toarray()
-Y_test = np.copy(X_test[:,target_id])
-X_test[:,target_id] = 0
 
 X_test_0 = X_test[Y_test==0]
 Y_test_0 = Y_test[Y_test==0]
 X_test_1 = X_test[Y_test==1]
 Y_test_1 = Y_test[Y_test==1]
-X_test = np.zeros((examples, number_of_features), dtype=np.uint32)
+X_test = np.zeros((examples, number_of_features-1), dtype=np.uint32)
 Y_test = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
 	if np.random.rand() <= 0.5:
@@ -88,6 +93,23 @@ for i in range(examples):
 		for c in range(context_size):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])].toarray())
 		Y_test[i] = 0
+
+print("Number of target words:", Y_train_1.shape)
+
+print("Creating contexts")
+
+X = np.zeros((examples, number_of_features-1), dtype=np.uint32)
+Y = np.zeros(examples, dtype=np.uint32)
+for i in range(examples):
+	if np.random.rand() <= 0.5:
+		for c in range(context_size):
+			X[i] = np.logical_or(X[i], X_1[np.random.randint(X_1.shape[0]),:].toarray())
+		Y[i] = 1
+	else:
+		for c in range(context_size):
+			X[i] = np.logical_or(X[i], X_0[np.random.randint(X_0.shape[0]),:].toarray())
+		Y[i] = 0
+
 
 tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
 
