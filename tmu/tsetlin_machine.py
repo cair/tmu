@@ -76,7 +76,8 @@ class TMBasis():
 		return transformed_X.reshape((X.shape[0], self.number_of_clauses, self.number_of_patches))
 
 	def literal_clause_frequency(self):
-		return self.clause_bank.calculate_literal_clause_frequency()
+		clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
+		return self.clause_bank.calculate_literal_clause_frequency(clause_active)
 	
 	def get_ta_action(self, clause, ta):
 		return self.clause_bank.get_ta_action(clause, ta)
@@ -222,9 +223,23 @@ class TMClassifier(TMBasis):
 		return transformed_X.reshape((X.shape[0], self.number_of_classes*self.number_of_clauses, self.number_of_patches))
 
 	def literal_clause_frequency(self):
+		clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
 		literal_frequency = np.zeros(self.clause_banks[0].number_of_literals, dtype=np.uint32)
 		for i in range(self.number_of_classes):
-			literal_frequency += self.clause_banks[i].calculate_literal_clause_frequency()
+			literal_frequency += self.clause_banks[i].calculate_literal_clause_frequency(clause_active)
+		return literal_frequency
+
+	def literal_importance(self, the_class, include_negated_literals=True, include_negative_polarity=False):
+		literal_frequency = np.zeros(self.clause_banks[0].number_of_literals, dtype=np.uint32)
+		if include_negated_literals:
+			literal_frequency += self.clause_banks[the_class].calculate_literal_clause_frequency(self.positive_clauses)
+			if include_negative_polarity:
+				literal_frequency += self.clause_banks[the_class].calculate_literal_clause_frequency(self.negative_clauses)
+		else:
+			literal_frequency[:self.clause_banks[the_class].number_of_literals//2] += self.clause_banks[the_class].calculate_literal_clause_frequency(self.positive_clauses)[:self.clause_banks[the_class].number_of_literals//2]
+			if include_negative_polarity:
+				literal_frequency[:self.clause_banks[the_class].number_of_literals//2] += self.clause_banks[the_class].calculate_literal_clause_frequency(self.negative_clauses)[:self.clause_banks[the_class].number_of_literals//2]
+
 		return literal_frequency
 
 	def clause_precision(self, the_class, polarity, X, Y):
