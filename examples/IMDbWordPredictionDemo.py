@@ -72,6 +72,9 @@ X_train_0 = X_train[Y_train==0]
 Y_train_0 = Y_train[Y_train==0]
 X_train_1 = X_train[Y_train==1]
 Y_train_1 = Y_train[Y_train==1]
+
+print("Number of Target Words:", Y_train_1.shape[0])
+
 X_train = np.zeros((examples, number_of_features), dtype=np.uint32)
 Y_train = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
@@ -116,10 +119,44 @@ for i in range(40):
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
 
-	literal_importance = tm.literal_importance(1, include_negated_features=False).astype(np.int32)
+	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-	print(sorted_literals)
-	print(literal_importance[sorted_literals])
+	for k in sorted_literals:
+		if literal_importance[k] == 0:
+			break
+
+		if k < number_of_features:
+			print(feature_names[k], end=' ')
+		else:
+			print("¬" + feature_names[k - number_of_features], end=' ')
+	print()
+
+	literal_importance = tm.literal_importance(0, negated_features=False, negative_polarity=True).astype(np.int32)
+	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
+	for k in sorted_literals:
+		if literal_importance[k] == 0:
+			break
+
+		if k < number_of_features:
+			print(feature_names[k], end=' ')
+		else:
+			print("¬" + feature_names[k - number_of_features], end=' ')
+	print()
+
+	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=True).astype(np.int32)
+	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
+	for k in sorted_literals:
+		if literal_importance[k] == 0:
+			break
+
+		if k < number_of_features:
+			print(feature_names[k], end=' ')
+		else:
+			print("¬" + feature_names[k - number_of_features], end=' ')
+	print()
+
+	literal_importance = tm.literal_importance(0, negated_features=True, negative_polarity=False).astype(np.int32)
+	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
 		if literal_importance[k] == 0:
 			break

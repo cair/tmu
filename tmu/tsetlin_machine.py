@@ -229,16 +229,18 @@ class TMClassifier(TMBasis):
 			literal_frequency += self.clause_banks[i].calculate_literal_clause_frequency(clause_active)
 		return literal_frequency
 
-	def literal_importance(self, the_class, include_negated_features=True, include_negative_polarity=False):
+	def literal_importance(self, the_class, negated_features=False, negative_polarity=False):
 		literal_frequency = np.zeros(self.clause_banks[0].number_of_literals, dtype=np.uint32)
-		if include_negated_features:
-			literal_frequency += self.clause_banks[the_class].calculate_literal_clause_frequency(self.positive_clauses)
-			if include_negative_polarity:
-				literal_frequency += self.clause_banks[the_class].calculate_literal_clause_frequency(self.negative_clauses)
+		if negated_features:
+			if negative_polarity:
+				literal_frequency[self.clause_banks[the_class].number_of_literals//2:] += self.clause_banks[the_class].calculate_literal_clause_frequency(self.negative_clauses)[self.clause_banks[the_class].number_of_literals//2:]
+			else:
+				literal_frequency[self.clause_banks[the_class].number_of_literals//2:] += self.clause_banks[the_class].calculate_literal_clause_frequency(self.positive_clauses)[self.clause_banks[the_class].number_of_literals//2:]
 		else:
-			literal_frequency[:self.clause_banks[the_class].number_of_literals//2] += self.clause_banks[the_class].calculate_literal_clause_frequency(self.positive_clauses)[:self.clause_banks[the_class].number_of_literals//2]
-			if include_negative_polarity:
+			if negative_polarity:
 				literal_frequency[:self.clause_banks[the_class].number_of_literals//2] += self.clause_banks[the_class].calculate_literal_clause_frequency(self.negative_clauses)[:self.clause_banks[the_class].number_of_literals//2]
+			else:
+				literal_frequency[:self.clause_banks[the_class].number_of_literals//2] += self.clause_banks[the_class].calculate_literal_clause_frequency(self.positive_clauses)[:self.clause_banks[the_class].number_of_literals//2]
 
 		return literal_frequency
 
