@@ -31,7 +31,7 @@ f.close()
 vectorizer_X = CountVectorizer(max_features=NUM_WORDS, binary=True)
 X_train = vectorizer_X.fit_transform(sentences)
 
-f_X_train = open("X_train.pickle", "wb")
+f_X_train = open("X_train.pickle", "wb", protocol=4)
 pickle.dump(X_train, f_X_train)
 f_X_train.close()
 
