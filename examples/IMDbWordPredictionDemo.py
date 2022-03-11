@@ -104,7 +104,7 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
 		Y_test[i] = 0
 
-tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True, type_iii_feedback=True)
+tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
 
 print("\nAccuracy over 40 epochs:\n")
 for i in range(40):
