@@ -39,6 +39,8 @@ f_X_train = open("X_train.pickle", "wb")
 pickle.dump(X_train, f_X_train, protocol=4)
 f_X_train.close()
 
+X_train = X_train.toarray()
+
 feature_names = vectorizer_X.get_feature_names_out()
 number_of_features = vectorizer_X.get_feature_names_out().shape[0]
 target_id = vectorizer_X.vocabulary_[target_word]
