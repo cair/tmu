@@ -71,7 +71,7 @@ class ClauseBankCUDA():
 		self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
 		self.calculate_clause_outputs_predict_gpu.prepare("PiiiPPi")
 		self.calculate_literal_frequency_gpu = mod.get_function("calculate_literal_frequency")
-		self.calculate_literal_frequency_gpu.prepare("PiiiP")
+		self.calculate_literal_frequency_gpu.prepare("PiiiPP")
 
 		mod = SourceModule(parameters + kernels.code_calculate_clause_outputs_update, no_extern_c=True)
 		self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
@@ -142,8 +142,9 @@ class ClauseBankCUDA():
 		cuda.Context.synchronize()
 		self.clause_bank_synchronized = False
 
-	def calculate_literal_clause_frequency(self):
-		self.calculate_literal_frequency_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.literal_clause_count_gpu)
+	def calculate_literal_clause_frequency(self, clause_active):
+		cuda.memcpy_htod(self.clause_active_gpu, np.ascontiguousarray(clause_active))
+		self.calculate_literal_frequency_gpu.prepared_call(self.grid, self.block, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.clause_active_gpu, self.literal_clause_count_gpu)
 		cuda.Context.synchronize()
 		cuda.memcpy_dtoh(self.literal_clause_count, self.literal_clause_count_gpu)
 		return self.literal_clause_count

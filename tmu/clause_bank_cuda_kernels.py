@@ -75,7 +75,7 @@ code_calculate_clause_outputs_predict = """
 			}
 		}
 
-		__global__ void calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *literal_clause_count)
+		__global__ void calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *clause_active, unsigned int *literal_clause_count)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -88,8 +88,10 @@ code_calculate_clause_outputs_predict = """
 				
 				literal_clause_count[k] = 0;
 				for (int j = 0; j < number_of_clauses; j++) {
-					unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits-1;
-					literal_clause_count[k] += (ta_state[pos] & (1 << chunk_pos)) > 0;
+					if (clause_active[j]) { 
+						unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits-1;
+						literal_clause_count[k] += (ta_state[pos] & (1 << chunk_pos)) > 0;
+					}
 				}
 			}
 		}
