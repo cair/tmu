@@ -116,7 +116,7 @@ for i in range(40):
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
 
-	literal_importance = tm.literal_importance(1).astype(np.int32)
+	literal_importance = tm.literal_importance(1, include_negated_features=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	print(sorted_literals)
 	print(literal_importance[sorted_literals])
