@@ -24,22 +24,28 @@ INDEX_FROM=2
 
 # Data obtained from https://www.kaggle.com/c/billion-word-imputation
 
-f = open("train_v2.txt")
-sentences = f.read().split("\n")
-f.close()
+#f = open("train_v2.txt")
+#sentences = f.read().split("\n")
+#f.close()
 
-vectorizer_X = CountVectorizer(max_features=NUM_WORDS, binary=True)
-X_train = vectorizer_X.fit_transform(sentences)
+#vectorizer_X = CountVectorizer(max_features=NUM_WORDS, binary=True)
+#X_train = vectorizer_X.fit_transform(sentences)
 
-f_vectorizer_X = open("vectorizer_X.pickle", "wb")
-pickle.dump(vectorizer_X, f_vectorizer_X, protocol=4)
+#f_vectorizer_X = open("vectorizer_X.pickle", "wb")
+#pickle.dump(vectorizer_X, f_vectorizer_X, protocol=4)
+#f_vectorizer_X.close()
+
+f_vectorizer_X = open("vectorizer_X.pickle", "rb")
+vectorizer_X = pickle.load(f_vectorizer_X)
 f_vectorizer_X.close()
 
-f_X_train = open("X_train.pickle", "wb")
-pickle.dump(X_train, f_X_train, protocol=4)
-f_X_train.close()
+#f_X_train = open("X_train.pickle", "wb")
+#pickle.dump(X_train, f_X_train, protocol=4)
+#f_X_train.close()
 
-X_train = X_train.toarray()
+f_X_train = open("X_train.pickle", "rb")
+X_train = pickle.load(f_X_train)
+f_X_train.close()
 
 feature_names = vectorizer_X.get_feature_names_out()
 number_of_features = vectorizer_X.get_feature_names_out().shape[0]
@@ -56,11 +62,11 @@ Y_train = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
 	if np.random.rand() <= 0.5:
 		for c in range(context_size):
-			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0])])
+			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0])].toarray())
 		Y_train[i] = 1
 	else:
 		for c in range(context_size):
-			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0])])
+			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0])].toarray())
 		Y_train[i] = 0
 
 X_test = vectorizer_X.transform(testing_documents).toarray()
@@ -76,11 +82,11 @@ Y_test = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
 	if np.random.rand() <= 0.5:
 		for c in range(context_size):
-			X_test[i] = np.logical_or(X_test[i], X_test_1[np.random.randint(X_test_1.shape[0])])
+			X_test[i] = np.logical_or(X_test[i], X_test_1[np.random.randint(X_test_1.shape[0])].toarray())
 		Y_test[i] = 1
 	else:
 		for c in range(context_size):
-			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
+			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])].toarray())
 		Y_test[i] = 0
 
 tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
