@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 from tmu.tsetlin_machine import TMClassifier
 
-target_words = ['terrible', 'brilliant', 'comedy', 'scary', 'funny', 'hate', 'love', 'awful']
+target_words = ['masterpiece', 'brilliant', 'comedy', 'scary', 'funny', 'hate', 'love', 'awful', 'terrible']
 
 examples = 20000
 context_size = 25
