@@ -118,6 +118,8 @@ for i in range(40):
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
 
+	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
+
 	print("\nPositive Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -140,7 +142,6 @@ for i in range(40):
 			print(feature_names[k], end=' ')
 		else:
 			print("¬" + feature_names[k - number_of_features], end=' ')
-	print()
 
 	print("\nNegative Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=True).astype(np.int32)
@@ -165,5 +166,3 @@ for i in range(40):
 		else:
 			print("¬" + feature_names[k - number_of_features], end=' ')
 	print()
-
-	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
