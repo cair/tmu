@@ -79,8 +79,8 @@ for i in range(examples):
 			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0]),:].toarray())
 		Y_train[i] = 1
 	else:
-		#for c in range(context_size):
-		X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0]),:].toarray())
+		for c in range(context_size):
+			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0]),:].toarray())
 		Y_train[i] = 0
 
 X_test_0 = X_test[Y_test==0]
@@ -95,8 +95,8 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_1[np.random.randint(X_test_1.shape[0])].toarray())
 		Y_test[i] = 1
 	else:
-		#for c in range(context_size):
-		X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])].toarray())
+		for c in range(context_size):
+			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])].toarray())
 		Y_test[i] = 0
 
 tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)

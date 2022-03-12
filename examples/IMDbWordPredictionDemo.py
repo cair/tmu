@@ -59,7 +59,6 @@ def tokenizer(s):
 
 vectorizer_X = CountVectorizer(tokenizer=tokenizer, lowercase=False, max_features=NUM_WORDS, binary=True)
 
-
 X_train = vectorizer_X.fit_transform(training_documents).toarray()
 feature_names = vectorizer_X.get_feature_names_out()
 
@@ -83,7 +82,7 @@ for i in range(examples):
 			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0])])
 		Y_train[i] = 1
 	else:
-		for c in range(context_size*5):
+		for c in range(context_size):
 			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0])])
 		Y_train[i] = 0
 
@@ -103,7 +102,7 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_1[np.random.randint(X_test_1.shape[0])])
 		Y_test[i] = 1
 	else:
-		for c in range(context_size*5):
+		for c in range(context_size):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
 		Y_test[i] = 0
 
