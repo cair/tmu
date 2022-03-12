@@ -8,10 +8,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 from tmu.tsetlin_machine import TMClassifier
 
-target_word = 'scary'#'comedy'#'romance'#"scary"
+target_word = 'awful' #'frightening'#'comedy'#'romance'#"scary"
 
 examples = 10000
-context_size = 25
+context_size = 50
 profile_size = 50
 
 clauses = 10
