@@ -107,8 +107,6 @@ for i in range(40):
 
 	print("\n********** Epoch %d **********" % (i+1))
 
-	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
-
 	for target_class in range(target_ids.shape[0]):
 		print("\n*****", target_words[target_class], "*****")
 
@@ -157,4 +155,7 @@ for i in range(40):
 		profile_list.sort()
 		print()
 		print("\nProfile:", " ".join(profile_list))
+
+		print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
+
 
