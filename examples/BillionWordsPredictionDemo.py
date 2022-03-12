@@ -13,7 +13,7 @@ target_word = 'awful'#'comedy'#'romance'#"scary"
 target_word = 'terrible'#'comedy'#'romance'#"scary"
 
 examples = 10000
-context_size = 25
+context_size = 50
 profile_size = 50
 
 clauses = 10*2
