@@ -81,11 +81,11 @@ for i in range(examples):
 	if np.random.rand() <= 0.5:
 		for c in range(context_size):
 			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0])])
-		Y_train[i] = 1
-	else:
-		for c in range(context_size):
-			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0])])
 		Y_train[i] = 0
+	else:
+		for c in range(context_size*5):
+			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0])])
+		Y_train[i] = 1
 
 X_test = vectorizer_X.transform(testing_documents).toarray()
 Y_test = np.copy(X_test[:,target_id])
@@ -101,11 +101,11 @@ for i in range(examples):
 	if np.random.rand() <= 0.5:
 		for c in range(context_size):
 			X_test[i] = np.logical_or(X_test[i], X_test_1[np.random.randint(X_test_1.shape[0])])
-		Y_test[i] = 1
-	else:
-		for c in range(context_size):
-			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
 		Y_test[i] = 0
+	else:
+		for c in range(context_size*5):
+			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
+		Y_test[i] = 1
 
 tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
 
@@ -119,6 +119,7 @@ for i in range(40):
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
 
+	print("Positive Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
@@ -129,9 +130,8 @@ for i in range(40):
 			print(feature_names[k], end=' ')
 		else:
 			print("¬" + feature_names[k - number_of_features], end=' ')
-	print()
 
-	literal_importance = tm.literal_importance(0, negated_features=False, negative_polarity=True).astype(np.int32)
+	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
 		if literal_importance[k] == 0:
@@ -142,20 +142,20 @@ for i in range(40):
 		else:
 			print("¬" + feature_names[k - number_of_features], end=' ')
 	print()
+
+	print("Negative Polarity:", end=' ')
+	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=True).astype(np.int32)
+	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
+	for k in sorted_literals:
+		if literal_importance[k] == 0:
+			break
+
+		if k < number_of_features:
+			print(feature_names[k], end=' ')
+		else:
+			print("¬" + feature_names[k - number_of_features], end=' ')
 
 	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=True).astype(np.int32)
-	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-	for k in sorted_literals:
-		if literal_importance[k] == 0:
-			break
-
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
-	print()
-
-	literal_importance = tm.literal_importance(0, negated_features=True, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
 		if literal_importance[k] == 0:

@@ -9,14 +9,14 @@ from sklearn.model_selection import train_test_split
 from tmu.tsetlin_machine import TMClassifier
 import pickle
 
-target_word = 'terrible'#'comedy'#'romance'#"scary"
+target_word = 'awful'#'comedy'#'romance'#"scary"
 
 examples = 10000
-context_size = 10
+context_size = 25
 profile_size = 50
 
-clauses = 10*5
-T = 40*5
+clauses = 10
+T = 40
 s = 5.0
 
 NUM_WORDS=10000
@@ -79,8 +79,8 @@ for i in range(examples):
 			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0]),:].toarray())
 		Y_train[i] = 1
 	else:
-		for c in range(context_size):
-			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0]),:].toarray())
+		#for c in range(context_size):
+		X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0]),:].toarray())
 		Y_train[i] = 0
 
 X_test_0 = X_test[Y_test==0]
@@ -95,8 +95,8 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_1[np.random.randint(X_test_1.shape[0])].toarray())
 		Y_test[i] = 1
 	else:
-		for c in range(context_size):
-			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])].toarray())
+		#for c in range(context_size):
+		X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])].toarray())
 		Y_test[i] = 0
 
 tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
@@ -111,6 +111,7 @@ for i in range(40):
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
 
+	print("Positive Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
@@ -121,9 +122,8 @@ for i in range(40):
 			print(feature_names[k], end=' ')
 		else:
 			print("¬" + feature_names[k - number_of_features], end=' ')
-	print()
 
-	literal_importance = tm.literal_importance(0, negated_features=False, negative_polarity=True).astype(np.int32)
+	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
 		if literal_importance[k] == 0:
@@ -134,6 +134,18 @@ for i in range(40):
 		else:
 			print("¬" + feature_names[k - number_of_features], end=' ')
 	print()
+
+	print("Negative Polarity:", end=' ')
+	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=True).astype(np.int32)
+	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
+	for k in sorted_literals:
+		if literal_importance[k] == 0:
+			break
+
+		if k < number_of_features:
+			print(feature_names[k], end=' ')
+		else:
+			print("¬" + feature_names[k - number_of_features], end=' ')
 
 	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=True).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -147,16 +159,4 @@ for i in range(40):
 			print("¬" + feature_names[k - number_of_features], end=' ')
 	print()
 
-	literal_importance = tm.literal_importance(0, negated_features=True, negative_polarity=False).astype(np.int32)
-	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-	for k in sorted_literals:
-		if literal_importance[k] == 0:
-			break
-
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
-	print()
-	
 	print("#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
