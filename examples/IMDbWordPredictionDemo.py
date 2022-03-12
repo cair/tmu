@@ -81,11 +81,11 @@ for i in range(examples):
 	if np.random.rand() <= 0.5:
 		for c in range(context_size):
 			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0])])
-		Y_train[i] = 0
+		Y_train[i] = 1
 	else:
 		for c in range(context_size*5):
 			X_train[i] = np.logical_or(X_train[i], X_train_0[np.random.randint(X_train_0.shape[0])])
-		Y_train[i] = 1
+		Y_train[i] = 0
 
 X_test = vectorizer_X.transform(testing_documents).toarray()
 Y_test = np.copy(X_test[:,target_id])
@@ -101,11 +101,11 @@ for i in range(examples):
 	if np.random.rand() <= 0.5:
 		for c in range(context_size):
 			X_test[i] = np.logical_or(X_test[i], X_test_1[np.random.randint(X_test_1.shape[0])])
-		Y_test[i] = 0
+		Y_test[i] = 1
 	else:
 		for c in range(context_size*5):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
-		Y_test[i] = 1
+		Y_test[i] = 0
 
 tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
 
@@ -119,7 +119,7 @@ for i in range(40):
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
 
-	print("Positive Polarity:", end=' ')
+	print("\nPositive Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
@@ -143,7 +143,7 @@ for i in range(40):
 			print("¬" + feature_names[k - number_of_features], end=' ')
 	print()
 
-	print("Negative Polarity:", end=' ')
+	print("\nNegative Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=True).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
@@ -166,4 +166,5 @@ for i in range(40):
 		else:
 			print("¬" + feature_names[k - number_of_features], end=' ')
 	print()
-	print("#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
+
+	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
