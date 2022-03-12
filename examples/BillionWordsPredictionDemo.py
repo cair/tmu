@@ -10,14 +10,15 @@ from tmu.tsetlin_machine import TMClassifier
 import pickle
 
 target_word = 'awful'#'comedy'#'romance'#"scary"
+target_word = 'terrible'#'comedy'#'romance'#"scary"
 
 examples = 10000
-context_size = 25
+context_size = 50
 profile_size = 50
 
-clauses = 10
-T = 40
-s = 5.0
+clauses = 10*2
+T = 40*2
+s = 10.0
 
 NUM_WORDS=10000
 INDEX_FROM=2 
@@ -51,16 +52,15 @@ f_X.close()
 
 X_csc = X_csr.tocsc()
 
-feature_names = vectorizer_X.get_feature_names_out()
-number_of_features = vectorizer_X.get_feature_names_out().shape[0]
 target_id = vectorizer_X.vocabulary_[target_word]
 Y = X_csc[:,target_id].toarray().reshape(X_csc.shape[0])
-cols = np.arange(number_of_features) != target_id
+cols = np.arange(X_csc.shape[1]) != target_id
+print(cols.shape)
 X_csc = X_csc[:,cols] 
 
 X_csr = X_csc.tocsr()
 
-X_train, X_test, Y_train, Y_test = train_test_split(X_csr, Y, test_size=0.5)
+X_train, X_test, Y_train, Y_test = train_test_split(X_csr, Y, test_size=0.2)
 
 print("Creating Contexts")
 
@@ -71,7 +71,7 @@ Y_train_1 = Y_train[Y_train==1]
 
 print("Number of Target Words:", Y_train_1.shape[0])
 
-X_train = np.zeros((examples, number_of_features-1), dtype=np.uint32)
+X_train = np.zeros((examples, X_csc.shape[1]), dtype=np.uint32)
 Y_train = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
 	if np.random.rand() <= 0.5:
@@ -87,7 +87,7 @@ X_test_0 = X_test[Y_test==0]
 Y_test_0 = Y_test[Y_test==0]
 X_test_1 = X_test[Y_test==1]
 Y_test_1 = Y_test[Y_test==1]
-X_test = np.zeros((examples, number_of_features-1), dtype=np.uint32)
+X_test = np.zeros((examples, X_csc.shape[1]), dtype=np.uint32)
 Y_test = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
 	if np.random.rand() <= 0.5:
@@ -101,6 +101,11 @@ for i in range(examples):
 
 tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
 
+feature_names = vectorizer_X.get_feature_names_out()
+feature_names = np.delete(feature_names, target_id, axis=0)
+number_of_features = feature_names.shape[0]
+print("Number of features", number_of_features, feature_names[target_id])
+
 print("\nAccuracy Over 40 Epochs:\n")
 for i in range(40):
 	start_training = time()
@@ -111,6 +116,10 @@ for i in range(40):
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
 
+	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
+
+	profile = {}
+
 	print("\nPositive Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -118,23 +127,19 @@ for i in range(40):
 		if literal_importance[k] == 0:
 			break
 
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
+		print(feature_names[k], end=' ')
+		profile[feature_names[k]] = True
 
 	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
 		if literal_importance[k] == 0:
 			break
+		
+		print("¬" + feature_names[k - number_of_features], end=' ')
+		profile["¬" + feature_names[k - number_of_features]] = True
 
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
 	print()
-
 	print("\nNegative Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=True).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -142,10 +147,8 @@ for i in range(40):
 		if literal_importance[k] == 0:
 			break
 
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
+		print(feature_names[k], end=' ')
+		profile["¬" + feature_names[k]] = True
 
 	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=True).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -153,10 +156,10 @@ for i in range(40):
 		if literal_importance[k] == 0:
 			break
 
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
-	print()
+		print("¬" + feature_names[k - number_of_features], end=' ')
+		profile[feature_names[k - number_of_features]] = True
 
-	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
+	profile_list = list(profile.keys())
+	profile_list.sort()
+	print()
+	print("\nProfile:", " ".join(profile_list))

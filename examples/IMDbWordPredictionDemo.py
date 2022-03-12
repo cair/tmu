@@ -9,6 +9,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from tmu.tsetlin_machine import TMClassifier
 
 target_word = 'awful' #'frightening'#'comedy'#'romance'#"scary"
+target_word = 'terrible'
 
 examples = 10000
 context_size = 50
@@ -108,7 +109,7 @@ for i in range(examples):
 
 tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
 
-print("\nAccuracy over 40 epochs:\n")
+print("\nAccuracy Over 40 Epochs:\n")
 for i in range(40):
 	start_training = time()
 	tm.fit(X_train, Y_train)
@@ -120,6 +121,8 @@ for i in range(40):
 
 	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
 
+	profile = {}
+
 	print("\nPositive Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -127,22 +130,19 @@ for i in range(40):
 		if literal_importance[k] == 0:
 			break
 
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
+		print(feature_names[k], end=' ')
+		profile[feature_names[k]] = True
 
 	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 	for k in sorted_literals:
 		if literal_importance[k] == 0:
 			break
+		
+		print("¬" + feature_names[k - number_of_features], end=' ')
+		profile["¬" + feature_names[k - number_of_features]] = True
 
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
-
+	print()
 	print("\nNegative Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=True).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -150,10 +150,8 @@ for i in range(40):
 		if literal_importance[k] == 0:
 			break
 
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
+		print(feature_names[k], end=' ')
+		profile["¬" + feature_names[k]] = True
 
 	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=True).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -161,8 +159,11 @@ for i in range(40):
 		if literal_importance[k] == 0:
 			break
 
-		if k < number_of_features:
-			print(feature_names[k], end=' ')
-		else:
-			print("¬" + feature_names[k - number_of_features], end=' ')
+		print("¬" + feature_names[k - number_of_features], end=' ')
+		profile[feature_names[k - number_of_features]] = True
+
+	profile_list = list(profile.keys())
+	profile_list.sort()
 	print()
+	print("\nProfile:", " ".join(profile_list))
+
