@@ -9,10 +9,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 from tmu.tsetlin_machine import TMClassifier
 
 target_word = 'awful' #'frightening'#'comedy'#'romance'#"scary"
-#target_word = 'terrible'
+target_word = 'terrible'
 
-examples = 10000
-context_size = 25
+examples = 20000
+context_size = 50
 profile_size = 50
 
 clauses = 10
@@ -78,7 +78,7 @@ print("Number of Target Words:", Y_train_1.shape[0])
 X_train = np.zeros((examples, number_of_features), dtype=np.uint32)
 Y_train = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
-	if np.random.rand() <= 0.5:
+	if np.random.rand() <= 0.1:
 		for c in range(context_size):
 			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0])])
 		Y_train[i] = 1
