@@ -6,7 +6,7 @@ from keras.datasets import imdb
 from time import time
 from sklearn.feature_extraction.text import CountVectorizer
 
-from tmu.tsetlin_machine import TMClassifier
+from tmu.tsetlin_machine import TMCoalescedClassifier
 
 #target_words = ['masterpiece', 'brilliant', 'comedy', 'scary', 'funny', 'hate', 'love', 'awful', 'terrible']
 
@@ -16,8 +16,8 @@ examples = 20000
 context_size = 25
 profile_size = 50
 
-clauses = 10
-T = 80
+clauses = 10 * len(target_words)
+T = 40
 s = 5.0
 
 NUM_WORDS=10000
@@ -95,7 +95,7 @@ for i in range(examples):
 		X_test[i] = np.logical_or(X_test[i], X_test_full[np.random.choice(target_rows)])
 	Y_test[i] = target_class
 
-tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
 
 print("\nAccuracy Over 40 Epochs:\n")
 for i in range(40):
@@ -109,54 +109,19 @@ for i in range(40):
 
 	print("\n********** Epoch %d **********" % (i+1))
 
-	for target_class in range(target_ids.shape[0]):
-		print("\n*****", target_words[target_class], "*****")
+	for j in range(clauses):
+		print("\n\tClause #%d:" % (j), end=' ')
+		l = []
+		for k in range(number_of_features*2):
+			if tm.get_ta_action(j, k) == 1:
+				if k < number_of_features:
+					l.append("%s" % (feature_names[k]))
+				else:
+					l.append("¬%s" % (feature_names[k-number_of_features]))
+		print(" ∧ ".join(l))
 
-		profile = {}
-
-		print("\nPositive Polarity:", end=' ')
-		literal_importance = tm.literal_importance(target_class, negated_features=False, negative_polarity=False).astype(np.int32)
-		sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-		for k in sorted_literals:
-			if literal_importance[k] == 0:
-				break
-
-			print(feature_names[k], end=' ')
-			profile[feature_names[k]] = True
-
-		literal_importance = tm.literal_importance(target_class, negated_features=True, negative_polarity=False).astype(np.int32)
-		sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-		for k in sorted_literals:
-			if literal_importance[k] == 0:
-				break
-			
-			print("¬" + feature_names[k - number_of_features], end=' ')
-			profile["¬" + feature_names[k - number_of_features]] = True
-
-		print()
-		print("\nNegative Polarity:", end=' ')
-		literal_importance = tm.literal_importance(target_class, negated_features=False, negative_polarity=True).astype(np.int32)
-		sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-		for k in sorted_literals:
-			if literal_importance[k] == 0:
-				break
-
-			print(feature_names[k], end=' ')
-			profile["¬" + feature_names[k]] = True
-
-		literal_importance = tm.literal_importance(target_class, negated_features=True, negative_polarity=True).astype(np.int32)
-		sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-		for k in sorted_literals:
-			if literal_importance[k] == 0:
-				break
-
-			print("¬" + feature_names[k - number_of_features], end=' ')
-			profile[feature_names[k - number_of_features]] = True
-
-		profile_list = list(profile.keys())
-		profile_list.sort()
-		print()
-		print("\nProfile:", " ".join(profile_list))
+		for target_class in range(target_ids.shape[0]):
+			print("\t\t%s: %+2d" % (target_words[target_class], tm.get_weight(target_class, j)))
 
 	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
 
