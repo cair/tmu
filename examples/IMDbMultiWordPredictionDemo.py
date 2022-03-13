@@ -10,14 +10,18 @@ from tmu.tsetlin_machine import TMClassifier
 
 #target_words = ['masterpiece', 'brilliant', 'comedy', 'scary', 'funny', 'hate', 'love', 'awful', 'terrible']
 
-target_words = ['awful', 'terrible', 'brilliant']
+#target_words = ['awful', 'terrible', 'brilliant']
+
+target_words = ['awful', 'brilliant']
 
 examples = 20000
 context_size = 25
 profile_size = 50
 
-clauses = 10
-T = 80
+clause_drop_p = 0.9
+
+clauses = int(10/(1.0 - clause_drop_p))
+T = 40
 s = 5.0
 
 NUM_WORDS=10000
@@ -95,7 +99,7 @@ for i in range(examples):
 		X_test[i] = np.logical_or(X_test[i], X_test_full[np.random.choice(target_rows)])
 	Y_test[i] = target_class
 
-tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
+tm = TMClassifier(clauses, T, s, clause_drop_p = 0.9, platform='CPU', weighted_clauses=True)
 
 print("\nAccuracy Over 40 Epochs:\n")
 for i in range(40):

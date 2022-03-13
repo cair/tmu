@@ -8,16 +8,20 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 from tmu.tsetlin_machine import TMClassifier
 
-#target_word = 'awful' #'frightening'#'comedy'#'romance'#"scary"
-target_word = 'brilliant'
+target_word = 'awful' #'frightening'#'comedy'#'romance'#"scary"
+#target_word = 'brilliant'
 
 examples = 20000
 context_size = 25
 profile_size = 50
 
-clauses = 10
+clause_drop_p = 0.9
+
+clauses = int(10/(1.0 - clause_drop_p))
 T = 40
 s = 5.0
+
+print("Number of clauses:", clauses)
 
 NUM_WORDS=10000
 INDEX_FROM=2 
@@ -78,7 +82,7 @@ print("Number of Target Words:", Y_train_1.shape[0])
 X_train = np.zeros((examples, number_of_features), dtype=np.uint32)
 Y_train = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
-	if np.random.rand() <= 0.1:
+	if np.random.rand() <= 0.5:
 		for c in range(context_size):
 			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0])])
 		Y_train[i] = 1
@@ -107,7 +111,7 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
 		Y_test[i] = 0
 
-tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
+tm = TMClassifier(clauses, T, s, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
 
 print("\nAccuracy Over 40 Epochs:\n")
 for i in range(40):

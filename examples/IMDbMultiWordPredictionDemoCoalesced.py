@@ -18,7 +18,9 @@ examples = 20000
 context_size = 25
 profile_size = 50
 
-clauses = 10*len(target_words)
+clause_drop_p = 0.9
+
+clauses = int(10*len(target_words)/(1.0 - clause_drop_p))
 T = 40
 s = 5.0
 
@@ -97,7 +99,7 @@ for i in range(examples):
 		X_test[i] = np.logical_or(X_test[i], X_test_full[np.random.choice(target_rows)])
 	Y_test[i] = target_class
 
-tm = TMCoalescedClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, s, clause_drop_p=clause_drop_p, platform='CPU', weighted_clauses=True)
 
 print("\nAccuracy Over 40 Epochs:\n")
 for i in range(40):
