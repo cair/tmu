@@ -10,13 +10,15 @@ from tmu.tsetlin_machine import TMCoalescedClassifier
 
 #target_words = ['masterpiece', 'brilliant', 'comedy', 'scary', 'funny', 'hate', 'love', 'awful', 'terrible']
 
-target_words = ['awful', 'terrible', 'brilliant']
+target_words = ['awful', 'brilliant']
+
+#target_words = ['awful', 'terrible', 'brilliant']
 
 examples = 20000
 context_size = 25
 profile_size = 50
 
-clauses = 10 * len(target_words)
+clauses = 10*len(target_words)
 T = 40
 s = 5.0
 
