@@ -395,12 +395,12 @@ class TMCoalescedClassifier(TMBasis):
 			chunk_pos = deactivate[d] % 32
 			self.literal_active[ta_chunk] &= (~(1 << chunk_pos))
 
-
 		if not self.feature_negation:
 			for k in range(self.clause_bank.number_of_literals//2, self.clause_bank.number_of_literals):
 				ta_chunk = k // 32
 				chunk_pos = k % 32
 				literal_active[ta_chunk] &= (~(1 << chunk_pos))
+				
 		self.literal_active = self.literal_active.astype(np.uint32)
 
 		self.update_ps = np.empty(self.number_of_classes)
@@ -485,8 +485,8 @@ class TMCoalescedClassifier(TMBasis):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMMultiChannelClassifier(TMBasis):
-	def __init__(self, number_of_clauses, global_T, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, global_T, T, s, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 		self.global_T = global_T
 
 	def initialize(self, X, Y):
@@ -546,6 +546,13 @@ class TMMultiChannelClassifier(TMBasis):
 			ta_chunk = deactivate[d] // 32
 			chunk_pos = deactivate[d] % 32
 			literal_active[ta_chunk] &= (~(1 << chunk_pos))
+
+		if not self.feature_negation:
+			for k in range(self.clause_bank.number_of_literals//2, self.clause_bank.number_of_literals):
+				ta_chunk = k // 32
+				chunk_pos = k % 32
+				literal_active[ta_chunk] &= (~(1 << chunk_pos))
+
 		literal_active = literal_active.astype(np.uint32)
 
 		local_class_sum = np.empty(X.shape[0], dtype=np.int32)
@@ -661,8 +668,8 @@ class TMMultiChannelClassifier(TMBasis):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMOneVsOneClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -694,7 +701,14 @@ class TMOneVsOneClassifier(TMBasis):
 		
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 		literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
-		
+		if not self.feature_negation:
+			for k in range(self.clause_bank.number_of_literals//2, self.clause_bank.number_of_literals):
+				ta_chunk = k // 32
+				chunk_pos = k % 32
+				literal_active[ta_chunk] &= (~(1 << chunk_pos))
+
+		literal_active = literal_active.astype(np.uint32)
+
 		shuffled_index = np.arange(X.shape[0])
 		if shuffle:
 			np.random.shuffle(shuffled_index)
@@ -797,8 +811,8 @@ class TMOneVsOneClassifier(TMBasis):
 		self.weight_banks[output].get_weights()[output] = weight
 
 class TMRegressor(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.max_y = np.max(Y)
@@ -827,7 +841,14 @@ class TMRegressor(TMBasis):
 
 		clause_active = np.ascontiguousarray(np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(np.int32))
 		literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
-		
+		if not self.feature_negation:
+			for k in range(self.clause_bank.number_of_literals//2, self.clause_bank.number_of_literals):
+				ta_chunk = k // 32
+				chunk_pos = k % 32
+				literal_active[ta_chunk] &= (~(1 << chunk_pos))
+
+		literal_active = literal_active.astype(np.uint32)
+
 		shuffled_index = np.arange(X.shape[0])
 		if shuffle:
 			np.random.shuffle(shuffled_index)
