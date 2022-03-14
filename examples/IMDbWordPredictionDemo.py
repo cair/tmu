@@ -15,9 +15,9 @@ examples = 20000
 context_size = 25
 profile_size = 50
 
-clause_drop_p = 0.9
+clause_drop_p = 0.0
 
-clauses = int(10/(1.0 - clause_drop_p))
+clauses = int(20/(1.0 - clause_drop_p))
 T = 40
 s = 5.0
 
@@ -111,7 +111,7 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
 		Y_test[i] = 0
 
-tm = TMClassifier(clauses, T, s, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
+tm = TMClassifier(clauses, T, s, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
 
 print("\nAccuracy Over 40 Epochs:\n")
 for i in range(40):
