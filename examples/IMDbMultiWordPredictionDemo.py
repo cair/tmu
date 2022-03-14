@@ -10,9 +10,9 @@ from tmu.tsetlin_machine import TMClassifier
 
 #target_words = ['masterpiece', 'brilliant', 'comedy', 'scary', 'funny', 'hate', 'love', 'awful', 'terrible']
 
-#target_words = ['awful', 'terrible', 'brilliant']
+target_words = ['awful', 'terrible', 'brilliant']
 
-target_words = ['awful', 'brilliant']
+#target_words = ['awful', 'brilliant']
 
 examples = 20000
 context_size = 25
@@ -108,7 +108,8 @@ for i in range(40):
 	stop_training = time()
 
 	start_testing = time()
-	result = 100*(tm.predict(X_test) == Y_test).mean()
+	result_test = 100*(tm.predict(X_test) == Y_test).mean()
+	result_train = 100*(tm.predict(X_train) == Y_train).mean()
 	stop_testing = time()
 
 	print("\n********** Epoch %d **********" % (i+1))
@@ -162,6 +163,6 @@ for i in range(40):
 		print()
 		print("\nProfile:", " ".join(profile_list))
 
-	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
+	print("\n#%d Training Accuracy: %.2f%% Testing Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
 
 
