@@ -119,26 +119,20 @@ for i in range(40):
 	for target_class in range(target_ids.shape[0]):
 		print("\n*****", target_words[target_class], "*****")
 
-		profile = {}
-
 		print("\nPositive Polarity:", end=' ')
 		literal_importance = tm.literal_importance(target_class, negated_features=False, negative_polarity=False).astype(np.int32)
 		sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 		for k in sorted_literals:
 			if literal_importance[k] == 0:
 				break
-
 			print(feature_names[k], end=' ')
-			profile[feature_names[k]] = True
 
 		literal_importance = tm.literal_importance(target_class, negated_features=True, negative_polarity=False).astype(np.int32)
 		sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 		for k in sorted_literals:
 			if literal_importance[k] == 0:
-				break
-			
+				break			
 			print("¬" + feature_names[k - number_of_features], end=' ')
-			profile["¬" + feature_names[k - number_of_features]] = True
 
 		print()
 		print("\nNegative Polarity:", end=' ')
@@ -147,23 +141,14 @@ for i in range(40):
 		for k in sorted_literals:
 			if literal_importance[k] == 0:
 				break
-
 			print(feature_names[k], end=' ')
-			profile["¬" + feature_names[k]] = True
 
 		literal_importance = tm.literal_importance(target_class, negated_features=True, negative_polarity=True).astype(np.int32)
 		sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
 		for k in sorted_literals:
 			if literal_importance[k] == 0:
 				break
-
 			print("¬" + feature_names[k - number_of_features], end=' ')
-			profile[feature_names[k - number_of_features]] = True
-
-		profile_list = list(profile.keys())
-		profile_list.sort()
-		print()
-		print("\nProfile:", " ".join(profile_list))
 
 	print("\n#%d Training Accuracy: %.2f%% Testing Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
 
