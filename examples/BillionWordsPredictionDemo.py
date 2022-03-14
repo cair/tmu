@@ -16,9 +16,9 @@ examples = 10000
 context_size = 50
 profile_size = 50
 
-clauses = 10*2
-T = 40*2
-s = 10.0
+clauses = 20
+T = 40
+s = 5.0
 
 NUM_WORDS=10000
 INDEX_FROM=2 
@@ -55,7 +55,6 @@ X_csc = X_csr.tocsc()
 target_id = vectorizer_X.vocabulary_[target_word]
 Y = X_csc[:,target_id].toarray().reshape(X_csc.shape[0])
 cols = np.arange(X_csc.shape[1]) != target_id
-print(cols.shape)
 X_csc = X_csc[:,cols] 
 
 X_csr = X_csc.tocsr()
@@ -99,7 +98,7 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])].toarray())
 		Y_test[i] = 0
 
-tm = TMClassifier(clauses, T, s, platform='CPU', weighted_clauses=True)
+tm = TMClassifier(clauses, T, s, feature_negation=False, platform='CPU', weighted_clauses=True)
 
 feature_names = vectorizer_X.get_feature_names_out()
 feature_names = np.delete(feature_names, target_id, axis=0)
@@ -118,8 +117,6 @@ for i in range(40):
 
 	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
 
-	profile = {}
-
 	print("\nPositive Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -128,7 +125,6 @@ for i in range(40):
 			break
 
 		print(feature_names[k], end=' ')
-		profile[feature_names[k]] = True
 
 	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=False).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -137,7 +133,6 @@ for i in range(40):
 			break
 		
 		print("¬" + feature_names[k - number_of_features], end=' ')
-		profile["¬" + feature_names[k - number_of_features]] = True
 
 	print()
 	print("\nNegative Polarity:", end=' ')
@@ -148,7 +143,6 @@ for i in range(40):
 			break
 
 		print(feature_names[k], end=' ')
-		profile["¬" + feature_names[k]] = True
 
 	literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=True).astype(np.int32)
 	sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
@@ -157,9 +151,4 @@ for i in range(40):
 			break
 
 		print("¬" + feature_names[k - number_of_features], end=' ')
-		profile[feature_names[k - number_of_features]] = True
-
-	profile_list = list(profile.keys())
-	profile_list.sort()
 	print()
-	print("\nProfile:", " ".join(profile_list))
