@@ -113,7 +113,7 @@ for i in range(examples):
 
 tm = TMClassifier(clauses, T, s, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
 
-print("\nAccuracy Over 40 Epochs:\n")
+print("\nAccuracy Over 40 Epochs:")
 for i in range(40):
 	start_training = time()
 	tm.fit(X_train, Y_train)
@@ -154,4 +154,5 @@ for i in range(40):
 			break
 		print("¬" + feature_names[k - number_of_features], end=' ')
 
+	print()
 	print("\n#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
