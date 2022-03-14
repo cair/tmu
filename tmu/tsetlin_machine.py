@@ -31,7 +31,7 @@ from sys import maxsize
 from time import time
 
 class TMBasis():
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits_ta = number_of_state_bits_ta
 		self.number_of_state_bits_ind = number_of_state_bits_ind
@@ -43,6 +43,7 @@ class TMBasis():
 		self.d = d
 		self.platform = platform
 		self.patch_dim = patch_dim
+		self.feature_negation = feature_negation
 		self.boost_true_positive_feedback = boost_true_positive_feedback
 		self.weighted_clauses = weighted_clauses
 
@@ -89,8 +90,8 @@ class TMBasis():
 		return self.clause_bank.set_ta_state(clause, ta, state)
 
 class TMClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, d=d, platform=platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, d=d, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -146,6 +147,12 @@ class TMClassifier(TMBasis):
 			ta_chunk = deactivate[d] // 32
 			chunk_pos = deactivate[d] % 32
 			literal_active[ta_chunk] &= (~(1 << chunk_pos))
+
+		if not self.feature_negation:
+			for k in range(self.clause_banks[0].number_of_literals//2, self.clause_banks[0].number_of_literals):
+				ta_chunk = k // 32
+				chunk_pos = k % 32
+				literal_active[ta_chunk] &= (~(1 << chunk_pos))
 		literal_active = literal_active.astype(np.uint32)
 
 		shuffled_index = np.arange(X.shape[0])
@@ -387,6 +394,13 @@ class TMCoalescedClassifier(TMBasis):
 			ta_chunk = deactivate[d] // 32
 			chunk_pos = deactivate[d] % 32
 			self.literal_active[ta_chunk] &= (~(1 << chunk_pos))
+
+
+		if not self.feature_negation:
+			for k in range(self.clause_bank.number_of_literals//2, self.clause_bank.number_of_literals):
+				ta_chunk = k // 32
+				chunk_pos = k % 32
+				literal_active[ta_chunk] &= (~(1 << chunk_pos))
 		self.literal_active = self.literal_active.astype(np.uint32)
 
 		self.update_ps = np.empty(self.number_of_classes)
