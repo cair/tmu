@@ -399,7 +399,7 @@ class TMCoalescedClassifier(TMBasis):
 			for k in range(self.clause_bank.number_of_literals//2, self.clause_bank.number_of_literals):
 				ta_chunk = k // 32
 				chunk_pos = k % 32
-				literal_active[ta_chunk] &= (~(1 << chunk_pos))
+				self.literal_active[ta_chunk] &= (~(1 << chunk_pos))
 
 		self.literal_active = self.literal_active.astype(np.uint32)
 
