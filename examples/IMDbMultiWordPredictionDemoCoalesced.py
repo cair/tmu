@@ -10,7 +10,7 @@ from tmu.tsetlin_machine import TMCoalescedClassifier
 
 #target_words = ['masterpiece', 'brilliant', 'comedy', 'scary', 'funny', 'hate', 'love', 'awful', 'terrible']
 
-target_words = ['awful', 'brilliant']
+target_words = ['awful', 'scary', 'brilliant']
 
 #target_words = ['awful', 'terrible', 'brilliant']
 
@@ -18,9 +18,9 @@ examples = 20000
 context_size = 25
 profile_size = 50
 
-clause_drop_p = 0.9
+clause_drop_p = 0.0
 
-clauses = int(10*len(target_words)/(1.0 - clause_drop_p))
+clauses = int(20*len(target_words)/(1.0 - clause_drop_p))
 T = 40
 s = 5.0
 
@@ -99,7 +99,7 @@ for i in range(examples):
 		X_test[i] = np.logical_or(X_test[i], X_test_full[np.random.choice(target_rows)])
 	Y_test[i] = target_class
 
-tm = TMCoalescedClassifier(clauses, T, s, clause_drop_p=clause_drop_p, platform='CPU', weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, s, feature_negation=False, clause_drop_p=clause_drop_p, platform='CPU', weighted_clauses=True)
 
 print("\nAccuracy Over 40 Epochs:\n")
 for i in range(40):
