@@ -12,12 +12,14 @@ import pickle
 #target_word = 'awful'#'comedy'#'romance'#"scary"
 #target_word = 'conflict'#'comedy'#'romance'#"scary"
 #target_word = 'war'
-#target_word = 'afghanistan'
-target_word = 'iraq'
+target_word = 'afghanistan'
+#target_word = 'iraq'
 
 examples = 10000
 context_size = 50
 profile_size = 50
+
+positive_sample_p = 0.1
 
 clause_drop_p = 0.75
 
@@ -78,7 +80,7 @@ print("Number of Target Words:", Y_train_1.shape[0])
 X_train = np.zeros((examples, X_csc.shape[1]), dtype=np.uint32)
 Y_train = np.zeros(examples, dtype=np.uint32)
 for i in range(examples):
-	if np.random.rand() <= 0.1:
+	if np.random.rand() <= positive_sample_p:
 		for c in range(context_size):
 			X_train[i] = np.logical_or(X_train[i], X_train_1[np.random.randint(X_train_1.shape[0]),:].toarray())
 		Y_train[i] = 1
