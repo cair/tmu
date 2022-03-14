@@ -20,9 +20,9 @@ examples = 20000
 context_size = 25
 profile_size = 50
 
-clause_drop_p = 0.9
+clause_drop_p = 0.0
 
-clauses = int(10/(1.0 - clause_drop_p))
+clauses = int(20/(1.0 - clause_drop_p))
 T = 40
 s = 5.0
 
@@ -149,7 +149,7 @@ for i in range(40):
 			if literal_importance[k] == 0:
 				break
 			print("¬" + feature_names[k - number_of_features], end=' ')
-
+		print()
 	print("\n#%d Training Accuracy: %.2f%% Testing Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
 
 
