@@ -300,8 +300,8 @@ class TMClassifier(TMBasis):
 			return self.clause_banks[the_class].set_ta_state(self.number_of_clauses//2 + clause, ta, state)
 
 class TMCoalescedClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform = 'CPU', patch_dim=None, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d, platform = platform, patch_dim=patch_dim, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -400,7 +400,7 @@ class TMCoalescedClassifier(TMBasis):
 				ta_chunk = k // 32
 				chunk_pos = k % 32
 				literal_active[ta_chunk] &= (~(1 << chunk_pos))
-				
+
 		self.literal_active = self.literal_active.astype(np.uint32)
 
 		self.update_ps = np.empty(self.number_of_classes)
