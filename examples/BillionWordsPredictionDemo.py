@@ -9,14 +9,19 @@ from sklearn.model_selection import train_test_split
 from tmu.tsetlin_machine import TMClassifier
 import pickle
 
-target_word = 'awful'#'comedy'#'romance'#"scary"
-target_word = 'terrible'#'comedy'#'romance'#"scary"
+#target_word = 'awful'#'comedy'#'romance'#"scary"
+#target_word = 'conflict'#'comedy'#'romance'#"scary"
+#target_word = 'war'
+#target_word = 'afghanistan'
+target_word = 'iraq'
 
 examples = 10000
 context_size = 50
 profile_size = 50
 
-clauses = 20
+clause_drop_p = 0.75
+
+clauses = int(20/(1.0 - clause_drop_p))
 T = 40
 s = 5.0
 
@@ -98,7 +103,7 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])].toarray())
 		Y_test[i] = 0
 
-tm = TMClassifier(clauses, T, s, feature_negation=False, platform='CPU', weighted_clauses=True)
+tm = TMClassifier(clauses, T, s, clause_drop_p=clause_drop_p, feature_negation=False, platform='CPU', weighted_clauses=True)
 
 feature_names = vectorizer_X.get_feature_names_out()
 feature_names = np.delete(feature_names, target_id, axis=0)
