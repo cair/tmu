@@ -12,8 +12,10 @@ import pickle
 #target_word = 'awful'#'comedy'#'romance'#"scary"
 #target_word = 'conflict'#'comedy'#'romance'#"scary"
 #target_word = 'war'
-target_word = 'afghanistan'
+#target_word = 'afghanistan'
 #target_word = 'iraq'
+#target_word = 'russia'
+target_word = 'france'
 
 examples = 10000
 context_size = 50
