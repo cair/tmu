@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Ole-Christoffer Granmo
+# Copyright (c) 2022 Ole-Christoffer Granmo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -176,7 +176,7 @@ class ClauseBankCUDA():
 			if state & (1 << b) > 0:
 				self.clause_bank[pos + b] |= (1 << chunk_pos)
 			else:
-				self.clause_bank[pos + b] &= (1 << chunk_pos)
+				self.clause_bank[pos + b] &= ~(1 << chunk_pos)
 		cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 
 	def prepare_X(self, X):
