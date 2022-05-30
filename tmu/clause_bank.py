@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Ole-Christoffer Granmo
+# Copyright (c) 2022 Ole-Christoffer Granmo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -145,7 +145,7 @@ class ClauseBank():
 			if state & (1 << b) > 0:
 				self.clause_bank[pos + b] |= (1 << chunk_pos)
 			else:
-				self.clause_bank[pos + b] &= (1 << chunk_pos)
+				self.clause_bank[pos + b] &= ~(1 << chunk_pos)
 
 	def prepare_X(self, X):		
 		return tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
