@@ -164,5 +164,5 @@ for e in range(40):
 					l.append("¬%s" % (feature_names[k-tm.clause_bank.number_of_features]))
 		print(" ∧ ".join(l))
 
-	print()
 	print("\n#%d Accuracy: %s Training: %.2fs Testing: %.2fs" % (i+1, str(result), stop_training-start_training, stop_testing-start_testing))
+	print()
