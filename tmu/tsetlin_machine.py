@@ -589,11 +589,11 @@ class TMMultiTaskClassifier(TMBasis):
 		
 		Y = np.ascontiguousarray(np.zeros((X.shape[0], X.shape[1]), dtype=np.uint32))
 
-		for e in range(X.shape[0]):
+		for e in range(X.shape[1]):
 			for i in range(self.number_of_classes):
 				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(self.encoded_X_test[i], e)			
 				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
-				Y[i, e] = class_sum >= 0
+				Y[i, e] = (class_sum >= 0)
 		return Y
 
 	def clause_precision(self, the_class, positive_polarity, X, Y):
