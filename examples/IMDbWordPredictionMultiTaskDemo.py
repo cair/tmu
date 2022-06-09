@@ -10,7 +10,7 @@ from tmu.tsetlin_machine import TMMultiTaskClassifier
 
 target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb']
 
-examples = 20000
+examples = 2000
 context_size = 25
 profile_size = 50
 
