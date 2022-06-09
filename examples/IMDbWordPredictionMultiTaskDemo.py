@@ -165,4 +165,4 @@ for e in range(40):
 		print(" ∧ ".join(l))
 
 	print()
-	print("\n#%d Accuracy: %s Training: %.2fs Testing: %.2fs Accuracy: " % (i+1, str(result), stop_training-start_training, stop_testing-start_testing))
+	print("\n#%d Accuracy: %s Training: %.2fs Testing: %.2fs" % (i+1, str(result), stop_training-start_training, stop_testing-start_testing))
