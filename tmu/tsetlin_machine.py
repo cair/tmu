@@ -25,7 +25,7 @@ import sys
 import numpy as np
 from tmu.clause_bank import ClauseBank
 from tmu.weight_bank import WeightBank
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, csc_matrix
 from sys import maxsize
 
 from time import time
