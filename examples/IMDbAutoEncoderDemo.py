@@ -10,16 +10,16 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from tmu.tsetlin_machine import TMAutoEncoder
 
-target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb', 'car', 'cars', 'scary', 'frightening', 'funny', 'comic']
+target_words = ['awful', 'terrible', 'lousy', 'abysmal', 'crap', 'outstanding', 'brilliant', 'excellent', 'superb', 'magnificent', 'marvellous', 'car', 'cars', 'motorcycle',  'scary', 'frightening', 'funny', 'comic']
 
-clause_weight_threshold = 10
+clause_weight_threshold = 0
 
 number_of_examples = 2000
 accumulation = 25
 
 clause_drop_p = 0.0
 
-clauses = int(40/(1.0 - clause_drop_p))
+clauses = int(20/(1.0 - clause_drop_p))
 T = 40
 s = 5.0
 
@@ -64,7 +64,7 @@ for i in range(test_y.shape[0]):
 def tokenizer(s):
 	return s
 
-vectorizer_X = CountVectorizer(tokenizer=tokenizer, lowercase=False, max_features=NUM_WORDS, binary=True)
+vectorizer_X = CountVectorizer(tokenizer=tokenizer, lowercase=False, binary=True)
 
 X_train = vectorizer_X.fit_transform(training_documents)
 feature_names = vectorizer_X.get_feature_names_out()
@@ -105,7 +105,7 @@ for e in range(40):
 	profile = np.empty((len(target_words), clauses))
 	for i in range(len(target_words)):
 		weights = tm.get_weights(i)
-		profile[i,:] = np.where(np.abs(weights) >= clause_weight_threshold, weights, 0)
+		profile[i,:] = np.where(weights >= clause_weight_threshold, weights, 0)
 
 	similarity = cosine_similarity(profile)
 	
