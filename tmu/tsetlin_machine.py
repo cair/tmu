@@ -645,6 +645,9 @@ class TMAutoEncoder(TMBasis):
 	def get_weight(self, the_class, clause):
 		return self.weight_banks[the_class].get_weights()[clause]
 
+	def get_weights(self, the_class):
+		return self.weight_banks[the_class].get_weights()
+
 	def set_weight(self, the_class, clause, weight):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 

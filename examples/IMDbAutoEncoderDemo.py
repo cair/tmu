@@ -6,10 +6,13 @@ from keras.datasets import imdb
 from time import time
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import f1_score
+from sklearn.metrics.pairwise import cosine_similarity
 
 from tmu.tsetlin_machine import TMAutoEncoder
 
 target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb', 'car', 'cars', 'scary', 'frightening']
+
+profile_size = 5
 
 number_of_examples = 2000
 accumulation = 25
@@ -82,14 +85,9 @@ for e in range(40):
 	start_training = time()
 	tm.fit(X_train, number_of_examples=number_of_examples)
 	stop_training = time()
-
-	start_testing = time()
-	prediction = tm.predict(X_test)
-	result = []
-	for i in range(len(target_words)):
-		result.append(f1_score(X_test[:,output_active[i]].toarray()[:,0], prediction[i]))
-	stop_testing = time()
 	
+	print("\nClauses\n")
+
 	for j in range(clauses):
 		print("Clause #%d " % (j), end=' ')
 		for i in range(len(target_words)):
@@ -104,5 +102,18 @@ for e in range(40):
 					l.append("¬%s" % (feature_names[k-tm.clause_bank.number_of_features]))
 		print(" ∧ ".join(l))
 
-	print("\n#%d Accuracy: %s Training: %.2fs Testing: %.2fs" % (e+1, str(result), stop_training-start_training, stop_testing-start_testing))
-	print()
+	profile = np.empty((len(target_words), clauses))
+	for i in range(len(target_words)):
+		weights = tm.get_weights(i)
+		profile[i,:] = np.where(np.abs(weights) >= 10, weights, 0)
+
+	similarity = cosine_similarity(profile)
+	
+	print("\nWord Similarity\n")
+
+	for i in range(len(target_words)):
+		print(target_words[i], end=': ')
+		sorted_index = np.argsort(-1*similarity[i,:])
+		for j in range(1, len(target_words)):
+			print("%s(%.2f) " % (target_words[sorted_index[j]], similarity[i,sorted_index[j]]), end=' ')
+		print()
