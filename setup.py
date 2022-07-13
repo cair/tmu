@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 os.chdir(os.path.dirname(sys.argv[0]) or ".")
 
 setup(
-    name='tmu',
+    name='tmu2',
     version='0.5.2',
     url='https://github.com/cair/tmu/',
     author='Ole-Christoffer Granmo',
