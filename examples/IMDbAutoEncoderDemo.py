@@ -12,7 +12,7 @@ from tmu.tsetlin_machine import TMAutoEncoder
 
 target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb', 'car', 'cars', 'scary', 'frightening']
 
-profile_size = 5
+clause_weight_threshold = 10
 
 number_of_examples = 2000
 accumulation = 25
@@ -105,7 +105,7 @@ for e in range(40):
 	profile = np.empty((len(target_words), clauses))
 	for i in range(len(target_words)):
 		weights = tm.get_weights(i)
-		profile[i,:] = np.where(np.abs(weights) >= 10, weights, 0)
+		profile[i,:] = np.where(np.abs(weights) >= clause_weight_threshold, weights, 0)
 
 	similarity = cosine_similarity(profile)
 	
