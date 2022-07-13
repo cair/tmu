@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from tmu.tsetlin_machine import TMAutoEncoder
 
-target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb', 'car', 'cars', 'scary', 'frightening']
+target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb', 'car', 'cars', 'scary', 'frightening', 'funny', 'comic']
 
 clause_weight_threshold = 10
 
@@ -19,7 +19,7 @@ accumulation = 25
 
 clause_drop_p = 0.0
 
-clauses = int(20/(1.0 - clause_drop_p))
+clauses = int(40/(1.0 - clause_drop_p))
 T = 40
 s = 5.0
 
