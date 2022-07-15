@@ -564,14 +564,19 @@ class TMAutoEncoder(TMBasis):
 				literal_active[ta_chunk] &= (~(1 << chunk_pos))
 		literal_active = literal_active.astype(np.uint32)
 
+		class_index = np.arange(self.number_of_classes, dtype=np.uint32)
 		for e in range(number_of_examples):
-			for i in range(self.number_of_classes):
+			np.random.shuffle(class_index)
+			for i in class_index:
 				if self.output_balancing:
 					target = np.random.choice(2)
 					if target == 1:
 						target_indices = X_csc[:,self.output_active[i]].indices
 					else:
 						target_indices = np.setdiff1d(np.random.choice(X_csr.shape[0], size=self.accumulation*10, replace=True), X_csc[:,self.output_active[i]].indices)
+						while target_indices.shape[0] == 0:
+							target_indices = np.setdiff1d(np.random.choice(X_csr.shape[0], size=self.accumulation*10, replace=True), X_csc[:,self.output_active[i]].indices)
+
 					examples = np.random.choice(target_indices, size=self.accumulation, replace=True)
 				else:
 					examples = np.random.choice(X_csr.shape[0], replace=True)
