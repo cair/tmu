@@ -5,6 +5,7 @@ from sklearn.feature_selection import chi2
 from keras.datasets import imdb
 from time import time
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 from tmu.tsetlin_machine import TMMultiTaskClassifier
 
@@ -13,6 +14,8 @@ target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb'
 examples = 2000
 context_size = 25
 profile_size = 50
+
+clause_weight_threshold = 0
 
 clause_drop_p = 0.0
 
@@ -163,6 +166,22 @@ for e in range(40):
 				else:
 					l.append("¬%s" % (feature_names[k-tm.clause_bank.number_of_features]))
 		print(" ∧ ".join(l))
+
+	profile = np.empty((len(target_words), clauses))
+	for i in range(len(target_words)):
+		weights = tm.get_weights(i)
+		profile[i,:] = np.where(weights >= clause_weight_threshold, weights, 0)
+
+	similarity = cosine_similarity(profile)
+	
+	print("\nWord Similarity\n")
+
+	for i in range(len(target_words)):
+		print(target_words[i], end=': ')
+		sorted_index = np.argsort(-1*similarity[i,:])
+		for j in range(1, len(target_words)):
+			print("%s(%.2f) " % (target_words[sorted_index[j]], similarity[i,sorted_index[j]]), end=' ')
+		print()
 
 	print("\n#%d Accuracy: %s Training: %.2fs Testing: %.2fs" % (i+1, str(result), stop_training-start_training, stop_testing-start_testing))
 	print()

@@ -681,11 +681,11 @@ class TMMultiTaskClassifier(TMBasis):
 			self.initialize(X, Y)
 			self.initialized = True
 
-		if not np.array_equal(self.X_train, X):
-			self.encoded_X_train = {}
-			for i in range(self.number_of_classes):
-				self.encoded_X_train[i] = self.clause_bank.prepare_X(X[i])
-			self.X_train = X.copy()
+		X_csr = {}
+		X_csc = {}
+		for i in range(self.number_of_classes):
+			X_csr[i] = csr_matrix(X[i].reshape(X[i].shape[0], -1))
+			X_csc[i] = csc_matrix(X[i].reshape(X[i].shape[0], -1))
 
 		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
@@ -724,7 +724,8 @@ class TMMultiTaskClassifier(TMBasis):
 
 		for e in shuffled_index:
 			for i in range(self.number_of_classes):
-				clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.literal_active, self.encoded_X_train[i], e)
+				encoded_X = self.clause_bank.prepare_X(X_csr[i][e,:].toarray())
+				clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.literal_active, encoded_X, 0)
 			
 				class_sum = np.dot(self.clause_active * self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
@@ -734,35 +735,34 @@ class TMMultiTaskClassifier(TMBasis):
 				if Ym[i, e] == 1:
 					update_p = (self.T - class_sum)/(2*self.T)
 
-					self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, self.encoded_X_train[i], e)
-					self.clause_bank.type_ii_feedback(update_p, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, self.encoded_X_train[i], e)
+					self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
+					self.clause_bank.type_ii_feedback(update_p, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
 					self.weight_banks[i].increment(clause_outputs, update_p, self.clause_active, True)
 					if self.type_iii_feedback and type_iii_feedback_selection == 0:
-						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, self.encoded_X_train[i], e, 1)
-						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, self.encoded_X_train[i], e, 0)
+						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0, 1)
+						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0, 0)
 				else:
 					update_p = (self.T + class_sum)/(2*self.T)
 
-					self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.clause_active * (self.weight_banks[i].get_weights() < 0), self.literal_active, self.encoded_X_train[i], e)
-					self.clause_bank.type_ii_feedback(update_p, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, self.encoded_X_train[i], e)
+					self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.clause_active * (self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
+					self.clause_bank.type_ii_feedback(update_p, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
 					self.weight_banks[i].decrement(clause_outputs, update_p, self.clause_active, True)
 					if self.type_iii_feedback and type_iii_feedback_selection == 1:
-						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, self.encoded_X_train[i], e, 1)
-						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, self.encoded_X_train[i], e, 0)
+						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0, 1)
+						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0, 0)
 		return
 
 	def predict(self, X):
-		if not np.array_equal(self.X_test, X):
-			self.encoded_X_test = {}
-			for i in range(self.number_of_classes):
-				self.encoded_X_test[i] = self.clause_bank.prepare_X(X[i])
-			self.X_test = X.copy()
-		
 		Y = np.ascontiguousarray(np.zeros((X.shape[0], X.shape[1]), dtype=np.uint32))
 
+		X_csr = {}
+		for i in range(self.number_of_classes):
+			X_csr[i] = csr_matrix(X[i].reshape(X[i].shape[0], -1))
+		
 		for e in range(X.shape[1]):
 			for i in range(self.number_of_classes):
-				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(self.encoded_X_test[i], e)			
+				encoded_X = self.clause_bank.prepare_X(X_csr[i][e,:].toarray())		
+				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)			
 				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
 				Y[i, e] = (class_sum >= 0)
 		return Y
@@ -796,6 +796,9 @@ class TMMultiTaskClassifier(TMBasis):
 
 	def get_weight(self, the_class, clause):
 		return self.weight_banks[the_class].get_weights()[clause]
+
+	def get_weights(self, the_class):
+		return self.weight_banks[the_class].get_weights()
 
 	def set_weight(self, the_class, clause, weight):
 		self.weight_banks[the_class].get_weights()[clause] = weight
