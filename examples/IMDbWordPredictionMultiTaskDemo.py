@@ -15,11 +15,10 @@ target_words = ['awful', 'terrible', 'lousy', 'abysmal', 'crap', 'outstanding', 
 
 number_of_examples = 2000
 context_size = 25
-profile_size = 50
 
 clause_weight_threshold = 0
 
-clause_drop_p = 0.5
+clause_drop_p = 0.75
 
 clauses = int(20/(1.0 - clause_drop_p))
 T = 40
@@ -140,9 +139,9 @@ for e in range(40):
 		for k in range(tm.clause_bank.number_of_literals):
 			if tm.get_ta_action(j, k) == 1:
 				if k < tm.clause_bank.number_of_features:
-					l.append("%s" % (feature_names[k]))
+					l.append("%s(%d)" % (feature_names[k], tm.clause_bank.get_ta_state(j, k)))
 				else:
-					l.append("¬%s" % (feature_names[k-tm.clause_bank.number_of_features]))
+					l.append("¬%s(%d)" % (feature_names[k-tm.clause_bank.number_of_features], tm.clause_bank.get_ta_state(j, k)))
 		print(" ∧ ".join(l))
 
 	profile = np.empty((len(target_words), clauses))
