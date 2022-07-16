@@ -13,13 +13,13 @@ from tmu.tsetlin_machine import TMMultiTaskClassifier
 #target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb']
 target_words = ['awful', 'terrible', 'lousy', 'abysmal', 'crap', 'outstanding', 'brilliant', 'excellent', 'superb', 'magnificent', 'marvellous', 'car', 'cars', 'motorcycle',  'scary', 'frightening', 'funny', 'comic']
 
-number_of_examples = 10000
+number_of_examples = 2000
 context_size = 25
 profile_size = 50
 
 clause_weight_threshold = 0
 
-clause_drop_p = 0.0
+clause_drop_p = 0.5
 
 clauses = int(20/(1.0 - clause_drop_p))
 T = 40
