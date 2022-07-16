@@ -7,7 +7,7 @@ os.chdir(os.path.dirname(sys.argv[0]) or ".")
 
 setup(
     name='tmu2',
-    version='0.5.3',
+    version='0.5.4',
     url='https://github.com/cair/tmu/',
     author='Ole-Christoffer Granmo',
     author_email='ole.granmo@uia.no',
