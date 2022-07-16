@@ -19,7 +19,7 @@ profile_size = 50
 
 clause_weight_threshold = 0
 
-clause_drop_p = 0.5
+clause_drop_p = 0.0
 
 clauses = int(20/(1.0 - clause_drop_p))
 T = 40
