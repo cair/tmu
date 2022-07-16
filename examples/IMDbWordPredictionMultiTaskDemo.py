@@ -6,18 +6,20 @@ from keras.datasets import imdb
 from time import time
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from scipy.sparse import csr_matrix, csc_matrix, lil_matrix
 
 from tmu.tsetlin_machine import TMMultiTaskClassifier
 
-target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb']
+#target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb']
+target_words = ['awful', 'terrible', 'lousy', 'abysmal', 'crap', 'outstanding', 'brilliant', 'excellent', 'superb', 'magnificent', 'marvellous', 'car', 'cars', 'motorcycle',  'scary', 'frightening', 'funny', 'comic']
 
-examples = 2000
+number_of_examples = 2000
 context_size = 25
 profile_size = 50
 
 clause_weight_threshold = 0
 
-clause_drop_p = 0.0
+clause_drop_p = 0.5
 
 clauses = int(20/(1.0 - clause_drop_p))
 T = 40
@@ -66,77 +68,53 @@ def tokenizer(s):
 
 vectorizer_X = CountVectorizer(tokenizer=tokenizer, lowercase=False, max_features=NUM_WORDS, binary=True)
 
-X_train = vectorizer_X.fit_transform(training_documents).toarray()
+X_train_csr = vectorizer_X.fit_transform(training_documents)
+X_train_csc = X_train_csr.tocsc()
 feature_names = vectorizer_X.get_feature_names_out()
 number_of_features = vectorizer_X.get_feature_names_out().shape[0]
 
-X_train_full = np.zeros((len(target_words), X_train.shape[0], X_train.shape[1]), dtype=np.uint32)
-Y_train_full = np.zeros((len(target_words), X_train.shape[0]), dtype=np.uint32)
-for i in range(len(target_words)):
-	target_word = target_words[i]
-	target_id = vectorizer_X.vocabulary_[target_word]
-	Y_train_full[i] = np.copy(X_train[:,target_id])
-	X_train_full[i] = np.copy(X_train)
-	X_train_full[i,:,target_id] = 0
-
-X_train_0 = {}
-Y_train_0 = {}
-X_train_1 = {}
-Y_train_1 = {}
-for i in range(len(target_words)):
-	X_train_0[i] = X_train_full[i][Y_train_full[i]==0]
-	Y_train_0[i]  = Y_train_full[i][Y_train_full[i]==0]
-	X_train_1[i]  = X_train_full[i][Y_train_full[i]==1]
-	Y_train_1[i]  = Y_train_full[i][Y_train_full[i]==1]
-
-X_train = np.zeros((len(target_words), examples, number_of_features), dtype=np.uint32)
-Y_train = np.zeros((len(target_words), examples), dtype=np.uint32)
+X_train = {}
+Y_train = lil_matrix((len(target_words), number_of_examples), dtype=np.uint32)
 
 for i in range(len(target_words)):
-	for e in range(examples):
-		if np.random.rand() <= 0.5:
-			for c in range(context_size):
-				X_train[i, e] = np.logical_or(X_train[i, e], X_train_1[i][np.random.randint(X_train_1[i].shape[0])])
-			Y_train[i, e] = 1
+	X_train[i] = lil_matrix((number_of_examples, number_of_features), dtype=np.uint32)
+	for e in range(number_of_examples):
+		target_word = target_words[i]
+		target_id = vectorizer_X.vocabulary_[target_word]
+		target = np.random.choice(2)
+		if target == 1:
+			target_indices = X_train_csc[:,target_id].indices
 		else:
-			for c in range(context_size):
-				X_train[i, e] = np.logical_or(X_train[i, e], X_train_0[i][np.random.randint(X_train_0[i].shape[0])])
-			Y_train[i, e] = 0
+			target_indices = np.setdiff1d(np.arange(X_train_csr.shape[0], dtype=np.uint32), X_train_csc[:,target_id].indices)
+		examples = np.random.choice(target_indices, size=context_size, replace=True)
+		X_train[i][e,:] = (X_train_csr[examples].toarray().sum(axis=0) > 0).astype(np.uint32)
+		X_train[i][e,target_id] = 1 
+		Y_train[i, e] = target
+	X_train[i] = X_train[i].tocsr()
+Y_train = Y_train.tocsr()
 
-X_test = vectorizer_X.transform(testing_documents).toarray()
+X_test_csr = vectorizer_X.transform(testing_documents)
+X_test_csc = X_test_csr.tocsc()
 
-X_test_full = np.zeros((len(target_words), X_test.shape[0], X_test.shape[1]), dtype=np.uint32)
-Y_test_full = np.zeros((len(target_words), X_test.shape[0]), dtype=np.uint32)
-for i in range(len(target_words)):
-	target_word = target_words[i]
-	target_id = vectorizer_X.vocabulary_[target_word]
-	Y_test_full[i] = np.copy(X_test[:,target_id])
-	X_test_full[i] = np.copy(X_test)
-	X_test_full[i,:,target_id] = 0
-
-X_test_0 = {}
-Y_test_0 = {}
-X_test_1 = {}
-Y_test_1 = {}
-for i in range(len(target_words)):
-	X_test_0[i] = X_test_full[i][Y_test_full[i]==0]
-	Y_test_0[i]  = Y_test_full[i][Y_test_full[i]==0]
-	X_test_1[i]  = X_test_full[i][Y_test_full[i]==1]
-	Y_test_1[i]  = Y_test_full[i][Y_test_full[i]==1]
-
-X_test = np.zeros((len(target_words), examples, number_of_features), dtype=np.uint32)
-Y_test = np.zeros((len(target_words), examples), dtype=np.uint32)
+X_test = {}
+Y_test = lil_matrix((len(target_words), number_of_examples), dtype=np.uint32)
 
 for i in range(len(target_words)):
-	for e in range(examples):
-		if np.random.rand() <= 0.5:
-			for c in range(context_size):
-				X_test[i, e] = np.logical_or(X_test[i, e], X_test_1[i][np.random.randint(X_test_1[i].shape[0])])
-			Y_test[i, e] = 1
+	X_test[i] = lil_matrix((number_of_examples, number_of_features), dtype=np.uint32)
+	for e in range(number_of_examples):
+		target_word = target_words[i]
+		target_id = vectorizer_X.vocabulary_[target_word]
+		target = np.random.choice(2)
+		if target == 1:
+			target_indices = X_test_csc[:,target_id].indices
 		else:
-			for c in range(context_size):
-				X_test[i, e] = np.logical_or(X_test[i, e], X_test_0[i][np.random.randint(X_test_0[i].shape[0])])
-			Y_test[i, e] = 0
+			target_indices = np.setdiff1d(np.arange(X_test_csr.shape[0], dtype=np.uint32), X_test_csc[:,target_id].indices)
+		examples = np.random.choice(target_indices, size=context_size, replace=True)
+		X_test[i][e,:] = (X_test_csr[examples].toarray().sum(axis=0) > 0).astype(np.uint32)
+		X_test[i][e,target_id] = 1
+		Y_test[i, e] = target
+	X_test[i] = X_test[i].tocsr()
+Y_test = Y_test.tocsr()
 
 tm = TMMultiTaskClassifier(clauses, T, s, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
 
@@ -183,5 +161,5 @@ for e in range(40):
 			print("%s(%.2f) " % (target_words[sorted_index[j]], similarity[i,sorted_index[j]]), end=' ')
 		print()
 
-	print("\n#%d Accuracy: %s Training: %.2fs Testing: %.2fs" % (i+1, str(result), stop_training-start_training, stop_testing-start_testing))
+	print("\n#%d Accuracy: %s Training: %.2fs Testing: %.2fs" % (e+1, str(result), stop_training-start_training, stop_testing-start_testing))
 	print()

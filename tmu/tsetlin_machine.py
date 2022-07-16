@@ -661,7 +661,7 @@ class TMMultiTaskClassifier(TMBasis):
 		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
-		self.number_of_classes = X.shape[0]
+		self.number_of_classes = len(X)
 	
 		if self.platform == 'CPU':
 			self.clause_bank = ClauseBank(X[0], self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim)
@@ -682,12 +682,8 @@ class TMMultiTaskClassifier(TMBasis):
 			self.initialized = True
 
 		X_csr = {}
-		X_csc = {}
 		for i in range(self.number_of_classes):
 			X_csr[i] = csr_matrix(X[i].reshape(X[i].shape[0], -1))
-			X_csc[i] = csc_matrix(X[i].reshape(X[i].shape[0], -1))
-
-		Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
 		# Clauses are dropped based on their weights
 		self.clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
@@ -722,8 +718,10 @@ class TMMultiTaskClassifier(TMBasis):
 		if shuffle:
 			np.random.shuffle(shuffled_index)
 
+		class_index = np.arange(self.number_of_classes, dtype=np.uint32)
 		for e in shuffled_index:
-			for i in range(self.number_of_classes):
+			np.random.shuffle(class_index)
+			for i in class_index:
 				encoded_X = self.clause_bank.prepare_X(X_csr[i][e,:].toarray())
 				clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.literal_active, encoded_X, 0)
 			
@@ -732,7 +730,7 @@ class TMMultiTaskClassifier(TMBasis):
 
 				type_iii_feedback_selection = np.random.choice(2)
 
-				if Ym[i, e] == 1:
+				if Y[i, e] == 1:
 					update_p = (self.T - class_sum)/(2*self.T)
 
 					self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
@@ -753,14 +751,14 @@ class TMMultiTaskClassifier(TMBasis):
 		return
 
 	def predict(self, X):
-		Y = np.ascontiguousarray(np.zeros((X.shape[0], X.shape[1]), dtype=np.uint32))
+		Y = np.ascontiguousarray(np.zeros((len(X), X[0].shape[0]), dtype=np.uint32))
 
 		X_csr = {}
 		for i in range(self.number_of_classes):
 			X_csr[i] = csr_matrix(X[i].reshape(X[i].shape[0], -1))
 		
-		for e in range(X.shape[1]):
-			for i in range(self.number_of_classes):
+		for i in range(self.number_of_classes):
+			for e in range(X[i].shape[0]):
 				encoded_X = self.clause_bank.prepare_X(X_csr[i][e,:].toarray())		
 				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)			
 				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
