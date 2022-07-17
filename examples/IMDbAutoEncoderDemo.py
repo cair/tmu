@@ -10,7 +10,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from tmu.tsetlin_machine import TMAutoEncoder
 
-#target_words = ['awful', 'terrible', 'lousy', 'abysmal', 'crap', 'outstanding', 'brilliant', 'excellent', 'superb', 'magnificent', 'marvellous', 'car', 'cars', 'motorcycle',  'scary', 'frightening', 'funny', 'comic']
 target_words = ['awful', 'terrible', 'lousy', 'abysmal', 'crap', 'outstanding', 'brilliant', 'excellent', 'superb', 'magnificent', 'marvellous', 'truck', 'plane', 'car', 'cars', 'motorcycle',  'scary', 'frightening', 'terrifying', 'horrifying', 'funny', 'comic', 'hilarious', 'witty']
 
 clause_weight_threshold = 0
@@ -87,7 +86,9 @@ for e in range(40):
 	tm.fit(X_train, number_of_examples=number_of_examples)
 	stop_training = time()
 	
-	print("\nClauses\n")
+	print("\nEpoch #%d\n" % (e+1))
+
+	print("Clauses\n")
 
 	for j in range(clauses):
 		print("Clause #%d " % (j), end=' ')
