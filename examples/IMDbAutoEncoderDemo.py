@@ -19,8 +19,9 @@ accumulation = 25
 
 clause_drop_p = 0.75
 
-clauses = int(20/(1.0 - clause_drop_p))
-T = 40
+factor = 4
+clauses = int(factor*20/(1.0 - clause_drop_p))
+T = factor*40
 s = 5.0
 
 print("Number of clauses:", clauses)
