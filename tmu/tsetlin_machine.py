@@ -31,12 +31,19 @@ from sys import maxsize
 from time import time
 
 class TMBasis():
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits_ta = number_of_state_bits_ta
 		self.number_of_state_bits_ind = number_of_state_bits_ind
 		self.T = int(T)
 		self.s = s
+		if type_i_ii_ratio >= 1.0:
+			self.type_i_p = 1.0
+			self.type_ii_p = 1.0/type_i_ii_ratio
+		else:
+			self.type_i_p = type_i_ii_ratio
+			self.type_ii_p = 1.0
+
 		self.type_iii_feedback = type_iii_feedback
 		self.focused_negative_sampling= focused_negative_sampling
 		self.output_balancing = output_balancing
@@ -90,8 +97,8 @@ class TMBasis():
 		return self.clause_bank.set_ta_state(clause, ta, state)
 
 class TMClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, d=d, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, type_i_ii_ratio = 1.0, type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, type_iii_feedback=type_iii_feedback, d=d, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -170,8 +177,8 @@ class TMClassifier(TMBasis):
 
 			if self.weighted_clauses:
 				self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
-			self.clause_banks[target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
-			self.clause_banks[target].type_ii_feedback(update_p, clause_active[target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
+			self.clause_banks[target].type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, clause_active[target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
+			self.clause_banks[target].type_ii_feedback(update_p*self.type_ii_p, clause_active[target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
 			if self.type_iii_feedback:
 				self.clause_banks[target].type_iii_feedback(update_p, self.d, clause_active[target]*self.positive_clauses, literal_active, self.encoded_X_train, e, 1)
 				self.clause_banks[target].type_iii_feedback(update_p, self.d, clause_active[target]*self.negative_clauses, literal_active, self.encoded_X_train, e, 0)
@@ -188,8 +195,8 @@ class TMClassifier(TMBasis):
 		
 			if self.weighted_clauses:
 				self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active[not_target], False)			
-			self.clause_banks[not_target].type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
-			self.clause_banks[not_target].type_ii_feedback(update_p, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
+			self.clause_banks[not_target].type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, clause_active[not_target]*self.negative_clauses, literal_active, self.encoded_X_train, e)
+			self.clause_banks[not_target].type_ii_feedback(update_p*self.type_ii_p, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e)
 			if self.type_iii_feedback:
 				self.clause_banks[not_target].type_iii_feedback(update_p, self.d, clause_active[not_target]*self.negative_clauses, literal_active, self.encoded_X_train, e, 1)
 				self.clause_banks[not_target].type_iii_feedback(update_p, self.d, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e, 0)
@@ -300,8 +307,8 @@ class TMClassifier(TMBasis):
 			return self.clause_banks[the_class].set_ta_state(self.number_of_clauses//2 + clause, ta, state)
 
 class TMCoalescedClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -328,8 +335,8 @@ class TMCoalescedClassifier(TMBasis):
 
 		type_iii_feedback_selection = np.random.choice(2)
 
-		self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.clause_active*(self.weight_banks[target].get_weights() >= 0), self.literal_active, self.encoded_X_train, e)
-		self.clause_bank.type_ii_feedback(update_p, self.clause_active*(self.weight_banks[target].get_weights() < 0), self.literal_active, self.encoded_X_train, e)
+		self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.clause_active*(self.weight_banks[target].get_weights() >= 0), self.literal_active, self.encoded_X_train, e)
+		self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, self.clause_active*(self.weight_banks[target].get_weights() < 0), self.literal_active, self.encoded_X_train, e)
 		self.weight_banks[target].increment(clause_outputs, update_p, self.clause_active, True)
 		if self.type_iii_feedback and type_iii_feedback_selection == 0:
 			self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[target].get_weights() >= 0), self.literal_active, self.encoded_X_train, e, 1)
@@ -355,8 +362,8 @@ class TMCoalescedClassifier(TMBasis):
 				not_target = np.random.randint(self.number_of_classes)
 			update_p = self.update_ps[not_target]
 	
-		self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.clause_active * (self.weight_banks[not_target].get_weights() < 0), self.literal_active, self.encoded_X_train, e)
-		self.clause_bank.type_ii_feedback(update_p, self.clause_active*(self.weight_banks[not_target].get_weights() >= 0), self.literal_active, self.encoded_X_train, e)
+		self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.clause_active * (self.weight_banks[not_target].get_weights() < 0), self.literal_active, self.encoded_X_train, e)
+		self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, self.clause_active*(self.weight_banks[not_target].get_weights() >= 0), self.literal_active, self.encoded_X_train, e)
 		if self.type_iii_feedback and type_iii_feedback_selection == 1:
 			self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[not_target].get_weights() < 0), self.literal_active, self.encoded_X_train, e, 1)
 			self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[not_target].get_weights() >= 0), self.literal_active, self.encoded_X_train, e, 0)
@@ -485,10 +492,10 @@ class TMCoalescedClassifier(TMBasis):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMAutoEncoder(TMBasis):
-	def __init__(self, number_of_clauses, T, s, output_active, accumulation=1, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, output_active, accumulation=1, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.output_active = output_active
 		self.accumulation = accumulation
-		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X):
 		self.number_of_classes = self.output_active.shape[0]
@@ -517,8 +524,8 @@ class TMAutoEncoder(TMBasis):
 		if target_value == 1:
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target_output].get_weights() < 0), literal_active, encoded_X, 0)
+			self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0)
+			self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[target_output].get_weights() < 0), literal_active, encoded_X, 0)
 			self.weight_banks[target_output].increment(clause_outputs, update_p, clause_active, True)
 			if self.type_iii_feedback and type_iii_feedback_selection == 0:
 				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0, 1)
@@ -526,8 +533,8 @@ class TMAutoEncoder(TMBasis):
 		else:
 			update_p = (self.T + class_sum)/(2*self.T)
 	
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[target_output].get_weights() < 0), literal_active, encoded_X, 0)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0)
+			self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[target_output].get_weights() < 0), literal_active, encoded_X, 0)
+			self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0)
 			self.weight_banks[target_output].decrement(clause_outputs, update_p, clause_active, True)
 			if self.type_iii_feedback and type_iii_feedback_selection == 1:
 				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[target_output].get_weights() < 0), literal_active, encoded_X, 0, 1)
@@ -657,8 +664,8 @@ class TMAutoEncoder(TMBasis):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMMultiTaskClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, type_iii_feedback=type_iii_feedback, focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = len(X)
@@ -733,8 +740,8 @@ class TMMultiTaskClassifier(TMBasis):
 				if Y[i, e] == 1:
 					update_p = (self.T - class_sum)/(2*self.T)
 
-					self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
-					self.clause_bank.type_ii_feedback(update_p, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
+					self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
+					self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
 					self.weight_banks[i].increment(clause_outputs, update_p, self.clause_active, True)
 					if self.type_iii_feedback and type_iii_feedback_selection == 0:
 						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0, 1)
@@ -742,8 +749,8 @@ class TMMultiTaskClassifier(TMBasis):
 				else:
 					update_p = (self.T + class_sum)/(2*self.T)
 
-					self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.clause_active * (self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
-					self.clause_bank.type_ii_feedback(update_p, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
+					self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.clause_active * (self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
+					self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
 					self.weight_banks[i].decrement(clause_outputs, update_p, self.clause_active, True)
 					if self.type_iii_feedback and type_iii_feedback_selection == 1:
 						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0, 1)
@@ -803,8 +810,8 @@ class TMMultiTaskClassifier(TMBasis):
 
 
 class TMMultiChannelClassifier(TMBasis):
-	def __init__(self, number_of_clauses, global_T, T, s, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, global_T, T, s, type_i_ii_ratio = 1.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 		self.global_T = global_T
 
 	def initialize(self, X, Y):
@@ -897,8 +904,8 @@ class TMMultiChannelClassifier(TMBasis):
 			for c in range(X.shape[0]):
 				local_update_p = 1.0*(self.T - local_class_sum[c])/(2*self.T)
 				update_p = np.minimum(local_update_p, global_update_p)
-				self.clause_bank.type_i_feedback(update_p, self.s[target], self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), literal_active, self.encoded_X_train[c], e)
-				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[target].get_weights() < 0), literal_active, self.encoded_X_train[c], e)
+				self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s[target], self.boost_true_positive_feedback, clause_active*(self.weight_banks[target].get_weights() >= 0), literal_active, self.encoded_X_train[c], e)
+				self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[target].get_weights() < 0), literal_active, self.encoded_X_train[c], e)
 				self.weight_banks[target].increment(clause_outputs[c], update_p, clause_active, True)
 
 			not_target = np.random.randint(self.number_of_classes)
@@ -916,8 +923,8 @@ class TMMultiChannelClassifier(TMBasis):
 			for c in range(X.shape[0]):
 				local_update_p = 1.0*(self.T + local_class_sum[c])/(2*self.T)
 				update_p = np.minimum(local_update_p, global_update_p)
-				self.clause_bank.type_i_feedback(update_p, self.s[not_target], self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train[c], e)
-				self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train[c], e)
+				self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s[not_target], self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train[c], e)
+				self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train[c], e)
 				self.weight_banks[not_target].decrement(clause_outputs[c], update_p, clause_active, True)
 		return
 
@@ -986,8 +993,8 @@ class TMMultiChannelClassifier(TMBasis):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMOneVsOneClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, type_i_ii_ratio = 1.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -1045,8 +1052,8 @@ class TMOneVsOneClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[output].get_weights() >= 0), literal_active, self.encoded_X_train, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() < 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[output].get_weights() >= 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[output].get_weights() < 0), literal_active, self.encoded_X_train, e)
 			self.weight_banks[output].increment(clause_outputs, update_p, clause_active, True)
 
 			output = not_target * (self.number_of_classes-1) + target - (target > not_target)
@@ -1055,8 +1062,8 @@ class TMOneVsOneClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T + class_sum)/(2*self.T)
 		
-			self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[output].get_weights() < 0), literal_active, self.encoded_X_train, e)
-			self.clause_bank.type_ii_feedback(update_p, clause_active*(self.weight_banks[output].get_weights() >= 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[output].get_weights() < 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[output].get_weights() >= 0), literal_active, self.encoded_X_train, e)
 			self.weight_banks[output].decrement(clause_outputs, update_p, clause_active, True)
 		return
 
