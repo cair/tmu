@@ -45,7 +45,7 @@ class TMBasis():
 			self.type_ii_p = 1.0
 
 		self.type_iii_feedback = type_iii_feedback
-		self.focused_negative_sampling= focused_negative_sampling
+		self.focused_negative_sampling = focused_negative_sampling
 		self.output_balancing = output_balancing
 		self.d = d
 		self.platform = platform
