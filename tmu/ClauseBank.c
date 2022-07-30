@@ -32,6 +32,8 @@ https://arxiv.org/abs/1905.09688
 #include <string.h>
 #include "fast_rand.h"
 
+#include "ClauseBank.h"
+
 static inline void cb_initialize_random_streams(unsigned int *feedback_to_ta, int number_of_features, int number_of_ta_chunks, float s)
 {
 	// Initialize all bits to zero	
@@ -266,7 +268,7 @@ static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_s
 }
 
 
-void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
+void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
 {
 	unsigned int filter;
 	if (((number_of_features) % 32) != 0) {
@@ -290,7 +292,7 @@ void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, un
 
 		cb_initialize_random_streams(feedback_to_ta, number_of_features, number_of_ta_chunks, s);
 
-		if (clause_output) {
+		if (clause_output && cb_number_of_include_actions(ta_state, j, number_of_features, number_of_state_bits) <= max_included_literals) {
 			// Type Ia Feedback
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int ta_pos = k*number_of_state_bits;
@@ -499,4 +501,27 @@ void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clause
 			}
 		}
 	}
+}
+
+int cb_number_of_include_actions(unsigned int *ta_state, int clause, int number_of_features, int number_of_state_bits)
+{
+	unsigned int filter;
+	if (((number_of_features) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_features) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+	
+	unsigned int clause_pos = clause*number_of_ta_chunks*number_of_state_bits;
+
+	int number_of_include_actions = 0;
+	for (int k = 0; k < number_of_ta_chunks-1; ++k) {
+		unsigned int ta_pos = k*number_of_state_bits + number_of_state_bits-1;
+		number_of_include_actions += __builtin_popcount(ta_state[clause_pos + ta_pos]);
+	}
+	unsigned int ta_pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+	number_of_include_actions += __builtin_popcount(ta_state[clause_pos + ta_pos] & filter);
+
+	return(number_of_include_actions);
 }

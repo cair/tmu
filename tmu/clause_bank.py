@@ -98,11 +98,11 @@ class ClauseBank():
 		lib.cb_calculate_clause_outputs_patchwise(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, self.cop_p, xi_p)
 		return self.clause_output_patchwise
 
-	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, clause_active, literal_active, encoded_X, e):
+	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active, literal_active, encoded_X, e):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
 		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
-		lib.cb_type_i_feedback(self.cb_p, self.ft_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, update_p, s, boost_true_positive_feedback, ca_p, la_p, xi_p)
+		lib.cb_type_i_feedback(self.cb_p, self.ft_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, update_p, s, boost_true_positive_feedback, max_included_literals, ca_p, la_p, xi_p)
 
 	def type_ii_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
@@ -120,7 +120,10 @@ class ClauseBank():
 		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		lib.cb_calculate_literal_frequency(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, ca_p, self.lcc_p)
 		return self.literal_clause_count
-		
+	
+	def number_of_include_actions(self, clause):
+		return lib.cb_number_of_include_actions(self.cb_p, clause, self.number_of_literals, self.number_of_state_bits_ta)
+
 	def get_ta_action(self, clause, ta):
 		ta_chunk = ta // 32
 		chunk_pos = ta % 32
