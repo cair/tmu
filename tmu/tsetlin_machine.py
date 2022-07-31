@@ -551,20 +551,35 @@ class TMAutoEncoder(TMBasis):
 				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0, 0)
 		return
 
-	def fit(self, X, number_of_examples=2000, shuffle=True):
-		if self.initialized == False:
-			self.initialize(X)
-			self.initialized = True
+	def produce_example(self, the_class, X_csc, X_csr):
+		if self.output_balancing:
+			target = np.random.choice(2)
+			if target == 1:
+				target_indices = X_csc[:,self.output_active[the_class]].indices
+			else:
+				target_indices = np.setdiff1d(np.random.choice(X_csr.shape[0], size=self.accumulation*10, replace=True), X_csc[:,self.output_active[the_class]].indices)
+				while target_indices.shape[0] == 0:
+					target_indices = np.setdiff1d(np.random.choice(X_csr.shape[0], size=self.accumulation*10, replace=True), X_csc[:,self.output_active[the_class]].indices)
 
-		X_csr = csr_matrix(X.reshape(X.shape[0], -1))
-		X_csc = csc_matrix(X.reshape(X.shape[0], -1))
+			examples = np.random.choice(target_indices, size=self.accumulation, replace=True)
+		else:
+			examples = np.random.choice(X_csr.shape[0], replace=True)
+			target = X_csr[examples,self.output_active[i]]
 
+		accumulated_X = (X_csr[examples].toarray().sum(axis=0) > 0).astype(np.uint32)
+
+		return (target, self.clause_bank.prepare_X(accumulated_X.reshape((1,-1))))
+
+	def activate_clauses(self):
 		# Clauses are dropped based on their weights
 		clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
 		deactivate = np.random.choice(self.number_of_clauses, size=int(self.number_of_clauses*self.clause_drop_p))
 		for d in range(deactivate.shape[0]):
 			clause_active[deactivate[d]] = 0
 
+		return clause_active
+
+	def activate_literals(self):		
 		# Literals are dropped based on their frequency
 		literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
 		literal_clause_frequency = self.literal_clause_frequency()
@@ -581,26 +596,24 @@ class TMAutoEncoder(TMBasis):
 				literal_active[ta_chunk] &= (~(1 << chunk_pos))
 		literal_active = literal_active.astype(np.uint32)
 
+		return(literal_active)
+
+	def fit(self, X, number_of_examples=2000, shuffle=True):
+		if self.initialized == False:
+			self.initialize(X)
+			self.initialized = True
+
+		X_csr = csr_matrix(X.reshape(X.shape[0], -1))
+		X_csc = csc_matrix(X.reshape(X.shape[0], -1))
+
+		clause_active = self.activate_clauses()
+		literal_active = self.activate_literals()
+		
 		class_index = np.arange(self.number_of_classes, dtype=np.uint32)
 		for e in range(number_of_examples):
 			np.random.shuffle(class_index)
 			for i in class_index:
-				if self.output_balancing:
-					target = np.random.choice(2)
-					if target == 1:
-						target_indices = X_csc[:,self.output_active[i]].indices
-					else:
-						target_indices = np.setdiff1d(np.random.choice(X_csr.shape[0], size=self.accumulation*10, replace=True), X_csc[:,self.output_active[i]].indices)
-						while target_indices.shape[0] == 0:
-							target_indices = np.setdiff1d(np.random.choice(X_csr.shape[0], size=self.accumulation*10, replace=True), X_csc[:,self.output_active[i]].indices)
-
-					examples = np.random.choice(target_indices, size=self.accumulation, replace=True)
-				else:
-					examples = np.random.choice(X_csr.shape[0], replace=True)
-					target = X_csr[examples,self.output_active[i]]
-
-				accumulated_X = (X_csr[examples].toarray().sum(axis=0) > 0).astype(np.uint32)
-				encoded_X = self.clause_bank.prepare_X(accumulated_X.reshape((1,-1)))
+				(target, encoded_X) = self.produce_example(i, X_csc, X_csr)
 				ta_chunk = self.output_active[i] // 32
 				chunk_pos = self.output_active[i] % 32
 				copy_literal_active_ta_chunk = literal_active[ta_chunk]
@@ -616,7 +629,7 @@ class TMAutoEncoder(TMBasis):
 		for e in range(X.shape[0]):
 			encoded_X = self.clause_bank.prepare_X(X_csr[e,:].toarray())		
 
-			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)			
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)[0]		
 			for i in range(self.number_of_classes):
 				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
 				Y[i, e] = (class_sum >= 0)
@@ -637,38 +650,60 @@ class TMAutoEncoder(TMBasis):
 
 		return literal_frequency
 
-	def clause_precision(self, positive_polarity, X, Y):
-		clause_outputs = self.transform(X)
+	def clause_precision(self, the_class, positive_polarity, X, number_of_examples=2000):
+		X_csr = csr_matrix(X.reshape(X.shape[0], -1))
+		X_csc = csc_matrix(X.reshape(X.shape[0], -1))
 
-		precision = np.empty(self.number_of_classes, number_of_clauses)
-		for i in range(self.number_of_classes):
-			weights = self.weight_banks[i].get_weights()
-			if positive_polarity == 0:
-				positive_clause_outputs = (weights >= 0)[:,np.newaxis].transpose() * clause_outputs
-				true_positive_clause_outputs = positive_clause_outputs[Y==i].sum(axis=0)
-				false_positive_clause_outputs = positive_clause_outputs[Y!=i].sum(axis=0)
-			else:
-				positive_clause_outputs = (weights < 0)[:,np.newaxis].transpose() * clause_outputs
-				true_positive_clause_outputs = clause_outputs[Y!=i].sum(axis=0)
-				false_positive_clause_outputs = clause_outputs[Y==i].sum(axis=0)
-			precision[i,:] = np.where(true_positive_clause_outputs + false_positive_clause_outputs == 0, 0, 1.0*true_positive_clause_outputs/(true_positive_clause_outputs + false_positive_clause_outputs))
-		return precision
+		true_positive = np.empty(self.number_of_clauses, dtype=np.uint32)
+		false_positive = np.empty(self.number_of_clauses, dtype=np.uint32)
 
-	def clause_recall(self, positive_polarity, X, Y):
-		clause_outputs = self.transform(X)
+		weights = self.weight_banks[the_class].get_weights()
 
-		recall = np.empty(self.number_of_classes, number_of_clauses)
-		for i in range(self.number_of_classes):
-			weights = self.weight_banks[i].get_weights()
-		
-			if positive_polarity == 0:
-				positive_clause_outputs = (weights >= 0)[:,np.newaxis].transpose() * clause_outputs
-				recall[i,:] = positive_clause_outputs[Y==the_class].sum(axis=0) / Y[Y==the_class].shape[0]
-			else:
-				positive_clause_outputs = (weights < 0)[:,np.newaxis].transpose() * clause_outputs
-				recall[i,:] = positive_clause_outputs[Y!=the_class].sum(axis=0) / Y[Y!=the_class].shape[0]
+		clause_active = self.activate_clauses()
+		literal_active = self.activate_literals()
+
+		for e in range(number_of_examples):
+			(target, encoded_X) = self.produce_example(the_class, X_csc, X_csr)
 			
-		return recall
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
+
+			if positive_polarity:
+				if target == 1:
+					true_positive += (weights >= 0) * clause_outputs
+				else:
+					false_positive += (weights >= 0) * clause_outputs
+			else:
+				if target == 0:
+					true_positive += (weights < 0) * clause_outputs
+				else:
+					false_positive += (weights < 0) * clause_outputs				
+
+		return 1.0*true_positive/(true_positive + false_positive)
+
+	def clause_recall(self, the_class, positive_polarity, X, number_of_examples=2000):
+		X_csr = csr_matrix(X.reshape(X.shape[0], -1))
+		X_csc = csc_matrix(X.reshape(X.shape[0], -1))
+
+		true_positive = np.empty(self.number_of_clauses, dtype=np.uint32)
+		false_negative = np.empty(self.number_of_clauses, dtype=np.uint32)
+
+		weights = self.weight_banks[the_class].get_weights()
+
+		for e in range(number_of_examples):
+			(target, encoded_X) = self.produce_example(the_class, X_csc, X_csr)
+
+			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
+
+			if positive_polarity:
+				if target == 1:
+					true_positive += (weights >= 0) * clause_outputs
+					false_negative += (weights >= 0) * (1 - clause_outputs)
+			else:
+				if target == 0:
+					true_positive += (weights < 0) * clause_outputs
+					false_negative += (weights < 0) * (1 - clause_outputs)
+
+		return true_positive/(true_positive + false_negative)
 
 	def get_weight(self, the_class, clause):
 		return self.weight_banks[the_class].get_weights()[clause]
