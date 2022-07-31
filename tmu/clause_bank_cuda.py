@@ -79,7 +79,7 @@ class ClauseBankCUDA():
 
 		mod = SourceModule(parameters + kernels.code_clause_feedback, no_extern_c=True)
 		self.type_i_feedback_gpu = mod.get_function("type_i_feedback")
-		self.type_i_feedback_gpu.prepare("PPiiiffiPPPi")
+		self.type_i_feedback_gpu.prepare("PPiiiffiiPPPi")
 		self.type_ii_feedback_gpu = mod.get_function("type_ii_feedback")
 		self.type_ii_feedback_gpu.prepare("PPiiifPPPi")
 
@@ -128,10 +128,10 @@ class ClauseBankCUDA():
 		lib.cb_calculate_clause_outputs_patchwise(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.number_of_patches, self.cop_p, xi_p)
 		return self.clause_output_patchwise
 
-	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, clause_active, literal_active, encoded_X, e):
+	def type_i_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active, literal_active, encoded_X, e):
 		cuda.memcpy_htod(self.clause_active_gpu, clause_active)
 		cuda.memcpy_htod(self.literal_active_gpu, literal_active)
-		self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, s, boost_true_positive_feedback, self.clause_active_gpu, self.literal_active_gpu, encoded_X, np.int32(e))
+		self.type_i_feedback_gpu.prepared_call(self.grid, self.block, g.state, self.clause_bank_gpu, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, update_p, s, boost_true_positive_feedback, max_included_literals, self.clause_active_gpu, self.literal_active_gpu, encoded_X, np.int32(e))
 		cuda.Context.synchronize()
 		self.clause_bank_synchronized = False
 
@@ -155,6 +155,12 @@ class ClauseBankCUDA():
 		chunk_pos = ta % 32
 		pos = int(clause * self.number_of_ta_chunks * self.number_of_state_bits + ta_chunk * self.number_of_state_bits + self.number_of_state_bits-1)
 		return (self.clause_bank[pos] & (1 << chunk_pos)) > 0
+
+	def number_of_include_actions(self, clause):
+		self.synchronize_clause_bank()
+		start = int(clause * self.number_of_ta_chunks * self.number_of_state_bits + self.number_of_state_bits-1)
+		stop = int((clause + 1) * self.number_of_ta_chunks * self.number_of_state_bits + self.number_of_state_bits-1)
+		return np.unpackbits(np.ascontiguousarray(self.clause_bank[start:stop:self.number_of_state_bits]).view('uint8')).sum()
 
 	def get_ta_state(self, clause, ta):
 		self.synchronize_clause_bank()

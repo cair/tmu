@@ -103,6 +103,23 @@ code_clause_feedback = """
 
 	extern "C"
     {
+    	// Counts number of include actions for a given clause
+
+    	__device__ inline int number_of_include_actions(unsigned int *ta_state, int clause, int number_of_literals, int number_of_state_bits, unsigned int number_of_ta_chunks, unsigned int filter)
+		{
+			unsigned int clause_pos = clause*number_of_ta_chunks*number_of_state_bits;
+
+			int number_of_include_actions = 0;
+			for (int k = 0; k < number_of_ta_chunks-1; ++k) {
+				unsigned int ta_pos = k*number_of_state_bits + number_of_state_bits-1;
+				number_of_include_actions += __popc(ta_state[clause_pos + ta_pos]);
+			}
+			unsigned int ta_pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+			number_of_include_actions += __popc(ta_state[clause_pos + ta_pos] & filter);
+
+			return(number_of_include_actions);
+		}
+
     	// Increment the states of each of those 32 Tsetlin Automata flagged in the active bit vector.
 		__device__ inline void inc(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
 		{
@@ -184,7 +201,7 @@ code_clause_feedback = """
 			}
 		}
 
-		__global__ void type_i_feedback(curandState *state, unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int *clause_active, unsigned int *literal_active, unsigned int *X, int e)
+		__global__ void type_i_feedback(curandState *state, unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *X, int e)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -213,6 +230,8 @@ code_clause_feedback = """
 				unsigned int clause_patch;
 				calculate_clause_output_feedback(&localState, &ta_state[clause_pos], &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, literal_active, Xi);
 
+				int included_literals = number_of_include_actions(ta_state, j, number_of_literals, number_of_state_bits, number_of_ta_chunks, filter);
+
 				for (int k = 0; k < number_of_ta_chunks; ++k) {
 					// Generate random bit values
 					unsigned int feedback_to_ta = 0;
@@ -224,7 +243,7 @@ code_clause_feedback = """
 
 					unsigned int ta_pos = k*number_of_state_bits;
 
-					if (clause_output) {
+					if (clause_output && included_literals <= max_included_literals) {
 						// Type Ia Feedback
 
 						if (boost_true_positive_feedback == 1) {
@@ -276,7 +295,7 @@ code_clause_feedback = """
 				if (clause_output) {				
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
 						unsigned int ta_pos = k*number_of_state_bits;
-						inc(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]) & (~ta_state[clause_pos + ta_pos + number_of_state_bits - 1]), number_of_state_bits);
+						inc(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]), number_of_state_bits);
 					}
 				}
 			}
