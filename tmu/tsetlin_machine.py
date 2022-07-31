@@ -660,8 +660,8 @@ class TMAutoEncoder(TMBasis):
 		X_csr = csr_matrix(X.reshape(X.shape[0], -1))
 		X_csc = csc_matrix(X.reshape(X.shape[0], -1))
 
-		true_positive = np.empty(self.number_of_clauses, dtype=np.uint32)
-		false_positive = np.empty(self.number_of_clauses, dtype=np.uint32)
+		true_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
+		false_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
 
 		weights = self.weight_banks[the_class].get_weights()
 
@@ -690,8 +690,8 @@ class TMAutoEncoder(TMBasis):
 		X_csr = csr_matrix(X.reshape(X.shape[0], -1))
 		X_csc = csc_matrix(X.reshape(X.shape[0], -1))
 
-		true_positive = np.empty(self.number_of_clauses, dtype=np.uint32)
-		false_negative = np.empty(self.number_of_clauses, dtype=np.uint32)
+		true_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
+		false_negative = np.zeros(self.number_of_clauses, dtype=np.uint32)
 
 		weights = self.weight_banks[the_class].get_weights()
 
