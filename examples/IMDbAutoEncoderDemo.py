@@ -91,12 +91,12 @@ for e in range(40):
 	
 	print("\nEpoch #%d\n" % (e+1))
 
-	print("Calculating precision")
+	print("Calculating precision\n")
 	precision = []
 	for i in range(len(target_words)):
 		precision.append(tm.clause_precision(i, True, X_train, number_of_examples=500))
 	
-	print("Calculating recall")
+	print("Calculating recall\n")
 	recall = []
 	for i in range(len(target_words)):
 		recall.append(tm.clause_recall(i, True, X_train, number_of_examples=500))
