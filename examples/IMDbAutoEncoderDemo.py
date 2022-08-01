@@ -15,9 +15,9 @@ target_words = ['awful', 'terrible', 'lousy', 'abysmal', 'crap', 'outstanding', 
 clause_weight_threshold = 0
 
 number_of_examples = 2000
-accumulation = 1
+accumulation = 25
 
-type_i_ii_ratio = 0.9
+type_i_ii_ratio = 1.0
 
 clause_drop_p = 0.0
 
@@ -81,7 +81,7 @@ for i in range(len(target_words)):
 	target_id = vectorizer_X.vocabulary_[target_word]
 	output_active[i] = target_id
 
-tm = TMAutoEncoder(clauses, T, s, output_active, type_i_ii_ratio=type_i_ii_ratio, accumulation=accumulation, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', output_balancing=True)
+tm = TMAutoEncoder(clauses, T, s, output_active, max_included_literals=3, type_i_ii_ratio=type_i_ii_ratio, accumulation=accumulation, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', output_balancing=True)
 
 print("\nAccuracy Over 40 Epochs:")
 for e in range(40):
@@ -91,12 +91,22 @@ for e in range(40):
 	
 	print("\nEpoch #%d\n" % (e+1))
 
+	print("Calculating precision")
+	precision = []
+	for i in range(len(target_words)):
+		precision.append(tm.clause_precision(i, True, X_train, number_of_examples=500))
+	
+	print("Calculating recall")
+	recall = []
+	for i in range(len(target_words)):
+		recall.append(tm.clause_recall(i, True, X_train, number_of_examples=500))
+
 	print("Clauses\n")
 
 	for j in range(clauses):
 		print("Clause #%d " % (j), end=' ')
 		for i in range(len(target_words)):
-			print("%s:%d " % (target_words[i], tm.get_weight(i, j)), end=' ')
+			print("%s:W%d:P%.2f:R%.2f " % (target_words[i], tm.get_weight(i, j), precision[i][j], recall[i][j]), end=' ')
 
 		l = []
 		for k in range(tm.clause_bank.number_of_literals):
