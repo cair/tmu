@@ -548,7 +548,7 @@ class TMAutoEncoder(TMBasis):
 				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[target_output].get_weights() < 0), literal_active, encoded_X, 0, 0)
 		else:
 			update_p = (self.T + class_sum)/(2*self.T)
-	
+
 			self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.max_included_literals, clause_active * (self.weight_banks[target_output].get_weights() < 0), literal_active, encoded_X, 0)
 			self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0)
 			self.weight_banks[target_output].decrement(clause_outputs, update_p, clause_active, True)
@@ -618,13 +618,21 @@ class TMAutoEncoder(TMBasis):
 		class_index = np.arange(self.number_of_classes, dtype=np.uint32)
 		for e in range(number_of_examples):
 			np.random.shuffle(class_index)
+
+			average_absolute_weights = np.zeros(self.number_of_clauses, dtype=np.float32)
+			for i in class_index:
+				 average_absolute_weights += np.absolute(self.weight_banks[i].get_weights())
+			average_absolute_weights /= self.number_of_classes
+			update_clause = np.random.random(self.number_of_clauses) <= (self.T - np.clip(average_absolute_weights, 0, self.T))/self.T
+
 			for i in class_index:
 				(target, encoded_X) = self.produce_example(i, X_csc, X_csr)
 				ta_chunk = self.output_active[i] // 32
 				chunk_pos = self.output_active[i] % 32
 				copy_literal_active_ta_chunk = literal_active[ta_chunk]
 				literal_active[ta_chunk] &= ~(1 << chunk_pos)
-				self.update(i, target, encoded_X, clause_active, literal_active)
+
+				self.update(i, target, encoded_X, update_clause*clause_active, literal_active)
 				literal_active[ta_chunk] = copy_literal_active_ta_chunk
 		return
 
