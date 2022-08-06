@@ -31,12 +31,15 @@ from sys import maxsize
 from time import time
 
 class TMBasis():
-	def __init__(self, number_of_clauses, T, s, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits_ta = number_of_state_bits_ta
 		self.number_of_state_bits_ind = number_of_state_bits_ind
 		self.T = int(T)
 		self.s = s
+
+		self.confidence_driven_updating = confidence_driven_updating
+
 		if type_i_ii_ratio >= 1.0:
 			self.type_i_p = 1.0
 			self.type_ii_p = 1.0/type_i_ii_ratio
@@ -98,8 +101,8 @@ class TMBasis():
 		return self.clause_bank.set_ta_state(clause, ta, state)
 
 class TMClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, type_i_ii_ratio = 1.0, type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, type_iii_feedback=type_iii_feedback, d=d, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio = 1.0, type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, confidence_driven_updating=confidence_driven_updating, type_i_ii_ratio = type_i_ii_ratio, type_iii_feedback=type_iii_feedback, d=d, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -177,7 +180,10 @@ class TMClassifier(TMBasis):
 			class_sum = np.dot(clause_active[target] * self.weight_banks[target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
-			update_p = (self.T - class_sum)/(2*self.T)
+			if self.confidence_driven_updating:
+				update_p = 1.0*(self.T - np.absolute(class_sum))/self.T
+			else:
+				update_p = (self.T - class_sum)/(2*self.T)
 
 			if self.weighted_clauses:
 				self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
@@ -195,7 +201,10 @@ class TMClassifier(TMBasis):
 			class_sum = np.dot(clause_active[not_target] * self.weight_banks[not_target].get_weights(), clause_outputs).astype(np.int32)
 			class_sum = np.clip(class_sum, -self.T, self.T)
 
-			update_p = (self.T + class_sum)/(2*self.T)
+			if self.confidence_driven_updating:
+				update_p = 1.0*(self.T - np.absolute(class_sum))/self.T
+			else:
+				update_p = (self.T + class_sum)/(2*self.T)
 		
 			if self.weighted_clauses:
 				self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active[not_target], False)			
