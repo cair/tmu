@@ -805,6 +805,13 @@ class TMMultiTaskClassifier(TMBasis):
 		class_index = np.arange(self.number_of_classes, dtype=np.uint32)
 		for e in shuffled_index:
 			np.random.shuffle(class_index)
+
+			average_absolute_weights = np.zeros(self.number_of_clauses, dtype=np.float32)
+			for i in class_index:
+				 average_absolute_weights += np.absolute(self.weight_banks[i].get_weights())
+			average_absolute_weights /= self.number_of_classes
+			update_clause = np.random.random(self.number_of_clauses) <= (self.T - np.clip(average_absolute_weights, 0, self.T))/self.T
+
 			for i in class_index:
 				encoded_X = self.clause_bank.prepare_X(X_csr[i][e,:].toarray())
 				clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.literal_active, encoded_X, 0)
@@ -820,24 +827,24 @@ class TMMultiTaskClassifier(TMBasis):
 					else:
 						update_p = (self.T - class_sum)/(2*self.T)
 
-					self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.max_included_literals, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
-					self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
-					self.weight_banks[i].increment(clause_outputs, update_p, self.clause_active, True)
+					self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.max_included_literals, update_clause*self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
+					self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, update_clause*self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
+					self.weight_banks[i].increment(clause_outputs, update_p, update_clause*self.clause_active, True)
 					if self.type_iii_feedback and type_iii_feedback_selection == 0:
-						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0, 1)
-						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0, 0)
+						self.clause_bank.type_iii_feedback(update_p, self.d, update_clause*self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0, 1)
+						self.clause_bank.type_iii_feedback(update_p, self.d, update_clause*self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0, 0)
 				else:
 					if self.confidence_driven_updating:
 						update_p = 1.0*(self.T - np.absolute(class_sum))/self.T
 					else:
 						update_p = (self.T + class_sum)/(2*self.T)
 
-					self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.max_included_literals, self.clause_active * (self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
-					self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
+					self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.max_included_literals, update_clause*self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0)
+					self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, update_clause*update_clause*self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0)
 					self.weight_banks[i].decrement(clause_outputs, update_p, self.clause_active, True)
 					if self.type_iii_feedback and type_iii_feedback_selection == 1:
-						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0, 1)
-						self.clause_bank.type_iii_feedback(update_p, self.d, self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0, 0)
+						self.clause_bank.type_iii_feedback(update_p, self.d, update_clause*self.clause_active*(self.weight_banks[i].get_weights() < 0), self.literal_active, encoded_X, 0, 1)
+						self.clause_bank.type_iii_feedback(update_p, self.d, update_clause*self.clause_active*(self.weight_banks[i].get_weights() >= 0), self.literal_active, encoded_X, 0, 0)
 		return
 
 	def predict(self, X):
