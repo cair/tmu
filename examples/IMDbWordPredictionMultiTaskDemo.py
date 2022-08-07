@@ -18,6 +18,10 @@ context_size = 25
 
 clause_weight_threshold = 0
 
+max_included_literals = 3
+
+confidence_driven_updating = False
+
 clause_drop_p = 0.75
 
 clauses = int(20/(1.0 - clause_drop_p))
@@ -115,7 +119,7 @@ for i in range(len(target_words)):
 	X_test[i] = X_test[i].tocsr()
 Y_test = Y_test.tocsr()
 
-tm = TMMultiTaskClassifier(clauses, T, s, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
+tm = TMMultiTaskClassifier(clauses, T, s, confidence_driven_updating=confidence_driven_updating, max_included_literals=max_included_literals, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
 
 print("\nAccuracy Over 40 Epochs:")
 for e in range(40):
