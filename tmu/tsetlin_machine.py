@@ -900,8 +900,8 @@ class TMMultiTaskClassifier(TMBasis):
 
 
 class TMMultiChannelClassifier(TMBasis):
-	def __init__(self, number_of_clauses, global_T, T, s, type_i_ii_ratio = 1.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, global_T, T, s, type_i_ii_ratio = 1.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 		self.global_T = global_T
 
 	def initialize(self, X, Y):
@@ -928,6 +928,9 @@ class TMMultiChannelClassifier(TMBasis):
 
 		self.encoded_X_train = {}
 		self.encoded_X_test = {}
+
+		if self.max_included_literals == None:
+			self.max_included_literals = self.clause_bank.number_of_literals
 
 	def fit(self, X, Y, shuffle=True):
 		if self.initialized == False:
@@ -1013,7 +1016,7 @@ class TMMultiChannelClassifier(TMBasis):
 			for c in range(X.shape[0]):
 				local_update_p = 1.0*(self.T + local_class_sum[c])/(2*self.T)
 				update_p = np.minimum(local_update_p, global_update_p)
-				self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s[not_target], self.boost_true_positive_feedback, clause_active * (self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train[c], e)
+				self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s[not_target], self.boost_true_positive_feedback, self.max_included_literals, clause_active * (self.weight_banks[not_target].get_weights() < 0), literal_active, self.encoded_X_train[c], e)
 				self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[not_target].get_weights() >= 0), literal_active, self.encoded_X_train[c], e)
 				self.weight_banks[not_target].decrement(clause_outputs[c], update_p, clause_active, True)
 		return
@@ -1083,8 +1086,8 @@ class TMMultiChannelClassifier(TMBasis):
 		self.weight_banks[the_class].get_weights()[clause] = weight
 
 class TMOneVsOneClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, type_i_ii_ratio = 1.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, type_i_ii_ratio = 1.0, platform = 'CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, type_i_ii_ratio = type_i_ii_ratio, platform = platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -1103,6 +1106,9 @@ class TMOneVsOneClassifier(TMBasis):
 		for i in range(self.number_of_outputs):
 			self.weight_banks.append(WeightBank(np.ones(self.number_of_clauses).astype(np.int32)))
 		
+		if self.max_included_literals == None:
+			self.max_included_literals = self.clause_bank.number_of_literals
+
 	def fit(self, X, Y, shuffle=True):
 		if self.initialized == False:
 			self.initialize(X, Y)
@@ -1142,7 +1148,7 @@ class TMOneVsOneClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T - class_sum)/(2*self.T)
 
-			self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, clause_active*(self.weight_banks[output].get_weights() >= 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.max_included_literals, clause_active*(self.weight_banks[output].get_weights() >= 0), literal_active, self.encoded_X_train, e)
 			self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[output].get_weights() < 0), literal_active, self.encoded_X_train, e)
 			self.weight_banks[output].increment(clause_outputs, update_p, clause_active, True)
 
@@ -1152,7 +1158,7 @@ class TMOneVsOneClassifier(TMBasis):
 			class_sum = np.clip(class_sum, -self.T, self.T)
 			update_p = (self.T + class_sum)/(2*self.T)
 		
-			self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, clause_active * (self.weight_banks[output].get_weights() < 0), literal_active, self.encoded_X_train, e)
+			self.clause_bank.type_i_feedback(update_p*self.type_i_p, self.s, self.boost_true_positive_feedback, self.max_included_literals, clause_active * (self.weight_banks[output].get_weights() < 0), literal_active, self.encoded_X_train, e)
 			self.clause_bank.type_ii_feedback(update_p*self.type_ii_p, clause_active*(self.weight_banks[output].get_weights() >= 0), literal_active, self.encoded_X_train, e)
 			self.weight_banks[output].decrement(clause_outputs, update_p, clause_active, True)
 		return
@@ -1226,8 +1232,8 @@ class TMOneVsOneClassifier(TMBasis):
 		self.weight_banks[output].get_weights()[output] = weight
 
 class TMRegressor(TMBasis):
-	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
 	def initialize(self, X, Y):
 		self.max_y = np.max(Y)
@@ -1243,6 +1249,9 @@ class TMRegressor(TMBasis):
 			sys.exit(-1)
 			
 		self.weight_bank = WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
+
+		if self.max_included_literals == None:
+			self.max_included_literals = self.clause_bank.number_of_literals
 
 	def fit(self, X, Y, shuffle=True):
 		if self.initialized == False:
@@ -1278,7 +1287,7 @@ class TMRegressor(TMBasis):
 			update_p = (1.0*prediction_error/self.T)**2
 
 			if pred_y < encoded_Y[e]:
-				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, clause_active, literal_active, self.encoded_X_train, e)
+				self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.max_included_literals, clause_active, literal_active, self.encoded_X_train, e)
 				if self.weighted_clauses:
 					self.weight_bank.increment(clause_outputs, update_p, clause_active, False)
 			elif pred_y > encoded_Y[e]:
