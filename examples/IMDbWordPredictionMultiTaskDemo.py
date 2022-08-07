@@ -10,8 +10,7 @@ from scipy.sparse import csr_matrix, csc_matrix, lil_matrix
 
 from tmu.tsetlin_machine import TMMultiTaskClassifier
 
-#target_words = ['awful', 'terrible', 'lousy', 'brilliant', 'excellent', 'superb']
-target_words = ['awful', 'terrible', 'lousy', 'abysmal', 'crap', 'outstanding', 'brilliant', 'excellent', 'superb', 'magnificent', 'marvellous', 'car', 'cars', 'motorcycle',  'scary', 'frightening', 'funny', 'comic']
+target_words = ['awful', 'terrible', 'lousy', 'abysmal', 'crap', 'outstanding', 'brilliant', 'excellent', 'superb', 'magnificent', 'marvellous', 'truck', 'plane', 'car', 'cars', 'motorcycle',  'scary', 'frightening', 'terrifying', 'horrifying', 'funny', 'comic', 'hilarious', 'witty']
 
 number_of_examples = 2000
 context_size = 25
