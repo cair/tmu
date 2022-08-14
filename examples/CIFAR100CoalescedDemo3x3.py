@@ -41,22 +41,22 @@ for en in range(ensembles):
 	tm = TMCoalescedClassifier(clauses, T, s, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits_ta, focused_negative_sampling=True, weighted_clauses=True, literal_drop_p=literal_drop_p)
 	for ep in range(epochs):
 		start_training = time()
-		tm.fit(X_train[0:10], Y_train[0:10])
+		tm.fit(X_train, Y_train)
 		stop_training = time()
 
 		start_testing = time()
-		Y_test_predicted = tm.predict_individual(X_test[0:10])
+		Y_test_predicted = tm.predict_individual(X_test)
 		stop_testing = time()
 
 		result_test = []
 		for i in range(classes):
-			result_test.append(100*(Y_test_predicted[:,i] == (Y_test[0:10] == i)).mean()/100)
+			result_test.append(100*(Y_test_predicted[:,i] == (Y_test == i)).mean()/100)
 
-		Y_train_predicted = tm.predict_individual(X_train[0:10])
+		Y_train_predicted = tm.predict_individual(X_train)
 
 		result_train = []
 		for i in range(classes):
-			result_train.append(100*(Y_train_predicted[:,i] == (Y_train[0:10] == i)).mean()/100)
+			result_train.append(100*(Y_train_predicted[:,i] == (Y_train == i)).mean()/100)
 
 		for j in range(clauses):
 			for i in range(classes):
