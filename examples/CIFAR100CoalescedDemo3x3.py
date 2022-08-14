@@ -47,16 +47,25 @@ for en in range(ensembles):
 		stop_training = time()
 
 		start_testing = time()
-		result_test = 100*(tm.predict(X_test) == Y_test).mean()
+		Y_test_predicted = tm.predict_individual(X_test)
 		stop_testing = time()
 
-		result_train = 100*(tm.predict(X_train) == Y_train).mean()
-		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
-		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
-		f.flush()
+		result_test = []
+		for i in range(classes):
+			result_test.append(100*(Y_test_predicted[:,i] == (Y_test == i)).mean()/100)
+
+		Y_train_predicted = tm.predict(X_train)
+
+		result_train = []
+		for i in range(classes):
+			result_train.append(100*(Y_train_predicted[:,i] == (Y_train == i)).mean()/100)
 
 		for j in range(clauses):
 			for i in range(classes):
 				print(tm.get_weight(i, j), end=' ')
 			print()
+
+		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing))
+		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing), file=f)
+		f.flush()
 f.close()
