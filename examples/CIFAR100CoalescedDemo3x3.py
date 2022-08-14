@@ -65,10 +65,10 @@ for en in range(ensembles):
 			print()
 
 		start_testing = time()
-                result_test = f1_score(Y_test, tm.predict(X_test))
-                stop_testing = time()
+		result_test = f1_score(Y_test, tm.predict(X_test))
+		stop_testing = time()
 
-                result_train = f1_score(Y_train, tm.predict(X_train))
+		result_train = f1_score(Y_train, tm.predict(X_train))
 
 		print("%d %d %.2f %.2f %s %s %.2f %.2f" % (en, ep, result_train, result_test, str(results_train), str(results_test), stop_training-start_training, stop_testing-start_testing))
 		print("%d %d %.2f %.2f %s %s %.2f %.2f" % (en, ep, result_train, result_test, str(results_train), str(results_test), stop_training-start_training, stop_testing-start_testing), file=f)
