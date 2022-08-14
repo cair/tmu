@@ -1,6 +1,7 @@
 from tmu.tsetlin_machine import TMCoalescedClassifier
 import numpy as np
 from time import time
+from sklearn.metrics import f1_score
 
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -50,20 +51,26 @@ for en in range(ensembles):
 
 		result_test = []
 		for i in range(classes):
-			result_test.append(100*(Y_test_predicted[:,i] == (Y_test == i)).mean()/100)
+			result_test.append(f1_score(Y_test == i, Y_test_predicted[:,i]))
 
 		Y_train_predicted = tm.predict_individual(X_train)
 
 		result_train = []
 		for i in range(classes):
-			result_train.append(100*(Y_train_predicted[:,i] == (Y_train == i)).mean()/100)
+			result_train.append(f1_score(Y_train == i, Y_train_predicted[:,i]))
 
 		for j in range(clauses):
 			for i in range(classes):
 				print(tm.get_weight(i, j), end=' ')
 			print()
 
-		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing))
-		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing), file=f)
+		start_testing = time()
+                result_test = f1_score(Y_test, tm.predict(X_test))
+                stop_testing = time()
+
+                result_train = f1_score(Y_train, tm.predict(X_train))
+
+		print("%d %d %.2f %.2f %s %s %.2f %.2f" % (en, ep, result_train, result_test, str(results_train), str(results_test), stop_training-start_training, stop_testing-start_testing))
+		print("%d %d %.2f %.2f %s %s %.2f %.2f" % (en, ep, result_train, result_test, str(results_train), str(results_test), stop_training-start_training, stop_testing-start_testing), file=f)
 		f.flush()
 f.close()
