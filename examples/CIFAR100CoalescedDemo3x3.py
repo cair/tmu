@@ -49,15 +49,15 @@ for en in range(ensembles):
 		Y_test_predicted = tm.predict_individual(X_test)
 		stop_testing = time()
 
-		result_test = []
+		results_test = []
 		for i in range(classes):
-			result_test.append(f1_score(Y_test == i, Y_test_predicted[:,i]))
+			results_test.append(f1_score(Y_test == i, Y_test_predicted[:,i]))
 
 		Y_train_predicted = tm.predict_individual(X_train)
 
-		result_train = []
+		results_train = []
 		for i in range(classes):
-			result_train.append(f1_score(Y_train == i, Y_train_predicted[:,i]))
+			results_train.append(f1_score(Y_train == i, Y_train_predicted[:,i]))
 
 		for j in range(clauses):
 			for i in range(classes):
