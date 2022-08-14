@@ -7,7 +7,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 from keras.datasets import cifar100
 
-clauses = 256
+clauses = 8000
 T = int(clauses*0.75)
 s = 10.0 
 patch_size = 3
@@ -77,4 +77,9 @@ for en in range(ensembles):
 		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing))
 		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing), file=f)
 		f.flush()
+
+		for j in range(clauses):
+			for i in range(classes):
+				print(tm.get_weight(i, j), sep=' ')
+			print()
 f.close()
