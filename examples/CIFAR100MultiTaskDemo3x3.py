@@ -18,7 +18,7 @@ literal_drop_p = 0.0
 epochs = 250
 ensembles = 10
 
-classes = 2
+classes = 10
 
 (X_train_org, Y_train), (X_test_org, Y_test) = cifar100.load_data()
 
