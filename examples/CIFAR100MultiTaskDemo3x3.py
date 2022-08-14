@@ -7,7 +7,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 from keras.datasets import cifar100
 
-clauses = 8000
+clauses = 800
 T = int(clauses*0.75)
 s = 10.0 
 patch_size = 3
@@ -54,7 +54,7 @@ for i in range(classes):
 
 f = open("cifar100_%.1f_%d_%d_%d_%.2f_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution), "w+")
 for en in range(ensembles):
-	tm = TMMultiTaskClassifier(clauses, T, s, confidence_driven_updating=True, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits_ta, focused_negative_sampling=True, weighted_clauses=True, literal_drop_p=literal_drop_p)
+	tm = TMMultiTaskClassifier(clauses, T, s, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits_ta, focused_negative_sampling=True, weighted_clauses=True, literal_drop_p=literal_drop_p)
 	for ep in range(epochs):
 		start_training = time()
 		tm.fit(X_train_multi_task, Y_train_multi_task)
