@@ -18,6 +18,8 @@ literal_drop_p = 0.0
 epochs = 250
 ensembles = 10
 
+classes = 2
+
 (X_train_org, Y_train), (X_test_org, Y_test) = cifar100.load_data()
 
 Y_train=Y_train.reshape(Y_train.shape[0])
@@ -40,7 +42,7 @@ X_train_multi_task = {}
 X_test_multi_task = {}
 Y_train_multi_task = {}
 Y_test_multi_task = {}
-for i in range(1):
+for i in range(classes):
 	other_index_train = np.arange((Y_train!=i).sum())
 	np.random.shuffle(other_index_train)
 	other_index_test = np.arange((Y_test!=i).sum())
@@ -62,12 +64,17 @@ for en in range(ensembles):
 		Y_test_predicted_multi_task = tm.predict(X_test_multi_task)
 		stop_testing = time()
 
-		result_test = 0.0
-		for i in range(1):
-			result_test += 100*(Y_test_predicted_multi_task[i] == Y_test_multi_task[i]).mean()/100
+		result_test = []
+		for i in range(classes):
+			result_test.append(100*(Y_test_predicted_multi_task[i] == Y_test_multi_task[i]).mean()/100)
 
-		result_train = 100*(tm.predict(X_train) == Y_train).mean()
-		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
-		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
+		Y_train_predicted_multi_task = tm.predict(X_train_multi_task)
+
+		result_train = []
+		for i in range(classes):
+			result_train.append(100*(Y_train_predicted_multi_task[i] == Y_train_multi_task[i]).mean()/100)
+
+		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing))
+		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing), file=f)
 		f.flush()
 f.close()
