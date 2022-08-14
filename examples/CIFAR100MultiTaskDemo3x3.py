@@ -63,7 +63,7 @@ for en in range(ensembles):
 		stop_testing = time()
 
 		result_test = 0.0
-		for i in range(100):
+		for i in range(1):
 			result_test += 100*(Y_test_predicted_multi_task[i] == Y_test_multi_task[i]).mean()/100
 
 		result_train = 100*(tm.predict(X_train) == Y_train).mean()
