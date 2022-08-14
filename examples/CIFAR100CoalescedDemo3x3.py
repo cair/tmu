@@ -25,8 +25,6 @@ classes = 10
 Y_train=Y_train.reshape(Y_train.shape[0])
 Y_test=Y_test.reshape(Y_test.shape[0])
 
-print((Y_train==1).sum())
-
 X_train = np.empty((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], X_train_org.shape[3], resolution), dtype=np.uint8) 
 for z in range(resolution):
 	X_train[:,:,:,:,z] = X_train_org[:,:,:,:] >= (z+1)*255/(resolution+1)
@@ -43,18 +41,18 @@ for en in range(ensembles):
 	tm = TMCoalescedClassifier(clauses, T, s, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits_ta, focused_negative_sampling=True, weighted_clauses=True, literal_drop_p=literal_drop_p)
 	for ep in range(epochs):
 		start_training = time()
-		tm.fit(X_train, Y_train)
+		tm.fit(X_train[0:10], Y_train[0:10])
 		stop_training = time()
 
 		start_testing = time()
-		Y_test_predicted = tm.predict_individual(X_test)
+		Y_test_predicted = tm.predict_individual(X_test[0:10])
 		stop_testing = time()
 
 		result_test = []
 		for i in range(classes):
 			result_test.append(100*(Y_test_predicted[:,i] == (Y_test == i)).mean()/100)
 
-		Y_train_predicted = tm.predict(X_train)
+		Y_train_predicted = tm.predict_individual(X_train[0:10])
 
 		result_train = []
 		for i in range(classes):
