@@ -62,6 +62,7 @@ for en in range(ensembles):
 		Y_test_predicted_multi_task = tm.predict(X_test_multi_task)
 		stop_testing = time()
 
+		result_test = 0.0
 		for i in range(100):
 			result_test += 100*(Y_test_predicted_multi_task[i] == Y_test_multi_task[i]).mean()/100
 
