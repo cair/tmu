@@ -80,6 +80,6 @@ for en in range(ensembles):
 
 		for j in range(clauses):
 			for i in range(classes):
-				print(tm.get_weight(i, j), sep=' ')
+				print(tm.get_weight(i, j), end=' ')
 			print()
 f.close()
