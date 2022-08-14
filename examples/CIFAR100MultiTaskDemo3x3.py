@@ -7,7 +7,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 from keras.datasets import cifar100
 
-clauses = 800
+clauses = 256
 T = int(clauses*0.75)
 s = 10.0 
 patch_size = 3
