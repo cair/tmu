@@ -42,7 +42,7 @@ Y_train_multi_task = {}
 Y_test_multi_task = {}
 for i in range(100):
 	other_index_train = np.arange((Y_train!=i).sum())
-	np.random.shuffle(other_index)
+	np.random.shuffle(other_index_train)
 	other_index_test = np.arange((Y_test!=i).sum())
 	np.random.shuffle(other_index_test)
 	X_train_multi_task[i] = np.concatenate(X_train[Y_train==i], X_train[Y_train!=i][other_index_train[:(Y_train==i).sum()]])
