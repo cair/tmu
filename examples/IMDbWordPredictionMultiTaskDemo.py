@@ -76,10 +76,10 @@ feature_names = vectorizer_X.get_feature_names_out()
 number_of_features = vectorizer_X.get_feature_names_out().shape[0]
 
 X_train = {}
-Y_train = lil_matrix((len(target_words), number_of_examples), dtype=np.uint32)
-
+Y_train = {}
 for i in range(len(target_words)):
 	X_train[i] = lil_matrix((number_of_examples, number_of_features), dtype=np.uint32)
+	Y_train[i] = lil_matrix(number_of_examples, dtype=np.uint32)
 	for e in range(number_of_examples):
 		target_word = target_words[i]
 		target_id = vectorizer_X.vocabulary_[target_word]
@@ -91,18 +91,18 @@ for i in range(len(target_words)):
 		examples = np.random.choice(target_indices, size=context_size, replace=True)
 		X_train[i][e,:] = (X_train_csr[examples].toarray().sum(axis=0) > 0).astype(np.uint32)
 		X_train[i][e,target_id] = 1 
-		Y_train[i, e] = target
+		Y_train[i][e] = target
 	X_train[i] = X_train[i].tocsr()
-Y_train = Y_train.tocsr()
+	Y_train[i] = Y_train[i].tocsr()
 
 X_test_csr = vectorizer_X.transform(testing_documents)
 X_test_csc = X_test_csr.tocsc()
 
 X_test = {}
-Y_test = lil_matrix((len(target_words), number_of_examples), dtype=np.uint32)
-
+Y_test = {}
 for i in range(len(target_words)):
 	X_test[i] = lil_matrix((number_of_examples, number_of_features), dtype=np.uint32)
+	Y_test[i] = lil_matrix(number_of_examples, dtype=np.uint32)
 	for e in range(number_of_examples):
 		target_word = target_words[i]
 		target_id = vectorizer_X.vocabulary_[target_word]
@@ -114,9 +114,9 @@ for i in range(len(target_words)):
 		examples = np.random.choice(target_indices, size=context_size, replace=True)
 		X_test[i][e,:] = (X_test_csr[examples].toarray().sum(axis=0) > 0).astype(np.uint32)
 		X_test[i][e,target_id] = 1
-		Y_test[i, e] = target
+		Y_test[i][e] = target
 	X_test[i] = X_test[i].tocsr()
-Y_test = Y_test.tocsr()
+	Y_test[i] = Y_test[i].tocsr()
 
 tm = TMMultiTaskClassifier(clauses, T, s, confidence_driven_updating=confidence_driven_updating, max_included_literals=max_included_literals, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
 

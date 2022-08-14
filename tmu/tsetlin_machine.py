@@ -821,7 +821,7 @@ class TMMultiTaskClassifier(TMBasis):
 
 				type_iii_feedback_selection = np.random.choice(2)
 
-				if Y[i, e] == 1:
+				if Y[i][e] == 1:
 					if self.confidence_driven_updating:
 						update_p = 1.0*(self.T - np.absolute(class_sum))/self.T
 					else:
@@ -848,7 +848,9 @@ class TMMultiTaskClassifier(TMBasis):
 		return
 
 	def predict(self, X):
-		Y = np.ascontiguousarray(np.zeros((len(X), X[0].shape[0]), dtype=np.uint32))
+		Y = {}
+		for i in range(len(X)):
+			Y[i] = np.ascontiguousarray(np.zeros((X[0].shape[0]), dtype=np.uint32))
 
 		X_csr = {}
 		for i in range(self.number_of_classes):
@@ -859,7 +861,7 @@ class TMMultiTaskClassifier(TMBasis):
 				encoded_X = self.clause_bank.prepare_X(X_csr[i][e,:].toarray())		
 				clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)			
 				class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
-				Y[i, e] = (class_sum >= 0)
+				Y[i][e] = (class_sum >= 0)
 		return Y
 
 	def clause_precision(self, the_class, positive_polarity, X, Y):
