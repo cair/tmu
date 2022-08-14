@@ -50,13 +50,13 @@ for en in range(ensembles):
 
 		result_test = []
 		for i in range(classes):
-			result_test.append(100*(Y_test_predicted[:,i] == (Y_test == i)).mean()/100)
+			result_test.append(100*(Y_test_predicted[:,i] == (Y_test[0:10] == i)).mean()/100)
 
 		Y_train_predicted = tm.predict_individual(X_train[0:10])
 
 		result_train = []
 		for i in range(classes):
-			result_train.append(100*(Y_train_predicted[:,i] == (Y_train == i)).mean()/100)
+			result_train.append(100*(Y_train_predicted[:,i] == (Y_train[0:10] == i)).mean()/100)
 
 		for j in range(clauses):
 			for i in range(classes):
