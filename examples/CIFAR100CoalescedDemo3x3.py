@@ -43,17 +43,17 @@ for en in range(ensembles):
 	tm = TMCoalescedClassifier(clauses, T, s, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits_ta, focused_negative_sampling=True, weighted_clauses=True, literal_drop_p=literal_drop_p)
 	for ep in range(epochs):
 		start_training = time()
-                tm.fit(X_train, Y_train)
-                stop_training = time()
+		tm.fit(X_train, Y_train)
+		stop_training = time()
 
-                start_testing = time()
-                result_test = 100*(tm.predict(X_test) == Y_test).mean()
-                stop_testing = time()
+		start_testing = time()
+		result_test = 100*(tm.predict(X_test) == Y_test).mean()
+		stop_testing = time()
 
-                result_train = 100*(tm.predict(X_train) == Y_train).mean()
-                print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
-                print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
-                f.flush()
+		result_train = 100*(tm.predict(X_train) == Y_train).mean()
+		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
+		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
+		f.flush()
 
 		for j in range(clauses):
 			for i in range(classes):
