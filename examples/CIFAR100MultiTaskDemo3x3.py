@@ -1,6 +1,7 @@
 from tmu.tsetlin_machine import TMMultiTaskClassifier
 import numpy as np
 from time import time
+from sklearn.metrics import f1_score
 
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -66,20 +67,23 @@ for en in range(ensembles):
 
 		result_test = []
 		for i in range(classes):
-			result_test.append(100*(Y_test_predicted_multi_task[i] == Y_test_multi_task[i]).mean()/100)
+			result_test.append(f1_score(Y_test_multi_task[i], Y_test_predicted_multi_task[i]))
 
 		Y_train_predicted_multi_task = tm.predict(X_train_multi_task)
 
 		result_train = []
 		for i in range(classes):
-			result_train.append(100*(Y_train_predicted_multi_task[i] == Y_train_multi_task[i]).mean()/100)
+			result_train.append(f1_score(Y_train_multi_task[i], Y_train_predicted_multi_task[i]))
+
+		for j in range(clauses):
+			print("#%d: " % (j), end=' ')
+
+			for i in range(classes):
+				print(tm.get_weight(i, j), end=' ')
+			print()
 
 		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing))
 		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing), file=f)
 		f.flush()
 
-		for j in range(clauses):
-			for i in range(classes):
-				print(tm.get_weight(i, j), end=' ')
-			print()
 f.close()
