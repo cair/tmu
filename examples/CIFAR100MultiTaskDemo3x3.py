@@ -44,14 +44,10 @@ X_test_multi_task = {}
 Y_train_multi_task = {}
 Y_test_multi_task = {}
 for i in range(classes):
-	other_index_train = np.arange((Y_train!=i).sum())
-	np.random.shuffle(other_index_train)
-	other_index_test = np.arange((Y_test!=i).sum())
-	np.random.shuffle(other_index_test)
-	X_train_multi_task[i] = np.concatenate((X_train[Y_train==i], X_train[Y_train!=i][other_index_train[:(Y_train==i).sum()]]))
-	X_test_multi_task[i] = np.concatenate((X_test[Y_test==i], X_test[Y_test!=i][other_index_test[:(Y_test==i).sum()]]))
-	Y_train_multi_task[i] = np.concatenate((np.ones((Y_train==i).sum(), dtype=np.uint32), np.zeros((Y_train==i).sum(), dtype=np.uint32)))
-	Y_test_multi_task[i] = np.concatenate((np.ones((Y_test==i).sum(), dtype=np.uint32), np.zeros((Y_test==i).sum(), dtype=np.uint32)))
+	X_train_multi_task[i] = np.concatenate((np.repeat(X_train[Y_train==i], 99, axis=0), X_train[Y_train!=i]))
+	X_test_multi_task[i] = np.concatenate((np.repeat(X_test[Y_test==i], 99, axis=0), X_test[Y_test!=i]))
+	Y_train_multi_task[i] = np.concatenate((np.ones((Y_train!=i).sum(), dtype=np.uint32), np.zeros((Y_train!=i).sum(), dtype=np.uint32)))
+	Y_test_multi_task[i] = np.concatenate((np.ones((Y_test!=i).sum(), dtype=np.uint32), np.zeros((Y_test!=i).sum(), dtype=np.uint32)))
 
 f = open("cifar100_%.1f_%d_%d_%d_%.2f_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution), "w+")
 for en in range(ensembles):
