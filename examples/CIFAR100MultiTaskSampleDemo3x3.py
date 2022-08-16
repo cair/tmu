@@ -19,7 +19,7 @@ literal_drop_p = 0.0
 epochs = 250
 ensembles = 10
 
-classes = 100
+classes = 10
 
 (X_train_org, Y_train), (X_test_org, Y_test) = cifar100.load_data()
 
@@ -99,7 +99,7 @@ for en in range(ensembles):
 		start_training = time()
 		result_train = f1_score(Y_train, tm.predict_exclusive(X_train), average='macro')
 		stop_training = time()
-				
+
 		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
 		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
 		f.flush()
