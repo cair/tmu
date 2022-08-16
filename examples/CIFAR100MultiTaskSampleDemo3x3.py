@@ -53,6 +53,12 @@ for i in range(classes):
 	Y_train_multi_task[i] = np.concatenate((np.ones((Y_train==i).sum(), dtype=np.uint32), np.zeros((Y_train==i).sum(), dtype=np.uint32)))
 	Y_test_multi_task[i] = np.concatenate((np.ones((Y_test==i).sum(), dtype=np.uint32), np.zeros((Y_test==i).sum(), dtype=np.uint32)))
 
+X_train = X_train[Y_train<classes]
+Y_train = Y_train[Y_train<classes]
+
+X_test = X_test[Y_test<classes]
+Y_test = Y_test[Y_test<classes]
+
 f = open("cifar100_%.1f_%d_%d_%d_%.2f_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution), "w+")
 for en in range(ensembles):
 	tm = TMMultiTaskClassifier(clauses, T, s, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits_ta, focused_negative_sampling=True, weighted_clauses=True, literal_drop_p=literal_drop_p)
@@ -84,6 +90,16 @@ for en in range(ensembles):
 
 		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing))
 		print("%d %d %s %s %.2f %.2f" % (en, ep, str(result_train), str(result_test), stop_training-start_training, stop_testing-start_testing), file=f)
+		f.flush()
+
+		start_testing = time()
+		result_test = f1_score(Y_test, tm.predict_exclusive(X_test), average='macro')
+		stop_testing = time()
+
+		result_train = f1_score(Y_train, tm.predict_exclusive(X_train), average='macro')
+		
+		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
+		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
 		f.flush()
 
 f.close()
