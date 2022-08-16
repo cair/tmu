@@ -45,7 +45,7 @@ Y_test = Y_test[Y_test<classes]
 
 f = open("cifar10_coalesced_%.1f_%d_%d_%d_%.2f_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution), "w+")
 for en in range(ensembles):
-	tm = TMMultiTaskClassifier(clauses, T, s, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits_ta, focused_negative_sampling=True, weighted_clauses=True, literal_drop_p=literal_drop_p)
+	tm = TMCoalescedClassifier(clauses, T, s, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits_ta, focused_negative_sampling=True, weighted_clauses=True, literal_drop_p=literal_drop_p)
 	for ep in range(epochs):
 		start_training = time()
 		tm.fit(X_train, Y_train)
