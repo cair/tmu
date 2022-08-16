@@ -21,7 +21,7 @@ ensembles = 10
 
 classes = 10
 
-(X_train_org, Y_train), (X_test_org, Y_test) = cifar100.load_data()
+(X_train_org, Y_train), (X_test_org, Y_test) = cifar10.load_data()
 
 Y_train=Y_train.reshape(Y_train.shape[0])
 Y_test=Y_test.reshape(Y_test.shape[0])
