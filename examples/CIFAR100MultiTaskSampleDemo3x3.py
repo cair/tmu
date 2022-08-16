@@ -96,8 +96,10 @@ for en in range(ensembles):
 		result_test = f1_score(Y_test, tm.predict_exclusive(X_test), average='macro')
 		stop_testing = time()
 
+		start_training = time()
 		result_train = f1_score(Y_train, tm.predict_exclusive(X_train), average='macro')
-		
+		stop_training = time()
+				
 		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
 		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
 		f.flush()
