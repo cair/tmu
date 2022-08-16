@@ -51,9 +51,21 @@ for en in range(ensembles):
 		tm.fit(X_train, Y_train)
 		stop_training = time()
 
-		for j in range(clauses):
-			print("#%d: " % (j), end=' ')
+		start_testing = time()
+		Y_test_predicted = tm.predict_individual(X_test)
+		stop_testing = time()
 
+		results_test = []
+		for i in range(classes):
+			results_test.append(f1_score(Y_test == i, Y_test_predicted[:,i]))
+
+		Y_train_predicted = tm.predict_individual(X_train)
+
+		results_train = []
+		for i in range(classes):
+			results_train.append(f1_score(Y_train == i, Y_train_predicted[:,i]))
+
+		for j in range(clauses):
 			for i in range(classes):
 				print(tm.get_weight(i, j), end=' ')
 			print()
@@ -64,8 +76,7 @@ for en in range(ensembles):
 
 		result_train = f1_score(Y_train, tm.predict(X_train), average='macro')
 
-		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
-		print("%d %d %.2f %.2f %.2f %.2f" % (en, ep, result_train, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
+		print("%d %d %.2f %.2f %s %s %.2f %.2f" % (en, ep, result_train, result_test, str(results_train), str(results_test), stop_training-start_training, stop_testing-start_testing))
+		print("%d %d %.2f %.2f %s %s %.2f %.2f" % (en, ep, result_train, result_test, str(results_train), str(results_test), stop_training-start_training, stop_testing-start_testing), file=f)
 		f.flush()
-
 f.close()
