@@ -18,7 +18,7 @@ max_included_literals = 5
 X_train = np.where(X_train.reshape((X_train.shape[0], 28*28)) > 75, 1, 0) 
 X_test = np.where(X_test.reshape((X_test.shape[0], 28*28)) > 75, 1, 0) 
 
-tm = TMClassifier(clauses, T, s, platform='CUDA', max_included_literals=max_included_literals, weighted_clauses=True)
+tm = TMClassifier(clauses, T, s, platform='CPU', max_included_literals=max_included_literals, weighted_clauses=True)
 
 
 f = open("mnist_%.1f_%d_%d_%d.txt" % (s, clauses, T, max_included_literals), "w+")
@@ -40,7 +40,7 @@ for ensemble in range(ensembles):
                                 number_of_includes += tm.number_of_include_actions(i, j)
                 number_of_includes /= 10*clauses
 
-                print("%d %d %.2f %.2f %.2f %.2f %.2f" % (ensembe, epoch, number_of_includes, result_test, stop_training-start_training, stop_testing-start_testing))
-                print("%d %d %.2f %.2f %.2f %.2f %.2f" % (ensembe, epoch, number_of_includes, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
+                print("%d %d %.2f %.2f %.2f %.2f %.2f" % (ensemble, epoch, number_of_includes, result_test, stop_training-start_training, stop_testing-start_testing))
+                print("%d %d %.2f %.2f %.2f %.2f %.2f" % (ensemble, epoch, number_of_includes, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
                 f.flush()
 f.close()
