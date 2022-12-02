@@ -22,7 +22,7 @@ f = open("mnist_%.1f_%d_%d_%d.txt" % (s, clauses, T, max_included_literals), "w+
 for ensemble in range(ensembles):
         print("\nAccuracy over %d epochs:\n" % (epochs))
 
-        tm = TMClassifier(clauses, T, s, platform='CPU', max_included_literals=max_included_literals, weighted_clauses=True)
+        tm = TMClassifier(clauses, T, s, platform='CUDA', max_included_literals=max_included_literals, weighted_clauses=True)
 
         for epoch in range(epochs):
                 start_training = time()
