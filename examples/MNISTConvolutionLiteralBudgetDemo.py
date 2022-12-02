@@ -18,11 +18,11 @@ max_included_literals = 1
 X_train = np.where(X_train >= 75, 1, 0) 
 X_test = np.where(X_test >= 75, 1, 0)
 
-tm = TMClassifier(clauses, T, s, platform='CUDA', patch_dim=(10, 10), max_included_literals=max_included_literals, weighted_clauses=True)
-
 f = open("mnist_convolution_%.1f_%d_%d_%d.txt" % (s, clauses, T, max_included_literals), "w+")
 for ensemble in range(ensembles):
         print("\nAccuracy over %d epochs:\n" % (epochs))
+
+        tm = TMClassifier(clauses, T, s, platform='CUDA', patch_dim=(10, 10), max_included_literals=max_included_literals, weighted_clauses=True)
 
         for epoch in range(epochs):
                 start_training = time()
