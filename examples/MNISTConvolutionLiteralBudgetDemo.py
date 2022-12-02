@@ -11,14 +11,14 @@ epochs = 250
 clauses = 8000
 T = 10000
 s = 5.0
-max_included_literals = 5
+max_included_literals = 1
 
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 
 X_train = np.where(X_train.reshape((X_train.shape[0], 28*28)) > 75, 1, 0) 
 X_test = np.where(X_test.reshape((X_test.shape[0], 28*28)) > 75, 1, 0) 
 
-tm = TMClassifier(clauses, T, s, platform='CPU', patch_dim=(10, 10), max_included_literals=max_included_literals, weighted_clauses=True)
+tm = TMClassifier(clauses, T, s, platform='CUDA', patch_dim=(10, 10), max_included_literals=max_included_literals, weighted_clauses=True)
 
 f = open("mnist_convolution_%.1f_%d_%d_%d.txt" % (s, clauses, T, max_included_literals), "w+")
 for ensemble in range(ensembles):
