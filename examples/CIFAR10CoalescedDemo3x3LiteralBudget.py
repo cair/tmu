@@ -18,7 +18,7 @@ number_of_state_bits_ta = 8
 literal_drop_p = 0.0
 
 epochs = 250
-ensembles = 10
+ensembles = 5
 
 classes = 10
 
