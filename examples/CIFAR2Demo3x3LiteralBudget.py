@@ -57,9 +57,10 @@ for ensemble in range(ensembles):
 		stop_testing = time()
 
 		number_of_includes = 0
-		for j in range(clauses):
-			number_of_includes += tm.number_of_include_actions(j)
-		number_of_includes /= clauses
+		for i in range(2):
+			for j in range(clauses):
+				number_of_includes += tm.number_of_include_actions(i, j)
+		number_of_includes /= 2*clauses
 
 		print("%d %d %.2f %.2f %.2f %.2f" % (ensemble, epoch, number_of_includes, result_test, stop_training-start_training, stop_testing-start_testing))
 		print("%d %d %.2f %.2f %.2f %.2f" % (ensemble, epoch, number_of_includes, result_test, stop_training-start_training, stop_testing-start_testing), file=f)
