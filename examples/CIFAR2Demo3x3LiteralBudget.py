@@ -41,9 +41,8 @@ for z in range(resolution):
 X_train = X_train.reshape((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], 3*resolution))
 X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], 3*resolution))
 
-Y_train = np.where(Y_train in animals, 1, 0)
-
-Y_test = np.where(Y_test in animals, 1, 0)
+Y_train = np.where(np.isin(Y_train, animals), 1, 0)
+Y_test = np.where(np.isin(Y_test, animals), 1, 0)
 
 f = open("cifar2_%.1f_%d_%d_%d_%.2f_%d_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution, max_included_literals), "w+")
 for ensemble in range(ensembles):
