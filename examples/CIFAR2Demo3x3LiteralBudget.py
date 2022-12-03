@@ -45,7 +45,7 @@ Y_train = np.where(Y_train in animals, 1, 0)
 
 Y_test = np.where(Y_test in animals, 1, 0)
 
-f = open("cifar2_coalesced_%.1f_%d_%d_%d_%.2f_%d_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution, max_included_literals), "w+")
+f = open("cifar2_%.1f_%d_%d_%d_%.2f_%d_%d.txt" % (s, clauses, T,  patch_size, literal_drop_p, resolution, max_included_literals), "w+")
 for ensemble in range(ensembles):
 	tm = TMClassifier(clauses, T, s, platform='CUDA', patch_dim=(patch_size, patch_size), number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=True, literal_drop_p=literal_drop_p, max_included_literals=max_included_literals)
 	for epoch in range(epochs):
