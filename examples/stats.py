@@ -10,6 +10,7 @@ print("MEDIAN", np.median(m[np.logical_and(m[:,1] >= start, m[:,1] < start+25),:
 print("STD", m[np.logical_and(m[:,1] >= start, m[:,1] < start+25),:].std(axis=0))
 print("95%", np.percentile(m[np.logical_and(m[:,1] >= start, m[:,1] < start+25),:], 95, axis=0))
 print("MAX", m[np.logical_and(m[:,1] >= start, m[:,1] < start+25),:].max(axis=0))
+print()
 
 ids = m[:,0]
 data = m[:,1:]
