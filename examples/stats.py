@@ -3,7 +3,6 @@ import sys
 
 m = np.loadtxt(sys.argv[1])
 start = int(sys.argv[2])
-#length = int(sys.argv[3])
 
 print("MIN", m[np.logical_and(m[:,1] >= start, m[:,1] < start+25),:].min(axis=0))
 print("MEAN", m[np.logical_and(m[:,1] >= start, m[:,1] < start+25),:].mean(axis=0))
