@@ -16,6 +16,8 @@ data = m[:,1:]
 _ndx = np.argsort(ids)
 _id, _pos  = np.unique(ids[_ndx], return_index=True)
 g_max = np.maximum.reduceat(data[_ndx], _pos)
+g_min = np.minimum.reduceat(data[_ndx], _pos)
+print("AVERAGE MIN", g_min.mean(axis=0))
 print("MIN-MAX:", g_max.min(axis=0))
 print("AVERAGE MAX", g_max.mean(axis=0))
 print("VARIANCE MAX", g_max.var(axis=0))
