@@ -82,10 +82,36 @@ class ClauseBank():
 		self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape((self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))
 		self.cbi_p = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
 
+		self.incremental_clause_evaluation_initialized = False
+
 	def calculate_clause_outputs_predict(self, encoded_X, e):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
 		lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, self.co_p, xi_p)
 		return self.clause_output
+
+	def calculate_clause_outputs_incremental_predict(self, encoded_X, e):
+		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
+
+		if self.incremental_clause_evaluation_initialized == False:
+			self.literal_clause_map = np.ascontiguousarray(np.empty((int(self.number_of_literals*self.number_of_clauses)), dtype=np.uint32))
+			self.lcm_p = ffi.cast("unsigned int *", self.literal_clause_map.ctypes.data)
+
+			self.literal_clause_map_pos = np.ascontiguousarray(np.empty((int(self.number_of_literals)), dtype=np.uint32))
+			self.lcmp_p = ffi.cast("unsigned int *", self.literal_clause_map_pos.ctypes.data)
+
+			self.false_literals_per_clause = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
+			self.flpc_p = ffi.cast("unsigned int *", self.false_literals_per_clause.ctypes.data)
+
+			self.previous_xi = np.ascontiguousarray(np.empty((int(self.number_of_ta_chunks)), dtype=np.uint32))
+			self.previous_xi_p = ffi.cast("unsigned int *", self.previous_xi.ctypes.data)
+
+			lib.cb_initialize_incremental_clause_calculation(self.cb_p, self.lcm_p, self.lcmp_p, self.flpc_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, self.previous_xi_p)
+
+			self.incremental_clause_evaluation_initialized = True
+
+		lib.cb_calculate_clause_outputs_incremental(self.lcm_p, self.lcmp_p, self.flpc_p, self.number_of_clauses, self.number_of_literals, self.number_of_patches, self.previous_xi_p, xi_p)
+
+		return (self.false_literals_per_clause == 0).astype(np.uint32)
 
 	def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
@@ -103,18 +129,21 @@ class ClauseBank():
 		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
 		lib.cb_type_i_feedback(self.cb_p, self.ft_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, update_p, s, boost_true_positive_feedback, max_included_literals, ca_p, la_p, xi_p)
+		self.incremental_clause_evaluation_initialized = False
 
 	def type_ii_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
 		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
 		lib.cb_type_ii_feedback(self.cb_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, update_p, ca_p, la_p, xi_p)
+		self.incremental_clause_evaluation_initialized = False
 
 	def type_iii_feedback(self, update_p, d, clause_active, literal_active, encoded_X, e, target):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
 		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
 		la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
 		lib.cb_type_iii_feedback(self.cb_p, self.cbi_p, self.ct_p, self.o1p_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.number_of_patches, update_p, d, ca_p, la_p, xi_p, target)
+		self.incremental_clause_evaluation_initialized = False
 
 	def calculate_literal_clause_frequency(self, clause_active):
 		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)

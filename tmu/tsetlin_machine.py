@@ -215,7 +215,7 @@ class TMClassifier(TMBasis):
 				self.clause_banks[not_target].type_iii_feedback(update_p, self.d, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e, 0)
 		return
 
-	def predict(self, X):
+	def predict(self, X, incremental=False):
 		if not np.array_equal(self.X_test, X):
 			self.encoded_X_test = self.clause_banks[0].prepare_X(X)
 			self.X_test = X.copy()
@@ -225,7 +225,10 @@ class TMClassifier(TMBasis):
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
-				class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test, e)).astype(np.int32)
+				if incremental:
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_incremental_predict(self.encoded_X_test, e)).astype(np.int32)
+				else:
+					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test, e)).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
 				if class_sum > max_class_sum:
 					max_class_sum = class_sum

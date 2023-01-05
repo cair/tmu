@@ -34,21 +34,21 @@ https://arxiv.org/abs/1905.09688
 
 #include "ClauseBank.h"
 
-static inline void cb_initialize_random_streams(unsigned int *feedback_to_ta, int number_of_features, int number_of_ta_chunks, float s)
+static inline void cb_initialize_random_streams(unsigned int *feedback_to_ta, int number_of_literals, int number_of_ta_chunks, float s)
 {
 	// Initialize all bits to zero	
 	memset(feedback_to_ta, 0, number_of_ta_chunks*sizeof(unsigned int));
 
-	int n = number_of_features;
+	int n = number_of_literals;
 	float p = 1.0 / s;
 
 	int active = normal(n * p, n * p * (1 - p));
 	active = active >= n ? n : active;
 	active = active < 0 ? 0 : active;
 	while (active--) {
-		int f = fast_rand() % (number_of_features);
+		int f = fast_rand() % (number_of_literals);
 		while (feedback_to_ta[f / 32] & (1 << (f % 32))) {
-			f = fast_rand() % (number_of_features);
+			f = fast_rand() % (number_of_literals);
 	    }
 		feedback_to_ta[f / 32] |= 1 << (f % 32);
 	}
@@ -268,15 +268,15 @@ static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_s
 }
 
 
-void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
+void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
 {
 	unsigned int filter;
-	if (((number_of_features) % 32) != 0) {
-		filter  = (~(0xffffffff << ((number_of_features) % 32)));
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 	} else {
 		filter = 0xffffffff;
 	}
-	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	for (int j = 0; j < number_of_clauses; ++j) {
 		if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
@@ -290,9 +290,9 @@ void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, un
 
 		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
 
-		cb_initialize_random_streams(feedback_to_ta, number_of_features, number_of_ta_chunks, s);
+		cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
 
-		if (clause_output && cb_number_of_include_actions(ta_state, j, number_of_features, number_of_state_bits) <= max_included_literals) {
+		if (clause_output && cb_number_of_include_actions(ta_state, j, number_of_literals, number_of_state_bits) <= max_included_literals) {
 			// Type Ia Feedback
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int ta_pos = k*number_of_state_bits;
@@ -317,15 +317,15 @@ void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, un
 	}
 }
 
-void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
+void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
 {
 	unsigned int filter;
-	if (((number_of_features) % 32) != 0) {
-		filter  = (~(0xffffffff << ((number_of_features) % 32)));
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 	} else {
 		filter = 0xffffffff;
 	}
-	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	for (int j = 0; j < number_of_clauses; j++) {
 		if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
@@ -347,15 +347,15 @@ void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patche
 	}
 }
 
-void cb_type_iii_feedback(unsigned int *ta_state, unsigned int *ind_state, unsigned int *clause_and_target, unsigned int *output_one_patches, int number_of_clauses, int number_of_features, int number_of_state_bits_ta, int number_of_state_bits_ind, int number_of_patches, float update_p, float d, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi, unsigned int target)
+void cb_type_iii_feedback(unsigned int *ta_state, unsigned int *ind_state, unsigned int *clause_and_target, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits_ta, int number_of_state_bits_ind, int number_of_patches, float update_p, float d, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi, unsigned int target)
 {
 	unsigned int filter;
-	if (((number_of_features) % 32) != 0) {
-		filter  = (~(0xffffffff << ((number_of_features) % 32)));
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 	} else {
 		filter = 0xffffffff;
 	}
-	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	for (int j = 0; j < number_of_clauses; ++j) {
 		if ((!clause_active[j])) {
@@ -429,15 +429,15 @@ void cb_type_iii_feedback(unsigned int *ta_state, unsigned int *ind_state, unsig
 	}
 }
 
-void cb_calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)
+void cb_calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)
 {
 	unsigned int filter;
-	if (((number_of_features) % 32) != 0) {
-		filter  = (~(0xffffffff << ((number_of_features) % 32)));
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 	} else {
 		filter = 0xffffffff;
 	}
-	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	for (int j = 0; j < number_of_clauses; j++) {
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
@@ -445,16 +445,105 @@ void cb_calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_c
 	}
 }
 
-void cb_calculate_clause_outputs_update(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *literal_active, unsigned int *Xi)
+void cb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsigned int *literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *previous_Xi)
 {
 	unsigned int filter;
-	if (((number_of_features) % 32) != 0) {
-		filter  = (~(0xffffffff << ((number_of_features) % 32)));
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	// Initialize all literals as false for the previous example
+	for (int k = 0; k < number_of_ta_chunks; ++k) {
+		previous_Xi[k] = 0;
+	}
+
+	// Initialize all false literal counters to 0
+	for (int j = 0; j < number_of_clauses; ++j) {
+		false_literals_per_clause[j] = 0;
+	}
+
+	// Build the literal clause map, and update the false literal counters
+	// Start filling out the map from position 0
+	unsigned int pos = 0;
+	for (int k = 0; k < number_of_literals; ++k) {
+		unsigned int ta_chunk = k / 32;
+		unsigned int chunk_pos = k % 32;
+
+		// For each literal, find out which clauses includes it
+		for (int j = 0; j < number_of_clauses; ++j) {	
+			// Obtain the clause ta chunk containing the literal decision (exclude/include)
+			unsigned int clause_ta_chunk = j * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits - 1;
+			if (ta_state[clause_ta_chunk] & (1 << chunk_pos)) {
+				// Literal k included in clause j
+				literal_clause_map[pos] = j;
+				++false_literals_per_clause[j];
+				++pos;
+			}
+
+		}
+		literal_clause_map_pos[k] = pos;
+	}
+
+	// Make empty clauses false
+	for (int j = 0; j < number_of_clauses; ++j) {
+		if (false_literals_per_clause[j] == 0) {
+			false_literals_per_clause[j] = 1;
+		}
+	}
+}
+
+void cb_calculate_clause_outputs_incremental(unsigned int * literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_patches, unsigned int *previous_Xi, unsigned int *Xi)
+{
+	unsigned int filter;
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	// Look up each in literal clause map
+
+	unsigned int start_pos = 0;
+	for (int k = 0; k < number_of_literals; ++k) {
+		unsigned int ta_chunk = k / 32;
+		unsigned int chunk_pos = k % 32;
+
+		// Check which literals have changed
+		if ((Xi[ta_chunk] & (1 << chunk_pos)) && !(previous_Xi[ta_chunk] & (1 << chunk_pos))) {
+			// If the literal now is True, decrement the false literal counter of all clauses including the literal
+			for (int j = 0; j < literal_clause_map_pos[k] - start_pos; ++j) {
+				--false_literals_per_clause[literal_clause_map[start_pos + j]];
+			}
+		} else if (!(Xi[ta_chunk] & (1 << chunk_pos)) && (previous_Xi[ta_chunk] & (1 << chunk_pos))) {
+			// If the literal now is False, increment the false counter of all clauses including literal
+			for (int j = 0; j < literal_clause_map_pos[k] - start_pos; ++j) {
+				++false_literals_per_clause[literal_clause_map[start_pos + j]];
+			}
+		}
+
+		start_pos = literal_clause_map_pos[k];
+	}
+
+	// Copy current Xi to previous_Xi
+	for (int k = 0; k < number_of_ta_chunks; ++k) {
+		previous_Xi[k] = Xi[k];
+	}
+}
+
+void cb_calculate_clause_outputs_update(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *literal_active, unsigned int *Xi)
+{
+	unsigned int filter;
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 	} else {
 		filter = 0xffffffff;
 	}
 
-	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	for (int j = 0; j < number_of_clauses; j++) {
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
@@ -462,16 +551,16 @@ void cb_calculate_clause_outputs_update(unsigned int *ta_state, int number_of_cl
 	}
 }
 
-void cb_calculate_clause_outputs_patchwise(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)
+void cb_calculate_clause_outputs_patchwise(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)
 {
 	unsigned int filter;
-	if (((number_of_features) % 32) != 0) {
-		filter  = (~(0xffffffff << ((number_of_features) % 32)));
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 	} else {
 		filter = 0xffffffff;
 	}
 
-	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	for (int j = 0; j < number_of_clauses; j++) {
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
@@ -479,11 +568,11 @@ void cb_calculate_clause_outputs_patchwise(unsigned int *ta_state, int number_of
 	}
 }
 
-void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_features, int number_of_state_bits, unsigned int *clause_active, unsigned int *literal_count)
+void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *clause_active, unsigned int *literal_count)
 {
-	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
-	for (int k = 0; k < number_of_features; k++) {
+	for (int k = 0; k < number_of_literals; k++) {
 		literal_count[k] = 0;
 	}
 	
@@ -492,7 +581,7 @@ void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clause
 			continue;
 		}
 
-		for (int k = 0; k < number_of_features; k++) {
+		for (int k = 0; k < number_of_literals; k++) {
 			unsigned int ta_chunk = k / 32;
 			unsigned int chunk_pos = k % 32;
 			unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits-1;
@@ -503,15 +592,15 @@ void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clause
 	}
 }
 
-int cb_number_of_include_actions(unsigned int *ta_state, int clause, int number_of_features, int number_of_state_bits)
+int cb_number_of_include_actions(unsigned int *ta_state, int clause, int number_of_literals, int number_of_state_bits)
 {
 	unsigned int filter;
-	if (((number_of_features) % 32) != 0) {
-		filter  = (~(0xffffffff << ((number_of_features) % 32)));
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
 	} else {
 		filter = 0xffffffff;
 	}
-	unsigned int number_of_ta_chunks = (number_of_features-1)/32 + 1;
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 	
 	unsigned int clause_pos = clause*number_of_ta_chunks*number_of_state_bits;
 
