@@ -31,7 +31,7 @@ from sys import maxsize
 from time import time
 
 class TMBasis():
-	def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
+	def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0, batch_size=100):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits_ta = number_of_state_bits_ta
 		self.number_of_state_bits_ind = number_of_state_bits_ind
@@ -60,6 +60,8 @@ class TMBasis():
 
 		self.clause_drop_p = clause_drop_p
 		self.literal_drop_p = literal_drop_p
+
+		self.batch_size = batch_size
 
 		self.X_train = np.zeros(0, dtype=np.uint32)
 		self.X_test = np.zeros(0, dtype=np.uint32)
@@ -114,7 +116,7 @@ class TMClassifier(TMBasis):
 		self.clause_banks = []
 		if self.platform == 'CPU':
 			for i in range(self.number_of_classes):
-				self.clause_banks.append(ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim))
+				self.clause_banks.append(ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim, self.batch_size))
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
 			for i in range(self.number_of_classes):
@@ -215,7 +217,7 @@ class TMClassifier(TMBasis):
 				self.clause_banks[not_target].type_iii_feedback(update_p, self.d, clause_active[not_target]*self.positive_clauses, literal_active, self.encoded_X_train, e, 0)
 		return
 
-	def predict(self, X, incremental=False):
+	def predict(self, X):
 		if not np.array_equal(self.X_test, X):
 			self.encoded_X_test = self.clause_banks[0].prepare_X(X)
 			self.X_test = X.copy()
@@ -225,10 +227,7 @@ class TMClassifier(TMBasis):
 			max_class_sum = -self.T
 			max_class = 0
 			for i in range(self.number_of_classes):
-				if incremental:
-					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_incremental_predict(self.encoded_X_test, e)).astype(np.int32)
-				else:
-					class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test, e)).astype(np.int32)
+				class_sum = np.dot(self.weight_banks[i].get_weights(), self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test, e)).astype(np.int32)
 				class_sum = np.clip(class_sum, -self.T, self.T)
 				if class_sum > max_class_sum:
 					max_class_sum = class_sum
