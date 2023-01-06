@@ -28,12 +28,13 @@ import numpy as np
 import tmu.tools
 
 class ClauseBank():
-	def __init__(self, X, number_of_clauses, number_of_state_bits_ta, number_of_state_bits_ind, patch_dim, batch_size):
+	def __init__(self, X, number_of_clauses, number_of_state_bits_ta, number_of_state_bits_ind, patch_dim, batch_size, incremental):
 		self.number_of_clauses = int(number_of_clauses)
 		self.number_of_state_bits_ta = int(number_of_state_bits_ta)
 		self.number_of_state_bits_ind = int(number_of_state_bits_ind)
 		self.patch_dim = patch_dim
 		self.batch_size = batch_size
+		self.incremental = incremental
 
 		if len(X.shape) == 2:
 			self.dim = (X.shape[1], 1, 1)
@@ -88,10 +89,10 @@ class ClauseBank():
 
 		self.incremental_clause_evaluation_initialized = False
 
-	def calculate_clause_outputs_predict(self, encoded_X, e, incremental=True):
+	def calculate_clause_outputs_predict(self, encoded_X, e):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
 
-		if not incremental:
+		if not self.incremental:
 			lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, self.co_p, xi_p)
 			return self.clause_output
 

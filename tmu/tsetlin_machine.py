@@ -31,7 +31,7 @@ from sys import maxsize
 from time import time
 
 class TMBasis():
-	def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0, batch_size=100):
+	def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio = 1.0, type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0, batch_size=100, incremental=True):
 		self.number_of_clauses = number_of_clauses
 		self.number_of_state_bits_ta = number_of_state_bits_ta
 		self.number_of_state_bits_ind = number_of_state_bits_ind
@@ -62,6 +62,8 @@ class TMBasis():
 		self.literal_drop_p = literal_drop_p
 
 		self.batch_size = batch_size
+
+		self.incremental = incremental
 
 		self.X_train = np.zeros(0, dtype=np.uint32)
 		self.X_test = np.zeros(0, dtype=np.uint32)
@@ -103,8 +105,8 @@ class TMBasis():
 		return self.clause_bank.set_ta_state(clause, ta, state)
 
 class TMClassifier(TMBasis):
-	def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio = 1.0, type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
-		super().__init__(number_of_clauses, T, s, confidence_driven_updating=confidence_driven_updating, type_i_ii_ratio = type_i_ii_ratio, type_iii_feedback=type_iii_feedback, d=d, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
+	def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio = 1.0, type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0, batch_size=100, incremental=True):
+		super().__init__(number_of_clauses, T, s, confidence_driven_updating=confidence_driven_updating, type_i_ii_ratio = type_i_ii_ratio, type_iii_feedback=type_iii_feedback, d=d, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta, number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p, batch_size=batch_size, incremental=incremental)
 
 	def initialize(self, X, Y):
 		self.number_of_classes = int(np.max(Y) + 1)
@@ -116,7 +118,7 @@ class TMClassifier(TMBasis):
 		self.clause_banks = []
 		if self.platform == 'CPU':
 			for i in range(self.number_of_classes):
-				self.clause_banks.append(ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim, self.batch_size))
+				self.clause_banks.append(ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim, self.batch_size, self.incremental))
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
 			for i in range(self.number_of_classes):
