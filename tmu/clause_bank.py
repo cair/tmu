@@ -28,11 +28,12 @@ import numpy as np
 import tmu.tools
 
 class ClauseBank():
-	def __init__(self, X, number_of_clauses, number_of_state_bits_ta, number_of_state_bits_ind, patch_dim):
+	def __init__(self, X, number_of_clauses, number_of_state_bits_ta, number_of_state_bits_ind, patch_dim, batch_size):
 		self.number_of_clauses = int(number_of_clauses)
 		self.number_of_state_bits_ta = int(number_of_state_bits_ta)
 		self.number_of_state_bits_ind = int(number_of_state_bits_ind)
 		self.patch_dim = patch_dim
+		self.batch_size = batch_size
 
 		if len(X.shape) == 2:
 			self.dim = (X.shape[1], 1, 1)
@@ -52,6 +53,9 @@ class ClauseBank():
 
 		self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 		self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
+
+		self.clause_output_batch = np.ascontiguousarray(np.empty((int(self.number_of_clauses*batch_size)), dtype=np.uint32))
+		self.cob_p = ffi.cast("unsigned int *", self.clause_output_batch.ctypes.data)
 
 		self.clause_and_target = np.ascontiguousarray(np.zeros((int(self.number_of_clauses*self.number_of_ta_chunks)), dtype=np.uint32))
 		self.ct_p = ffi.cast("unsigned int *", self.clause_and_target.ctypes.data)
@@ -86,11 +90,6 @@ class ClauseBank():
 
 	def calculate_clause_outputs_predict(self, encoded_X, e):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
-		lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, self.co_p, xi_p)
-		return self.clause_output
-
-	def calculate_clause_outputs_incremental_predict(self, encoded_X, e):
-		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
 
 		if self.incremental_clause_evaluation_initialized == False:
 			self.literal_clause_map = np.ascontiguousarray(np.empty((int(self.number_of_literals*self.number_of_clauses)), dtype=np.uint32))
@@ -105,13 +104,14 @@ class ClauseBank():
 			self.previous_xi = np.ascontiguousarray(np.empty((int(self.number_of_ta_chunks)*int(self.number_of_patches)), dtype=np.uint32))
 			self.previous_xi_p = ffi.cast("unsigned int *", self.previous_xi.ctypes.data)
 
-			lib.cb_initialize_incremental_clause_calculation(self.cb_p, self.lcm_p, self.lcmp_p, self.flpc_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, self.previous_xi_p)
+			lib.cb_initialize_incremental_clause_calculation(self.cb_p, self.lcm_p, self.lcmp_p, self.flpc_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.previous_xi_p)
 
 			self.incremental_clause_evaluation_initialized = True
 
-		lib.cb_calculate_clause_outputs_incremental(self.lcm_p, self.lcmp_p, self.flpc_p, self.number_of_clauses, self.number_of_literals, self.number_of_patches, self.previous_xi_p, xi_p)
+		if e % self.batch_size == 0:
+			lib.cb_calculate_clause_outputs_incremental_batch(self.lcm_p, self.lcmp_p, self.flpc_p, self.number_of_clauses, self.number_of_literals, self.number_of_patches, self.cob_p, self.previous_xi_p, xi_p, np.minimum(self.batch_size, encoded_X.shape[0]-e))
 
-		return (self.false_literals_per_clause.reshape((self.number_of_patches, self.number_of_clauses)).min(axis=0) == 0).astype(np.uint32)
+		return self.clause_output_batch.reshape((self.batch_size, self.number_of_clauses))[e % self.batch_size,:]
 
 	def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)

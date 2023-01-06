@@ -445,7 +445,7 @@ void cb_calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_c
 	}
 }
 
-void cb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsigned int *literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *previous_Xi)
+void cb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsigned int *literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *previous_Xi)
 {
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {
@@ -456,19 +456,13 @@ void cb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsign
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	// Initialize all literals as false for the previous example per patch
-	for (int patch = 0; patch < number_of_patches; ++patch) {
-		unsigned int patch_ta_chunk = patch * number_of_ta_chunks;
-		for (int k = 0; k < number_of_ta_chunks; ++k) {
-			previous_Xi[patch_ta_chunk + k] = 0;
-		}
+	for (int k = 0; k < number_of_ta_chunks; ++k) {
+		previous_Xi[k] = 0;
 	}
 
 	// Initialize all false literal counters to 0 per patch
-	for (int patch = 0; patch < number_of_patches; ++patch) {
-		unsigned int patch_clause_pos = patch * number_of_clauses;
-		for (int j = 0; j < number_of_clauses; ++j) {
-			false_literals_per_clause[patch_clause_pos + j] = 0;
-		}
+	for (int j = 0; j < number_of_clauses; ++j) {
+		false_literals_per_clause[j] = 0;
 	}
 
 	// Build the literal clause map, and update the false literal counters
@@ -486,10 +480,7 @@ void cb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsign
 				// Literal k included in clause j
 				literal_clause_map[pos] = j;
 
-				for (int patch = 0; patch < number_of_patches; ++patch) {
-					unsigned int patch_clause_pos = patch * number_of_clauses;
-					++false_literals_per_clause[patch_clause_pos + j];
-				}
+				++false_literals_per_clause[j];
 				++pos;
 			}
 		}
@@ -497,17 +488,42 @@ void cb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsign
 	}
 
 	// Make empty clauses false
-	for (int patch = 0; patch < number_of_patches; ++patch) {
-		unsigned int patch_clause_pos = patch * number_of_clauses;
-		for (int j = 0; j < number_of_clauses; ++j) {
-			if (false_literals_per_clause[patch_clause_pos + j] == 0) {
-				false_literals_per_clause[patch_clause_pos + j] = 1;
-			}
+	for (int j = 0; j < number_of_clauses; ++j) {
+		if (false_literals_per_clause[j] == 0) {
+			false_literals_per_clause[j] = 1;
 		}
 	}
 }
 
-void cb_calculate_clause_outputs_incremental(unsigned int * literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_patches, unsigned int *previous_Xi, unsigned int *Xi)
+void cb_calculate_clause_outputs_incremental_batch(unsigned int * literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_patches, unsigned int *clause_output, unsigned int *previous_Xi, unsigned int *Xi, int batch_size)
+{
+	unsigned int filter;
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	unsigned int *current_Xi = Xi;
+	for (int b = 0; b < batch_size; ++b) {
+		for (int j = 0; j < number_of_clauses; ++j) {
+			clause_output[b*number_of_clauses + j] = 0;
+		}
+
+		for (int patch = 0; patch < number_of_patches; ++patch) {
+			cb_calculate_clause_outputs_incremental(literal_clause_map, literal_clause_map_pos, false_literals_per_clause, number_of_clauses, number_of_literals, previous_Xi, current_Xi);
+			for (int j = 0; j < number_of_clauses; ++j) {
+				if (false_literals_per_clause[j] == 0) {
+					clause_output[b*number_of_clauses + j] = 1;
+				}
+			}
+			current_Xi += number_of_ta_chunks;
+		}
+	}
+}
+
+void cb_calculate_clause_outputs_incremental(unsigned int * literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, unsigned int *previous_Xi, unsigned int *Xi)
 {
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {
@@ -518,36 +534,30 @@ void cb_calculate_clause_outputs_incremental(unsigned int * literal_clause_map, 
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	// Look up each in literal clause map
+	unsigned int start_pos = 0;
+	for (int k = 0; k < number_of_literals; ++k) {
+		unsigned int ta_chunk = k / 32;
+		unsigned int chunk_pos = k % 32;
 
-	for (int patch = 0; patch < number_of_patches; ++patch) {
-		unsigned int patch_clause_pos = patch * number_of_clauses;
-		unsigned int patch_ta_chunk = patch * number_of_ta_chunks;
-
-		unsigned int start_pos = 0;
-		for (int k = 0; k < number_of_literals; ++k) {
-			unsigned int ta_chunk = k / 32;
-			unsigned int chunk_pos = k % 32;
-
-			// Check which literals have changed
-			if ((Xi[patch_ta_chunk + ta_chunk] & (1 << chunk_pos)) && !(previous_Xi[patch_ta_chunk + ta_chunk] & (1 << chunk_pos))) {
-				// If the literal now is True, decrement the false literal counter of all clauses including the literal
-				for (int j = 0; j < literal_clause_map_pos[k] - start_pos; ++j) {
-					--false_literals_per_clause[patch_clause_pos + literal_clause_map[start_pos + j]];
-				}
-			} else if (!(Xi[patch_ta_chunk + ta_chunk] & (1 << chunk_pos)) && (previous_Xi[patch_ta_chunk + ta_chunk] & (1 << chunk_pos))) {
-				// If the literal now is False, increment the false counter of all clauses including literal
-				for (int j = 0; j < literal_clause_map_pos[k] - start_pos; ++j) {
-					++false_literals_per_clause[patch_clause_pos + literal_clause_map[start_pos + j]];
-				}
+		// Check which literals have changed
+		if ((Xi[ta_chunk] & (1 << chunk_pos)) && !(previous_Xi[ta_chunk] & (1 << chunk_pos))) {
+			// If the literal now is True, decrement the false literal counter of all clauses including the literal
+			for (int j = 0; j < literal_clause_map_pos[k] - start_pos; ++j) {
+				--false_literals_per_clause[literal_clause_map[start_pos + j]];
 			}
-
-			start_pos = literal_clause_map_pos[k];
+		} else if (!(Xi[ta_chunk] & (1 << chunk_pos)) && (previous_Xi[ta_chunk] & (1 << chunk_pos))) {
+			// If the literal now is False, increment the false counter of all clauses including literal
+			for (int j = 0; j < literal_clause_map_pos[k] - start_pos; ++j) {
+				++false_literals_per_clause[literal_clause_map[start_pos + j]];
+			}
 		}
 
-		// Copy current Xi to previous_Xi
-		for (int k = 0; k < number_of_ta_chunks; ++k) {
-			previous_Xi[patch_ta_chunk + k] = Xi[patch_ta_chunk + k];
-		}
+		start_pos = literal_clause_map_pos[k];
+	}
+
+	// Copy current Xi to previous_Xi
+	for (int k = 0; k < number_of_ta_chunks; ++k) {
+		previous_Xi[k] = Xi[k];
 	}
 }
 
