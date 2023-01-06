@@ -102,7 +102,7 @@ class ClauseBank():
 			self.false_literals_per_clause = np.ascontiguousarray(np.empty((int(self.number_of_clauses*self.number_of_patches)), dtype=np.uint32))
 			self.flpc_p = ffi.cast("unsigned int *", self.false_literals_per_clause.ctypes.data)
 
-			self.previous_xi = np.ascontiguousarray(np.empty((int(self.number_of_ta_chunks)), dtype=np.uint32))
+			self.previous_xi = np.ascontiguousarray(np.empty((int(self.number_of_ta_chunks)*int(self.number_of_patches)), dtype=np.uint32))
 			self.previous_xi_p = ffi.cast("unsigned int *", self.previous_xi.ctypes.data)
 
 			lib.cb_initialize_incremental_clause_calculation(self.cb_p, self.lcm_p, self.lcmp_p, self.flpc_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, self.previous_xi_p)
@@ -111,7 +111,7 @@ class ClauseBank():
 
 		lib.cb_calculate_clause_outputs_incremental(self.lcm_p, self.lcmp_p, self.flpc_p, self.number_of_clauses, self.number_of_literals, self.number_of_patches, self.previous_xi_p, xi_p)
 
-		return (self.false_literals_per_clause == 0).astype(np.uint32)
+		return (self.false_literals_per_clause.reshape((self.number_of_patches, self.number_of_clauses)).min(axis=0) == 0).astype(np.uint32)
 
 	def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
