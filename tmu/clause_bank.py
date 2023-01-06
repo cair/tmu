@@ -88,7 +88,13 @@ class ClauseBank():
 
 		self.incremental_clause_evaluation_initialized = False
 
-	def calculate_clause_outputs_predict(self, encoded_X, e):
+	def calculate_clause_outputs_predict(self, encoded_X, e, incremental=True):
+		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
+
+		if not incremental:
+			lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits_ta, self.number_of_patches, self.co_p, xi_p)
+			return self.clause_output
+
 		xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
 
 		if self.incremental_clause_evaluation_initialized == False:
