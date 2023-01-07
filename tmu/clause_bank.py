@@ -28,7 +28,7 @@ import numpy as np
 import tmu.tools
 
 class ClauseBank():
-	def __init__(self, X, number_of_clauses, number_of_state_bits_ta, number_of_state_bits_ind, patch_dim, batch_size, incremental):
+	def __init__(self, X, number_of_clauses, number_of_state_bits_ta, number_of_state_bits_ind, patch_dim, batch_size, incremental=True):
 		self.number_of_clauses = int(number_of_clauses)
 		self.number_of_state_bits_ta = int(number_of_state_bits_ta)
 		self.number_of_state_bits_ind = int(number_of_state_bits_ind)
