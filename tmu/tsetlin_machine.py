@@ -118,7 +118,7 @@ class TMClassifier(TMBasis):
 		self.clause_banks = []
 		if self.platform == 'CPU':
 			for i in range(self.number_of_classes):
-				self.clause_banks.append(ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim, self.batch_size, incremental=self.incremental))
+				self.clause_banks.append(ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim, batch_size=self.batch_size, incremental=self.incremental))
 		elif self.platform == 'CUDA':
 			from tmu.clause_bank_cuda import ClauseBankCUDA
 			for i in range(self.number_of_classes):
