@@ -20,21 +20,22 @@
 
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
-
 from cffi import FFI
+import pathlib
+current_dir = pathlib.Path(__file__).parent
+
 ffibuilder = FFI()
 
-ffibuilder.cdef("""
-    void wb_increment(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active, unsigned int positive_weights);
-    void wb_decrement(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active, unsigned int negative_weights);
-""")
+with current_dir.joinpath("WeightBank.h").open("r") as f:
+    ffibuilder.cdef(f.read())
 
-ffibuilder.set_source("tmu._wb",  # name of the output C extension
-"""
-    #include "./tmu/WeightBank.h"
-""",
-    include_dirs=['.'],
-    sources=['./tmu/WeightBank.c'])    # on Unix, link with the math library
+with current_dir.joinpath("WeightBank.c").open("r") as f:
+    ffibuilder.set_source(
+        "tmu._wb",
+        f.read(),
+        include_dirs=[current_dir.absolute()],
+        source_extension=".c",
+    )
 
 if __name__ == "__main__":
     ffibuilder.compile(verbose=True)
