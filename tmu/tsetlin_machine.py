@@ -585,25 +585,6 @@ class TMAutoEncoder(TMBasis):
 				self.clause_bank.type_iii_feedback(update_p, self.d, clause_active*(self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0, 0)
 		return
 
-	def produce_example(self, the_class, X_csc, X_csr):
-		if self.output_balancing:
-			target = np.random.choice(2)
-			if target == 1:
-				target_indices = X_csc[:,self.output_active[the_class]].indices
-			else:
-				target_indices = np.setdiff1d(np.random.choice(X_csr.shape[0], size=self.accumulation*10, replace=True), X_csc[:,self.output_active[the_class]].indices)
-				while target_indices.shape[0] == 0:
-					target_indices = np.setdiff1d(np.random.choice(X_csr.shape[0], size=self.accumulation*10, replace=True), X_csc[:,self.output_active[the_class]].indices)
-
-			examples = np.random.choice(target_indices, size=self.accumulation, replace=True)
-		else:
-			examples = np.random.choice(X_csr.shape[0], replace=True)
-			target = X_csr[examples,self.output_active[i]]
-
-		accumulated_X = (X_csr[examples].toarray().sum(axis=0) > 0).astype(np.uint32)
-
-		return (target, self.clause_bank.prepare_X(accumulated_X.reshape((1,-1))))
-
 	def activate_clauses(self):
 		# Clauses are dropped based on their weights
 		clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
@@ -696,7 +677,7 @@ class TMAutoEncoder(TMBasis):
 
 	def clause_precision(self, the_class, positive_polarity, X, number_of_examples=2000):
 		X_csr = csr_matrix(X.reshape(X.shape[0], -1))
-		X_csc = csc_matrix(X.reshape(X.shape[0], -1))
+		X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
 
 		true_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
 		false_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
@@ -707,7 +688,8 @@ class TMAutoEncoder(TMBasis):
 		literal_active = self.activate_literals()
 
 		for e in range(number_of_examples):
-			(target, encoded_X) = self.produce_example(the_class, X_csc, X_csr)
+			Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc, np.array([self.output_active[the_class]], dtype=np.uint32), self.accumulation)
+			(target, encoded_X) = Yu[0], Xu[0].reshape((1,-1))
 			
 			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
 
@@ -726,15 +708,16 @@ class TMAutoEncoder(TMBasis):
 
 	def clause_recall(self, the_class, positive_polarity, X, number_of_examples=2000):
 		X_csr = csr_matrix(X.reshape(X.shape[0], -1))
-		X_csc = csc_matrix(X.reshape(X.shape[0], -1))
-
+		X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
+		
 		true_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
 		false_negative = np.zeros(self.number_of_clauses, dtype=np.uint32)
 
 		weights = self.weight_banks[the_class].get_weights()
 
 		for e in range(number_of_examples):
-			(target, encoded_X) = self.produce_example(the_class, X_csc, X_csr)
+			Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc, np.array([self.output_active[the_class]], dtype=np.uint32), self.accumulation)
+			(target, encoded_X) = Yu[0], Xu[0].reshape((1,-1))
 
 			clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
 
