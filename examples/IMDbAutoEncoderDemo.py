@@ -132,3 +132,5 @@ for e in range(40):
 		for j in range(1, len(target_words)):
 			print("%s(%.2f) " % (target_words[sorted_index[j]], similarity[i,sorted_index[j]]), end=' ')
 		print()
+
+	print("Training time: %.2f" % (stop_training - start_training))
