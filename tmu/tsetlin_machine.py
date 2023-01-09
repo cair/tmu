@@ -638,7 +638,7 @@ class TMAutoEncoder(TMBasis):
 			self.initialized = True
 
 		X_csr = csr_matrix(X.reshape(X.shape[0], -1))
-		X_csc = csc_matrix(X.reshape(X.shape[0], -1))
+		X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
 
 		clause_active = self.activate_clauses()
 		literal_active = self.activate_literals()
@@ -653,7 +653,7 @@ class TMAutoEncoder(TMBasis):
 			average_absolute_weights /= self.number_of_classes
 			update_clause = np.random.random(self.number_of_clauses) <= (self.T - np.clip(average_absolute_weights, 0, self.T))/self.T
 
-			Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X, self.output_active, self.accumulation)
+			Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc, self.output_active, self.accumulation)
 			for i in class_index:
 				(target, encoded_X) = Yu[i], Xu[i].reshape((1,-1))
 

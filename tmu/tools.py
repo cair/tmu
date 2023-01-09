@@ -26,10 +26,7 @@ from scipy.sparse import csr_matrix, csc_matrix
 
 from ._tools import ffi, lib
 
-def produce_autoencoder_examples(X, active_output, accumulation, number_of_ta_chunks, append_negated=True):
-	X_csr = csr_matrix(X)
-	X_csc = X_csr.tocsc().sorted_indices()
-
+def produce_autoencoder_examples(X_csr, X_csc, active_output, accumulation, number_of_ta_chunks, append_negated=True):
 	encoded_X = np.ascontiguousarray(np.empty(int(number_of_ta_chunks*active_output.shape[0]), dtype=np.uint32))
 	Y = np.ascontiguousarray(np.empty(int(active_output.shape[0]), dtype=np.uint32))
 
