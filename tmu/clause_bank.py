@@ -188,3 +188,6 @@ class ClauseBank():
 
 	def prepare_X(self, X):		
 		return tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim, self.patch_dim, 0)
+
+	def prepare_autoencoder_examples(self, X, active_output, accumulation):	
+		return tmu.tools.produce_autoencoder_examples(X, active_output, accumulation, self.number_of_ta_chunks)
