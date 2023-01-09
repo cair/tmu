@@ -25,6 +25,11 @@ https://arxiv.org/abs/1905.09688
 
 */
 
+#ifdef _MSC_VER
+#  include <intrin.h>
+#  define __builtin_popcount __popcnt
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -33,6 +38,8 @@ https://arxiv.org/abs/1905.09688
 #include "fast_rand.h"
 
 #include "ClauseBank.h"
+
+
 
 static inline void cb_initialize_random_streams(unsigned int *feedback_to_ta, int number_of_literals, int number_of_ta_chunks, float s)
 {
