@@ -25,4 +25,5 @@ https://arxiv.org/abs/1905.09688
 
 */
 
+void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of_active_outputs, unsigned int *indptr_row, unsigned int *indices_row, int number_of_rows, unsigned int *indptr_col, unsigned int *indices_col, int number_of_cols, unsigned int *encoded_X, unsigned int *Y, int accumulation, int append_negated);
 void tmu_encode(unsigned int *X, unsigned int *encoded_X, int number_of_examples, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features);

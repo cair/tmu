@@ -653,8 +653,10 @@ class TMAutoEncoder(TMBasis):
 			average_absolute_weights /= self.number_of_classes
 			update_clause = np.random.random(self.number_of_clauses) <= (self.T - np.clip(average_absolute_weights, 0, self.T))/self.T
 
+			Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X, self.output_active, self.accumulation)
 			for i in class_index:
-				(target, encoded_X) = self.produce_example(i, X_csc, X_csr)
+				(target, encoded_X) = Yu[i], Xu[i].reshape((1,-1))
+
 				ta_chunk = self.output_active[i] // 32
 				chunk_pos = self.output_active[i] % 32
 				copy_literal_active_ta_chunk = literal_active[ta_chunk]
