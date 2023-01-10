@@ -18,7 +18,7 @@ number_of_examples = 2000
 accumulation = 25
 
 factor = 4
-clauses = int(factor*20/(1.0 - clause_drop_p))
+clauses = int(factor*20)
 T = factor*40
 s = 5.0
 
