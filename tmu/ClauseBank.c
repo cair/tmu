@@ -25,6 +25,11 @@ https://arxiv.org/abs/1905.09688
 
 */
 
+#ifdef _MSC_VER
+#  include <intrin.h>
+#  define __builtin_popcount __popcnt
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
