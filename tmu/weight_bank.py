@@ -21,26 +21,27 @@
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
 
-from ._wb import ffi, lib
+from _wb import ffi, lib
 
 import numpy as np
 
-class WeightBank():
-	def __init__(self, weights):
-		self.number_of_clauses = weights.shape[0]
 
-		self.weights = np.ascontiguousarray(weights, dtype=np.int32)
-		self.cw_p = ffi.cast("int *", self.weights.ctypes.data)
+class WeightBank:
+    def __init__(self, weights):
+        self.number_of_clauses = weights.shape[0]
 
-	def increment(self, clause_output, update_p, clause_active, positive_weights):
-		co_p = ffi.cast("unsigned int *", clause_output.ctypes.data)
-		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
-		lib.wb_increment(self.cw_p, self.number_of_clauses, co_p, update_p, ca_p, int(positive_weights))
+        self.weights = np.ascontiguousarray(weights, dtype=np.int32)
+        self.cw_p = ffi.cast("int *", self.weights.ctypes.data)
 
-	def decrement(self, clause_output, update_p, clause_active, negative_weights):
-		co_p = ffi.cast("unsigned int *", clause_output.ctypes.data)
-		ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
-		lib.wb_decrement(self.cw_p, self.number_of_clauses, co_p, update_p, ca_p, int(negative_weights))
+    def increment(self, clause_output, update_p, clause_active, positive_weights):
+        co_p = ffi.cast("unsigned int *", clause_output.ctypes.data)
+        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        lib.wb_increment(self.cw_p, self.number_of_clauses, co_p, update_p, ca_p, int(positive_weights))
 
-	def get_weights(self):
-		return self.weights
+    def decrement(self, clause_output, update_p, clause_active, negative_weights):
+        co_p = ffi.cast("unsigned int *", clause_output.ctypes.data)
+        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        lib.wb_decrement(self.cw_p, self.number_of_clauses, co_p, update_p, ca_p, int(negative_weights))
+
+    def get_weights(self):
+        return self.weights

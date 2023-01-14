@@ -36,5 +36,5 @@ setup(
         "./tmu/tools_extension_build.py:ffibuilder",
         "./tmu/weight_bank_extension_build.py:ffibuilder"
     ],
-    install_requires=["cffi>=1.0.0"],
+    install_requires=["cffi>=1.0.0", "numpy", "scipy"],
 )
