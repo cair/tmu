@@ -1,5 +1,5 @@
 import abc
-from typing import Tuple, Any
+from typing import Dict
 
 import numpy as np
 
@@ -14,7 +14,7 @@ class TMUDataset:
         raise NotImplementedError("You should override def threshold()")
 
     @abc.abstractmethod
-    def retrieve_dataset(self) -> dict[str, np.ndarray]:
+    def retrieve_dataset(self) -> Dict[str, np.ndarray]:
         raise NotImplementedError("You should override def retrieve_dataset()")
 
     def get(self):
@@ -25,7 +25,7 @@ class TMUDataset:
 
 
 class MNIST(TMUDataset):
-    def retrieve_dataset(self) -> dict[str, np.ndarray]:
+    def retrieve_dataset(self) -> Dict[str, np.ndarray]:
         from keras.datasets import mnist
         (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
         return dict(
@@ -38,6 +38,6 @@ class MNIST(TMUDataset):
     def booleanizer(self, name, dataset):
         if name.startswith("y"):
             return dataset
-        
+
         return np.where(dataset.reshape((dataset.shape[0], 28*28)) > 75, 1, 0)
 
