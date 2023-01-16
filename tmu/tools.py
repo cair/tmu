@@ -24,7 +24,7 @@
 import numpy as np
 from scipy.sparse import csr_matrix, csc_matrix
 
-from ._tools import ffi, lib
+from tmu.tmulib import ffi, lib
 
 def produce_autoencoder_examples(X_csr, X_csc, active_output, accumulation, number_of_ta_chunks, append_negated=True):
 	encoded_X = np.ascontiguousarray(np.empty(int(number_of_ta_chunks*active_output.shape[0]), dtype=np.uint32))

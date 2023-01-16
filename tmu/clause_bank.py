@@ -21,7 +21,7 @@
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
 
-from _cb import ffi, lib
+from tmu.tmulib import ffi, lib
 
 import numpy as np
 

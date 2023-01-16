@@ -17,9 +17,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from clause_bank import ClauseBank
-from models.base import TMBasis
-from weight_bank import WeightBank
+from tmu.clause_bank import ClauseBank
+from tmu.models.base import TMBasis
+from tmu.weight_bank import WeightBank
 import numpy as np
 import tmu.tools
 
