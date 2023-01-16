@@ -29,6 +29,6 @@ setup(
                      'TMU is written in Python with wrappers for C and CUDA-based clause evaluation and updating.',
     packages=find_packages(),
     cffi_modules=[
-        "tmu/tmulib/tmulib_extension_build.py:ffibuilder"
+        "tmu/lib/tmulib_extension_build.py:ffibuilder"
     ],
 )
