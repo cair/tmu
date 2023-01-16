@@ -31,4 +31,7 @@ setup(
     cffi_modules=[
         "tmu/lib/tmulib_extension_build.py:ffibuilder"
     ],
+    install_requires=[
+        "cffi>=1.0.0"
+    ]
 )
