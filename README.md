@@ -7,8 +7,8 @@ The TMU repository is a collection of Tsetlin Machine implementations, namely:
 * Convolutional Tsetlin Machine (https://arxiv.org/abs/1905.09688)
 * Regression Tsetlin Machine (https://royalsocietypublishing.org/doi/full/10.1098/rsta.2019.0165)
 * Weighted Tsetlin Machine (https://ieeexplore.ieee.org/document/9316190)
-* Multi-task classifier (to be published)
 * Autoencoder (https://arxiv.org/abs/2301.00709)
+* Multi-task classifier (to be published)
 * One-vs-one multi-class classifier (to be published).
 
 Further, we implement many TM features, including:
