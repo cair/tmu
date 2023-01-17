@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Ole-Christoffer Granmo
+# Copyright (c) 2023 Ole-Christoffer Granmo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
