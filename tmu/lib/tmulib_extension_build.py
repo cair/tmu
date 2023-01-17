@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Ole-Christoffer Granmo
+# Copyright (c) 2023 Ole-Christoffer Granmo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,27 @@
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
 
-from tmu.tmulib import ffi, lib
+from cffi import FFI
+import pathlib
 
-import numpy as np
+current_dir = pathlib.Path(__file__).parent
+source_dir = current_dir.joinpath("src")
+header_dir = current_dir.joinpath("include")
 
+HEADERS = ["ClauseBank.h", "Tools.h", "WeightBank.h"]
+SOURCES = ["ClauseBank.c", "Tools.c", "WeightBank.c"]
 
-class WeightBank:
-    def __init__(self, weights):
-        self.number_of_clauses = weights.shape[0]
+header_content = '\n'.join([header_dir.joinpath(x).open("r").read() for x in HEADERS])
+source_content = '\n'.join([source_dir.joinpath(x).open("r").read() for x in SOURCES])
 
-        self.weights = np.ascontiguousarray(weights, dtype=np.int32)
-        self.cw_p = ffi.cast("int *", self.weights.ctypes.data)
+ffibuilder = FFI()
+ffibuilder.cdef(header_content)
+ffibuilder.set_source(
+    "tmu.tmulib",
+    source_content,
+    include_dirs=[header_dir.absolute()],
+    extra_compile_args=["-O3"]
+)
 
-    def increment(self, clause_output, update_p, clause_active, positive_weights):
-        co_p = ffi.cast("unsigned int *", clause_output.ctypes.data)
-        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
-        lib.wb_increment(self.cw_p, self.number_of_clauses, co_p, update_p, ca_p, int(positive_weights))
-
-    def decrement(self, clause_output, update_p, clause_active, negative_weights):
-        co_p = ffi.cast("unsigned int *", clause_output.ctypes.data)
-        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
-        lib.wb_decrement(self.cw_p, self.number_of_clauses, co_p, update_p, ca_p, int(negative_weights))
-
-    def get_weights(self):
-        return self.weights
+if __name__ == "__main__":
+    ffibuilder.compile(verbose=True)

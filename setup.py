@@ -1,13 +1,12 @@
-import os
-import sys
 
+from pathlib import Path
 from setuptools import setup, find_packages
 
-os.chdir(os.path.dirname(sys.argv[0]) or ".")
+current_dir = Path(__file__).parent
 
 setup(
     name='tmu',
-    version='0.7.1',
+    version='0.7.2',
     url='https://github.com/cair/tmu/',
     author='Ole-Christoffer Granmo',
     author_email='ole.granmo@uia.no',
@@ -28,13 +27,11 @@ setup(
                      'autoencoder (https://arxiv.org/abs/2301.00709), literal budget (to be published), incremental '
                      'clause evaluation (to be published), and one-vs-one multi-class classifier (to be published). '
                      'TMU is written in Python with wrappers for C and CUDA-based clause evaluation and updating.',
-
-    setup_requires=["cffi>=1.0.0"],
     packages=find_packages(),
     cffi_modules=[
-        "./tmu/clause_bank_extension_build.py:ffibuilder",
-        "./tmu/tools_extension_build.py:ffibuilder",
-        "./tmu/weight_bank_extension_build.py:ffibuilder"
+        "tmu/lib/tmulib_extension_build.py:ffibuilder"
     ],
-    install_requires=["cffi>=1.0.0"],
+    install_requires=[
+        "cffi>=1.0.0"
+    ]
 )

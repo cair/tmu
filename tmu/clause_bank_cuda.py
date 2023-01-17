@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Ole-Christoffer Granmo
+# Copyright (c) 2023 Ole-Christoffer Granmo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
 
-from ._cb import ffi, lib
+from tmu.tmulib import ffi, lib
 
 import numpy as np
 
