@@ -19,12 +19,13 @@
 # SOFTWARE.
 from tmu.clause_bank import ClauseBank
 from tmu.models.base import TMBasis
+from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
 import numpy as np
 import tmu.tools
 
 
-class TMClassifier(TMBasis):
+class TMClassifier(TMBaseClassifier):
     def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio=1.0,
                  type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True,
                  boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8,
@@ -39,16 +40,7 @@ class TMClassifier(TMBasis):
                          clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, batch_size=batch_size,
                          incremental=incremental)
 
-    def initialize(self, X, Y):
-        self.number_of_classes = int(np.max(Y) + 1)
-
-        self.weight_banks = []
-        for i in range(self.number_of_classes):
-            self.weight_banks.append(WeightBank(np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
-                                                                -1 * np.ones(self.number_of_clauses // 2,
-                                                                             dtype=np.int32)))))
-
-        self.clause_banks = []
+    def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
         if self.platform == 'CPU':
             for i in range(self.number_of_classes):
                 self.clause_banks.append(
@@ -62,18 +54,28 @@ class TMClassifier(TMBasis):
         else:
             raise RuntimeError(f"Unknown platform of type: {self.platform}")
 
+    def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
+        self.weight_banks = []
+        for i in range(self.number_of_classes):
+            self.weight_banks.append(WeightBank(np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
+                                                                -1 * np.ones(self.number_of_clauses // 2,
+                                                                             dtype=np.int32)))))
+
+    def init_after(self, X: np.ndarray, Y: np.ndarray):
         if self.max_included_literals == None:
             self.max_included_literals = self.clause_banks[0].number_of_literals
 
         self.positive_clauses = np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
                                                 np.zeros(self.number_of_clauses // 2, dtype=np.int32)))
+
         self.negative_clauses = np.concatenate((np.zeros(self.number_of_clauses // 2, dtype=np.int32),
                                                 np.ones(self.number_of_clauses // 2, dtype=np.int32)))
 
+    def init_num_classes(self, X: np.ndarray, Y: np.ndarray):
+        return int(np.max(Y) + 1)
+
     def fit(self, X, Y, shuffle=True):
-        if self.initialized == False:
-            self.initialize(X, Y)
-            self.initialized = True
+        self.init(X, Y)
 
         if not np.array_equal(self.X_train, X):
             self.encoded_X_train = self.clause_banks[0].prepare_X(X)
@@ -199,6 +201,7 @@ class TMClassifier(TMBasis):
         return transformed_X.reshape((X.shape[0], self.number_of_classes * self.number_of_clauses))
 
     def transform_patchwise(self, X):
+        # TODO - This needs to be fixed.
         encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim,
                                      self.patch_dim, 0)
         transformed_X = np.empty(
@@ -240,8 +243,13 @@ class TMClassifier(TMBasis):
         return literal_frequency
 
     def clause_precision(self, the_class, polarity, X, Y):
-        clause_outputs = self.transform(X).reshape(X.shape[0], self.number_of_classes, 2, self.number_of_clauses // 2)[
-                         :, the_class, polarity, :]
+        clause_outputs = self.transform(X).reshape(
+            X.shape[0],
+            self.number_of_classes,
+            2,
+            self.number_of_clauses // 2
+        )[:, the_class, polarity, :]
+
         if polarity == 0:
             true_positive_clause_outputs = clause_outputs[Y == the_class].sum(axis=0)
             false_positive_clause_outputs = clause_outputs[Y != the_class].sum(axis=0)
@@ -252,8 +260,13 @@ class TMClassifier(TMBasis):
                         true_positive_clause_outputs / (true_positive_clause_outputs + false_positive_clause_outputs))
 
     def clause_recall(self, the_class, polarity, X, Y):
-        clause_outputs = self.transform(X).reshape(X.shape[0], self.number_of_classes, 2, self.number_of_clauses // 2)[
-                         :, the_class, polarity, :]
+        clause_outputs = self.transform(X).reshape(
+            X.shape[0],
+            self.number_of_classes,
+            2,
+            self.number_of_clauses // 2
+        )[:, the_class, polarity, :]
+
         if polarity == 0:
             true_positive_clause_outputs = clause_outputs[Y == the_class].sum(axis=0) / Y[Y == the_class].shape[0]
         else:
@@ -261,34 +274,27 @@ class TMClassifier(TMBasis):
         return true_positive_clause_outputs
 
     def get_weight(self, the_class, polarity, clause):
-        if polarity == 0:
-            return self.weight_banks[the_class].get_weights()[clause]
-        else:
-            return self.weight_banks[the_class].get_weights()[self.number_of_clauses // 2 + clause]
+        polarized_clause = self._get_polarized_clause_index(clause, polarity)
+        return self.weight_banks[the_class].get_weights()[polarized_clause]
 
     def set_weight(self, the_class, polarity, clause, weight):
-        if polarity == 0:
-            self.weight_banks[the_class].get_weights()[clause] = weight
-        else:
-            self.weight_banks[the_class].get_weights()[self.number_of_clauses // 2 + clause] = weight
+        polarized_clause = self._get_polarized_clause_index(clause, polarity)
+        self.weight_banks[the_class].get_weights()[polarized_clause] = weight
 
-    def get_ta_action(self, the_class, polarity, clause, ta):
-        if polarity == 0:
-            return self.clause_banks[the_class].get_ta_action(clause, ta)
-        else:
-            return self.clause_banks[the_class].get_ta_action(self.number_of_clauses // 2 + clause, ta)
+    def get_ta_action(self, clause, ta, the_class=None, polarity=0):
+        self.clause_banks[the_class].get_ta_action(
+            self._get_polarized_clause_index(clause, polarity), ta)
 
-    def get_ta_state(self, the_class, polarity, clause, ta):
-        if polarity == 0:
-            return self.clause_banks[the_class].get_ta_state(clause, ta)
-        else:
-            return self.clause_banks[the_class].get_ta_state(self.number_of_clauses // 2 + clause, ta)
+    def get_ta_state(self, clause, ta, the_class=None, polarity=None):
+        self.clause_banks[the_class].get_ta_state(
+            self._get_polarized_clause_index(clause, polarity), ta)
 
-    def set_ta_state(self, the_class, polarity, clause, ta, state):
-        if polarity == 0:
-            return self.clause_banks[the_class].set_ta_state(clause, ta, state)
-        else:
-            return self.clause_banks[the_class].set_ta_state(self.number_of_clauses // 2 + clause, ta, state)
+    def set_ta_state(self, clause, ta, state, the_class=None, polarity=0):
+        self.clause_banks[the_class].set_ta_state(
+            self._get_polarized_clause_index(clause, polarity), ta, state)
 
     def number_of_include_actions(self, the_class, clause):
         return self.clause_banks[the_class].number_of_include_actions(clause)
+
+    def _get_polarized_clause_index(self, clause, polarity):
+        return clause if polarity == 0 else self.number_of_clauses // 2 + clause
