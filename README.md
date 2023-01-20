@@ -14,9 +14,9 @@ The TMU repository is a collection of Tsetlin Machine implementations, namely:
 Further, we implement many TM features, including:
 * Support for continuous features (https://arxiv.org/abs/1905.04199)
 * Drop clause (https://arxiv.org/abs/2105.14506)
-* Type III Feedback (to be published)
+* Literal budget (https://arxiv.org/abs/2301.08190)
 * Focused negative sampling (https://ieeexplore.ieee.org/document/9923859)
-* Literal budget (to be published)
+* Type III Feedback (to be published)
 * Incremental clause evaluation (to be published)
 
 TMU is written in Python with wrappers for C and CUDA-based clause evaluation and updating.
