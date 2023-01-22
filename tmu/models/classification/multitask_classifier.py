@@ -68,31 +68,17 @@ class TMMultiTaskClassifier(TMBasis):
         for i in range(self.number_of_classes):
             X_csr[i] = csr_matrix(X[i].reshape(X[i].shape[0], -1))
 
-        # Clauses are dropped based on their weights
-        self.clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
-        clause_score = np.zeros(self.number_of_clauses, dtype=np.int32)
-        for i in range(self.number_of_classes):
-            clause_score += np.abs(self.weight_banks[i].get_weights())
-        deactivate = np.random.choice(np.arange(self.number_of_clauses),
-                                      size=int(self.number_of_clauses * self.clause_drop_p),
-                                      p=clause_score / clause_score.sum())
-        for d in range(deactivate.shape[0]):
-            self.clause_active[deactivate[d]] = 0
+        # Drops clauses randomly based on clause drop probability
+        self.clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
-        # Literals are dropped based on their frequency
-        self.literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
-        literal_clause_frequency = self.literal_clause_frequency()
-        if literal_clause_frequency.sum() > 0:
-            deactivate = np.random.choice(np.arange(self.clause_bank.number_of_literals),
-                                          size=int(self.clause_bank.number_of_literals * self.literal_drop_p),
-                                          p=literal_clause_frequency / literal_clause_frequency.sum())
-        else:
-            deactivate = np.random.choice(np.arange(self.clause_bank.number_of_literals),
-                                          size=int(self.clause_bank.number_of_literals * self.literal_drop_p))
-        for d in range(deactivate.shape[0]):
-            ta_chunk = deactivate[d] // 32
-            chunk_pos = deactivate[d] % 32
-            self.literal_active[ta_chunk] &= (~(1 << chunk_pos))
+        # Literals are dropped based on literal drop probability
+        self.literal_active = np.zeros(self.clause_banks[0].number_of_ta_chunks, dtype=np.uint32)
+        literal_active_integer = np.random.rand(self.clause_banks[0].number_of_literals) >= self.literal_drop_p
+        for k in range(self.clause_banks[0].number_of_literals):
+            if literal_active_integer[k] == 1:
+                ta_chunk = k // 32
+                chunk_pos = k % 32
+                self.literal_active[ta_chunk] |= (1 << chunk_pos)
 
         if not self.feature_negation:
             for k in range(self.clause_bank.number_of_literals // 2, self.clause_bank.number_of_literals):
