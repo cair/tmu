@@ -105,24 +105,20 @@ class TMAutoEncoder(TMBasis):
         return
 
     def activate_clauses(self):
-        # Clauses are dropped based on their weights
-        clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
-        deactivate = np.random.choice(self.number_of_clauses, size=int(self.number_of_clauses * self.clause_drop_p))
-        for d in range(deactivate.shape[0]):
-            clause_active[deactivate[d]] = 0
+        # Drops clauses randomly based on clause drop probability
+        clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
-        return clause_active
+        return clause_active 
 
     def activate_literals(self):
-        # Literals are dropped based on their frequency
-        literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
-        literal_clause_frequency = self.literal_clause_frequency()
-        deactivate = np.random.choice(self.clause_bank.number_of_literals,
-                                      size=int(self.clause_bank.number_of_literals * self.literal_drop_p))
-        for d in range(deactivate.shape[0]):
-            ta_chunk = deactivate[d] // 32
-            chunk_pos = deactivate[d] % 32
-            literal_active[ta_chunk] &= (~(1 << chunk_pos))
+        # Literals are dropped based on literal drop probability
+        literal_active = np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32)
+        literal_active_integer = np.random.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
+        for k in range(self.clause_bank.number_of_literals):
+            if literal_active_integer[k] == 1:
+                ta_chunk = k // 32
+                chunk_pos = k % 32
+                literal_active[ta_chunk] |= (1 << chunk_pos)
 
         if not self.feature_negation:
             for k in range(self.clause_bank.number_of_literals // 2, self.clause_bank.number_of_literals):
@@ -131,7 +127,7 @@ class TMAutoEncoder(TMBasis):
                 literal_active[ta_chunk] &= (~(1 << chunk_pos))
         literal_active = literal_active.astype(np.uint32)
 
-        return (literal_active)
+        return literal_active
 
     def fit(self, X, number_of_examples=2000, shuffle=True):
         if self.initialized == False:
