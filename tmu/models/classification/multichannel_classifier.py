@@ -80,9 +80,9 @@ class TMMultiChannelClassifier(TMBasis):
         clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
         # Literals are dropped based on literal drop probability
-        literal_active = np.zeros(self.clause_banks[0].number_of_ta_chunks, dtype=np.uint32)
-        literal_active_integer = np.random.rand(self.clause_banks[0].number_of_literals) >= self.literal_drop_p
-        for k in range(self.clause_banks[0].number_of_literals):
+        literal_active = np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32)
+        literal_active_integer = np.random.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
+        for k in range(self.clause_bank.number_of_literals):
             if literal_active_integer[k] == 1:
                 ta_chunk = k // 32
                 chunk_pos = k % 32
