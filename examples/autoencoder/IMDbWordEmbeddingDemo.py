@@ -17,12 +17,8 @@ clause_weight_threshold = 0
 number_of_examples = 2000
 accumulation = 25
 
-type_i_ii_ratio = 1.0
-
-clause_drop_p = 0.0
-
 factor = 4
-clauses = int(factor*20/(1.0 - clause_drop_p))
+clauses = factor*20
 T = factor*40
 s = 5.0
 
@@ -81,7 +77,7 @@ for i in range(len(target_words)):
 	target_id = vectorizer_X.vocabulary_[target_word]
 	output_active[i] = target_id
 
-tm = TMAutoEncoder(clauses, T, s, output_active, max_included_literals=3, type_i_ii_ratio=type_i_ii_ratio, accumulation=accumulation, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', output_balancing=True)
+tm = TMAutoEncoder(clauses, T, s, output_active, max_included_literals=3, accumulation=accumulation, feature_negation=False, platform='CPU', output_balancing=True)
 
 print("\nAccuracy Over 40 Epochs:")
 for e in range(40):
