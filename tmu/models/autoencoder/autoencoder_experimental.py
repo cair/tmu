@@ -28,7 +28,7 @@ class TMAutoEncoder(TMBasis):
                  type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0,
                  platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1,
                  max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8,
-                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0):
+                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0, incremental=True):
         self.output_active = output_active
         self.accumulation = accumulation
         super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
@@ -37,13 +37,13 @@ class TMAutoEncoder(TMBasis):
                          boost_true_positive_feedback=boost_true_positive_feedback,
                          max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
                          number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
-                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p)
+                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, incremental=incremental)
 
     def initialize(self, X):
         self.number_of_classes = self.output_active.shape[0]
         if self.platform == 'CPU':
             self.clause_bank = ClauseWeightBank(X, self.number_of_classes, self.number_of_clauses, self.number_of_state_bits_ta,
-                                          self.number_of_state_bits_ind, self.patch_dim, batch_size=self.number_of_classes, incremental=True)
+                                          self.number_of_state_bits_ind, self.patch_dim, batch_size=self.number_of_classes, incremental=self.incremental)
         else:
             raise RuntimeError(f"Unknown platform of type: {self.platform}")
 
