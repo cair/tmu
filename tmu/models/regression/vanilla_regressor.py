@@ -59,7 +59,10 @@ class TMRegressor(TMBasis):
         if not np.array_equal(self.X_train, X):
             self.encoded_X_train = self.clause_bank.prepare_X(X)
             self.X_train = X.copy()
-        encoded_Y = np.ascontiguousarray(((Y - self.min_y) / (self.max_y - self.min_y) * self.T).astype(np.int32))
+        if (self.max_y - self.min_y) == 0:
+            encoded_Y = np.ascontiguousarray(np.zeros(Y.shape[0], dtype=np.int32))
+        else:
+            encoded_Y = np.ascontiguousarray(((Y - self.min_y) / (self.max_y - self.min_y) * self.T).astype(np.int32))
 
         # Drops clauses randomly based on clause drop probability
         clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
