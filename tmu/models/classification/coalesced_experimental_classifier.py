@@ -27,7 +27,7 @@ class TMCoalescedClassifier(TMBasis):
                  focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None,
                  feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None,
                  number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p=0.0,
-                 literal_drop_p=0.0, incremental=False, batch_size=1):
+                 literal_drop_p=0.0, incremental=True, batch_size=1000):
         super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
                          focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d,
                          platform=platform, patch_dim=patch_dim, feature_negation=feature_negation,
