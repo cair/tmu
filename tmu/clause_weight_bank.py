@@ -211,7 +211,7 @@ class ClauseWeightBank:
 
     def type_i_and_ii_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
                         literal_active, encoded_X, e, y, output_literal_index, autoencoder=0):
-        xi_p = ffi.cast("unsigned int *", encoded_X.ctypes.data)
+        xi_p = ffi.cast("unsigned int *", encoded_X[e,:].ctypes.data)
         ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
         la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
         up_p = ffi.cast("float *", update_p.ctypes.data)
