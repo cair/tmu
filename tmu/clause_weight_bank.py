@@ -81,6 +81,22 @@ class ClauseWeightBank:
         self.literal_clause_count = np.ascontiguousarray(np.empty((int(self.number_of_literals)), dtype=np.uint32))
         self.lcc_p = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)
 
+        self.literal_clause_map = np.ascontiguousarray(
+                np.empty((int(self.number_of_literals * self.number_of_clauses)), dtype=np.uint32))
+        self.lcm_p = ffi.cast("unsigned int *", self.literal_clause_map.ctypes.data)
+
+        self.literal_clause_map_pos = np.ascontiguousarray(
+            np.empty((int(self.number_of_literals)), dtype=np.uint32))
+        self.lcmp_p = ffi.cast("unsigned int *", self.literal_clause_map_pos.ctypes.data)
+
+        self.false_literals_per_clause = np.ascontiguousarray(
+            np.empty((int(self.number_of_clauses * self.number_of_patches)), dtype=np.uint32))
+        self.flpc_p = ffi.cast("unsigned int *", self.false_literals_per_clause.ctypes.data)
+
+        self.previous_xi = np.ascontiguousarray(
+            np.empty((int(self.number_of_ta_chunks) * int(self.number_of_patches)), dtype=np.uint32))
+        self.previous_xi_p = ffi.cast("unsigned int *", self.previous_xi.ctypes.data)
+
         self.initialize_clauses()
 
     def initialize_clauses(self):
@@ -104,11 +120,43 @@ class ClauseWeightBank:
 
         self.incremental_clause_evaluation_initialized = False
 
+    def calculate_clause_outputs(self, literal_active, encoded_X, e, update):
+        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+        la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
+
+        if not self.incremental:
+            if update:
+                lib.cwb_calculate_clause_outputs_update(self.cb_p, self.number_of_clauses, self.number_of_literals,
+                                               self.number_of_state_bits_ta, self.number_of_patches, self.co_p, la_p,
+                                               xi_p)
+            else:
+                lib.cwb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals,
+                                                    self.number_of_state_bits_ta, self.number_of_patches, self.co_p,
+                                                    xi_p)
+            return self.clause_output
+
+        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+
+        if self.incremental_clause_evaluation_initialized == False or (update and (e % self.batch_size == 0)):
+            lib.cwb_initialize_incremental_clause_calculation(self.cb_p, self.lcm_p, self.lcmp_p, self.flpc_p,
+                                                             self.number_of_clauses, self.number_of_literals,
+                                                             self.number_of_state_bits_ta, self.previous_xi_p, int(update))
+
+            self.incremental_clause_evaluation_initialized = True
+
+        if e % self.batch_size == 0:
+            lib.cwb_calculate_clause_outputs_incremental_batch(self.lcm_p, self.lcmp_p, self.flpc_p,
+                                                              self.number_of_clauses, self.number_of_literals,
+                                                              self.number_of_patches, self.cob_p, self.previous_xi_p,
+                                                              xi_p, np.minimum(self.batch_size, encoded_X.shape[0] - e))
+
+        return self.clause_output_batch.reshape((self.batch_size, self.number_of_clauses))[e % self.batch_size, :]
+
     def calculate_clause_outputs_predict(self, encoded_X, e):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
 
         if not self.incremental:
-            lib.cwb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals,
+            lib.cb_calculate_clause_outputs_predict(self.cb_p, self.number_of_clauses, self.number_of_literals,
                                                     self.number_of_state_bits_ta, self.number_of_patches, self.co_p,
                                                     xi_p)
             return self.clause_output
@@ -132,14 +180,14 @@ class ClauseWeightBank:
                 np.empty((int(self.number_of_ta_chunks) * int(self.number_of_patches)), dtype=np.uint32))
             self.previous_xi_p = ffi.cast("unsigned int *", self.previous_xi.ctypes.data)
 
-            lib.cwb_initialize_incremental_clause_calculation(self.cb_p, self.lcm_p, self.lcmp_p, self.flpc_p,
+            lib.cb_initialize_incremental_clause_calculation(self.cb_p, self.lcm_p, self.lcmp_p, self.flpc_p,
                                                              self.number_of_clauses, self.number_of_literals,
                                                              self.number_of_state_bits_ta, self.previous_xi_p)
 
             self.incremental_clause_evaluation_initialized = True
 
         if e % self.batch_size == 0:
-            lib.cwb_calculate_clause_outputs_incremental_batch(self.lcm_p, self.lcmp_p, self.flpc_p,
+            lib.cb_calculate_clause_outputs_incremental_batch(self.lcm_p, self.lcmp_p, self.flpc_p,
                                                               self.number_of_clauses, self.number_of_literals,
                                                               self.number_of_patches, self.cob_p, self.previous_xi_p,
                                                               xi_p, np.minimum(self.batch_size, encoded_X.shape[0] - e))
@@ -149,7 +197,7 @@ class ClauseWeightBank:
     def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
         la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
-        lib.cwb_calculate_clause_outputs_update(self.cb_p, self.number_of_clauses, self.number_of_literals,
+        lib.cb_calculate_clause_outputs_update(self.cb_p, self.number_of_clauses, self.number_of_literals,
                                                self.number_of_state_bits_ta, self.number_of_patches, self.co_p, la_p,
                                                xi_p)
         return self.clause_output
@@ -162,17 +210,17 @@ class ClauseWeightBank:
         return self.clause_output_patchwise
 
     def type_i_and_ii_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
-                        literal_active, encoded_X, e, y):
-        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+                        literal_active, encoded_X, e, y, output_literal_index, autoencoder=0):
+        xi_p = ffi.cast("unsigned int *", encoded_X.ctypes.data)
         ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
         la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
         up_p = ffi.cast("float *", update_p.ctypes.data)
         y_p = ffi.cast("unsigned int *", y.ctypes.data)
+        oli_p = ffi.cast("unsigned int *", output_literal_index.ctypes.data)
 
         lib.cwb_type_i_and_ii_feedback(self.cb_p, self.wb_p, self.ft_p, self.o1p_p, self.number_of_outputs, self.number_of_clauses, self.number_of_literals,
                                self.number_of_state_bits_ta, self.number_of_patches, up_p, s,
-                               boost_true_positive_feedback, max_included_literals, ca_p, la_p, xi_p, y_p)
-        self.incremental_clause_evaluation_initialized = False
+                               boost_true_positive_feedback, max_included_literals, ca_p, la_p, xi_p, y_p, oli_p, autoencoder)
 
     def type_iii_feedback(self, update_p, d, clause_active, literal_active, encoded_X, e, target):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
@@ -181,7 +229,6 @@ class ClauseWeightBank:
         lib.cwb_type_iii_feedback(self.cb_p, self.cbi_p, self.ct_p, self.o1p_p, self.number_of_clauses,
                                  self.number_of_literals, self.number_of_state_bits_ta, self.number_of_state_bits_ind,
                                  self.number_of_patches, update_p, d, ca_p, la_p, xi_p, target)
-        self.incremental_clause_evaluation_initialized = False
 
     def calculate_literal_clause_frequency(self, clause_active):
         ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)

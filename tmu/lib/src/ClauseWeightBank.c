@@ -272,8 +272,10 @@ static inline unsigned int cwb_calculate_clause_output_predict(unsigned int *ta_
 	return(0);
 }
 
-void cwb_type_i_and_ii_feedback(unsigned int *ta_state, int *weights, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_outputs, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float *update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi, unsigned int *y)
+void cwb_type_i_and_ii_feedback(unsigned int *ta_state, int *weights, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_outputs, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float *update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi_base, unsigned int *y, unsigned int *output_literal_index, int autoencoder)
 {
+	unsigned int *Xi;
+
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {
 		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
@@ -290,6 +292,15 @@ void cwb_type_i_and_ii_feedback(unsigned int *ta_state, int *weights, unsigned i
 		for (int i = 0; i < number_of_outputs; ++i) {
 			if (((float)fast_rand())/((float)FAST_RAND_MAX) > update_p[i]) {
 				continue;
+			}
+
+			int output_literal_value;
+			if (autoencoder) {
+				Xi = &Xi_base[i*number_of_ta_chunks];
+				output_literal_value = literal_active[output_literal_index[i] / 32] & (1 << (output_literal_index[i] % 32));
+				literal_active[output_literal_index[i] / 32] &= ~(1 << (output_literal_index[i] % 32));
+			} else {
+				Xi = Xi_base;
 			}
 
 			unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
@@ -315,7 +326,6 @@ void cwb_type_i_and_ii_feedback(unsigned int *ta_state, int *weights, unsigned i
 
 			 			cwb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta[k], number_of_state_bits);
 					}
-
 					weights[i*number_of_clauses + j] += (weights[i*number_of_clauses + j] >= 0) - (weights[i*number_of_clauses + j] < 0);
 				} else {
 					// Type Ib Feedback
@@ -335,6 +345,10 @@ void cwb_type_i_and_ii_feedback(unsigned int *ta_state, int *weights, unsigned i
 					}
 					weights[i*number_of_clauses + j] -= (weights[i*number_of_clauses + j] >= 0) - (weights[i*number_of_clauses + j] < 0);
 				}
+			}
+
+			if (autoencoder) {
+				literal_active[output_literal_index[i] / 32] |= output_literal_value;
 			}
 		}
 	}
@@ -438,7 +452,7 @@ void cwb_calculate_clause_outputs_predict(unsigned int *ta_state, int number_of_
 	}
 }
 
-void cwb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsigned int *literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *previous_Xi)
+void cwb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsigned int *literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *previous_Xi, int update)
 {
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {
@@ -480,10 +494,12 @@ void cwb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsig
 		literal_clause_map_pos[k] = pos;
 	}
 
-	// Make empty clauses false
-	for (int j = 0; j < number_of_clauses; ++j) {
-		if (false_literals_per_clause[j] == 0) {
-			false_literals_per_clause[j] = 1;
+	if (!update) {
+		// Make empty clauses false
+		for (int j = 0; j < number_of_clauses; ++j) {
+			if (false_literals_per_clause[j] == 0) {
+				false_literals_per_clause[j] = 1;
+			}
 		}
 	}
 }
