@@ -45,7 +45,7 @@ class TMMultiTaskClassifier(TMBasis):
             self.clause_bank = ClauseBank(X[0], self.number_of_clauses, self.number_of_state_bits_ta,
                                           self.number_of_state_bits_ind, self.patch_dim)
         elif self.platform == 'CUDA':
-            from tmu.clause_bank_cuda import ClauseBankCUDA
+            from clause_bank.clause_bank_cuda import ClauseBankCUDA
             self.clause_bank = ClauseBankCUDA(X[0], self.number_of_clauses, self.number_of_state_bits_ta,
                                               self.patch_dim)
         else:

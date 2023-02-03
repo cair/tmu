@@ -25,12 +25,18 @@ from tmu.tmulib import ffi, lib
 
 import numpy as np
 
+from tools import CFFISerializable
 
-class WeightBank:
+
+class WeightBank(CFFISerializable):
+
+
     def __init__(self, weights):
         self.number_of_clauses = weights.shape[0]
-
         self.weights = np.ascontiguousarray(weights, dtype=np.int32)
+        self._cffi_init()
+
+    def _cffi_init(self):
         self.cw_p = ffi.cast("int *", self.weights.ctypes.data)
 
     def increment(self, clause_output, update_p, clause_active, positive_weights):

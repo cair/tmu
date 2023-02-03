@@ -1,5 +1,4 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
-
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -17,20 +16,33 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from tmu.clause_bank import ClauseBank
-from tmu.models.base import TMBasis
+from tmu.clause_bank.clause_bank_cuda import ClauseBank, ClauseBankCUDA
 from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
 import numpy as np
 import tmu.tools
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TMClassifier(TMBaseClassifier):
-    def __init__(self, number_of_clauses, T, s, confidence_driven_updating=False, type_i_ii_ratio=1.0,
-                 type_iii_feedback=False, d=200.0, platform='CPU', patch_dim=None, feature_negation=True,
-                 boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8,
-                 number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0,
-                 batch_size=100, incremental=True):
+    def __init__(
+            self,
+            number_of_clauses,
+            T,
+            s,
+            confidence_driven_updating=False,
+            type_i_ii_ratio=1.0,
+            type_iii_feedback=False,
+            d=200.0,
+            platform='CPU',
+            patch_dim=None, feature_negation=True,
+            boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8,
+            number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0,
+            batch_size=100,
+            incremental=True
+    ):
         super().__init__(number_of_clauses, T, s, confidence_driven_updating=confidence_driven_updating,
                          type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback, d=d, platform=platform,
                          patch_dim=patch_dim, feature_negation=feature_negation,
@@ -41,28 +53,38 @@ class TMClassifier(TMBaseClassifier):
                          incremental=incremental)
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
-        if self.platform == 'CPU':
-            for i in range(self.number_of_classes):
-                self.clause_banks.append(
-                    ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind,
-                               self.patch_dim, batch_size=self.batch_size, incremental=self.incremental))
-        elif self.platform == 'CUDA':
-            from tmu.clause_bank_cuda import ClauseBankCUDA
-            for i in range(self.number_of_classes):
-                self.clause_banks.append(
-                    ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim))
-        else:
-            raise RuntimeError(f"Unknown platform of type: {self.platform}")
+        _LOGGER.debug("Initializing clause bank....")
+        platforms = {
+            "CPU": lambda: ClauseBank(
+                X=X,
+                number_of_clauses=self.number_of_clauses,
+                number_of_state_bits_ta=self.number_of_state_bits_ta,
+                number_of_state_bits_ind=self.number_of_state_bits_ind,
+                patch_dim=self.patch_dim,
+                batch_size=self.batch_size,
+                incremental=self.incremental
+            ),
+            "GPU": lambda: ClauseBankCUDA(
+                X=X,
+                number_of_clauses=self.number_of_clauses,
+                number_of_state_bits_ta=self.number_of_state_bits_ta,
+                patch_dim=self.patch_dim
+            )
+        }
+
+        assert self.platform in platforms, f"Could not find platform of type {self.platform}. Supports: {list(platforms.keys())}"
+
+        for i in range(self.number_of_classes):
+            self.clause_banks.append(platforms[self.platform]())
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
-        self.weight_banks = []
         for i in range(self.number_of_classes):
             self.weight_banks.append(WeightBank(np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
                                                                 -1 * np.ones(self.number_of_clauses // 2,
                                                                              dtype=np.int32)))))
 
     def init_after(self, X: np.ndarray, Y: np.ndarray):
-        if self.max_included_literals == None:
+        if self.max_included_literals is None:
             self.max_included_literals = self.clause_banks[0].number_of_literals
 
         self.positive_clauses = np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
@@ -124,27 +146,56 @@ class TMClassifier(TMBaseClassifier):
 
             if self.weighted_clauses:
                 self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
-            self.clause_banks[target].type_i_feedback(update_p * self.type_i_p, self.s,
-                                                      self.boost_true_positive_feedback, self.max_included_literals,
-                                                      clause_active[target] * self.positive_clauses, literal_active,
-                                                      self.encoded_X_train, e)
-            self.clause_banks[target].type_ii_feedback(update_p * self.type_ii_p,
-                                                       clause_active[target] * self.negative_clauses, literal_active,
-                                                       self.encoded_X_train, e)
+
+            self.clause_banks[target].type_i_feedback(
+                update_p=update_p * self.type_i_p,
+                s=self.s,
+                boost_true_positive_feedback=self.boost_true_positive_feedback,
+                max_included_literals=self.max_included_literals,
+                clause_active=clause_active[target] * self.positive_clauses,
+                literal_active=literal_active,
+                encoded_X=self.encoded_X_train,
+                e=e
+            )
+
+            self.clause_banks[target].type_ii_feedback(
+                update_p=update_p * self.type_ii_p,
+                clause_active=clause_active[target] * self.negative_clauses,
+                literal_active=literal_active,
+                encoded_X=self.encoded_X_train,
+                e=e
+            )
+
             if self.type_iii_feedback:
-                self.clause_banks[target].type_iii_feedback(update_p, self.d,
-                                                            clause_active[target] * self.positive_clauses,
-                                                            literal_active, self.encoded_X_train, e, 1)
-                self.clause_banks[target].type_iii_feedback(update_p, self.d,
-                                                            clause_active[target] * self.negative_clauses,
-                                                            literal_active, self.encoded_X_train, e, 0)
+                self.clause_banks[target].type_iii_feedback(
+                    update_p=update_p,
+                    d=self.d,
+                    clause_active=clause_active[target] * self.positive_clauses,
+                    literal_active=literal_active,
+                    encoded_X=self.encoded_X_train,
+                    e=e,
+                    target=1
+                )
+
+                self.clause_banks[target].type_iii_feedback(
+                    update_p=update_p,
+                    d=self.d,
+                    clause_active=clause_active[target] * self.negative_clauses,
+                    literal_active=literal_active,
+                    encoded_X=self.encoded_X_train,
+                    e=e,
+                    target=0
+                )
 
             not_target = np.random.randint(self.number_of_classes)
             while not_target == target:
                 not_target = np.random.randint(self.number_of_classes)
 
-            clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(literal_active,
-                                                                                           self.encoded_X_train, e)
+            clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(
+                literal_active,
+                self.encoded_X_train,
+                e
+            )
             class_sum = np.dot(clause_active[not_target] * self.weight_banks[not_target].get_weights(),
                                clause_outputs).astype(np.int32)
             class_sum = np.clip(class_sum, -self.T, self.T)
@@ -156,20 +207,46 @@ class TMClassifier(TMBaseClassifier):
 
             if self.weighted_clauses:
                 self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active[not_target], False)
-            self.clause_banks[not_target].type_i_feedback(update_p * self.type_i_p, self.s,
-                                                          self.boost_true_positive_feedback, self.max_included_literals,
-                                                          clause_active[not_target] * self.negative_clauses,
-                                                          literal_active, self.encoded_X_train, e)
-            self.clause_banks[not_target].type_ii_feedback(update_p * self.type_ii_p,
-                                                           clause_active[not_target] * self.positive_clauses,
-                                                           literal_active, self.encoded_X_train, e)
+
+            self.clause_banks[not_target].type_i_feedback(
+                update_p=update_p * self.type_i_p,
+                s=self.s,
+                boost_true_positive_feedback=self.boost_true_positive_feedback,
+                max_included_literals=self.max_included_literals,
+                clause_active=clause_active[not_target] * self.negative_clauses,
+                literal_active=literal_active,
+                encoded_X=self.encoded_X_train,
+                e=e
+            )
+
+            self.clause_banks[not_target].type_ii_feedback(
+                update_p=update_p * self.type_ii_p,
+                clause_active=clause_active[not_target] * self.positive_clauses,
+                literal_active=literal_active,
+                encoded_X=self.encoded_X_train,
+                e=e
+            )
+
             if self.type_iii_feedback:
-                self.clause_banks[not_target].type_iii_feedback(update_p, self.d,
-                                                                clause_active[not_target] * self.negative_clauses,
-                                                                literal_active, self.encoded_X_train, e, 1)
-                self.clause_banks[not_target].type_iii_feedback(update_p, self.d,
-                                                                clause_active[not_target] * self.positive_clauses,
-                                                                literal_active, self.encoded_X_train, e, 0)
+                self.clause_banks[not_target].type_iii_feedback(
+                    update_p=update_p,
+                    d=self.d,
+                    clause_active=clause_active[not_target] * self.negative_clauses,
+                    literal_active=literal_active,
+                    encoded_X=self.encoded_X_train,
+                    e=e,
+                    target=1
+                )
+
+                self.clause_banks[not_target].type_iii_feedback(
+                    update_p=update_p,
+                    d=self.d,
+                    clause_active=clause_active[not_target] * self.positive_clauses,
+                    literal_active=literal_active,
+                    encoded_X=self.encoded_X_train,
+                    e=e,
+                    target=0
+                )
         return
 
     def predict(self, X):

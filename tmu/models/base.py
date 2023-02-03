@@ -1,5 +1,7 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
+import collections
 import typing
+from collections.abc import Mapping, Iterable
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +22,6 @@ import typing
 # SOFTWARE.
 import numpy as np
 from scipy.sparse import csr_matrix
-from tmu.clause_bank import ClauseBank
-from tmu.clause_bank_cuda import ClauseBankCUDA
 from tmu.weight_bank import WeightBank
 
 
@@ -33,7 +33,7 @@ def _validate_input_dtype(d: np.ndarray):
 class TMBasis:
 
     weight_banks: typing.List[WeightBank]
-    clause_banks: typing.List[typing.Union[ClauseBank, ClauseBankCUDA]]
+    clause_banks: typing.List[typing.Union["ClauseBank", "ClauseBankCUDA"]]
 
     def __init__(
             self,
@@ -93,6 +93,9 @@ class TMBasis:
         # TODO - Change to checksum
         self.X_train = np.zeros(0, dtype=np.uint32)
         self.X_test = np.zeros(0, dtype=np.uint32)
+
+        self.weight_banks = []
+        self.clause_banks = []
 
     def clause_co_occurrence(self, X, percentage=False):
         clause_outputs = csr_matrix(self.transform(X))
