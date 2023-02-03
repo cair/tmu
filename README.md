@@ -24,8 +24,8 @@ TMU is written in Python with wrappers for C and CUDA-based clause evaluation an
 # Installation
 
 ## Installing on Windows
-To install on windows, you will need the MSVC build tools, (https://visualstudio.microsoft.com/visual-cpp-build-tools/
-)[found here].  When prompted, select the `Workloads → Desktop development with C++` package, 
+To install on windows, you will need the MSVC build tools, [found here](https://visualstudio.microsoft.com/visual-cpp-build-tools/
+).  When prompted, select the `Workloads → Desktop development with C++` package, 
 which is roughly 6-7GB of size, install it and you should be able to compile the cffi modules.
 
 ## Installing TMU

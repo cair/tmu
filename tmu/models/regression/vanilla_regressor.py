@@ -59,12 +59,23 @@ class TMRegressor(TMBasis):
         if not np.array_equal(self.X_train, X):
             self.encoded_X_train = self.clause_bank.prepare_X(X)
             self.X_train = X.copy()
-        encoded_Y = np.ascontiguousarray(((Y - self.min_y) / (self.max_y - self.min_y) * self.T).astype(np.int32))
+        if (self.max_y - self.min_y) == 0:
+            encoded_Y = np.ascontiguousarray(np.zeros(Y.shape[0], dtype=np.int32))
+        else:
+            encoded_Y = np.ascontiguousarray(((Y - self.min_y) / (self.max_y - self.min_y) * self.T).astype(np.int32))
 
-        clause_active = np.ascontiguousarray(
-            np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(
-                np.int32))
-        literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
+        # Drops clauses randomly based on clause drop probability
+        clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
+
+        # Literals are dropped based on literal drop probability
+        literal_active = np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32)
+        literal_active_integer = np.random.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
+        for k in range(self.clause_bank.number_of_literals):
+            if literal_active_integer[k] == 1:
+                ta_chunk = k // 32
+                chunk_pos = k % 32
+                literal_active[ta_chunk] |= (1 << chunk_pos)
+
         if not self.feature_negation:
             for k in range(self.clause_bank.number_of_literals // 2, self.clause_bank.number_of_literals):
                 ta_chunk = k // 32

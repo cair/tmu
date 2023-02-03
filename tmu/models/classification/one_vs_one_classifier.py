@@ -64,10 +64,18 @@ class TMOneVsOneClassifier(TMBasis):
 
         Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
-        clause_active = np.ascontiguousarray(
-            np.random.choice(2, self.number_of_clauses, p=[self.clause_drop_p, 1.0 - self.clause_drop_p]).astype(
-                np.int32))
-        literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
+        # Drops clauses randomly based on clause drop probability
+        clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
+
+        # Literals are dropped based on literal drop probability
+        literal_active = np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32)
+        literal_active_integer = np.random.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
+        for k in range(self.clause_bank.number_of_literals):
+            if literal_active_integer[k] == 1:
+                ta_chunk = k // 32
+                chunk_pos = k % 32
+                literal_active[ta_chunk] |= (1 << chunk_pos)
+
         if not self.feature_negation:
             for k in range(self.clause_bank.number_of_literals // 2, self.clause_bank.number_of_literals):
                 ta_chunk = k // 32
