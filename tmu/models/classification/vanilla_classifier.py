@@ -54,8 +54,10 @@ class TMClassifier(TMBaseClassifier):
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
         _LOGGER.debug("Initializing clause bank....")
-        platforms = {
-            "CPU": lambda: ClauseBank(
+
+        if self.platform == "CPU":
+            clause_bank_type = ClauseBank
+            clause_bank_args = dict(
                 X=X,
                 number_of_clauses=self.number_of_clauses,
                 number_of_state_bits_ta=self.number_of_state_bits_ta,
@@ -63,19 +65,20 @@ class TMClassifier(TMBaseClassifier):
                 patch_dim=self.patch_dim,
                 batch_size=self.batch_size,
                 incremental=self.incremental
-            ),
-            "GPU": lambda: ClauseBankCUDA(
+            )
+        elif self.platform in ["GPU", "CUDA"]:
+            clause_bank_type = ClauseBankCUDA
+            clause_bank_args = dict(
                 X=X,
                 number_of_clauses=self.number_of_clauses,
                 number_of_state_bits_ta=self.number_of_state_bits_ta,
                 patch_dim=self.patch_dim
             )
-        }
+        else:
+            raise NotImplementedError(f"Could not find platform of type {self.platform}.")
 
-        assert self.platform in platforms, f"Could not find platform of type {self.platform}. Supports: {list(platforms.keys())}"
-
-        for i in range(self.number_of_classes):
-            self.clause_banks.append(platforms[self.platform]())
+        assert len(self.clause_banks) == 0, "There should be no existing clause banks when init_clause_bank is called!"
+        self.clause_banks = [clause_bank_type(**clause_bank_args) for _ in range(self.number_of_classes)]
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         for i in range(self.number_of_classes):
@@ -96,7 +99,7 @@ class TMClassifier(TMBaseClassifier):
     def init_num_classes(self, X: np.ndarray, Y: np.ndarray):
         return int(np.max(Y) + 1)
 
-    def fit(self, X, Y, shuffle=True):
+    def fit(self, X, Y, shuffle=True, *args, **kwargs):
         self.init(X, Y)
 
         if not np.array_equal(self.X_train, X):

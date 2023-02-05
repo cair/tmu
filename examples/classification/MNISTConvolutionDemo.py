@@ -1,6 +1,6 @@
 import logging
 import argparse
-from tmu.data import MNIST
+from data import MNIST
 from tmu.models.classification.vanilla_classifier import TMClassifier
 from tmu.tools import BenchmarkTimer
 
@@ -16,22 +16,35 @@ if __name__ == "__main__":
     parser.add_argument("--device", default="GPU", type=str)
     parser.add_argument("--weighted_clauses", default=True, type=bool)
     parser.add_argument("--epochs", default=60, type=int)
+    parser.add_argument("--patch_dim", nargs="+", default=(10, 10), type=int)
     args = parser.parse_args()
 
-X_train = np.where(X_train  > 75, 1, 0)
-X_test = np.where(X_test > 75, 1, 0)
+    data = MNIST().get()
 
-tm = TMClassifier(8000, 10000, 5.0, patch_dim=(10, 10), max_included_literals=32, platform='CUDA', weighted_clauses=True)
+    # Reshape MNist from 768 to 28x28
+    data["x_train"] = data["x_train"].reshape(-1, 28, 28)
+    data["x_test"] = data["x_test"].reshape(-1, 28, 28)
+
+    tm = TMClassifier(
+        args.num_clauses,
+        args.T,
+        args.s,
+        patch_dim=tuple(args.patch_dim),
+        max_included_literals=args.max_included_literals,
+        platform=args.device,
+        weighted_clauses=args.weighted_clauses
+    )
 
     _LOGGER.info(f"Running {TMClassifier} for {args.epochs}")
     for epoch in range(args.epochs):
-        benchmark1 = BenchmarkTimer()
+        benchmark1 = BenchmarkTimer(logger=_LOGGER, text="Training Time")
         with benchmark1:
             tm.fit(data["x_train"], data["y_train"])
 
-        benchmark2 = BenchmarkTimer()
+        benchmark2 = BenchmarkTimer(logger=_LOGGER, text="Testing Time")
         with benchmark2:
             result = 100 * (tm.predict(data["x_test"]) == data["y_test"]).mean()
 
         _LOGGER.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Training Time: {benchmark1.elapsed():.2f}s, "
                      f"Testing Time: {benchmark2.elapsed():.2f}s")
+

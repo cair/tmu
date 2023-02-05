@@ -1,25 +1,40 @@
+import logging
+import argparse
 import numpy as np
-from time import time
-
-from keras.datasets import mnist
-
+from data import MNIST
 from tmu.models.classification.coalesced_classifier import TMCoalescedClassifier
+from tmu.tools import BenchmarkTimer
 
-(X_train, Y_train), (X_test, Y_test) = mnist.load_data()
+_LOGGER = logging.getLogger(__name__)
 
-X_train = np.where(X_train.reshape((X_train.shape[0], 28*28)) > 75, 1, 0)
-X_test = np.where(X_test.reshape((X_test.shape[0], 28*28)) > 75, 1, 0)
+if __name__ == "__main__":
 
-tm = TMCoalescedClassifier(20000, 5000, 10.0, weighted_clauses=True)
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--num_clauses", default=20000, type=int)
+        parser.add_argument("--T", default=5000, type=int)
+        parser.add_argument("--s", default=10.0, type=float)
+        parser.add_argument("--weighted_clauses", default=True, type=bool)
+        parser.add_argument("--epochs", default=60, type=int)
+        args = parser.parse_args()
 
-print("\nAccuracy over 60 epochs:\n")
-for i in range(60):
-        start_training = time()
-        tm.fit(X_train, Y_train)
-        stop_training = time()
+        data = MNIST().get()
 
-        start_testing = time()
-        result = 100*(tm.predict(X_test) == Y_test).mean()
-        stop_testing = time()
+        tm = TMCoalescedClassifier(
+                number_of_clauses=args.num_clauses,
+                T=args.T,
+                s=args.s,
+                weighted_clauses=args.weighted_clauses
+        )
 
-        print("#%d Accuracy: %.2f%% Training: %.2fs Testing: %.2fs" % (i+1, result, stop_training-start_training, stop_testing-start_testing))
+        _LOGGER.info(f"Running {TMCoalescedClassifier} for {args.epochs}")
+        for epoch in range(args.epochs):
+                benchmark1 = BenchmarkTimer(logger=_LOGGER, text="Training Time")
+                with benchmark1:
+                        tm.fit(data["x_train"], data["y_train"])
+
+                benchmark2 = BenchmarkTimer(logger=_LOGGER, text="Testing Time")
+                with benchmark2:
+                        result = 100 * (tm.predict(data["x_test"]) == data["y_test"]).mean()
+
+                _LOGGER.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Training Time: {benchmark1.elapsed():.2f}s, "
+                             f"Testing Time: {benchmark2.elapsed():.2f}s")
