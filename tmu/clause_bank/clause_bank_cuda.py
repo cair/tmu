@@ -130,6 +130,9 @@ class ImplClauseBankCUDA(BaseClauseBank):
 
         self.initialize_clauses()
 
+    def _cffi_init(self):
+        pass
+
     def initialize_clauses(self):
         self.clause_bank = np.empty(
             shape=(self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ta),

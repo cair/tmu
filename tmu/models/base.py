@@ -123,3 +123,9 @@ class TMBasis:
 
     def set_ta_state(self, clause, ta, state, **kwargs):
         return self.clause_bank.set_ta_state(clause, ta, state)
+
+    def fit(self, X, Y, *args, **kwargs):
+        raise NotImplementedError("fit(self, X, Y, *args, **kwargs) is not implemented for your model")
+
+    def init(self, X: np.ndarray, Y: np.ndarray):
+        raise NotImplementedError("init(self, X: np.ndarray, Y: np.ndarray)")
