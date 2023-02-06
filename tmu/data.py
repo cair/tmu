@@ -280,7 +280,7 @@ class TMUDatasetSource:
             shuffle=False,
             train_ratio: typing.Union[int, float] = 1.0,
             test_ratio: int = None,
-            return_type: typing.Union[tuple, dict] = tuple
+            return_type: typing.Union[typing.Type[tuple], typing.Type[dict]] = tuple
     ):
         all_releases = self._get_releases(cache=cache, cache_max_age=cache_max_age)
         latest_release = self._get_latest_release(all_releases)

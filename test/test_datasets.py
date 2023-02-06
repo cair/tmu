@@ -2,14 +2,14 @@ import pytest
 class TestMNISTDatasetobject:
 
     def setup_class(self):
-        from tmu.datasets import MNIST
+        from tmu.data import MNIST
         self.dataset_instance = MNIST()
 
     def teardown_class(self):
         self.dataset_instance = None
 
     def test_mnist_dict(self):
-        dataset = self.dataset_instance.retrieve_dataset()
+        dataset = self.dataset_instance.get()
         assert len(dataset) == 4
         assert "x_train" in dataset
         assert "y_train" in dataset
