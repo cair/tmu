@@ -272,7 +272,6 @@ class TMRelational(TMBasis):
 
     def propositionalize_relations(self, X):
     	for facts in X:
-    		print(e, ":")
     		for fact in facts:
     			print(fact, end = ' ')
     		print()
