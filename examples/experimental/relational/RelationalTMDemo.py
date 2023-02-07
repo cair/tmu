@@ -9,6 +9,8 @@ X = [
 		(("Parent", "Ida", "Chris"), ("Parent", "Chris", "Ann"), ("Ancestor", "Ida", "Chris"), ("Ancestor", "Chris", "Ann"), ("Ancestor", "Ida", "Ann"))
 	]
 
+output_active = [("Ancestor", "Ida", "Chris"), ("Ancestor", "Chris", "Ann"), ("Ancestor", "Ida", "Ann"), ("Ancestor", "Mary", "Bob"), ("Ancestor", "Bob", "Peter"), ("Ancestor", "Mary", "Peter")]
+
 clauses = 20
 T = 40
 s = 5.0
