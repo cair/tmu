@@ -18,6 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from tmu.clause_bank import ClauseBank
+from tmu.models.base import TMBasis
+from tmu.weight_bank import WeightBank
+import numpy as np
+
 class TMRelational(TMBasis):
     def __init__(self, number_of_clauses, T, s, output_active, type_i_ii_ratio=1.0,
                  type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0,
@@ -266,9 +271,9 @@ class TMRelational(TMBasis):
         self.weight_banks[the_class].get_weights()[clause] = weight
 
     def propositionalize_relations(self, X):
-    	for e in range(X.shape[0]):
+    	for facts in X:
     		print(e, ":")
-    		for fact in X[0]:
+    		for fact in facts:
     			print(fact, end = ' ')
     		print()
 
