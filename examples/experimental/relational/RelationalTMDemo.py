@@ -19,8 +19,7 @@ print("Number of clauses:", clauses)
 
 tm = TMRelational(clauses, T, s, output_active, max_included_literals=3, feature_negation=False, platform='CPU', output_balancing=True)
 
-(X_propositional, X_active) = tm.propositionalize(X)
-
-print(X_propositional.toarray())
-
-tm.fit(X)
+print("\nAccuracy Over 40 Epochs:")
+for e in range(40):
+	tm.fit(X)
+	print(e)
