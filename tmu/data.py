@@ -32,7 +32,10 @@ class TMUDatasetSource:
     def __init__(self):
         pass
 
-    def _get_config_dir(self):
+    def _get_config_dir(self, cache_dir):
+        if cache_dir is not None:
+            return pathlib.Path(cache_dir)
+
         system = platform.system()
         if system == 'Windows':
             conf_dir = Path(os.environ['APPDATA']) / self._tmu_dataset_name
@@ -43,8 +46,8 @@ class TMUDatasetSource:
         conf_dir.mkdir(exist_ok=True)
         return conf_dir
 
-    def _get_releases(self, cache=True, cache_max_age=60) -> list:
-        config_dir = self._get_config_dir()
+    def _get_releases(self, cache, cache_max_age, cache_dir) -> list:
+        config_dir = self._get_config_dir(cache_dir=cache_dir)
         release_file = config_dir / "releases.json"
         _LOGGER.debug(f"Found config directory at: {config_dir}. Release File: {release_file}")
         _LOGGER.debug(f"Release file exists={release_file.exists()}")
@@ -274,6 +277,7 @@ class TMUDatasetSource:
             dataset: str,
             cache: bool = True,
             cache_max_age: int = 60,
+            cache_dir: typing.Union[None, str] = None,
             features: typing.Union[None, list] = None,
             labels: typing.Union[None, list] = None,
             data_type="numpy",
@@ -282,7 +286,7 @@ class TMUDatasetSource:
             test_ratio: int = None,
             return_type: typing.Union[typing.Type[tuple], typing.Type[dict]] = tuple
     ):
-        all_releases = self._get_releases(cache=cache, cache_max_age=cache_max_age)
+        all_releases = self._get_releases(cache=cache, cache_max_age=cache_max_age, cache_dir=cache_dir)
         latest_release = self._get_latest_release(all_releases)
 
         dataset_dir = self._download_dataset(latest_release_metadata=latest_release)
