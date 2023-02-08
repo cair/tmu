@@ -19,4 +19,4 @@ print("Number of clauses:", clauses)
 
 tm = TMRelational(clauses, T, s, output_active, max_included_literals=3, feature_negation=False, platform='CPU', output_balancing=True)
 
-tm.propositionalize_relations(X)
+tm.propositionalize(X)

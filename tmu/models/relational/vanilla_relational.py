@@ -271,7 +271,7 @@ class TMRelational(TMBasis):
     def set_weight(self, the_class, clause, weight):
         self.weight_banks[the_class].get_weights()[clause] = weight
 
-    def propositionalize_relations(self, X):
+    def propositionalize(self, X):
     	# Identify relations and symbols
     	self.relation_id = {}
     	self.id_relation = {}
