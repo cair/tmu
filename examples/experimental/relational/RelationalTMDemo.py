@@ -22,3 +22,5 @@ tm = TMRelational(clauses, T, s, output_active, max_included_literals=3, feature
 (X_propositional, X_active) = tm.propositionalize(X)
 
 print(X_propositional.toarray())
+
+tm.fit(X)

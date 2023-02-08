@@ -22,15 +22,15 @@ from tmu.clause_bank import ClauseBank
 from tmu.models.base import TMBasis
 from tmu.weight_bank import WeightBank
 import numpy as np
-from scipy.sparse import lil_matrix, csr_matrix
+from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
 
 class TMRelational(TMBasis):
-    def __init__(self, number_of_clauses, T, s, output_active, type_i_ii_ratio=1.0,
+    def __init__(self, number_of_clauses, T, s, output_active_facts, type_i_ii_ratio=1.0,
                  type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0,
                  platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1,
                  max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8,
                  weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0):
-        self.output_active = output_active
+        self.output_active_facts = output_active_facts
 
         super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
                          focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d,
@@ -41,7 +41,7 @@ class TMRelational(TMBasis):
                          clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p)
 
     def initialize(self, X):
-        self.number_of_classes = self.output_active.shape[0]
+        self.number_of_classes = X.shape[1]
         if self.platform == 'CPU':
             self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta,
                                           self.number_of_state_bits_ind, self.patch_dim)
@@ -58,6 +58,11 @@ class TMRelational(TMBasis):
 
         if self.max_included_literals == None:
             self.max_included_literals = self.clause_bank.number_of_literals
+
+        self.output_active = np.empty(len(self.output_active_facts), dtype=np.uint32)
+
+        for i in range(len(self.output_active_facts)):
+        	self.output_active[i] = self.fact_id[self.output_active_facts[i]]
 
     def update(self, target_output, target_value, encoded_X, clause_active, literal_active):
         all_literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
@@ -131,6 +136,8 @@ class TMRelational(TMBasis):
         return literal_active
 
     def fit(self, X, number_of_examples=2000, shuffle=True):
+        (X, X_active) = self.propositionalize(X)
+
         if self.initialized == False:
             self.initialize(X)
             self.initialized = True
@@ -141,19 +148,18 @@ class TMRelational(TMBasis):
         clause_active = self.activate_clauses()
         literal_active = self.activate_literals()
 
-        class_index = np.arange(self.number_of_classes, dtype=np.uint32)
+        output_index = np.arange(self.output_active.shape[0])
+        np.random.shuffle(output_index)
         for e in range(number_of_examples):
-            np.random.shuffle(class_index)
-
             average_absolute_weights = np.zeros(self.number_of_clauses, dtype=np.float32)
-            for i in class_index:
+            for i in output_index:
                 average_absolute_weights += np.absolute(self.weight_banks[i].get_weights())
             average_absolute_weights /= self.number_of_classes
             update_clause = np.random.random(self.number_of_clauses) <= (
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
             Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc, self.output_active, 1)
-            for i in class_index:
+            for i in output_index:
                 (target, encoded_X) = Yu[i], Xu[i].reshape((1, -1))
 
                 ta_chunk = self.output_active[i] // 32
