@@ -295,10 +295,24 @@ class TMRelational(TMBasis):
     			print(fact, end = ' ')
     		print()
 
-    	self.number_of_features = 0;
+    	self.fact_id = {}
+    	self.id_fact = {}
+    	self.number_of_features = 0
     	for relation in self.relation_id.keys():
-    		self.number_of_features += len(self.symbol_id)**(self.relation_arity[relation])
+    		number_of_relation_facts = len(self.symbol_id)**(self.relation_arity[relation])
+    		for relation_fact_id in range(number_of_relation_facts):
+    			fact = [relation]
+    			symbol_id_remainder = relation_fact_id
+    			for argument_id in range(self.relation_arity[relation]):
+    				fact.append(self.id_symbol[symbol_id_remainder % len(self.symbol_id)])
+    				symbol_id_remainder = symbol_id_remainder // len(self.symbol_id)
+    			fact = tuple(fact)
+    			self.fact_id[fact] = self.number_of_features + relation_fact_id
+    			self.id_fact[self.number_of_features + relation_fact_id] = fact
+    		self.number_of_features += number_of_relation_facts
+
     	print(self.relation_id)
     	print(self.symbol_id)
     	print(self.relation_arity)
+    	print(self.fact_id)
     	print(self.number_of_features)
