@@ -320,4 +320,5 @@ class TMRelational(TMBasis):
     		example_id += 1
     	X_propositional = csr_matrix(X_propositional)
     	X_active = csr_matrix(X_active)
-    	print(X_active.toarray())
+    	
+    	return (X_propositional, X_active)
