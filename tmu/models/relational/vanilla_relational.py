@@ -22,6 +22,7 @@ from tmu.clause_bank import ClauseBank
 from tmu.models.base import TMBasis
 from tmu.weight_bank import WeightBank
 import numpy as np
+from scipy.sparse import lil_matrix, csr_matrix
 
 class TMRelational(TMBasis):
     def __init__(self, number_of_clauses, T, s, output_active, type_i_ii_ratio=1.0,
@@ -292,8 +293,6 @@ class TMRelational(TMBasis):
 	    				self.symbol_id[symbol] = s_id
 	    				self.id_symbol[s_id] = symbol
     					s_id += 1
-    			print(fact, end = ' ')
-    		print()
 
     	self.fact_id = {}
     	self.id_fact = {}
@@ -311,8 +310,14 @@ class TMRelational(TMBasis):
     			self.id_fact[self.number_of_features + relation_fact_id] = fact
     		self.number_of_features += number_of_relation_facts
 
-    	print(self.relation_id)
-    	print(self.symbol_id)
-    	print(self.relation_arity)
-    	print(self.fact_id)
-    	print(self.number_of_features)
+    	X_propositional = lil_matrix((len(X), self.number_of_features), dtype=np.uint32)
+    	X_active = lil_matrix((len(X), self.number_of_features), dtype=np.uint32)
+    	example_id = 0
+    	for facts in X:
+    		for (fact, value) in facts:
+    			X_propositional[example_id, self.fact_id[fact]] = value
+    			X_active[example_id, self.fact_id[fact]] = 1
+    		example_id += 1
+    	X_propositional = csr_matrix(X_propositional)
+    	X_active = csr_matrix(X_active)
+    	print(X_active.toarray())
