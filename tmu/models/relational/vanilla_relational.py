@@ -271,8 +271,34 @@ class TMRelational(TMBasis):
         self.weight_banks[the_class].get_weights()[clause] = weight
 
     def propositionalize_relations(self, X):
+    	# Identify relations and symbols
+    	self.relation_id = {}
+    	self.id_relation = {}
+    	self.relation_arity = {}
+    	r_id = 0
+    	self.symbol_id = {}
+    	self.id_symbol = {}
+    	s_id = 0
     	for facts in X:
-    		for fact in facts:
+    		for (fact, value) in facts:
+    			relation = fact[0]
+    			if relation not in self.relation_id:
+	    			self.relation_id[relation] = r_id
+	    			self.id_relation[r_id] = relation
+	    			self.relation_arity[relation] = len(fact[1:])
+    				r_id += 1
+    			for symbol in fact[1:]:
+    				if symbol not in self.symbol_id:
+	    				self.symbol_id[symbol] = s_id
+	    				self.id_symbol[s_id] = symbol
+    					s_id += 1
     			print(fact, end = ' ')
     		print()
 
+    	self.number_of_features = 0;
+    	for relation in self.relation_id.keys():
+    		self.number_of_features += len(self.symbol_id)**(self.relation_arity[relation])
+    	print(self.relation_id)
+    	print(self.symbol_id)
+    	print(self.relation_arity)
+    	print(self.number_of_features)

@@ -5,8 +5,8 @@ from time import time
 from tmu.models.relational.vanilla_relational import TMRelational
 
 X = [
-		(("Parent", "Mary", "Bob"), ("Parent", "Bob", "Peter"), ("Ancestor", "Mary", "Bob"), ("Ancestor", "Bob", "Peter"), ("Ancestor", "Mary", "Peter")),
-		(("Parent", "Ida", "Chris"), ("Parent", "Chris", "Ann"), ("Ancestor", "Ida", "Chris"), ("Ancestor", "Chris", "Ann"), ("Ancestor", "Ida", "Ann"))
+		((("Parent", "Mary", "Bob"), "True"), (("Parent", "Bob", "Peter"), "True"), (("Ancestor", "Mary", "Bob"), "True"), (("Ancestor", "Bob", "Peter"), "True"), (("Ancestor", "Mary", "Peter"), "True")),
+		((("Parent", "Ida", "Chris"), "True"), (("Parent", "Chris", "Ann"), "True"), (("Ancestor", "Ida", "Chris"), "True"), (("Ancestor", "Chris", "Ann"), "True"), (("Ancestor", "Ida", "Ann"), "True"))
 	]
 
 output_active = [("Ancestor", "Ida", "Chris"), ("Ancestor", "Chris", "Ann"), ("Ancestor", "Ida", "Ann"), ("Ancestor", "Mary", "Bob"), ("Ancestor", "Bob", "Peter"), ("Ancestor", "Mary", "Peter")]
