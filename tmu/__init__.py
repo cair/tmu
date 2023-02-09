@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-import logging
->>>>>>> dev
 import logging.config
 import pathlib
 import json
