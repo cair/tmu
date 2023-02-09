@@ -46,7 +46,7 @@ class ClauseWeightBank:
         elif len(X.shape) == 4:
             self.dim = (X.shape[1], X.shape[2], X.shape[3])
 
-        if self.patch_dim == None:
+        if self.patch_dim is None:
             self.patch_dim = (self.dim[0] * self.dim[1] * self.dim[2], 1)
 
         self.number_of_features = int(

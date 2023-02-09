@@ -34,7 +34,9 @@ class TMUDatasetSource:
 
     def _get_config_dir(self, cache_dir):
         if cache_dir is not None:
-            return pathlib.Path(cache_dir)
+            cdir = pathlib.Path(cache_dir)
+            cdir.mkdir(exist_ok=True)
+            return cdir
 
         system = platform.system()
         if system == 'Windows':
@@ -86,7 +88,7 @@ class TMUDatasetSource:
         sorted(releases_cpy, key=lambda item: item["id"])
         return releases_cpy[0]
 
-    def _download_release_archive(self, archive_url) -> tempfile.TemporaryDirectory:
+    def _download_release_archive(self, archive_url, target_dir) -> pathlib.Path:
         response = urlopen(archive_url)
 
         total_size = int(response.info().get("Content-Length", 0))
@@ -95,8 +97,8 @@ class TMUDatasetSource:
         f = io.BytesIO()
 
         try:
-            from tqdm import tqdm
-            status = tqdm(total=total_size // block_size, unit="KB", desc="tmu-datasets")
+            import tqdm
+            status = tqdm.tqdm(total=total_size // block_size, unit="KB", desc="tmu-datasets")
         except ImportError:
             status = None
 
@@ -107,28 +109,36 @@ class TMUDatasetSource:
             f.write(buffer)
             n_read = len(buffer)
 
-            if status:
+            if status is not None:
                 status.update(n_read // block_size)
 
-        td = tempfile.TemporaryDirectory(prefix="tmu-datasets-")
-        try:
-            f.seek(0)
-            archive_zip = zipfile.ZipFile(f)
-            archive_zip.extractall(str(td))
-        except zipfile.BadZipfile:
-            f.seek(0)
-            with tarfile.open(fileobj=f, mode="r:gz") as tar:
-                tar.extractall(str(td))
+        with tempfile.TemporaryDirectory(prefix="tmu-datasets-") as td:
+            try:
+                f.seek(0)
+                archive_zip = zipfile.ZipFile(f)
+                archive_zip.extractall(str(td))
+            except zipfile.BadZipfile:
+                f.seek(0)
+                with tarfile.open(fileobj=f, mode="r:gz") as tar:
+                    tar.extractall(str(td))
 
-        # Move extracted files into root of temp directory
+            # Move extracted files into root of temp directory
+            temp_dir_pathlib = Path(str(td))
 
-        root_dir = next(Path(str(td)).glob("cair-tmu-datasets*"))
-        for item in root_dir.glob("*"):
-            shutil.move(item, str(td))
-        root_dir.rmdir()
-        return td
+            root_dir = next(temp_dir_pathlib.glob("cair-tmu-datasets*"))
+            for item in root_dir.glob("*"):
+                shutil.move(item, str(td))
+            root_dir.rmdir()
 
-    def _download_dataset(self, latest_release_metadata):
+            # Finally move all dataset items to target dir
+            target_dir.mkdir(exist_ok=True)
+            _LOGGER.debug(f"Moving {temp_dir_pathlib} to {target_dir}")
+            for item in temp_dir_pathlib.glob("*"):
+                shutil.move(item, target_dir)
+
+        return target_dir
+
+    def _download_dataset(self, latest_release_metadata, cache_dir):
         system = platform.system()
         if system == "Windows":
             ball_url_key = "zipball_url"
@@ -138,7 +148,7 @@ class TMUDatasetSource:
         dl_url = latest_release_metadata[ball_url_key]
         dl_name = latest_release_metadata["name"]
 
-        config_dir = self._get_config_dir()
+        config_dir = self._get_config_dir(cache_dir=cache_dir)
         dataset_dir = config_dir / dl_name
 
         if dataset_dir.exists():
@@ -146,10 +156,11 @@ class TMUDatasetSource:
             return dataset_dir
 
         _LOGGER.debug(f"Dataset directory {dataset_dir} not found. Downloading release {dl_name}")
-        temp_dataset_dir = self._download_release_archive(dl_url)
+        temp_dataset_dir = self._download_release_archive(dl_url, target_dir=dataset_dir)
 
-        _LOGGER.debug(f"Moving {temp_dataset_dir} to {dataset_dir}")
-        shutil.move(str(temp_dataset_dir), dataset_dir)
+
+
+
         return dataset_dir
 
     def _get_metadata(self, metadata, key, default, extra_info=None):
@@ -249,8 +260,11 @@ class TMUDatasetSource:
         metadata_file = dataset_path / "metadata.json"
 
         if not metadata_file.exists():
-            _LOGGER.warning("Could not find metadata.json.")
-            # TODO handle
+            err = f"Could not find metadata.json for dataset \"{dataset_path.name}\". All datasets must have a " \
+                  f"metadata.json file. Please consult " \
+                  "documentation!"
+            _LOGGER.warning(err)
+            raise RuntimeError(err)
 
         with metadata_file.open("rb+") as mdf:
             metadata = json.load(mdf)
@@ -289,7 +303,7 @@ class TMUDatasetSource:
         all_releases = self._get_releases(cache=cache, cache_max_age=cache_max_age, cache_dir=cache_dir)
         latest_release = self._get_latest_release(all_releases)
 
-        dataset_dir = self._download_dataset(latest_release_metadata=latest_release)
+        dataset_dir = self._download_dataset(latest_release_metadata=latest_release, cache_dir=cache_dir)
         dataset_names = [x.name.lower() for x in dataset_dir.glob("*") if x.is_dir()]
 
         if not dataset_names:
@@ -308,8 +322,17 @@ class TMUDatasetSource:
             dataset_df = dataset_df.sample(frac=1).reset_index(drop=True)
 
         # Dataset feature/label split
-        X = dataset_df[features] if features else dataset_df
-        Y = dataset_df[labels] if labels else None
+        try:
+            X = dataset_df[features] if features else dataset_df
+        except KeyError as err:
+            _LOGGER.error(f"Could not find feature keys '{features}'. Available: {list(dataset_df.columns)}")
+            raise err
+
+        try:
+            Y = dataset_df[labels] if labels else None
+        except KeyError as err:
+            _LOGGER.error(f"Could not find label keys '{labels}'. Available: {dataset_df.columns}")
+            raise err
 
         # Dataset ratio. If ratio is a float. we split by %. else by count.
         if isinstance(train_ratio, int):
