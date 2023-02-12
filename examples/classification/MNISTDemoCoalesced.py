@@ -5,15 +5,16 @@ from keras.datasets import mnist
 
 from tmu.models.classification.coalesced_classifier import TMCoalescedClassifier
 
-clauses = 20000//5
+clauses = 20000
 T = clauses//4
+s = 10.0
 
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 
 X_train = np.where(X_train.reshape((X_train.shape[0], 28*28)) > 75, 1, 0)
 X_test = np.where(X_test.reshape((X_test.shape[0], 28*28)) > 75, 1, 0)
 
-tm = TMCoalescedClassifier(clauses, T, 10.0, focused_negative_sampling=True, max_included_literals=10, max_positive_clauses=200, weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, 10.0, focused_negative_sampling=True, max_positive_clauses=500, weighted_clauses=True)
 
 print("\nAccuracy over 60 epochs:\n")
 for e in range(60):
