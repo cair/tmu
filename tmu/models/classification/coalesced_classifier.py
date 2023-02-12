@@ -58,6 +58,10 @@ class TMCoalescedClassifier(TMBasis):
         if self.max_included_literals == None:
             self.max_included_literals = self.clause_bank.number_of_literals
 
+        print("*", self.max_positive_clauses)
+        if self.max_positive_clauses == None:
+            self.max_positive_clauses = self.number_of_clauses
+
     def update(self, target, e):
         clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.literal_active, self.encoded_X_train, e)
 
