@@ -5,7 +5,7 @@ from keras.datasets import mnist
 
 from tmu.models.classification.coalesced_classifier import TMCoalescedClassifier
 
-clauses = 20000
+clauses = 20000//5
 T = clauses//4
 s = 10.0
 
