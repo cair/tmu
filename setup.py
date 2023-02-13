@@ -13,7 +13,7 @@ setup(
     license='MIT',
     description='Implements the Tsetlin Machine, Coalesced Tsetlin Machine, Convolutional Tsetlin Machine, Regression '
                 'Tsetlin Machine, and Weighted Tsetlin Machine, with support for continuous features, drop clause, '
-                'Type III Feedback, focused negative sampling, multi-task classifier, autoencoder, literal budget, clause budget,'
+                'Type III Feedback, focused negative sampling, multi-task classifier, autoencoder, literal budget,'
                 'incremental clause evaluation, and one-vs-one multi-class classifier. TMU is written in Python with '
                 'wrappers for C and CUDA-based clause evaluation and updating.',
     long_description='Implements the Tsetlin Machine (https://arxiv.org/abs/1804.01508), Coalesced Tsetlin Machine ('
@@ -24,7 +24,7 @@ setup(
                      'https://arxiv.org/abs/1905.04199), drop clause (https://arxiv.org/abs/2105.14506), '
                      'Type III Feedback (to be published), focused negative sampling ('
                      'https://ieeexplore.ieee.org/document/9923859), multi-task classifier (to be published), '
-                     'autoencoder (https://arxiv.org/abs/2301.00709), literal budget (https://arxiv.org/abs/2301.08190), clause budget (to be published), incremental '
+                     'autoencoder (https://arxiv.org/abs/2301.00709), literal budget (https://arxiv.org/abs/2301.08190), incremental '
                      'clause evaluation (to be published), and one-vs-one multi-class classifier (to be published). '
                      'TMU is written in Python with wrappers for C and CUDA-based clause evaluation and updating.',
     packages=find_packages(),
