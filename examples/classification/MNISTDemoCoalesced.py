@@ -14,7 +14,7 @@ s = 10.0
 X_train = np.where(X_train.reshape((X_train.shape[0], 28*28)) > 75, 1, 0)
 X_test = np.where(X_test.reshape((X_test.shape[0], 28*28)) > 75, 1, 0)
 
-tm = TMCoalescedClassifier(clauses, T, 10.0, focused_negative_sampling=True, max_positive_clauses=500, weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, 10.0, focused_negative_sampling=True, weighted_clauses=True)
 
 print("\nAccuracy over 60 epochs:\n")
 for e in range(60):
