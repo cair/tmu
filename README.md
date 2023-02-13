@@ -16,7 +16,6 @@ Further, we implement many TM features, including:
 * Support for continuous features (https://arxiv.org/abs/1905.04199)
 * Drop clause (https://arxiv.org/abs/2105.14506)
 * Literal budget (https://arxiv.org/abs/2301.08190)
-* Clause budget (to be published)
 * Focused negative sampling (https://ieeexplore.ieee.org/document/9923859)
 * Type III Feedback (to be published)
 * Incremental clause evaluation (to be published)
