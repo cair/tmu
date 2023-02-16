@@ -91,6 +91,9 @@ class ClauseBank:
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta)))
         self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
 
+        self.actions = np.ascontiguousarray(np.zeros(self.number_of_ta_chunks, dtype=np.uint32))
+        self.ac_p = ffi.cast("unsigned int *", self.actions.ctypes.data)
+
         self.clause_bank_ind = np.empty(
             (self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ind), dtype=np.uint32)
         self.clause_bank_ind[:, :, :] = np.uint32(~0)
@@ -189,6 +192,11 @@ class ClauseBank:
         lib.cb_calculate_literal_frequency(self.cb_p, self.number_of_clauses, self.number_of_literals,
                                            self.number_of_state_bits_ta, ca_p, self.lcc_p)
         return self.literal_clause_count
+
+    def included_literals(self):
+        lib.cb_included_literals(self.cb_p, self.number_of_clauses, self.number_of_literals,
+                                           self.number_of_state_bits_ta, self.ac_p)
+        return self.actions
 
     def number_of_include_actions(self, clause):
         return lib.cb_number_of_include_actions(self.cb_p, clause, self.number_of_literals,
