@@ -624,6 +624,22 @@ void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clause
 	}
 }
 
+void cb_included_literals(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *actions) 
+{
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	for (int k = 0; k < number_of_ta_chunks; k++) {
+		actions[k] = 0;
+	}
+	
+	for (int j = 0; j < number_of_clauses; j++) {	
+		for (int k = 0; k < number_of_ta_chunks; k++) {
+			unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + k * number_of_state_bits + number_of_state_bits-1;
+			actions[k] |= ta_state[pos];
+		}
+	}
+}
+
 int cb_number_of_include_actions(unsigned int *ta_state, int clause, int number_of_literals, int number_of_state_bits)
 {
 	unsigned int filter;
