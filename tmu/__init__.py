@@ -5,8 +5,8 @@ import json
 
 if not logging.getLogger().handlers:
     # TODO add argparse configs here.
-    current_file = pathlib.Path(__file__).parent
-    with current_file.joinpath("logging_example.json").open("r") as config_file:
+    _current_file = pathlib.Path(__file__).parent
+    with _current_file.joinpath("logging_example.json").open("r") as config_file:
         logging.config.dictConfig(json.load(config_file))
 
 try:
@@ -15,4 +15,4 @@ except ImportError:
     raise ImportError("Could not import cffi compiled libraries. To fix this problem, run pip install -e .")
 
 
-__version__ = "0.7.5"
+__version__ = "0.7.6"

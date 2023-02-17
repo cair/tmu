@@ -25,7 +25,7 @@ from tmu.tmulib import ffi, lib
 
 import numpy as np
 
-from tools import CFFISerializable
+from tmu.tools import CFFISerializable
 
 
 class WeightBank(CFFISerializable):

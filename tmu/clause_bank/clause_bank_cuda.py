@@ -20,13 +20,13 @@
 
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
-import numpy as np
-from pycuda._driver import Device, Context
+import tmu.tools
 from tmu.tmulib import ffi, lib
 from tmu.tools import BenchmarkTimer
-import tmu.tools
-from .clause_bank import ClauseBank
-from clause_bank.base_clause_bank import BaseClauseBank
+from tmu.clause_bank.clause_bank import ClauseBank
+from tmu.clause_bank.base_clause_bank import BaseClauseBank
+
+import numpy as np
 import logging
 import pathlib
 import tempfile
@@ -35,11 +35,11 @@ current_dir = pathlib.Path(__file__).parent
 _LOGGER = logging.getLogger(__name__)
 
 try:
+    from pycuda._driver import Device, Context
     import pycuda.driver as cuda
     import pycuda.autoinit
     import pycuda.curandom as curandom
     import pycuda.compiler as compiler
-
     cuda_installed = True
 except ImportError as e:
     _LOGGER.warning("Could not import pycuda. This indicates that it is not installed! A possible fix is to run 'pip "
@@ -294,8 +294,16 @@ class ImplClauseBankCUDA(BaseClauseBank):
         cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 
     def prepare_X(self, X):
-        encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim,
-                                     self.patch_dim, 0)
+        encoded_X = tmu.tools.encode(
+            X,
+            X.shape[0],
+            self.number_of_patches,
+            self.number_of_ta_chunks,
+            self.dim,
+            self.patch_dim,
+            0
+        )
+
         encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
         cuda.memcpy_htod(encoded_X_gpu, encoded_X)
         return encoded_X_gpu

@@ -37,6 +37,8 @@ void cb_calculate_clause_outputs_update(unsigned int *ta_state, int number_of_cl
 
 void cb_calculate_clause_outputs_patchwise(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi);
 
+void cb_included_literals(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *actions);
+
 void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *clause_active, unsigned int *literal_count);
 
 int cb_number_of_include_actions(unsigned int *ta_state, int clause, int number_of_literals, int number_of_state_bits);

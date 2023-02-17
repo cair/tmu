@@ -20,13 +20,11 @@
 
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
-
 from tmu.tmulib import ffi, lib
+import tmu.tools
+from tmu.clause_bank.base_clause_bank import BaseClauseBank
 
 import numpy as np
-
-import tmu.tools
-from clause_bank.base_clause_bank import BaseClauseBank
 
 
 class ClauseBank(BaseClauseBank):
@@ -39,6 +37,7 @@ class ClauseBank(BaseClauseBank):
     ft_p = None  # _cffi_backend._CDataBase
     o1p_p = None  # _cffi_backend._CDataBase
     lcc_p = None  # _cffi_backend._CDataBase
+    ac_p = None  # _cffi_backend._CDataBase
 
     def __init__(
             self,
@@ -67,7 +66,6 @@ class ClauseBank(BaseClauseBank):
         # Finally, map numpy arrays to CFFI compatible pointers.
         self._cffi_init()
 
-
     def _cffi_init(self):
         self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)  # clause_output
         self.cob_p = ffi.cast("unsigned int *", self.clause_output_batch.ctypes.data)  # clause_output_batch
@@ -81,6 +79,9 @@ class ClauseBank(BaseClauseBank):
         self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
         self.cbi_p = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
 
+        # Action Initialization
+        self.ac_p = ffi.cast("unsigned int *", self.actions.ctypes.data)
+
     def initialize_clauses(self):
         self.clause_bank = np.empty(
             shape=(self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ta),
@@ -93,13 +94,13 @@ class ClauseBank(BaseClauseBank):
         self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape(
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta)))
 
+        self.actions = np.ascontiguousarray(np.zeros(self.number_of_ta_chunks, dtype=np.uint32))
 
         self.clause_bank_ind = np.empty(
             (self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ind), dtype=np.uint32)
         self.clause_bank_ind[:, :, :] = np.uint32(~0)
         self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape(
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))
-
 
         self.incremental_clause_evaluation_initialized = False
 
@@ -291,6 +292,16 @@ class ClauseBank(BaseClauseBank):
         )
         return self.literal_clause_count
 
+    def included_literals(self):
+        lib.cb_included_literals(
+            self.cb_p,
+            self.number_of_clauses,
+            self.number_of_literals,
+            self.number_of_state_bits_ta,
+            self.ac_p
+        )
+        return self.actions
+
     def number_of_include_actions(self, clause):
         return lib.cb_number_of_include_actions(
             self.cb_p,
@@ -319,4 +330,3 @@ class ClauseBank(BaseClauseBank):
             accumulation,
             self.number_of_ta_chunks
         )
-

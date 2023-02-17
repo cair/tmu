@@ -2,7 +2,7 @@ import typing
 import logging
 import numpy as np
 
-from tools import CFFISerializable
+from tmu.tools import CFFISerializable
 
 _LOGGER = logging.getLogger(__name__)
 
