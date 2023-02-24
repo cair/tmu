@@ -25,7 +25,7 @@ import numpy as np
 
 import tmu.tools
 
-from numba import jit
+from numba import jit, prange
 
 @jit(nopython=True)
 def pack_X_numba(encoded_X, e, packed_X, number_of_literals):
@@ -63,6 +63,20 @@ def unpack_clause_output_numba(e, clause_output, clause_output_batch, number_of_
     for j in range(number_of_clauses):
         clause_output[j] = (clause_output_batch[j] & (1 << (e % 32))) > 0
     return clause_output
+
+@jit(nopython=True)
+def calculate_clause_outputs_update_packed_X_numba(packed_X, number_of_clauses, clause_output_batch, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
+            clause_bank_included_static, clause_bank_included_static_length):
+    for j in range(number_of_clauses):
+        clause_output_batch[j] = ~0
+
+        for k in range(clause_bank_included_static_length[j]):
+            clause_output_batch[j] &= packed_X[clause_bank_included_static[j, k]]
+
+        for k in range(clause_bank_included_dynamic_length[j]):
+            clause_output_batch[j] &= packed_X[clause_bank_included_dynamic[j, k, 0]]
+
+    return clause_output_batch
 
 @jit(nopython=True)
 def calculate_clause_outputs_update_numba(literal_active, encoded_X, e, number_of_clauses, clause_output, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
@@ -134,12 +148,12 @@ def calculate_clause_outputs_predict_numba(encoded_X, e, number_of_clauses, clau
 
     return clause_output
 
-@jit(nopython=True)
+@jit(nopython=True,parallel=True)
 def type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
                     literal_active, encoded_X, e, number_of_clauses, number_of_states, clause_bank_included_dynamic,
                     clause_bank_included_dynamic_length, clause_bank_excluded_dynamic, clause_bank_excluded_dynamic_length, clause_bank_included_static,
                     clause_bank_included_static_length):
-    for j in range(number_of_clauses):
+    for j in prange(number_of_clauses):
         if np.random.random() > update_p or not clause_active[j]:
             continue
 
@@ -238,11 +252,11 @@ def type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_include
                         clause_bank_excluded_dynamic[j, k, 0] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 0]       
                         clause_bank_excluded_dynamic[j, k, 1] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 1]
 
-@jit(nopython=True)
+@jit(nopython=True,parallel=True)
 def type_ii_feedback_numba(update_p, clause_active, literal_active, encoded_X, e, number_of_clauses, number_of_states, clause_bank_included_dynamic,
                     clause_bank_included_dynamic_length, clause_bank_excluded_dynamic, clause_bank_excluded_dynamic_length, clause_bank_included_static,
                     clause_bank_included_static_length):
-    for j in range(number_of_clauses):
+    for j in prange(number_of_clauses):
         if np.random.random() > update_p or not clause_active[j]:
             continue
 
