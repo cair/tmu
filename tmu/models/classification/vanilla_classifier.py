@@ -59,7 +59,7 @@ class TMClassifier(TMBasis):
             for i in range(self.number_of_classes):
                 self.clause_banks.append(
                     ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim))
-        elif self.platform == 'sparse':
+        elif self.platform == 'CPU_sparse':
             from tmu.clause_bank_sparse import ClauseBankSparse
             for i in range(self.number_of_classes):
                 self.clause_banks.append(
