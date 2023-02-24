@@ -65,20 +65,6 @@ def unpack_clause_output_numba(e, clause_output, clause_output_batch, number_of_
     return clause_output
 
 @jit(nopython=True)
-def calculate_clause_outputs_update_packed_X_numba(packed_X, number_of_clauses, clause_output_batch, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
-            clause_bank_included_static, clause_bank_included_static_length):
-    for j in range(number_of_clauses):
-        clause_output_batch[j] = ~0
-
-        for k in range(clause_bank_included_static_length[j]):
-            clause_output_batch[j] &= packed_X[clause_bank_included_static[j, k]]
-
-        for k in range(clause_bank_included_dynamic_length[j]):
-            clause_output_batch[j] &= packed_X[clause_bank_included_dynamic[j, k, 0]]
-
-    return clause_output_batch
-
-@jit(nopython=True)
 def calculate_clause_outputs_update_numba(literal_active, encoded_X, e, number_of_clauses, clause_output, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
                     clause_bank_included_static, clause_bank_included_static_length):
     for j in range(number_of_clauses):
@@ -355,8 +341,6 @@ class ClauseBankSparse:
         if not self.batching:
             return calculate_clause_outputs_predict_numba(encoded_X, e, self.number_of_clauses, self.clause_output, self.clause_bank_included_dynamic, self.clause_bank_included_dynamic_length,
             self.clause_bank_included_static, self.clause_bank_included_static_length)
-
-        # Encode 32 examples into bitform, one int per bit, collecting 32 examples if e % 32 == 0
             
         if e % 32 == 0:
             self.packed_X = pack_X_numba(encoded_X, e, self.packed_X, self.number_of_literals)
