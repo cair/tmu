@@ -21,13 +21,48 @@
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
 
-from tmu.tmulib import ffi, lib
-
 import numpy as np
 
 import tmu.tools
 
 from numba import jit
+
+@jit(nopython=True)
+def pack_X_numba(encoded_X, e, packed_X, number_of_literals):
+    packed_X[:] = 0
+    for i in range(32):
+        if e+i >= encoded_X.shape[0]:
+            break
+
+        for k in range(number_of_literals):
+            chunk = k // 32
+            pos = k % 32
+
+            if encoded_X[e+i,chunk] & (1 << pos) > 0:
+                packed_X[k] |= (1 << i)
+    return packed_X
+
+jit(nopython=True)
+def unpack_X_numba(encoded_X, e, packed_X, number_of_literals):
+
+    encoded_X[e:e+i] = 0
+    for i in range(32):
+        if e+i >= encoded_X.shape[0]:
+            break
+
+        for k in range(number_of_literals):
+            chunk = k // 32
+            pos = k % 32
+
+            if packed_X[k] & (1 << i) > 0:
+                encoded_X[e+i,chunk] |= (1 << pos)
+    return packed_X
+
+@jit(nopython=True)
+def unpack_clause_output_numba(e, clause_output, clause_output_batch, number_of_clauses):
+    for j in range(number_of_clauses):
+        clause_output[j] = (clause_output_batch[j] & (1 << (e % 32))) > 0
+    return clause_output
 
 @jit(nopython=True)
 def calculate_clause_outputs_update_numba(literal_active, encoded_X, e, number_of_clauses, clause_output, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
@@ -55,10 +90,27 @@ def calculate_clause_outputs_update_numba(literal_active, encoded_X, e, number_o
     return clause_output
 
 @jit(nopython=True)
+def calculate_clause_outputs_predict_packed_X_numba(packed_X, number_of_clauses, clause_output_batch, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
+            clause_bank_included_static, clause_bank_included_static_length):
+    for j in range(number_of_clauses):
+        if clause_bank_included_dynamic_length[j] == 0 and clause_bank_included_static_length[j] == 0:
+            clause_output_batch[j] = 0
+        else:
+            clause_output_batch[j] = ~0
+
+            for k in range(clause_bank_included_static_length[j]):
+                clause_output_batch[j] &= packed_X[clause_bank_included_static[j, k]]
+
+            for k in range(clause_bank_included_dynamic_length[j]):
+                clause_output_batch[j] &= packed_X[clause_bank_included_dynamic[j, k, 0]]
+
+    return clause_output_batch
+
+@jit(nopython=True)
 def calculate_clause_outputs_predict_numba(encoded_X, e, number_of_clauses, clause_output, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
                     clause_bank_included_static, clause_bank_included_static_length):
     for j in range(number_of_clauses):
-        if clause_bank_included_dynamic_length[j] == 0:
+        if clause_bank_included_dynamic_length[j] == 0 and clause_bank_included_static_length[j] == 0:
             clause_output[j] = 0
         else:
             clause_output[j] = 1
@@ -233,11 +285,11 @@ def type_ii_feedback_numba(update_p, clause_active, literal_active, encoded_X, e
 
 class ClauseBankSparse:
     def __init__(self, X, number_of_clauses, number_of_states, patch_dim,
-                 batch_size=100, incremental=True, skip=0.1):
+                 batching=True, incremental=True, skip=0.1):
         self.number_of_clauses = int(number_of_clauses)
         self.number_of_states = int(number_of_states)
         self.patch_dim = patch_dim
-        self.batch_size = batch_size
+        self.batching = batching
         self.incremental = incremental
 
         if len(X.shape) == 2:
@@ -259,21 +311,16 @@ class ClauseBankSparse:
         self.number_of_ta_chunks = int((self.number_of_literals - 1) / 32 + 1)
 
         self.clause_output = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
-        self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
-
-        self.clause_output_batch = np.ascontiguousarray(
-            np.empty((int(self.number_of_clauses * batch_size)), dtype=np.uint32))
-        self.cob_p = ffi.cast("unsigned int *", self.clause_output_batch.ctypes.data)
+        self.clause_output_batch = np.ascontiguousarray(np.empty((int(self.number_of_clauses)), dtype=np.uint32))
 
         self.clause_output_patchwise = np.ascontiguousarray(
             np.empty((int(self.number_of_clauses * self.number_of_patches)), dtype=np.uint32))
-        self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
 
         self.output_one_patches = np.ascontiguousarray(np.empty(self.number_of_patches, dtype=np.uint32))
-        self.o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
 
         self.literal_clause_count = np.ascontiguousarray(np.empty((int(self.number_of_literals)), dtype=np.uint32))
-        self.lcc_p = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)
+
+        self.packed_X = np.ascontiguousarray(np.empty(self.number_of_literals, dtype=np.uint32))
 
         self.initialize_clauses()
 
@@ -291,8 +338,19 @@ class ClauseBankSparse:
         self.clause_bank_excluded_dynamic[:,:,1] = self.number_of_states // 2 - 1 # Initialize excluded literals in least forgotten state
  
     def calculate_clause_outputs_predict(self, encoded_X, e):
-        return calculate_clause_outputs_predict_numba(encoded_X, e, self.number_of_clauses, self.clause_output, self.clause_bank_included_dynamic, self.clause_bank_included_dynamic_length,
+        if not self.batching:
+            return calculate_clause_outputs_predict_numba(encoded_X, e, self.number_of_clauses, self.clause_output, self.clause_bank_included_dynamic, self.clause_bank_included_dynamic_length,
             self.clause_bank_included_static, self.clause_bank_included_static_length)
+
+        # Encode 32 examples into bitform, one int per bit, collecting 32 examples if e % 32 == 0
+            
+        if e % 32 == 0:
+            self.packed_X = pack_X_numba(encoded_X, e, self.packed_X, self.number_of_literals)
+
+            self.clause_output_batch = calculate_clause_outputs_predict_packed_X_numba(self.packed_X, self.number_of_clauses, self.clause_output_batch, self.clause_bank_included_dynamic, self.clause_bank_included_dynamic_length,
+                self.clause_bank_included_static, self.clause_bank_included_static_length)
+        return unpack_clause_output_numba(e, self.clause_output, self.clause_output_batch, self.number_of_clauses)
+
 
     def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
         return calculate_clause_outputs_update_numba(literal_active, encoded_X, e, self.number_of_clauses, self.clause_output, self.clause_bank_included_dynamic, self.clause_bank_included_dynamic_length,
