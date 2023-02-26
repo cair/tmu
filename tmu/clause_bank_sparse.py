@@ -170,7 +170,7 @@ def type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_include
                     clause_output = 0
                     break
 
-        if clause_output and clause_bank_included_dynamic_length[j] <= max_included_literals:
+        if clause_output and (clause_bank_included_static_length[j] + clause_bank_included_dynamic_length[j] <= max_included_literals):
             # Type Ia Feedback
 
             for k in range(clause_bank_included_dynamic_length[j]-1, -1, -1):
@@ -395,6 +395,9 @@ class ClauseBankSparse:
                     self.clause_bank_included_dynamic_length, self.clause_bank_excluded_dynamic, self.clause_bank_excluded_dynamic_length,
                     self.clause_bank_included_static, self.clause_bank_included_static_length)
         restore_Xi_numba(encoded_X.indices[encoded_X.indptr[e]:encoded_X.indptr[e+1]], self.Xi, self.number_of_features)
+
+    def number_of_include_actions(self, clause):
+        return self.clause_bank_included_static_length[clause] + self.clause_bank_included_dynamic_length[clause]
 
     def prepare_X(self, X):
         return csr_matrix(X, dtype=np.uint32)
