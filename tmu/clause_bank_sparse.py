@@ -131,6 +131,9 @@ def type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_include
                     literal_active, feedback_to_ta, Xi, number_of_clauses, number_of_literals, number_of_states, clause_bank_included_dynamic,
                     clause_bank_included_dynamic_length, clause_bank_excluded_dynamic, clause_bank_excluded_dynamic_length, clause_bank_included_static,
                     clause_bank_included_static_length):
+    
+    absorbing = False
+
     for j in range(number_of_clauses):
         if np.random.random() > update_p or not clause_active[j]:
             continue
@@ -178,9 +181,9 @@ def type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_include
                 literal_pos = clause_bank_included_dynamic[j, k, 0] % 32
 
                 if Xi[literal_chunk] & (1 << literal_pos) > 0:
-                    if clause_bank_included_dynamic[j, k, 1] < number_of_states-1:# and np.random.random() <= (s-1.0)/s:
+                    if clause_bank_included_dynamic[j, k, 1] < number_of_states-1 and (boost_true_positive_feedback or feedback_to_ta[literal_chunk] & (1 << literal_pos) == 0):
                         clause_bank_included_dynamic[j, k, 1] += 1
-                    else:
+                    elif clause_bank_included_dynamic[j, k, 1] == number_of_states-1 and absorbing:
                         clause_bank_included_static[j, clause_bank_included_static_length[j]] = clause_bank_included_dynamic[j, k, 0]
                         clause_bank_included_static_length[j] += 1
 
@@ -204,7 +207,7 @@ def type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_include
                 literal_pos = clause_bank_excluded_dynamic[j, k, 0] % 32
 
                 if Xi[literal_chunk] & (1 << literal_pos) > 0:
-                    if True or np.random.random() <= (s-1.0)/s:
+                    if boost_true_positive_feedback or feedback_to_ta[literal_chunk] & (1 << literal_pos) == 0:
                         clause_bank_excluded_dynamic[j, k, 1] += 1
                         if clause_bank_excluded_dynamic[j, k, 1] >= number_of_states//2:
                             clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 0] = clause_bank_excluded_dynamic[j, k, 0]
@@ -217,7 +220,7 @@ def type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_include
                 elif feedback_to_ta[literal_chunk] & (1 << literal_pos):
                     if clause_bank_excluded_dynamic[j, k, 1] > 0:
                         clause_bank_excluded_dynamic[j, k, 1] -= 1
-                    else:
+                    elif absorbing:
                         clause_bank_excluded_dynamic_length[j] -= 1
                         clause_bank_excluded_dynamic[j, k, 0] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 0]       
                         clause_bank_excluded_dynamic[j, k, 1] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 1]
@@ -245,7 +248,7 @@ def type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_include
                 if feedback_to_ta[literal_chunk] & (1 << literal_pos):
                     if clause_bank_excluded_dynamic[j, k, 1] > 0:
                         clause_bank_excluded_dynamic[j, k, 1] -= 1
-                    else:
+                    elif absorbing:
                         clause_bank_excluded_dynamic_length[j] -= 1
                         clause_bank_excluded_dynamic[j, k, 0] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 0]       
                         clause_bank_excluded_dynamic[j, k, 1] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 1]
