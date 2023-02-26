@@ -6,7 +6,7 @@ current_dir = Path(__file__).parent
 
 setup(
     name='tmu',
-    version='0.7.6',
+    version='0.7.7',
     url='https://github.com/cair/tmu/',
     author='Ole-Christoffer Granmo',
     author_email='ole.granmo@uia.no',
