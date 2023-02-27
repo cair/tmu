@@ -75,6 +75,7 @@ $(function() {
 <li>calculate_clause_outputs_predict()
 : <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html#a37fa924445a68935ded1c008fe8b01d0">ClauseBank</a>
 , <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank__cuda_1_1ImplClauseBankCUDA.html#a37fa924445a68935ded1c008fe8b01d0">ImplClauseBankCUDA</a>
+, <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#a37fa924445a68935ded1c008fe8b01d0">ClauseBankSparse</a>
 , <a class="el" href="classtmu_1_1clause__weight__bank_1_1ClauseWeightBank.html#a37fa924445a68935ded1c008fe8b01d0">ClauseWeightBank</a>
 </li>
 <li>calculate_clause_outputs_predict_gpu
@@ -83,6 +84,7 @@ $(function() {
 <li>calculate_clause_outputs_update()
 : <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html#a86b64a31beea615ed4c0136df3d9fac5">ClauseBank</a>
 , <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank__cuda_1_1ImplClauseBankCUDA.html#a86b64a31beea615ed4c0136df3d9fac5">ImplClauseBankCUDA</a>
+, <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#a86b64a31beea615ed4c0136df3d9fac5">ClauseBankSparse</a>
 , <a class="el" href="classtmu_1_1clause__weight__bank_1_1ClauseWeightBank.html#a86b64a31beea615ed4c0136df3d9fac5">ClauseWeightBank</a>
 </li>
 <li>calculate_clause_outputs_update_gpu
@@ -130,8 +132,26 @@ $(function() {
 , <a class="el" href="classtmu_1_1models_1_1regression_1_1vanilla__regressor_1_1TMRegressor.html#a03ecc11494bd46faf3118d5b0be4c6cf">TMRegressor</a>
 , <a class="el" href="classvanilla__relational_1_1TMRelational.html#a03ecc11494bd46faf3118d5b0be4c6cf">TMRelational</a>
 </li>
+<li>clause_bank_excluded_dynamic
+: <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#a785b410c91f3ba879ce054c12b236bc8">ClauseBankSparse</a>
+</li>
+<li>clause_bank_excluded_dynamic_length
+: <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#ad1fbd93ff2a3fd01304bd369508a5033">ClauseBankSparse</a>
+</li>
 <li>clause_bank_gpu
 : <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank__cuda_1_1ImplClauseBankCUDA.html#abae40cab3bdc4ce2dbca7fb63b0847b3">ImplClauseBankCUDA</a>
+</li>
+<li>clause_bank_included_dynamic
+: <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#aba4449d90fe49ae3299bf0e025fd83b2">ClauseBankSparse</a>
+</li>
+<li>clause_bank_included_dynamic_length
+: <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#a5a532119d4042e916378aa14e0f47fd1">ClauseBankSparse</a>
+</li>
+<li>clause_bank_included_static
+: <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#ad00ee57973c9ed3db64c237589e7487a">ClauseBankSparse</a>
+</li>
+<li>clause_bank_included_static_length
+: <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#a21700844e15777be7f5a56a31b0cece4">ClauseBankSparse</a>
 </li>
 <li>clause_bank_ind
 : <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html#a3b50cc0860fefa475b81fad443b47b57">ClauseBank</a>
@@ -153,10 +173,12 @@ $(function() {
 <li>clause_output
 : <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html#ac048e0a2bd3a7ee08377c7bdd9e2f8a6">ClauseBank</a>
 , <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank__cuda_1_1ImplClauseBankCUDA.html#ac048e0a2bd3a7ee08377c7bdd9e2f8a6">ImplClauseBankCUDA</a>
+, <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#ac048e0a2bd3a7ee08377c7bdd9e2f8a6">ClauseBankSparse</a>
 , <a class="el" href="classtmu_1_1clause__weight__bank_1_1ClauseWeightBank.html#ac048e0a2bd3a7ee08377c7bdd9e2f8a6">ClauseWeightBank</a>
 </li>
 <li>clause_output_batch
 : <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html#ad020802ece300475f35ed26db2374768">ClauseBank</a>
+, <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#ad020802ece300475f35ed26db2374768">ClauseBankSparse</a>
 , <a class="el" href="classtmu_1_1clause__weight__bank_1_1ClauseWeightBank.html#ad020802ece300475f35ed26db2374768">ClauseWeightBank</a>
 </li>
 <li>clause_output_gpu
@@ -165,6 +187,7 @@ $(function() {
 <li>clause_output_patchwise
 : <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html#a651852f5b72b3bae7f3ea2c5f8387da4">ClauseBank</a>
 , <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank__cuda_1_1ImplClauseBankCUDA.html#a651852f5b72b3bae7f3ea2c5f8387da4">ImplClauseBankCUDA</a>
+, <a class="el" href="classtmu_1_1clause__bank__sparse_1_1ClauseBankSparse.html#a651852f5b72b3bae7f3ea2c5f8387da4">ClauseBankSparse</a>
 , <a class="el" href="classtmu_1_1clause__weight__bank_1_1ClauseWeightBank.html#a651852f5b72b3bae7f3ea2c5f8387da4">ClauseWeightBank</a>
 </li>
 <li>clause_precision()
