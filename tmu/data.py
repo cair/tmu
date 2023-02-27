@@ -1,12 +1,14 @@
 import abc
 import pathlib
 import shutil
+import sys
 import tempfile
 import typing
 from typing import Dict
 import numpy as np
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
+import sklearn
 from urllib.request import urlopen
 import json
 import platform
@@ -424,7 +426,19 @@ class TMUDataset:
 
 class MNIST(TMUDataset):
     def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
-        X, y = fetch_openml("mnist_784", version=1, return_X_y=True, as_frame=False, parser="pandas")
+        kwargs = dict()
+
+        if sys.version_info > (3, 7):
+            kwargs["parser"] = "pandas"
+
+        X, y = fetch_openml(
+            "mnist_784",
+            version=1,
+            return_X_y=True,
+            as_frame=False,
+            **kwargs
+        )
+
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=10000)
         y_train = y_train.astype(int)
         y_test = y_test.astype(int)

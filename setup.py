@@ -49,6 +49,6 @@ setup(
         "cffi>=1.0.0",
         "numpy",
         "pandas",
-        "scikit-learn>=1.2.1"
+        "scikit-learn"
     ]
 )
