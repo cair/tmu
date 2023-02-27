@@ -52,6 +52,9 @@ class TMCoalescedClassifier(TMBasis):
 
         elif self.platform == 'CUDA':
             self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
+        elif self.platform == 'CPU_sparse':
+            from tmu.clause_bank_sparse import ClauseBankSparse
+            self.clause_bank = ClauseBankSparse(X, self.number_of_clauses, 2**self.number_of_state_bits_ta, self.patch_dim)
         else:
             raise RuntimeError(f"Unknown platform of type: {self.platform}")
 
