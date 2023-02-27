@@ -38,20 +38,39 @@ class TMClassifier(TMBaseClassifier):
             type_iii_feedback=False,
             d=200.0,
             platform='CPU',
-            patch_dim=None, feature_negation=True,
-            boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8,
-            number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0,
+            patch_dim=None,
+            feature_negation=True,
+            boost_true_positive_feedback=1,
+            max_included_literals=None,
+            number_of_state_bits_ta=8,
+            number_of_state_bits_ind=8,
+            weighted_clauses=False,
+            clause_drop_p=0.0,
+            literal_drop_p=0.0,
             batch_size=100,
             incremental=True
     ):
-        super().__init__(number_of_clauses, T, s, confidence_driven_updating=confidence_driven_updating,
-                         type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback, d=d, platform=platform,
-                         patch_dim=patch_dim, feature_negation=feature_negation,
-                         boost_true_positive_feedback=boost_true_positive_feedback,
-                         max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
-                         number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
-                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, batch_size=batch_size,
-                         incremental=incremental)
+        super().__init__(
+            number_of_clauses,
+            T,
+            s,
+            confidence_driven_updating=confidence_driven_updating,
+            type_i_ii_ratio=type_i_ii_ratio,
+            type_iii_feedback=type_iii_feedback,
+            d=d,
+            platform=platform,
+            patch_dim=patch_dim,
+            feature_negation=feature_negation,
+            boost_true_positive_feedback=boost_true_positive_feedback,
+            max_included_literals=max_included_literals,
+            number_of_state_bits_ta=number_of_state_bits_ta,
+            number_of_state_bits_ind=number_of_state_bits_ind,
+            weighted_clauses=weighted_clauses,
+            clause_drop_p=clause_drop_p,
+            literal_drop_p=literal_drop_p,
+            batch_size=batch_size,
+            incremental=incremental
+        )
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
         _LOGGER.debug("Initializing clause bank....")
@@ -80,13 +99,15 @@ class TMClassifier(TMBaseClassifier):
             clause_bank_args = dict(
                 X=X,
                 number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=2**self.number_of_state_bits_ta,
+                number_of_state_bits_ta=2 ** self.number_of_state_bits_ta,
                 patch_dim=self.patch_dim
             )
         else:
             raise NotImplementedError(f"Could not find platform of type {self.platform}.")
 
         assert len(self.clause_banks) == 0, "There should be no existing clause banks when init_clause_bank is called!"
+
+        # Create clause banks for TM
         self.clause_banks = [clause_bank_type(**clause_bank_args) for _ in range(self.number_of_classes)]
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
