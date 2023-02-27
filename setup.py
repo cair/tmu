@@ -48,6 +48,7 @@ setup(
     install_requires=[
         "cffi>=1.0.0",
         "numpy",
-        "pandas"
+        "pandas",
+        "scikit-learn>=1.2.1"
     ]
 )
