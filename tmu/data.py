@@ -427,8 +427,9 @@ class TMUDataset:
 class MNIST(TMUDataset):
     def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
         kwargs = dict()
+        pyver = sys.version_info
 
-        if sys.version_info > (3, 7):
+        if pyver[0] >= 3 and pyver[1] > 7:
             kwargs["parser"] = "pandas"
 
         X, y = fetch_openml(
