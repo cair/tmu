@@ -47,6 +47,7 @@ setup(
     ],
     install_requires=[
         "cffi>=1.0.0",
-        "numpy"
+        "numpy",
+        "pandas"
     ]
 )
