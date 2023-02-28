@@ -384,26 +384,6 @@ class TMUDatasetSource:
         return [x.name for x in dataset_dir.glob("*") if x.is_dir()]
 
 
-if __name__ == "__main__":
-    class TestBase(TMUDatasetSource):
-
-        def __init__(self):
-            pass
-
-
-    data = TestBase().get_dataset(
-        "XOR_biased",
-        cache=False,
-        cache_max_age=1,
-        features=["X", "Y"],
-        labels=["xor"],
-        shuffle=True,
-        train_ratio=1000
-    )
-
-    print(data[0].shape, data[1].shape)
-
-
 class TMUDataset:
 
     def __init__(self):
@@ -427,7 +407,7 @@ class TMUDataset:
 class MNIST(TMUDataset):
     def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
         kwargs = dict()
-        pyver = tuple(sklearn.__version__.split("."))
+        pyver = tuple([int(x) for x in sklearn.__version__.split(".")])
 
         if pyver[0] >= 1 and pyver[1] >= 2:
             kwargs["parser"] = "pandas"
@@ -457,3 +437,25 @@ class MNIST(TMUDataset):
 
         return np.where(dataset.reshape((dataset.shape[0], 28 * 28)) > 75, 1, 0)
 
+
+if __name__ == "__main__":
+
+    MNIST().get()
+
+    class TestBase(TMUDatasetSource):
+
+        def __init__(self):
+            pass
+
+
+    data = TestBase().get_dataset(
+        "XOR_biased",
+        cache=False,
+        cache_max_age=1,
+        features=["X", "Y"],
+        labels=["xor"],
+        shuffle=True,
+        train_ratio=1000
+    )
+
+    print(data[0].shape, data[1].shape)
