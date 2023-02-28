@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['weight_5fbank_2epy_810',['weight_bank.py',['../weight__bank_8py.html',1,'']]],
-  ['weightbank_2ec_811',['WeightBank.c',['../WeightBank_8c.html',1,'']]],
-  ['weightbank_2eh_812',['WeightBank.h',['../WeightBank_8h.html',1,'']]]
+  ['vanilla_5fclassifier_2epy_811',['vanilla_classifier.py',['../vanilla__classifier_8py.html',1,'']]],
+  ['vanilla_5fregressor_2epy_812',['vanilla_regressor.py',['../vanilla__regressor_8py.html',1,'']]],
+  ['vanilla_5frelational_2epy_813',['vanilla_relational.py',['../vanilla__relational_8py.html',1,'']]]
 ];
