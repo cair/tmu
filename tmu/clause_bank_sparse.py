@@ -22,270 +22,215 @@
 # https://arxiv.org/abs/1905.09688
 
 import numpy as np
-
-import tmu.tools
-
+from scipy.sparse import csr_matrix
 from numba import jit
 
 @jit(nopython=True)
-def pack_X_numba(encoded_X, e, packed_X, number_of_literals):
-    packed_X[:] = 0
+def prepare_Xi_numba(indices, Xi, number_of_features):
+    for k in indices:
+        chunk = k // 32
+        pos = k % 32
+        Xi[chunk] |= (1 << pos)
+        chunk = (k + number_of_features) // 32
+        pos = (k + number_of_features) % 32
+        Xi[chunk] &= ~(1 << pos)
+
+@jit(nopython=True)
+def restore_Xi_numba(indices, Xi, number_of_features):
+    for k in indices:
+        chunk = k // 32
+        pos = k % 32
+        Xi[chunk] &= ~(1 << pos)
+        chunk = (k + number_of_features) // 32
+        pos = (k + number_of_features) % 32
+        Xi[chunk] |= (1 << pos)
+
+@jit(nopython=True)
+def pack_X_numba(indptr, indices, e, packed_X, number_of_literals):
+    packed_X[:number_of_literals//2] = 0
+    packed_X[number_of_literals//2:] = ~0
     for i in range(32):
-        if e+i >= encoded_X.shape[0]:
+        if e+i >= indptr.shape[0]-1:
             break
 
-        for k in range(number_of_literals):
-            chunk = k // 32
-            pos = k % 32
-
-            if encoded_X[e+i,chunk] & (1 << pos) > 0:
-                packed_X[k] |= (1 << i)
-    return packed_X
-
-jit(nopython=True)
-def unpack_X_numba(encoded_X, e, packed_X, number_of_literals):
-
-    encoded_X[e:e+i] = 0
-    for i in range(32):
-        if e+i >= encoded_X.shape[0]:
-            break
-
-        for k in range(number_of_literals):
-            chunk = k // 32
-            pos = k % 32
-
-            if packed_X[k] & (1 << i) > 0:
-                encoded_X[e+i,chunk] |= (1 << pos)
-    return packed_X
+        for k in indices[indptr[e+i]:indptr[e+i+1]]:
+            packed_X[k] |= (1 << i)
+            packed_X[k + number_of_literals//2] &= ~(1 << i)
 
 @jit(nopython=True)
 def unpack_clause_output_numba(e, clause_output, clause_output_batch, number_of_clauses):
     for j in range(number_of_clauses):
         clause_output[j] = (clause_output_batch[j] & (1 << (e % 32))) > 0
-    return clause_output
 
 @jit(nopython=True)
-def calculate_clause_outputs_update_numba(literal_active, encoded_X, e, number_of_clauses, clause_output, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
-                    clause_bank_included_static, clause_bank_included_static_length):
+def calculate_clause_outputs_update_numba(literal_active, Xi, number_of_clauses, clause_output, clause_bank_included, clause_bank_included_length):
     for j in range(number_of_clauses):
         clause_output[j] = 1
-
-        for k in range(clause_bank_included_static_length[j]):
-                literal_chunk = clause_bank_included_static[j, k] // 32
-                literal_pos = clause_bank_included_static[j, k] % 32
-                if encoded_X[e, literal_chunk] & (1 << literal_pos) == 0:
-                    clause_output[j] = 0
-                    break
-
-        if clause_output[j] == 0:
-            continue
-
-        for k in range(clause_bank_included_dynamic_length[j]):
-            literal_chunk = clause_bank_included_dynamic[j, k, 0] // 32
-            literal_pos = clause_bank_included_dynamic[j, k, 0] % 32
-            if encoded_X[e, literal_chunk] & (1 << literal_pos) == 0:
+        for k in range(clause_bank_included_length[j]):
+            literal_chunk = clause_bank_included[j, k, 0] // 32
+            literal_pos = clause_bank_included[j, k, 0] % 32
+            if Xi[literal_chunk] & (1 << literal_pos) == 0:
                 clause_output[j] = 0
                 break
 
-    return clause_output
-
 @jit(nopython=True)
-def calculate_clause_outputs_predict_packed_X_numba(packed_X, number_of_clauses, clause_output_batch, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
-            clause_bank_included_static, clause_bank_included_static_length):
+def calculate_clause_outputs_predict_packed_X_numba(packed_X, number_of_clauses, clause_output_batch, clause_bank_included, clause_bank_included_length):
     for j in range(number_of_clauses):
-        if clause_bank_included_dynamic_length[j] == 0 and clause_bank_included_static_length[j] == 0:
+        if clause_bank_included_length[j] == 0:
             clause_output_batch[j] = 0
         else:
             clause_output_batch[j] = ~0
 
-            for k in range(clause_bank_included_static_length[j]):
-                clause_output_batch[j] &= packed_X[clause_bank_included_static[j, k]]
-
-            for k in range(clause_bank_included_dynamic_length[j]):
-                clause_output_batch[j] &= packed_X[clause_bank_included_dynamic[j, k, 0]]
-
-    return clause_output_batch
+            for k in range(clause_bank_included_length[j]):
+                clause_output_batch[j] &= packed_X[clause_bank_included[j, k, 0]]
 
 @jit(nopython=True)
-def calculate_clause_outputs_predict_numba(encoded_X, e, number_of_clauses, clause_output, clause_bank_included_dynamic, clause_bank_included_dynamic_length,
-                    clause_bank_included_static, clause_bank_included_static_length):
+def calculate_clause_outputs_predict_numba(Xi, number_of_clauses, clause_output, clause_bank_included, clause_bank_included_length):
     for j in range(number_of_clauses):
-        if clause_bank_included_dynamic_length[j] == 0 and clause_bank_included_static_length[j] == 0:
+        if clause_bank_included_length[j] == 0:
             clause_output[j] = 0
         else:
             clause_output[j] = 1
 
-            for k in range(clause_bank_included_static_length[j]):
-                literal_chunk = clause_bank_included_static[j, k] // 32
-                literal_pos = clause_bank_included_static[j, k] % 32
-                if encoded_X[e, literal_chunk] & (1 << literal_pos) == 0:
+            for k in range(clause_bank_included_length[j]):
+                literal_chunk = clause_bank_included[j, k, 0] // 32
+                literal_pos = clause_bank_included[j, k, 0] % 32
+                if Xi[literal_chunk] & (1 << literal_pos) == 0:
                     clause_output[j] = 0
                     break
-
-            if clause_output[j] == 0:
-                continue
-
-            for k in range(clause_bank_included_dynamic_length[j]):
-                literal_chunk = clause_bank_included_dynamic[j, k, 0] // 32
-                literal_pos = clause_bank_included_dynamic[j, k, 0] % 32
-                if encoded_X[e, literal_chunk] & (1 << literal_pos) == 0:
-                    clause_output[j] = 0
-                    break
-
-    return clause_output
 
 @jit(nopython=True)
 def type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
-                    literal_active, encoded_X, e, number_of_clauses, number_of_states, clause_bank_included_dynamic,
-                    clause_bank_included_dynamic_length, clause_bank_excluded_dynamic, clause_bank_excluded_dynamic_length, clause_bank_included_static,
-                    clause_bank_included_static_length):
+                    literal_active, feedback_to_ta, Xi, number_of_clauses, number_of_literals, number_of_states, clause_bank_included,
+                    clause_bank_included_length, clause_bank_excluded, clause_bank_excluded_length):
     for j in range(number_of_clauses):
-        if np.random.random() > update_p or not clause_active[j]:
+        if (not clause_active[j]) or np.random.random() > update_p:
             continue
 
-        clause_output = 1
+        p = 1.0/s
+        # number_of_decrements = np.random.normal(1.0*number_of_literals*p, np.sqrt(number_of_literals * p * (1.0 - p)))
+        # if number_of_decrements > number_of_literals:
+        #     number_of_decrements = number_of_literals
+        # elif number_of_decrements < 0:
+        #     number_of_decrements = 0
 
-        for k in range(clause_bank_included_static_length[j]):
-            literal_chunk = clause_bank_included_static[j, k] // 32
-            literal_pos = clause_bank_included_static[j, k] % 32
-            if encoded_X[e, literal_chunk] & (1 << literal_pos) == 0:
+        number_of_decrements = np.random.binomial(number_of_literals, p)
+
+        feedback_to_ta[:] = 0
+        for k in range(number_of_decrements):
+            literal = np.random.randint(number_of_literals)
+            literal_chunk = literal // 32
+            literal_pos = literal % 32
+            while feedback_to_ta[literal_chunk] & (1 << literal_pos):
+                literal = np.random.randint(number_of_literals)
+                literal_chunk = literal // 32
+                literal_pos = literal % 32
+            feedback_to_ta[literal_chunk] |= (1 << literal_pos)
+
+        clause_output = 1
+        for k in range(clause_bank_included_length[j]):
+            literal_chunk = clause_bank_included[j, k, 0] // 32
+            literal_pos = clause_bank_included[j, k, 0] % 32
+            if Xi[literal_chunk] & (1 << literal_pos) == 0:
                 clause_output = 0
                 break
 
-        if clause_output:
-            for k in range(clause_bank_included_dynamic_length[j]):
-                literal_chunk = clause_bank_included_dynamic[j, k, 0] // 32
-                literal_pos = clause_bank_included_dynamic[j, k, 0] % 32
-                if encoded_X[e, literal_chunk] & (1 << literal_pos) == 0:
-                    clause_output = 0
-                    break
+        if clause_output and (clause_bank_included_length[j] <= max_included_literals):
+            for k in range(clause_bank_included_length[j]-1, -1, -1):
+                literal_chunk = clause_bank_included[j, k, 0] // 32
+                literal_pos = clause_bank_included[j, k, 0] % 32
 
-        if clause_output and clause_bank_included_dynamic_length[j] <= max_included_literals:
-            # Type Ia Feedback
+                if Xi[literal_chunk] & (1 << literal_pos) > 0:
+                    if clause_bank_included[j, k, 1] < number_of_states-1 and (boost_true_positive_feedback or (feedback_to_ta[literal_chunk] & (1 << literal_pos) == 0)):
+                        clause_bank_included[j, k, 1] += 1
+                elif feedback_to_ta[literal_chunk] & (1 << literal_pos):
+                    clause_bank_included[j, k, 1] -= 1
+                    if clause_bank_included[j, k, 1] < number_of_states//2:
+                        clause_bank_excluded[j, clause_bank_excluded_length[j], 0] = clause_bank_included[j, k, 0]
+                        clause_bank_excluded[j, clause_bank_excluded_length[j], 1] = clause_bank_included[j, k, 1]
+                        clause_bank_excluded_length[j] += 1
 
-            for k in range(clause_bank_included_dynamic_length[j]-1, -1, -1):
-                literal_chunk = clause_bank_included_dynamic[j, k, 0] // 32
-                literal_pos = clause_bank_included_dynamic[j, k, 0] % 32
+                        clause_bank_included_length[j] -= 1
+                        clause_bank_included[j, k, 0] = clause_bank_included[j, clause_bank_included_length[j], 0]       
+                        clause_bank_included[j, k, 1] = clause_bank_included[j, clause_bank_included_length[j], 1]
 
-                if encoded_X[e, literal_chunk] & (1 << literal_pos) > 0:
-                    if clause_bank_included_dynamic[j, k, 1] < number_of_states-1:# and np.random.random() <= (s-1.0)/s:
-                        clause_bank_included_dynamic[j, k, 1] += 1
-                    else:
-                        clause_bank_included_static[j, clause_bank_included_static_length[j]] = clause_bank_included_dynamic[j, k, 0]
-                        clause_bank_included_static_length[j] += 1
+            for k in range(clause_bank_excluded_length[j]-1, -1, -1):
+                literal_chunk = clause_bank_excluded[j, k, 0] // 32
+                literal_pos = clause_bank_excluded[j, k, 0] % 32
 
-                        clause_bank_included_dynamic_length[j] -= 1
-                        clause_bank_included_dynamic[j, k, 0] = clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 0]       
-                        clause_bank_included_dynamic[j, k, 1] = clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 1]
+                if Xi[literal_chunk] & (1 << literal_pos) > 0:
+                    if boost_true_positive_feedback or (feedback_to_ta[literal_chunk] & (1 << literal_pos) == 0):
+                        clause_bank_excluded[j, k, 1] += 1
+                        if clause_bank_excluded[j, k, 1] >= number_of_states//2:
+                            clause_bank_included[j, clause_bank_included_length[j], 0] = clause_bank_excluded[j, k, 0]
+                            clause_bank_included[j, clause_bank_included_length[j], 1] = clause_bank_excluded[j, k, 1]
+                            clause_bank_included_length[j] += 1
 
-                elif np.random.random() <= 1.0/s:
-                    clause_bank_included_dynamic[j, k, 1] -= 1
-                    if clause_bank_included_dynamic[j, k, 1] < number_of_states//2:
-                        clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 0] = clause_bank_included_dynamic[j, k, 0]
-                        clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 1] = clause_bank_included_dynamic[j, k, 1]
-                        clause_bank_excluded_dynamic_length[j] += 1
-
-                        clause_bank_included_dynamic_length[j] -= 1
-                        clause_bank_included_dynamic[j, k, 0] = clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 0]       
-                        clause_bank_included_dynamic[j, k, 1] = clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 1]
-
-            for k in range(clause_bank_excluded_dynamic_length[j]-1, -1, -1):
-                literal_chunk = clause_bank_excluded_dynamic[j, k, 0] // 32
-                literal_pos = clause_bank_excluded_dynamic[j, k, 0] % 32
-
-                if encoded_X[e, literal_chunk] & (1 << literal_pos) > 0:
-                    if True or np.random.random() <= (s-1.0)/s:
-                        clause_bank_excluded_dynamic[j, k, 1] += 1
-                        if clause_bank_excluded_dynamic[j, k, 1] >= number_of_states//2:
-                            clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 0] = clause_bank_excluded_dynamic[j, k, 0]
-                            clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 1] = clause_bank_excluded_dynamic[j, k, 1]
-                            clause_bank_included_dynamic_length[j] += 1
-
-                            clause_bank_excluded_dynamic_length[j] -= 1
-                            clause_bank_excluded_dynamic[j, k, 0] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 0]       
-                            clause_bank_excluded_dynamic[j, k, 1] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 1]
-                elif np.random.random() <= 1.0/s:
-                    if clause_bank_excluded_dynamic[j, k, 1] > 0:
-                        clause_bank_excluded_dynamic[j, k, 1] -= 1
-                    else:
-                        clause_bank_excluded_dynamic_length[j] -= 1
-                        clause_bank_excluded_dynamic[j, k, 0] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 0]       
-                        clause_bank_excluded_dynamic[j, k, 1] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 1]
+                            clause_bank_excluded_length[j] -= 1
+                            clause_bank_excluded[j, k, 0] = clause_bank_excluded[j, clause_bank_excluded_length[j], 0]       
+                            clause_bank_excluded[j, k, 1] = clause_bank_excluded[j, clause_bank_excluded_length[j], 1]
+                elif (feedback_to_ta[literal_chunk] & (1 << literal_pos)) and (clause_bank_excluded[j, k, 1] > 0):
+                    clause_bank_excluded[j, k, 1] -= 1
         else:
-            # Type Ib Feedback
+            for k in range(clause_bank_included_length[j]-1, -1, -1):
+                literal_chunk = clause_bank_included[j, k, 0] // 32
+                literal_pos = clause_bank_included[j, k, 0] % 32
+                if feedback_to_ta[literal_chunk] & (1 << literal_pos):
+                    clause_bank_included[j, k, 1] -= 1
 
-            for k in range(clause_bank_included_dynamic_length[j]-1, -1, -1):
-                if np.random.random() <= 1.0/s:
-                    clause_bank_included_dynamic[j, k, 1] -= 1
+                    if clause_bank_included[j, k, 1] < number_of_states//2:
+                        clause_bank_excluded[j, clause_bank_excluded_length[j], 0] = clause_bank_included[j, k, 0]
+                        clause_bank_excluded[j, clause_bank_excluded_length[j], 1] = clause_bank_included[j, k, 1]
+                        clause_bank_excluded_length[j] += 1
 
-                    if clause_bank_included_dynamic[j, k, 1] < number_of_states//2:
-                        clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 0] = clause_bank_included_dynamic[j, k, 0]
-                        clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 1] = clause_bank_included_dynamic[j, k, 1]
-                        clause_bank_excluded_dynamic_length[j] += 1
-
-                        clause_bank_included_dynamic_length[j] -= 1
-                        clause_bank_included_dynamic[j, k, 0] = clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 0]       
-                        clause_bank_included_dynamic[j, k, 1] = clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 1]
-                        clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 0] = 0
-                        clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 1] = 0
+                        clause_bank_included_length[j] -= 1
+                        clause_bank_included[j, k, 0] = clause_bank_included[j, clause_bank_included_length[j], 0]       
+                        clause_bank_included[j, k, 1] = clause_bank_included[j, clause_bank_included_length[j], 1]
             
-            for k in range(clause_bank_excluded_dynamic_length[j]-1, -1, -1):
-                if np.random.random() <= 1.0/s:
-                    if clause_bank_excluded_dynamic[j, k, 1] > 0:
-                        clause_bank_excluded_dynamic[j, k, 1] -= 1
-                    else:
-                        clause_bank_excluded_dynamic_length[j] -= 1
-                        clause_bank_excluded_dynamic[j, k, 0] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 0]       
-                        clause_bank_excluded_dynamic[j, k, 1] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 1]
+            for k in range(clause_bank_excluded_length[j]-1, -1, -1):
+                literal_chunk = clause_bank_excluded[j, k, 0] // 32
+                literal_pos = clause_bank_excluded[j, k, 0] % 32
+                if (feedback_to_ta[literal_chunk] & (1 << literal_pos)) and (clause_bank_excluded[j, k, 1] > 0):
+                    clause_bank_excluded[j, k, 1] -= 1
 
 @jit(nopython=True)
-def type_ii_feedback_numba(update_p, clause_active, literal_active, encoded_X, e, number_of_clauses, number_of_states, clause_bank_included_dynamic,
-                    clause_bank_included_dynamic_length, clause_bank_excluded_dynamic, clause_bank_excluded_dynamic_length, clause_bank_included_static,
-                    clause_bank_included_static_length):
+def type_ii_feedback_numba(update_p, clause_active, literal_active, Xi, number_of_clauses, number_of_states, clause_bank_included,
+                    clause_bank_included_length, clause_bank_excluded, clause_bank_excluded_length):
     for j in range(number_of_clauses):
-        if np.random.random() > update_p or not clause_active[j]:
+        if (not clause_active[j]) or np.random.random() > update_p:
             continue
 
         clause_output = 1
-
-        for k in range(clause_bank_included_static_length[j]):
-            literal_chunk = clause_bank_included_static[j, k] // 32
-            literal_pos = clause_bank_included_static[j, k] % 32
-            if encoded_X[e, literal_chunk] & (1 << literal_pos) == 0:
+        for k in range(clause_bank_included_length[j]):
+            literal_chunk = clause_bank_included[j, k, 0] // 32
+            literal_pos = clause_bank_included[j, k, 0] % 32
+            if Xi[literal_chunk] & (1 << literal_pos) == 0:
                 clause_output = 0
                 break
-
-        if clause_output:
-            for k in range(clause_bank_included_dynamic_length[j]):
-                literal_chunk = clause_bank_included_dynamic[j, k, 0] // 32
-                literal_pos = clause_bank_included_dynamic[j, k, 0] % 32
-                if encoded_X[e, literal_chunk] & (1 << literal_pos) == 0:
-                    clause_output = 0
-                    break
 
         if not clause_output:
             continue
 
         # Type II Feedback
 
-        for k in range(clause_bank_excluded_dynamic_length[j]-1, -1, -1):
-            literal_chunk = clause_bank_excluded_dynamic[j, k, 0] // 32
-            literal_pos = clause_bank_excluded_dynamic[j, k, 0] % 32
+        for k in range(clause_bank_excluded_length[j]-1, -1, -1):
+            literal_chunk = clause_bank_excluded[j, k, 0] // 32
+            literal_pos = clause_bank_excluded[j, k, 0] % 32
 
-            if encoded_X[e, literal_chunk] & (1 << literal_pos) == 0:
-                clause_bank_excluded_dynamic[j, k, 1] += 1
-                if clause_bank_excluded_dynamic[j, k, 1] >= number_of_states//2:
-                    clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 0] = clause_bank_excluded_dynamic[j, k, 0]
-                    clause_bank_included_dynamic[j, clause_bank_included_dynamic_length[j], 1] = clause_bank_excluded_dynamic[j, k, 1]
-                    clause_bank_included_dynamic_length[j] += 1
+            if Xi[literal_chunk] & (1 << literal_pos) == 0:
+                clause_bank_excluded[j, k, 1] += 1
+                if clause_bank_excluded[j, k, 1] >= number_of_states//2:
+                    clause_bank_included[j, clause_bank_included_length[j], 0] = clause_bank_excluded[j, k, 0]
+                    clause_bank_included[j, clause_bank_included_length[j], 1] = clause_bank_excluded[j, k, 1]
+                    clause_bank_included_length[j] += 1
 
-                    clause_bank_excluded_dynamic_length[j] -= 1
-                    clause_bank_excluded_dynamic[j, k, 0] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 0]       
-                    clause_bank_excluded_dynamic[j, k, 1] = clause_bank_excluded_dynamic[j, clause_bank_excluded_dynamic_length[j], 1]
+                    clause_bank_excluded_length[j] -= 1
+                    clause_bank_excluded[j, k, 0] = clause_bank_excluded[j, clause_bank_excluded_length[j], 0]       
+                    clause_bank_excluded[j, k, 1] = clause_bank_excluded[j, clause_bank_excluded_length[j], 1]
 
 class ClauseBankSparse:
     def __init__(self, X, number_of_clauses, number_of_states, patch_dim,
-                 batching=True, incremental=True, skip=0.1):
+                 batching=True, incremental=True):
         self.number_of_clauses = int(number_of_clauses)
         self.number_of_states = int(number_of_states)
         self.patch_dim = patch_dim
@@ -320,56 +265,64 @@ class ClauseBankSparse:
 
         self.literal_clause_count = np.ascontiguousarray(np.empty((int(self.number_of_literals)), dtype=np.uint32))
 
+        self.feedback_to_ta = np.ascontiguousarray(np.empty((int(self.number_of_ta_chunks)), dtype=np.uint32))
+
         self.packed_X = np.ascontiguousarray(np.empty(self.number_of_literals, dtype=np.uint32))
 
+        self.Xi = np.ascontiguousarray(np.zeros(self.number_of_ta_chunks, dtype=np.uint32))
+        for k in range(self.number_of_features, self.number_of_literals):
+            chunk = k // 32
+            pos = k % 32
+            self.Xi[chunk] |= (1 << pos)
+        
         self.initialize_clauses()
 
     def initialize_clauses(self):
-        self.clause_bank_included_static = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals), dtype=np.uint32)) # Contains index of included literals, none at start
-        self.clause_bank_included_static_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint32))
-        
-        self.clause_bank_included_dynamic = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2), dtype=np.uint32)) # Contains index and state of included literals, none at start
-        self.clause_bank_included_dynamic_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint32)) 
+        self.clause_bank_included = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2), dtype=np.uint32)) # Contains index and state of included literals, none at start
+        self.clause_bank_included_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint32)) 
 
-        self.clause_bank_excluded_dynamic = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2), dtype=np.uint32)) # Contains index and state of excluded literals
-        self.clause_bank_excluded_dynamic_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint32)) # All literals excluded at start
-        self.clause_bank_excluded_dynamic_length[:] = self.number_of_literals
-        self.clause_bank_excluded_dynamic[:,:,0] = np.arange(self.number_of_literals, dtype=np.uint32) # Initialize clause literals with increasing index
-        self.clause_bank_excluded_dynamic[:,:,1] = self.number_of_states // 2 - 1 # Initialize excluded literals in least forgotten state
+        self.clause_bank_excluded = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2), dtype=np.uint32)) # Contains index and state of excluded literals
+        self.clause_bank_excluded_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint32)) # All literals excluded at start
+        self.clause_bank_excluded_length[:] = self.number_of_literals
+        self.clause_bank_excluded[:,:,0] = np.arange(self.number_of_literals, dtype=np.uint32) # Initialize clause literals with increasing index
+        self.clause_bank_excluded[:,:,1] = self.number_of_states // 2 - 1 # Initialize excluded literals in least forgotten state
  
     def calculate_clause_outputs_predict(self, encoded_X, e):
         if not self.batching:
-            return calculate_clause_outputs_predict_numba(encoded_X, e, self.number_of_clauses, self.clause_output, self.clause_bank_included_dynamic, self.clause_bank_included_dynamic_length,
-            self.clause_bank_included_static, self.clause_bank_included_static_length)
-            
+            prepare_Xi_numba(encoded_X.indices[encoded_X.indptr[e]:encoded_X.indptr[e+1]], self.Xi, self.number_of_features)
+            calculate_clause_outputs_predict_numba(self.Xi, self.number_of_clauses, self.clause_output, self.clause_bank_included, self.clause_bank_included_length)
+            restore_Xi_numba(encoded_X.indices[encoded_X.indptr[e]:encoded_X.indptr[e+1]], self.Xi, self.number_of_features)
+            return self.clause_output
+
         if e % 32 == 0:
-            self.packed_X = pack_X_numba(encoded_X, e, self.packed_X, self.number_of_literals)
+            pack_X_numba(encoded_X.indptr, encoded_X.indices, e, self.packed_X, self.number_of_literals)
 
-            self.clause_output_batch = calculate_clause_outputs_predict_packed_X_numba(self.packed_X, self.number_of_clauses, self.clause_output_batch, self.clause_bank_included_dynamic, self.clause_bank_included_dynamic_length,
-                self.clause_bank_included_static, self.clause_bank_included_static_length)
-        return unpack_clause_output_numba(e, self.clause_output, self.clause_output_batch, self.number_of_clauses)
-
+            calculate_clause_outputs_predict_packed_X_numba(self.packed_X, self.number_of_clauses, self.clause_output_batch, self.clause_bank_included, self.clause_bank_included_length)
+        unpack_clause_output_numba(e, self.clause_output, self.clause_output_batch, self.number_of_clauses)
+        return self.clause_output
 
     def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
-        return calculate_clause_outputs_update_numba(literal_active, encoded_X, e, self.number_of_clauses, self.clause_output, self.clause_bank_included_dynamic, self.clause_bank_included_dynamic_length,
-            self.clause_bank_included_static, self.clause_bank_included_static_length)
+        prepare_Xi_numba(encoded_X.indices[encoded_X.indptr[e]:encoded_X.indptr[e+1]], self.Xi, self.number_of_features)
+        calculate_clause_outputs_update_numba(literal_active, self.Xi, self.number_of_clauses, self.clause_output, self.clause_bank_included, self.clause_bank_included_length)
+        restore_Xi_numba(encoded_X.indices[encoded_X.indptr[e]:encoded_X.indptr[e+1]], self.Xi, self.number_of_features)
+        return self.clause_output
 
     def type_i_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
                         literal_active, encoded_X, e):
+        prepare_Xi_numba(encoded_X.indices[encoded_X.indptr[e]:encoded_X.indptr[e+1]], self.Xi, self.number_of_features)
         type_i_feedback_numba(update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
-                        literal_active, encoded_X, e, self.number_of_clauses, self.number_of_states, self.clause_bank_included_dynamic,
-                        self.clause_bank_included_dynamic_length, self.clause_bank_excluded_dynamic, self.clause_bank_excluded_dynamic_length,
-                        self.clause_bank_included_static, self.clause_bank_included_static_length)
+                        literal_active, self.feedback_to_ta, self.Xi, self.number_of_clauses, self.number_of_literals, self.number_of_states, self.clause_bank_included,
+                        self.clause_bank_included_length, self.clause_bank_excluded, self.clause_bank_excluded_length)
+        restore_Xi_numba(encoded_X.indices[encoded_X.indptr[e]:encoded_X.indptr[e+1]], self.Xi, self.number_of_features)
 
     def type_ii_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
-        type_ii_feedback_numba(update_p, clause_active, literal_active, encoded_X, e, self.number_of_clauses, self.number_of_states, self.clause_bank_included_dynamic,
-                    self.clause_bank_included_dynamic_length, self.clause_bank_excluded_dynamic, self.clause_bank_excluded_dynamic_length,
-                    self.clause_bank_included_static, self.clause_bank_included_static_length)
+        prepare_Xi_numba(encoded_X.indices[encoded_X.indptr[e]:encoded_X.indptr[e+1]], self.Xi, self.number_of_features)
+        type_ii_feedback_numba(update_p, clause_active, literal_active, self.Xi, self.number_of_clauses, self.number_of_states, self.clause_bank_included,
+                    self.clause_bank_included_length, self.clause_bank_excluded, self.clause_bank_excluded_length)
+        restore_Xi_numba(encoded_X.indices[encoded_X.indptr[e]:encoded_X.indptr[e+1]], self.Xi, self.number_of_features)
+
+    def number_of_include_actions(self, clause):
+        return self.clause_bank_included_length[clause]
 
     def prepare_X(self, X):
-        return tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim,
-                                self.patch_dim, 0)
-
-    def prepare_autoencoder_examples(self, X_csr, X_csc, active_output, accumulation):
-        return tmu.tools.produce_autoencoder_examples(X_csr, X_csc, active_output, accumulation,
-                                                      self.number_of_ta_chunks)
+        return csr_matrix(X, dtype=np.uint32)
