@@ -427,9 +427,9 @@ class TMUDataset:
 class MNIST(TMUDataset):
     def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
         kwargs = dict()
-        pyver = sys.version_info
+        pyver = tuple(sklearn.__version__.split("."))
 
-        if pyver[0] >= 3 and pyver[1] > 7:
+        if pyver[0] >= 1 and pyver[1] >= 2:
             kwargs["parser"] = "pandas"
 
         X, y = fetch_openml(
@@ -456,3 +456,4 @@ class MNIST(TMUDataset):
             return dataset
 
         return np.where(dataset.reshape((dataset.shape[0], 28 * 28)) > 75, 1, 0)
+

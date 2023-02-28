@@ -17,7 +17,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 from tmu.clause_bank.clause_bank_cuda import ClauseBank, ClauseBankCUDA
-from tmu.clause_bank_sparse import ClauseBankSparse
+
 from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
 import numpy as np
@@ -95,6 +95,7 @@ class TMClassifier(TMBaseClassifier):
                 patch_dim=self.patch_dim
             )
         elif self.platform == "CPU_sparse":
+            from tmu.clause_bank_sparse import ClauseBankSparse
             clause_bank_type = ClauseBankSparse
             clause_bank_args = dict(
                 X=X,
