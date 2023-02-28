@@ -1,12 +1,26 @@
-
+import codecs
+import os
 from pathlib import Path
 from setuptools import setup, find_packages
 
 current_dir = Path(__file__).parent
 
+def read(rel_path):
+    here = os.path.abspath(os.path.dirname(__file__))
+    with codecs.open(os.path.join(here, rel_path), 'r') as fp:
+        return fp.read()
+
+def get_version(rel_path):
+    for line in read(rel_path).splitlines():
+        if line.startswith('__version__'):
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    else:
+        raise RuntimeError("Unable to find version string.")
+
 setup(
     name='tmu',
-    version='0.7.7',
+    version=get_version("tmu/__init__.py"),  # Change version in tmu/__init__.py
     url='https://github.com/cair/tmu/',
     author='Ole-Christoffer Granmo',
     author_email='ole.granmo@uia.no',
@@ -32,6 +46,9 @@ setup(
         "tmu/lib/tmulib_extension_build.py:ffibuilder"
     ],
     install_requires=[
-        "cffi>=1.0.0"
+        "cffi>=1.0.0",
+        "numpy",
+        "pandas",
+        "scikit-learn"
     ]
 )

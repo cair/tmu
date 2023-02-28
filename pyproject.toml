@@ -1,3 +1,14 @@
+[project]
+name = "tmu"
+dynamic = ["version"]
+
 [build-system]
 requires = ["setuptools", "numpy", "wheel", "cffi>=1.0.0", "scipy"]
 build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.dynamic]
+version = {attr = "tmu.__version__"}
+
+
+

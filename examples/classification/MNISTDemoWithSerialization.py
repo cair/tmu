@@ -3,6 +3,8 @@ import argparse
 from tmu.data import MNIST
 from tmu.models.classification.vanilla_classifier import TMClassifier
 from tmu.tools import BenchmarkTimer
+import pickle
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +37,17 @@ if __name__ == "__main__":
         with benchmark1:
             tm.fit(data["x_train"], data["y_train"])
 
-        benchmark2 = BenchmarkTimer(logger=_LOGGER, text="Testing Time")
+        benchmark2 = BenchmarkTimer(logger=_LOGGER, text="Saving model to binary")
         with benchmark2:
-            result = 100 * (tm.predict(data["x_test"]) == data["y_test"]).mean()
+            dumped = pickle.dumps(tm)
+
+        benchmark3 = BenchmarkTimer(logger=_LOGGER, text="Loading model from binary")
+        with benchmark3:
+            tm2 = pickle.loads(dumped)
+
+        benchmark4 = BenchmarkTimer(logger=_LOGGER, text="Testing Time")
+        with benchmark2:
+            result = 100 * (tm2.predict(data["x_test"]) == data["y_test"]).mean()
 
         _LOGGER.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Training Time: {benchmark1.elapsed():.2f}s, "
                      f"Testing Time: {benchmark2.elapsed():.2f}s")

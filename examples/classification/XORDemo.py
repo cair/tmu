@@ -1,6 +1,6 @@
 import logging
 import argparse
-from tmu.data import MNIST
+from tmu.data import MNIST, TMUDatasetSource
 from tmu.models.classification.vanilla_classifier import TMClassifier
 from tmu.tools import BenchmarkTimer
 
@@ -9,7 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_clauses", default=50, type=int)
+    parser.add_argument("--num_clauses", default=4, type=int)
     parser.add_argument("--T", default=10, type=int)
     parser.add_argument("--s", default=10.0, type=float)
     parser.add_argument("--max_included_literals", default=32, type=int)
@@ -18,7 +18,17 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", default=60, type=int)
     args = parser.parse_args()
 
-    data = MNIST().get()
+    data = TMUDatasetSource().get_dataset(
+        "XOR_biased",
+        cache=True,
+        cache_max_age=1,
+        features=["X", "Y"],
+        labels=["xor"],
+        shuffle=True,
+        train_ratio=1000,
+        test_ratio=1000,
+        return_type=dict
+    )
 
     tm = TMClassifier(
         number_of_clauses=args.num_clauses,
