@@ -28,8 +28,8 @@ current_dir = pathlib.Path(__file__).parent
 source_dir = current_dir.joinpath("src")
 header_dir = current_dir.joinpath("include")
 
-HEADERS = ["ClauseBank.h", "Tools.h", "WeightBank.h", "ClauseWeightBank.h"]
-SOURCES = ["ClauseBank.c", "Tools.c", "WeightBank.c", "ClauseWeightBank.c"]
+HEADERS = ["ClauseBank.h", "Tools.h", "WeightBank.h", "ClauseWeightBank.h", "ClauseBankSparse.h"]
+SOURCES = ["ClauseBank.c", "Tools.c", "WeightBank.c", "ClauseWeightBank.c", "ClauseBankSparse.c"]
 
 header_content = '\n'.join([header_dir.joinpath(x).open("r").read() for x in HEADERS])
 source_content = '\n'.join([source_dir.joinpath(x).open("r").read() for x in SOURCES])
