@@ -19,7 +19,7 @@ Further, we implement many TM features, including:
 * Focused negative sampling (https://ieeexplore.ieee.org/document/9923859)
 * Type III Feedback (to be published)
 * Incremental clause evaluation (to be published)
-* Sparse data and computation (to be published)
+* Sparse computation (to be published)
 
 TMU is written in Python with wrappers for C and CUDA-based clause evaluation and updating.
 
