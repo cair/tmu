@@ -85,8 +85,8 @@ for j in range(5):
 				l.append("¬x%d" % (k-number_of_features))
 	print(" ∧ ".join(l))
 
-#print("\nClause Co-Occurence Matrix:\n")
-#print(tm.clause_co_occurrence(X_test, percentage=True).toarray())
+print("\nClause Co-Occurence Matrix:\n")
+print(tm.clause_co_occurrence(X_test, percentage=True).toarray())
 
-#print("\nLiteral Frequency:\n")
-#print(tm.literal_clause_frequency())
+print("\nLiteral Frequency:\n")
+print(tm.literal_clause_frequency())
