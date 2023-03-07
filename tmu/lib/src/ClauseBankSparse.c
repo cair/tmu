@@ -164,7 +164,7 @@ void cbs_calculate_clause_outputs_predict(unsigned int *Xi, int number_of_clause
     }
 }
 
-void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int *clause_active,
+void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int absorbing, int *clause_active,
                     unsigned int *literal_active, unsigned int *feedback_to_ta, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned int *clause_bank_included,
                     unsigned int *clause_bank_included_length, unsigned int *clause_bank_excluded, unsigned int *clause_bank_excluded_length)
 {
@@ -238,8 +238,15 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
 		                    clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
                         }
                     }
-                } else if ((feedback_to_ta[literal_chunk] & (1 << literal_pos)) && (clause_bank_excluded[clause_excluded_pos + 1] > 0)) {
-                    clause_bank_excluded[clause_excluded_pos + 1] -= 1;
+                } else if (feedback_to_ta[literal_chunk] & (1 << literal_pos)) {
+                    if (clause_bank_excluded[clause_excluded_pos + 1] > absorbing) {
+                        clause_bank_excluded[clause_excluded_pos + 1] -= 1;
+                    } else if (absorbing >= 0) {
+                        clause_bank_excluded_length[j] -= 1;
+                        int clause_excluded_end_pos = clause_pos_base + clause_bank_excluded_length[j]*2;
+                        clause_bank_excluded[clause_excluded_pos] = clause_bank_excluded[clause_excluded_end_pos];
+                        clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
+                    }
                 }
             }
         } else {
@@ -271,8 +278,15 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
             	unsigned int literal_chunk = clause_bank_excluded[clause_excluded_pos] / 32;
             	unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
 		
-            	if ((feedback_to_ta[literal_chunk] & (1 << literal_pos)) && (clause_bank_excluded[clause_excluded_pos + 1] > 0)) {
-                    clause_bank_excluded[clause_excluded_pos + 1] -= 1;
+            	if (feedback_to_ta[literal_chunk] & (1 << literal_pos)) {
+                    if (clause_bank_excluded[clause_excluded_pos + 1] > absorbing) {
+                        clause_bank_excluded[clause_excluded_pos + 1] -= 1;
+                    } else if (absorbing >= 0) {
+                        clause_bank_excluded_length[j] -= 1;
+                        int clause_excluded_end_pos = clause_pos_base + clause_bank_excluded_length[j]*2;
+                        clause_bank_excluded[clause_excluded_pos] = clause_bank_excluded[clause_excluded_end_pos];
+                        clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
+                    }
                 }
             }
     	}

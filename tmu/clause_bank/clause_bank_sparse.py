@@ -28,12 +28,13 @@ from scipy.sparse import csr_matrix
 
 class ClauseBankSparse:
     def __init__(self, X, number_of_clauses, number_of_states, patch_dim,
-                 batching=True, incremental=True):
+                 batching=True, incremental=True, absorbing=-1):
         self.number_of_clauses = int(number_of_clauses)
         self.number_of_states = int(number_of_states)
         self.patch_dim = patch_dim
         self.batching = batching
         self.incremental = incremental
+        self.absorbing = int(absorbing)
 
         if len(X.shape) == 2:
             self.dim = (X.shape[1], 1, 1)
@@ -116,7 +117,7 @@ class ClauseBankSparse:
     def type_i_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
                         literal_active, encoded_X, e):
         lib.cbs_prepare_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
-        lib.cbs_type_i_feedback(update_p, s, boost_true_positive_feedback, max_included_literals, ffi.cast("int *", clause_active.ctypes.data), ffi.cast("unsigned int *", literal_active.ctypes.data), self.ftt_p, self.Xi_p, self.number_of_clauses, self.number_of_literals, self.number_of_states, self.cbi_p,
+        lib.cbs_type_i_feedback(update_p, s, int(boost_true_positive_feedback), int(max_included_literals), self.absorbing, ffi.cast("int *", clause_active.ctypes.data), ffi.cast("unsigned int *", literal_active.ctypes.data), self.ftt_p, self.Xi_p, self.number_of_clauses, self.number_of_literals, self.number_of_states, self.cbi_p,
                         self.cbil_p, self.cbe_p, self.cbel_p)
         lib.cbs_restore_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
 
