@@ -393,15 +393,15 @@ class TMClassifier(TMBaseClassifier):
         polarized_clause = self._get_polarized_clause_index(clause, polarity)
         self.weight_banks[the_class].get_weights()[polarized_clause] = weight
 
-    def get_ta_action(self, clause, ta, the_class=None, polarity=0):
-        self.clause_banks[the_class].get_ta_action(
+    def get_ta_action(self, clause, ta, the_class=0, polarity=0):
+        return self.clause_banks[the_class].get_ta_action(
             self._get_polarized_clause_index(clause, polarity), ta)
 
-    def get_ta_state(self, clause, ta, the_class=None, polarity=None):
-        self.clause_banks[the_class].get_ta_state(
+    def get_ta_state(self, clause, ta, the_class=0, polarity=0):
+        return self.clause_banks[the_class].get_ta_state(
             self._get_polarized_clause_index(clause, polarity), ta)
 
-    def set_ta_state(self, clause, ta, state, the_class=None, polarity=0):
+    def set_ta_state(self, clause, ta, state, the_class=0, polarity=0):
         self.clause_banks[the_class].set_ta_state(
             self._get_polarized_clause_index(clause, polarity), ta, state)
 

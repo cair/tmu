@@ -12,7 +12,7 @@ Y_train = np.where(np.random.rand(5000) <= noise, 1-Y_train, Y_train) # Adds noi
 X_test = np.random.randint(0, 2, size=(5000, number_of_features), dtype=np.uint32)
 Y_test = np.logical_xor(X_test[:,0], X_test[:,1]).astype(dtype=np.uint32)
 
-tm = TMClassifier(10, 15, 3.0, platform='CPU_sparse', boost_true_positive_feedback=0)
+tm = TMClassifier(10, 15, 3.0, platform='CPU', boost_true_positive_feedback=0)
 
 for i in range(20):
 	tm.fit(X_train, Y_train)
@@ -30,7 +30,7 @@ for j in range(5):
 	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 0, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_ta_action(j, k, the_class = 0, polarity = 0) == 1:
+		if tm.get_ta_action(j, k, the_class = 0, polarity = 0):
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
@@ -46,7 +46,8 @@ for j in range(5):
 	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 1, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_ta_action(j, k, the_class = 0, polarity = 1) == 1:
+		print(">>", tm.get_ta_action(j, k, the_class = 0, polarity = 1))
+		if tm.get_ta_action(j, k, the_class = 0, polarity = 1):
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
@@ -62,7 +63,7 @@ for j in range(5):
 	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 0, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_ta_action(j, k, the_class = 1, polarity = 0) == 1:
+		if tm.get_ta_action(j, k, the_class = 1, polarity = 0):
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
@@ -78,7 +79,7 @@ for j in range(5):
 	print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 1, j), precision[j], recall[j]), end=' ')
 	l = []
 	for k in range(number_of_features*2):
-		if tm.get_ta_action(j, k, the_class = 1, polarity = 1) == 1:
+		if tm.get_ta_action(j, k, the_class = 1, polarity = 1):
 			if k < number_of_features:
 				l.append(" x%d" % (k))
 			else:
