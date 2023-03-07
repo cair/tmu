@@ -16,7 +16,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from tmu.clause_bank.clause_bank_cuda import ClauseBank, ClauseBankCUDA
+from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
+from tmu.clause_bank.clause_bank import ClauseBank
+from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
 
 from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
@@ -95,12 +97,11 @@ class TMClassifier(TMBaseClassifier):
                 patch_dim=self.patch_dim
             )
         elif self.platform == "CPU_sparse":
-            from tmu.clause_bank_sparse import ClauseBankSparse
             clause_bank_type = ClauseBankSparse
             clause_bank_args = dict(
                 X=X,
                 number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=2 ** self.number_of_state_bits_ta,
+                number_of_states=2 ** self.number_of_state_bits_ta,
                 patch_dim=self.patch_dim
             )
         else:
