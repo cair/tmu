@@ -130,19 +130,19 @@ class ClauseBankSparse:
         return self.clause_bank_included_length[clause]
 
     def get_ta_action(self, clause, ta):
-        self.clause_bank_included
-        return (self.clause_bank[pos] & (1 << chunk_pos)) > 0
+        if ta in self.clause_bank_included[clause, :self.clause_bank_included_length[clause], 0]:
+            return 1
+        else:
+            return 0
 
     def get_ta_state(self, clause, ta):
-        ta_chunk = ta // 32
-        chunk_pos = ta % 32
-        pos = int(
-            clause * self.number_of_ta_chunks * self.number_of_state_bits_ta + ta_chunk * self.number_of_state_bits_ta)
-        state = 0
-        for b in range(self.number_of_state_bits_ta):
-            if self.clause_bank[pos + b] & (1 << chunk_pos) > 0:
-                state |= (1 << b)
-        return state
+        action = self.get_action(clause, ta)
+        if action == 0:
+            literals = self.clause_bank_excluded[clause, :self.clause_bank_excluded_length[clause], 0]
+            return self.clause_bank_excluded[clause, nonzero(literals == ta)[0][0], 1]
+        else:
+            literals = self.clause_bank_included[clause, :self.clause_bank_included_length[clause], 0]
+            return self.clause_bank_included[clause, nonzero(literals == ta)[0][0], 1]
 
     def prepare_X(self, X):
         X_csr = csr_matrix(X, dtype=np.uint32)
