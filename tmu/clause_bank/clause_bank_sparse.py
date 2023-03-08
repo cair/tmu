@@ -130,6 +130,9 @@ class ClauseBankSparse:
     def number_of_include_actions(self, clause):
         return self.clause_bank_included_length[clause]
 
+    def number_of_exclude_actions(self, clause):
+        return self.clause_bank_excluded_length[clause]
+
     def get_ta_action(self, clause, ta):
         if ta in self.clause_bank_included[clause, :self.clause_bank_included_length[clause], 0]:
             return 1

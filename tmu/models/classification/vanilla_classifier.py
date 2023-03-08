@@ -412,5 +412,8 @@ class TMClassifier(TMBaseClassifier):
     def number_of_include_actions(self, the_class, clause):
         return self.clause_banks[the_class].number_of_include_actions(clause)
 
+    def number_of_exclude_actions(self, the_class, clause):
+        return self.clause_banks[the_class].number_of_exclude_actions(clause)
+
     def _get_polarized_clause_index(self, clause, polarity):
         return clause if polarity == 0 else self.number_of_clauses // 2 + clause
