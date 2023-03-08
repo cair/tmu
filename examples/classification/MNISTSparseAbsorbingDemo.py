@@ -29,6 +29,6 @@ for e in range(60):
         for i in range(10):
                 for j in range(2000):
                         absorbed += 1.0 - (tm.number_of_include_actions(i, j) + tm.number_of_exclude_actions(i, j)) / (X_train.shape[1]*2)
-        absorbed = 100 * absorbed / 10*2000
+        absorbed = 100 * absorbed / (10*2000)
 
         print("#%d Accuracy: %.2f%% Absorbed: %.2f%% Training: %.2fs Testing: %.2fs" % (e+1, result, absorbed, stop_training-start_training, stop_testing-start_testing))
