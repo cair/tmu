@@ -1,18 +1,12 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
-import collections
-import typing
-from collections.abc import Mapping, Iterable
-
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,6 +14,7 @@ from collections.abc import Mapping, Iterable
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import typing
 import numpy as np
 from scipy.sparse import csr_matrix
 from tmu.weight_bank import WeightBank
@@ -33,7 +28,6 @@ def _validate_input_dtype(d: np.ndarray):
 class TMBasis:
 
     weight_banks: typing.List[WeightBank]
-    clause_banks: typing.List[typing.Union["ClauseBank", "ClauseBankCUDA"]]
 
     def __init__(
             self,
@@ -97,7 +91,7 @@ class TMBasis:
         self.X_test = np.zeros(0, dtype=np.uint32)
 
         self.weight_banks = []
-        self.clause_banks = []
+
 
     def clause_co_occurrence(self, X, percentage=False):
         clause_outputs = csr_matrix(self.transform(X))

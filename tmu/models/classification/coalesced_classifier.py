@@ -53,7 +53,7 @@ class TMCoalescedClassifier(TMBasis):
         elif self.platform == 'CUDA':
             self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
         elif self.platform == 'CPU_sparse':
-            from tmu.clause_bank_sparse import ClauseBankSparse
+            from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
             self.clause_bank = ClauseBankSparse(X, self.number_of_clauses, 2**self.number_of_state_bits_ta, self.patch_dim)
         else:
             raise RuntimeError(f"Unknown platform of type: {self.platform}")
@@ -86,10 +86,10 @@ class TMCoalescedClassifier(TMBasis):
         self.clause_bank.type_ii_feedback(update_p * self.type_ii_p,
                                           self.clause_active * (self.weight_banks[target].get_weights() < 0),
                                           self.literal_active, self.encoded_X_train, e)
-        
+
         if (self.weight_banks[target].get_weights() >= 0).sum() < self.max_positive_clauses:
             self.weight_banks[target].increment(clause_outputs, update_p, self.clause_active, True)
-        
+
         if self.type_iii_feedback and type_iii_feedback_selection == 0:
             self.clause_bank.type_iii_feedback(update_p, self.d,
                                                self.clause_active * (self.weight_banks[target].get_weights() >= 0),

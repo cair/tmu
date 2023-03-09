@@ -19,17 +19,21 @@
 
 from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
-
 from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
 import numpy as np
 import tmu.tools
 import logging
 
+from util.clause_dictionary import ClauseDictionary
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class TMClassifier(TMBaseClassifier):
+
+    clause_banks: ClauseDictionary
+
     def __init__(
             self,
             number_of_clauses,
@@ -76,6 +80,8 @@ class TMClassifier(TMBaseClassifier):
             absorbing=absorbing
         )
 
+        self.clause_banks = ClauseDictionary()
+
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
         _LOGGER.debug("Initializing clause bank....")
 
@@ -113,8 +119,11 @@ class TMClassifier(TMBaseClassifier):
 
         assert len(self.clause_banks) == 0, "There should be no existing clause banks when init_clause_bank is called!"
 
+        self.clause_banks.set_clause_init(clause_bank_type, clause_bank_args)
+
         # Create clause banks for TM
-        self.clause_banks = [clause_bank_type(**clause_bank_args) for _ in range(self.number_of_classes)]
+        for _ in range(self.number_of_classes):
+            self.clause_banks.append(clause_bank_type(**clause_bank_args))
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         for i in range(self.number_of_classes):
