@@ -110,19 +110,20 @@ $(function() {
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">// Knuth&#39;s random Poisson-distributed number</span></div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">inline</span> <span class="keyword">static</span> <span class="keywordtype">int</span> poisson(<span class="keywordtype">double</span> lambda) {</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordtype">int</span> k = 0;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceclassification_1_1InterpretabilityDemo.html#adc468c70fb574ebd07287b38d0d0676d">k</a> = 0;</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">double</span> <a class="code" href="namespaceautoencoder_1_1IMDbWordEmbeddingDemo.html#ae444945db5297bdd9e5c43355c9c76a1">l</a> = exp(-lambda), p = 1;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordflow">while</span> (p &gt; <a class="code" href="namespaceautoencoder_1_1IMDbWordEmbeddingDemo.html#ae444945db5297bdd9e5c43355c9c76a1">l</a>) {</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        ++k;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        ++<a class="code" href="namespaceclassification_1_1InterpretabilityDemo.html#adc468c70fb574ebd07287b38d0d0676d">k</a>;</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        p *= (double) <a class="code" href="fast__rand_8h.html#a98bc0cdbde4d6f139a56f7d09dc064f0">fast_rand</a>() / <a class="code" href="fast__rand_8h.html#a7040ce2b63347533c054b3f46ef7a790">FAST_RAND_MAX</a>;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    }</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keywordflow">return</span> k - 1;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="namespaceclassification_1_1InterpretabilityDemo.html#adc468c70fb574ebd07287b38d0d0676d">k</a> - 1;</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;}</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">#endif </span><span class="comment">//C_BITWISE_TSETLIN_MACHINE_FAST_RAND_H</span></div>
 <div class="ttc" id="afast__rand_8h_html_a7040ce2b63347533c054b3f46ef7a790"><div class="ttname"><a href="fast__rand_8h.html#a7040ce2b63347533c054b3f46ef7a790">FAST_RAND_MAX</a></div><div class="ttdeci">#define FAST_RAND_MAX</div><div class="ttdef"><b>Definition:</b> fast_rand.h:26</div></div>
 <div class="ttc" id="afast__rand_8h_html_a98bc0cdbde4d6f139a56f7d09dc064f0"><div class="ttname"><a href="fast__rand_8h.html#a98bc0cdbde4d6f139a56f7d09dc064f0">fast_rand</a></div><div class="ttdeci">#define fast_rand()</div><div class="ttdef"><b>Definition:</b> fast_rand.h:27</div></div>
 <div class="ttc" id="anamespaceautoencoder_1_1IMDbWordEmbeddingDemo_html_ae444945db5297bdd9e5c43355c9c76a1"><div class="ttname"><a href="namespaceautoencoder_1_1IMDbWordEmbeddingDemo.html#ae444945db5297bdd9e5c43355c9c76a1">autoencoder.IMDbWordEmbeddingDemo.l</a></div><div class="ttdeci">list l</div><div class="ttdef"><b>Definition:</b> IMDbWordEmbeddingDemo.py:107</div></div>
+<div class="ttc" id="anamespaceclassification_1_1InterpretabilityDemo_html_adc468c70fb574ebd07287b38d0d0676d"><div class="ttname"><a href="namespaceclassification_1_1InterpretabilityDemo.html#adc468c70fb574ebd07287b38d0d0676d">classification.InterpretabilityDemo.k</a></div><div class="ttdeci">k</div><div class="ttdef"><b>Definition:</b> InterpretabilityDemo.py:33</div></div>
 <div class="ttc" id="anamespaceexperimental_1_1classification_1_1InterpretabilityDemoAND_html_ad43c3812e6d13e0518d9f8b8f463ffcf"><div class="ttname"><a href="namespaceexperimental_1_1classification_1_1InterpretabilityDemoAND.html#ad43c3812e6d13e0518d9f8b8f463ffcf">experimental.classification.InterpretabilityDemoAND.count</a></div><div class="ttdeci">int count</div><div class="ttdef"><b>Definition:</b> InterpretabilityDemoAND.py:60</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
