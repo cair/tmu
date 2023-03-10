@@ -1,5 +1,4 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
-
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -18,13 +17,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from tmu.clause_bank import ClauseBank
-from tmu.models.base import TMBasis
+from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.weight_bank import WeightBank
 import numpy as np
 from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
+import logging
+from models.classification.base_classification import TMBaseClassifier
+_LOGGER = logging.getLogger(__name__)
 
-class TMRelational(TMBasis):
+
+class TMRelational(TMBaseClassifier):
     def __init__(self, number_of_clauses, T, s, output_active_facts, type_i_ii_ratio=1.0,
                  type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0,
                  platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1,
@@ -40,29 +42,59 @@ class TMRelational(TMBasis):
                          number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
                          clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p)
 
-    def initialize(self, X):
-        self.number_of_classes = X.shape[1]
-        if self.platform == 'CPU':
-            self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta,
-                                          self.number_of_state_bits_ind, self.patch_dim)
-        elif self.platform == 'CUDA':
-            from tmu.clause_bank_cuda import ClauseBankCUDA
-            self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
+    def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
+        _LOGGER.debug("Initializing clause bank....")
+
+        if self.platform == "CPU":
+            clause_bank_type = ClauseBank
+            clause_bank_args = dict(
+                X=X,
+                number_of_clauses=self.number_of_clauses,
+                number_of_state_bits_ta=self.number_of_state_bits_ta,
+                number_of_state_bits_ind=self.number_of_state_bits_ind,
+                patch_dim=self.patch_dim,
+                batch_size=self.batch_size,
+                incremental=self.incremental
+            )
+        elif self.platform in ["GPU", "CUDA"]:
+            from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
+            clause_bank_type = ClauseBankCUDA
+            clause_bank_args = dict(
+                X=X,
+                number_of_clauses=self.number_of_clauses,
+                number_of_state_bits_ta=self.number_of_state_bits_ta,
+
+                patch_dim=self.patch_dim
+            )
+        elif self.platform == "CPU_sparse":
+            from clause_bank.clause_bank_sparse import ClauseBankSparse
+            clause_bank_type = ClauseBankSparse
+            clause_bank_args = dict(
+                X=X,
+                number_of_clauses=self.number_of_clauses,
+                number_of_states=2 ** self.number_of_state_bits_ta,
+                patch_dim=self.patch_dim,
+                absorbing=self.absorbing
+            )
         else:
-            raise RuntimeError(f"Unknown platform of type: {self.platform}")
+            raise NotImplementedError(f"Could not find platform of type {self.platform}.")
 
-        self.weight_banks = []
-        for i in range(self.number_of_classes):
-            self.weight_banks.append(
-                WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)))
-
-        if self.max_included_literals == None:
+        self.clause_bank = clause_bank_type(**clause_bank_args)
+        if self.max_included_literals is None:
             self.max_included_literals = self.clause_bank.number_of_literals
 
+    def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
+        self.number_of_classes = X.shape[1]
+        for i in range(self.number_of_classes):
+            self.weight_banks.append(
+                WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32))
+            )
+
+    def init_after(self, X: np.ndarray, Y: np.ndarray):
         self.output_active = np.empty(len(self.output_active_facts), dtype=np.uint32)
 
         for i in range(len(self.output_active_facts)):
-        	self.output_active[i] = self.fact_id[self.output_active_facts[i]]
+            self.output_active[i] = self.fact_id[self.output_active_facts[i]]
 
     def update(self, target_output, target_value, encoded_X, clause_active, literal_active):
         all_literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
@@ -114,7 +146,7 @@ class TMRelational(TMBasis):
         # Drops clauses randomly based on clause drop probability
         clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
-        return clause_active 
+        return clause_active
 
     def activate_literals(self):
         # Literals are dropped based on literal drop probability
@@ -135,12 +167,10 @@ class TMRelational(TMBasis):
 
         return literal_active
 
-    def fit(self, X, number_of_examples=2000, shuffle=True):
+    def fit(self, X, number_of_examples=2000, shuffle=True, **kwargs):
         (X, X_active) = self.propositionalize(X)
 
-        if self.initialized == False:
-            self.initialize(X)
-            self.initialized = True
+        self.init(X, Y=np.empty(0))
 
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
@@ -171,7 +201,7 @@ class TMRelational(TMBasis):
                 literal_active[ta_chunk] = copy_literal_active_ta_chunk
         return
 
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         Y = np.ascontiguousarray(np.zeros((self.number_of_classes, X.shape[0]), dtype=np.uint32))
 
@@ -278,53 +308,53 @@ class TMRelational(TMBasis):
         self.weight_banks[the_class].get_weights()[clause] = weight
 
     def propositionalize(self, X):
-    	# Identify relations and symbols
-    	self.relation_id = {}
-    	self.id_relation = {}
-    	self.relation_arity = {}
-    	r_id = 0
-    	self.symbol_id = {}
-    	self.id_symbol = {}
-    	s_id = 0
-    	for facts in X:
-    		for (fact, value) in facts:
-    			relation = fact[0]
-    			if relation not in self.relation_id:
-	    			self.relation_id[relation] = r_id
-	    			self.id_relation[r_id] = relation
-	    			self.relation_arity[relation] = len(fact[1:])
-    				r_id += 1
-    			for symbol in fact[1:]:
-    				if symbol not in self.symbol_id:
-	    				self.symbol_id[symbol] = s_id
-	    				self.id_symbol[s_id] = symbol
-    					s_id += 1
+        # Identify relations and symbols
+        self.relation_id = {}
+        self.id_relation = {}
+        self.relation_arity = {}
+        r_id = 0
+        self.symbol_id = {}
+        self.id_symbol = {}
+        s_id = 0
+        for facts in X:
+            for (fact, value) in facts:
+                relation = fact[0]
+                if relation not in self.relation_id:
+                    self.relation_id[relation] = r_id
+                    self.id_relation[r_id] = relation
+                    self.relation_arity[relation] = len(fact[1:])
+                    r_id += 1
+                for symbol in fact[1:]:
+                    if symbol not in self.symbol_id:
+                        self.symbol_id[symbol] = s_id
+                        self.id_symbol[s_id] = symbol
+                        s_id += 1
 
-    	self.fact_id = {}
-    	self.id_fact = {}
-    	self.number_of_features = 0
-    	for relation in self.relation_id.keys():
-    		number_of_relation_facts = len(self.symbol_id)**(self.relation_arity[relation])
-    		for relation_fact_id in range(number_of_relation_facts):
-    			fact = [relation]
-    			symbol_id_remainder = relation_fact_id
-    			for argument_id in range(self.relation_arity[relation]):
-    				fact.append(self.id_symbol[symbol_id_remainder % len(self.symbol_id)])
-    				symbol_id_remainder = symbol_id_remainder // len(self.symbol_id)
-    			fact = tuple(fact)
-    			self.fact_id[fact] = self.number_of_features + relation_fact_id
-    			self.id_fact[self.number_of_features + relation_fact_id] = fact
-    		self.number_of_features += number_of_relation_facts
+        self.fact_id = {}
+        self.id_fact = {}
+        self.number_of_features = 0
+        for relation in self.relation_id.keys():
+            number_of_relation_facts = len(self.symbol_id) ** (self.relation_arity[relation])
+            for relation_fact_id in range(number_of_relation_facts):
+                fact = [relation]
+                symbol_id_remainder = relation_fact_id
+                for argument_id in range(self.relation_arity[relation]):
+                    fact.append(self.id_symbol[symbol_id_remainder % len(self.symbol_id)])
+                    symbol_id_remainder = symbol_id_remainder // len(self.symbol_id)
+                fact = tuple(fact)
+                self.fact_id[fact] = self.number_of_features + relation_fact_id
+                self.id_fact[self.number_of_features + relation_fact_id] = fact
+            self.number_of_features += number_of_relation_facts
 
-    	X_propositional = lil_matrix((len(X), self.number_of_features), dtype=np.uint32)
-    	X_active = lil_matrix((len(X), self.number_of_features), dtype=np.uint32)
-    	example_id = 0
-    	for facts in X:
-    		for (fact, value) in facts:
-    			X_propositional[example_id, self.fact_id[fact]] = value
-    			X_active[example_id, self.fact_id[fact]] = 1
-    		example_id += 1
-    	X_propositional = csr_matrix(X_propositional)
-    	X_active = csr_matrix(X_active)
-    	
-    	return (X_propositional, X_active)
+        X_propositional = lil_matrix((len(X), self.number_of_features), dtype=np.uint32)
+        X_active = lil_matrix((len(X), self.number_of_features), dtype=np.uint32)
+        example_id = 0
+        for facts in X:
+            for (fact, value) in facts:
+                X_propositional[example_id, self.fact_id[fact]] = value
+                X_active[example_id, self.fact_id[fact]] = 1
+            example_id += 1
+        X_propositional = csr_matrix(X_propositional)
+        X_active = csr_matrix(X_active)
+
+        return (X_propositional, X_active)
