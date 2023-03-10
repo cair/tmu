@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['cffiserializable_643',['CFFISerializable',['../classtmu_1_1tools_1_1CFFISerializable.html',1,'tmu::tools']]],
-  ['clausebank_644',['ClauseBank',['../classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html',1,'tmu::clause_bank::clause_bank']]],
-  ['clausebanksparse_645',['ClauseBankSparse',['../classtmu_1_1clause__bank_1_1clause__bank__sparse_1_1ClauseBankSparse.html',1,'tmu::clause_bank::clause_bank_sparse']]],
-  ['clausedictionary_646',['ClauseDictionary',['../classtmu_1_1util_1_1clause__dictionary_1_1ClauseDictionary.html',1,'tmu::util::clause_dictionary']]],
-  ['clauseweightbank_647',['ClauseWeightBank',['../classtmu_1_1clause__weight__bank_1_1ClauseWeightBank.html',1,'tmu::clause_weight_bank']]]
+  ['cffiserializable_645',['CFFISerializable',['../classtmu_1_1tools_1_1CFFISerializable.html',1,'tmu::tools']]],
+  ['clausebank_646',['ClauseBank',['../classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html',1,'tmu::clause_bank::clause_bank']]],
+  ['clausebanksparse_647',['ClauseBankSparse',['../classtmu_1_1clause__bank_1_1clause__bank__sparse_1_1ClauseBankSparse.html',1,'tmu::clause_bank::clause_bank_sparse']]],
+  ['clausedictionary_648',['ClauseDictionary',['../classtmu_1_1util_1_1clause__dictionary_1_1ClauseDictionary.html',1,'tmu::util::clause_dictionary']]],
+  ['clauseweightbank_649',['ClauseWeightBank',['../classtmu_1_1clause__weight__bank_1_1ClauseWeightBank.html',1,'tmu::clause_weight_bank']]]
 ];
