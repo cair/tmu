@@ -45,6 +45,10 @@ class StandardBinarizer:
 
         return X_transformed
 
+    def fit_transform(self, X):
+        self.fit(X)
+        return self.transform(X)
+
 
 if __name__ == "__main__":
     import tmu.data
