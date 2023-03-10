@@ -33,6 +33,7 @@ class TMBasis:
     weight_banks: typing.List[WeightBank]
     clause_bank: typing.Union[ClauseBank, ClauseBankCUDA, ClauseBankSparse]
 
+
     def __init__(
             self,
             number_of_clauses,
