@@ -82,17 +82,17 @@ class ClauseBankSparse:
         self.initialize_clauses()
 
     def initialize_clauses(self):
-        self.clause_bank_included = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2), dtype=np.uint32)) # Contains index and state of included literals, none at start
-        self.cbi_p = ffi.cast("unsigned int *", self.clause_bank_included.ctypes.data)
-        self.clause_bank_included_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint32)) 
-        self.cbil_p = ffi.cast("unsigned int *", self.clause_bank_included_length.ctypes.data)
+        self.clause_bank_included = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2), dtype=np.uint16)) # Contains index and state of included literals, none at start
+        self.cbi_p = ffi.cast("unsigned short *", self.clause_bank_included.ctypes.data)
+        self.clause_bank_included_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint16)) 
+        self.cbil_p = ffi.cast("unsigned short *", self.clause_bank_included_length.ctypes.data)
 
-        self.clause_bank_excluded = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2), dtype=np.uint32)) # Contains index and state of excluded literals
-        self.cbe_p = ffi.cast("unsigned int *", self.clause_bank_excluded.ctypes.data)
-        self.clause_bank_excluded_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint32)) # All literals excluded at start
-        self.cbel_p = ffi.cast("unsigned int *", self.clause_bank_excluded_length.ctypes.data)
+        self.clause_bank_excluded = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2), dtype=np.uint16)) # Contains index and state of excluded literals
+        self.cbe_p = ffi.cast("unsigned short *", self.clause_bank_excluded.ctypes.data)
+        self.clause_bank_excluded_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint16)) # All literals excluded at start
+        self.cbel_p = ffi.cast("unsigned short *", self.clause_bank_excluded_length.ctypes.data)
         self.clause_bank_excluded_length[:] = self.number_of_literals
-        self.clause_bank_excluded[:,:,0] = np.arange(self.number_of_literals, dtype=np.uint32) # Initialize clause literals with increasing index
+        self.clause_bank_excluded[:,:,0] = np.arange(self.number_of_literals, dtype=np.uint16) # Initialize clause literals with increasing index
         self.clause_bank_excluded[:,:,1] = self.number_of_states // 2 - 1 # Initialize excluded literals in least forgotten state
  
     def calculate_clause_outputs_predict(self, encoded_X, e):
