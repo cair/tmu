@@ -297,7 +297,7 @@ class TMClassifier(TMBaseClassifier):
                 )
         return
 
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         if not np.array_equal(self.X_test, X):
             self.encoded_X_test = self.clause_banks[0].prepare_X(X)
             self.X_test = X.copy()

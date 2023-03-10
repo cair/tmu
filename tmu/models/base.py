@@ -23,16 +23,15 @@ from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
 from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
 
+
 def _validate_input_dtype(d: np.ndarray):
     if d.dtype is not np.uint32:
         raise RuntimeError(f"The data input is of type {d.dtype}, but should be {np.uint32}")
 
 
 class TMBasis:
-
     weight_banks: typing.List[WeightBank]
     clause_bank: typing.Union[ClauseBank, ClauseBankCUDA, ClauseBankSparse]
-
 
     def __init__(
             self,
@@ -97,7 +96,6 @@ class TMBasis:
 
         self.weight_banks = []
 
-
     def clause_co_occurrence(self, X, percentage=False):
         clause_outputs = csr_matrix(self.transform(X))
         if percentage:
@@ -133,5 +131,3 @@ class TMBasis:
 
     def init(self, X: np.ndarray, Y: np.ndarray):
         raise NotImplementedError("init(self, X: np.ndarray, Y: np.ndarray)")
-
-
