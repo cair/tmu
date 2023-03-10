@@ -19,6 +19,9 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from tmu.weight_bank import WeightBank
 
+from tmu.clause_bank.clause_bank import ClauseBank
+from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
+from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
 
 def _validate_input_dtype(d: np.ndarray):
     if d.dtype is not np.uint32:
@@ -28,6 +31,7 @@ def _validate_input_dtype(d: np.ndarray):
 class TMBasis:
 
     weight_banks: typing.List[WeightBank]
+    clause_bank: typing.Union[ClauseBank, ClauseBankCUDA, ClauseBankSparse]
 
     def __init__(
             self,
@@ -123,5 +127,10 @@ class TMBasis:
     def fit(self, X, Y, *args, **kwargs):
         raise NotImplementedError("fit(self, X, Y, *args, **kwargs) is not implemented for your model")
 
+    def predict(self, X, shuffle=True) -> np.ndarray:
+        raise NotImplementedError("predict(self, X: np.ndarray")
+
     def init(self, X: np.ndarray, Y: np.ndarray):
         raise NotImplementedError("init(self, X: np.ndarray, Y: np.ndarray)")
+
+
