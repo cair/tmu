@@ -1,5 +1,8 @@
 import logging
 import argparse
+
+from tqdm import tqdm
+
 from tmu.data import MNIST
 from tmu.models.classification.vanilla_classifier import TMClassifier
 from tmu.tools import BenchmarkTimer
@@ -30,7 +33,7 @@ if __name__ == "__main__":
     )
 
     _LOGGER.info(f"Running {TMClassifier} for {args.epochs}")
-    for epoch in range(args.epochs):
+    for epoch in tqdm(range(args.epochs)):
         benchmark1 = BenchmarkTimer(logger=_LOGGER, text="Training Time")
         with benchmark1:
             tm.fit(data["x_train"], data["y_train"])

@@ -5,7 +5,7 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
+from models.base import SingleClauseBankMixin, MultiWeightBankMixin
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 
@@ -23,63 +23,61 @@ import numpy as np
 from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
 import logging
 from models.classification.base_classification import TMBaseClassifier
+
 _LOGGER = logging.getLogger(__name__)
 
 
-class TMRelational(TMBaseClassifier):
-    def __init__(self, number_of_clauses, T, s, output_active_facts, type_i_ii_ratio=1.0,
-                 type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0,
-                 platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1,
-                 max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8,
-                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0):
+class TMRelational(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixin):
+    def __init__(
+            self,
+            number_of_clauses,
+            T,
+            s,
+            output_active_facts,
+            type_i_ii_ratio=1.0,
+            type_iii_feedback=False,
+            focused_negative_sampling=False,
+            output_balancing=False,
+            d=200.0,
+            platform='CPU',
+            patch_dim=None,
+            feature_negation=True,
+            boost_true_positive_feedback=1,
+            max_included_literals=None,
+            number_of_state_bits_ta=8,
+            number_of_state_bits_ind=8,
+            weighted_clauses=False,
+            clause_drop_p=0.0,
+            literal_drop_p=0.0
+    ):
+        super().__init__(
+            number_of_clauses,
+            T,
+            s,
+            type_i_ii_ratio=type_i_ii_ratio,
+            type_iii_feedback=type_iii_feedback,
+            focused_negative_sampling=focused_negative_sampling,
+            output_balancing=output_balancing,
+            d=d,
+            platform=platform,
+            patch_dim=patch_dim,
+            feature_negation=feature_negation,
+            boost_true_positive_feedback=boost_true_positive_feedback,
+            max_included_literals=max_included_literals,
+            number_of_state_bits_ta=number_of_state_bits_ta,
+            number_of_state_bits_ind=number_of_state_bits_ind,
+            weighted_clauses=weighted_clauses,
+            clause_drop_p=clause_drop_p,
+            literal_drop_p=literal_drop_p
+        )
+        SingleClauseBankMixin.__init__(self)
+        MultiWeightBankMixin.__init__(self)
         self.output_active_facts = output_active_facts
 
-        super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
-                         focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d,
-                         platform=platform, patch_dim=patch_dim, feature_negation=feature_negation,
-                         boost_true_positive_feedback=boost_true_positive_feedback,
-                         max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
-                         number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
-                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p)
-
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
-        _LOGGER.debug("Initializing clause bank....")
-
-        if self.platform == "CPU":
-            clause_bank_type = ClauseBank
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-                number_of_state_bits_ind=self.number_of_state_bits_ind,
-                patch_dim=self.patch_dim,
-                batch_size=self.batch_size,
-                incremental=self.incremental
-            )
-        elif self.platform in ["GPU", "CUDA"]:
-            from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
-            clause_bank_type = ClauseBankCUDA
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-
-                patch_dim=self.patch_dim
-            )
-        elif self.platform == "CPU_sparse":
-            from clause_bank.clause_bank_sparse import ClauseBankSparse
-            clause_bank_type = ClauseBankSparse
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_states=2 ** self.number_of_state_bits_ta,
-                patch_dim=self.patch_dim,
-                absorbing=self.absorbing
-            )
-        else:
-            raise NotImplementedError(f"Could not find platform of type {self.platform}.")
-
+        clause_bank_type, clause_bank_args = self.build_clause_bank(X=X)
         self.clause_bank = clause_bank_type(**clause_bank_args)
+
         if self.max_included_literals is None:
             self.max_included_literals = self.clause_bank.number_of_literals
 

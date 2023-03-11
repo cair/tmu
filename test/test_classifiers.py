@@ -2,7 +2,7 @@ import unittest
 from models.base import TMBasis
 
 
-class ClassifierTests(unittest.TestCase):
+class ClassifierTests(object):
     model: TMBasis
 
     def setUp(self) -> None:
@@ -37,7 +37,7 @@ class ClassifierTests(unittest.TestCase):
         self.assertGreater(accuracy, 0.7)
 
 
-class VanillaClassifierTests(ClassifierTests):
+class VanillaClassifierTests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:
         from models.classification.vanilla_classifier import TMClassifier
@@ -49,25 +49,27 @@ class VanillaClassifierTests(ClassifierTests):
             platform="CPU",
             weighted_clauses=False
         )
-        super().setUp()
+        ClassifierTests.setUp(self)
 
 
-class TMMultiChannelClassifierTests(ClassifierTests):
+class TMMultiChannelClassifierTests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:
         from models.classification.multichannel_classifier import TMMultiChannelClassifier
+        import numpy as np
         self.model = TMMultiChannelClassifier(
             number_of_clauses=4,
+            global_T=10.0,
             T=10,
             s=10.0,
             max_included_literals=32,
             platform="CPU",
             weighted_clauses=False
         )
-        super().setUp()
+        ClassifierTests.setUp(self)
+        self.data["x_train"] = np.array([self.data["x_train"], self.data["x_train"]])
 
-
-class TMCoalescedClassifierv2Tests(ClassifierTests):
+class TMCoalescedClassifierv2Tests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:
         from tmu.models.classification.coalesced_experimental_classifier import TMCoalescedClassifier
@@ -79,10 +81,10 @@ class TMCoalescedClassifierv2Tests(ClassifierTests):
             platform="CPU",
             weighted_clauses=False
         )
-        super().setUp()
+        ClassifierTests.setUp(self)
 
 
-class TMCoalescedClassifierv1Tests(ClassifierTests):
+class TMCoalescedClassifierv1Tests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:
         from tmu.models.classification.coalesced_classifier import TMCoalescedClassifier
@@ -94,13 +96,14 @@ class TMCoalescedClassifierv1Tests(ClassifierTests):
             platform="CPU",
             weighted_clauses=False
         )
-        super().setUp()
+        ClassifierTests.setUp(self)
 
 
-class OneVSOneClassifierTests(ClassifierTests):
+class OneVSOneClassifierTests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:
         from models.classification.one_vs_one_classifier import TMOneVsOneClassifier
+        import numpy as np
 
         self.model = TMOneVsOneClassifier(
             number_of_clauses=4,
@@ -110,4 +113,4 @@ class OneVSOneClassifierTests(ClassifierTests):
             platform="CPU",
             weighted_clauses=False
         )
-        super().setUp()
+        ClassifierTests.setUp(self)

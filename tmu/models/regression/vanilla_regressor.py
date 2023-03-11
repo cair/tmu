@@ -1,5 +1,5 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
-
+from models.base import SingleClauseBankMixin, SingleWeightBankMixin
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -17,19 +17,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.weight_bank import WeightBank
 import numpy as np
 import logging
-from clause_bank.clause_bank_sparse import ClauseBankSparse
 from models.classification.base_classification import TMBaseClassifier
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TMRegressor(TMBaseClassifier):
+class TMRegressor(TMBaseClassifier, SingleClauseBankMixin, SingleWeightBankMixin):
 
-    weight_bank: WeightBank
     max_y: np.float
     min_y: np.float
 
@@ -61,44 +58,13 @@ class TMRegressor(TMBaseClassifier):
             clause_drop_p=clause_drop_p,
             literal_drop_p=literal_drop_p
         )
+        SingleClauseBankMixin.__init__(self)
+        SingleWeightBankMixin.__init__(self)
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
-        _LOGGER.debug("Initializing clause bank....")
-
-        if self.platform == "CPU":
-            clause_bank_type = ClauseBank
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-                number_of_state_bits_ind=self.number_of_state_bits_ind,
-                patch_dim=self.patch_dim,
-                batch_size=self.batch_size,
-                incremental=self.incremental
-            )
-        elif self.platform in ["GPU", "CUDA"]:
-            from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
-            clause_bank_type = ClauseBankCUDA
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-
-                patch_dim=self.patch_dim
-            )
-        elif self.platform == "CPU_sparse":
-            clause_bank_type = ClauseBankSparse
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_states=2 ** self.number_of_state_bits_ta,
-                patch_dim=self.patch_dim,
-                absorbing=self.absorbing
-            )
-        else:
-            raise NotImplementedError(f"Could not find platform of type {self.platform}.")
-
+        clause_bank_type, clause_bank_args = self.build_clause_bank(X=X)
         self.clause_bank = clause_bank_type(**clause_bank_args)
+
         if self.max_included_literals is None:
             self.max_included_literals = self.clause_bank.number_of_literals
 

@@ -5,10 +5,8 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -16,23 +14,17 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-from tmu.clause_bank.clause_bank import ClauseBank
-from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
+from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin
 from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
 import numpy as np
 import tmu.tools
 import logging
 
-from util.clause_dictionary import ClauseDictionary
-
 _LOGGER = logging.getLogger(__name__)
 
 
-class TMClassifier(TMBaseClassifier):
-
-    clause_banks: ClauseDictionary
+class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin):
 
     def __init__(
             self,
@@ -79,57 +71,21 @@ class TMClassifier(TMBaseClassifier):
             incremental=incremental,
             absorbing=absorbing
         )
-
-        self.clause_banks = ClauseDictionary()
+        MultiClauseBankMixin.__init__(self)
+        MultiWeightBankMixin.__init__(self)
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
-        _LOGGER.debug("Initializing clause bank....")
-
-        if self.platform == "CPU":
-            clause_bank_type = ClauseBank
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-                number_of_state_bits_ind=self.number_of_state_bits_ind,
-                patch_dim=self.patch_dim,
-                batch_size=self.batch_size,
-                incremental=self.incremental
-            )
-        elif self.platform in ["GPU", "CUDA"]:
-            from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
-            clause_bank_type = ClauseBankCUDA
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-                patch_dim=self.patch_dim
-            )
-        elif self.platform == "CPU_sparse":
-            clause_bank_type = ClauseBankSparse
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_states=2 ** self.number_of_state_bits_ta,
-                patch_dim=self.patch_dim,
-                absorbing=self.absorbing
-            )
-        else:
-            raise NotImplementedError(f"Could not find platform of type {self.platform}.")
-
-        assert len(self.clause_banks) == 0, "There should be no existing clause banks when init_clause_bank is called!"
-
+        clause_bank_type, clause_bank_args = self.build_clause_bank(X=X)
         self.clause_banks.set_clause_init(clause_bank_type, clause_bank_args)
-
-        # Create clause banks for TM
-        for _ in range(self.number_of_classes):
-            self.clause_banks.append(clause_bank_type(**clause_bank_args))
+        self.clause_banks.populate(list(range(self.number_of_classes)))
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         for i in range(self.number_of_classes):
-            self.weight_banks.append(WeightBank(np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
-                                                                -1 * np.ones(self.number_of_clauses // 2,
-                                                                             dtype=np.int32)))))
+            self.weight_banks.insert(
+                key=i,
+                value=WeightBank(np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
+                                                 -1 * np.ones(self.number_of_clauses // 2,
+                                                              dtype=np.int32)))))
 
     def init_after(self, X: np.ndarray, Y: np.ndarray):
         if self.max_included_literals is None:

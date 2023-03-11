@@ -17,11 +17,14 @@
 import typing
 import numpy as np
 from scipy.sparse import csr_matrix
+
+from clause_weight_bank import ClauseWeightBank
 from tmu.weight_bank import WeightBank
 
 from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
 from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
+from util.clause_dictionary import SparseFlexList
 
 
 def _validate_input_dtype(d: np.ndarray):
@@ -29,9 +32,35 @@ def _validate_input_dtype(d: np.ndarray):
         raise RuntimeError(f"The data input is of type {d.dtype}, but should be {np.uint32}")
 
 
+class MultiWeightBankMixin:
+    weight_banks: SparseFlexList
+
+    def __init__(self):
+        self.weight_banks = SparseFlexList()
+
+
+class MultiClauseBankMixin:
+    clause_banks: SparseFlexList
+
+    def __init__(self):
+        self.clause_banks = SparseFlexList()
+
+
+class SingleWeightBankMixin:
+    weight_bank: WeightBank
+
+    def __init__(self):
+        pass
+
+
+class SingleClauseBankMixin:
+    clause_bank: typing.Union[ClauseBank, ClauseBankSparse, ClauseBankCUDA, ClauseWeightBank]
+
+    def __init__(self):
+        pass
+
+
 class TMBasis:
-    weight_banks: typing.List[WeightBank]
-    clause_bank: typing.Union[ClauseBank, ClauseBankCUDA, ClauseBankSparse]
 
     def __init__(
             self,
@@ -93,8 +122,6 @@ class TMBasis:
         # TODO - Change to checksum
         self.X_train = np.zeros(0, dtype=np.uint32)
         self.X_test = np.zeros(0, dtype=np.uint32)
-
-        self.weight_banks = []
 
     def clause_co_occurrence(self, X, percentage=False):
         clause_outputs = csr_matrix(self.transform(X))
