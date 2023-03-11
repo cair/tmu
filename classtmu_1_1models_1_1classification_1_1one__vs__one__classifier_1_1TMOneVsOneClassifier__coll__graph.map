@@ -1,4 +1,7 @@
 <map id="TMOneVsOneClassifier" name="TMOneVsOneClassifier">
-<area shape="rect" id="node1" title=" " alt="" coords="5,80,176,107"/>
-<area shape="rect" id="node2" href="$classtmu_1_1models_1_1base_1_1TMBasis.html" title=" " alt="" coords="52,5,129,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="166,155,337,181"/>
+<area shape="rect" id="node2" href="$classtmu_1_1models_1_1classification_1_1base__classification_1_1TMBaseClassifier.html" title=" " alt="" coords="5,80,140,107"/>
+<area shape="rect" id="node3" href="$classtmu_1_1models_1_1base_1_1TMBasis.html" title=" " alt="" coords="34,5,111,32"/>
+<area shape="rect" id="node4" href="$classtmu_1_1models_1_1base_1_1SingleClauseBankMixin.html" title=" " alt="" coords="164,80,339,107"/>
+<area shape="rect" id="node5" href="$classtmu_1_1models_1_1base_1_1MultiWeightBankMixin.html" title=" " alt="" coords="363,80,532,107"/>
 </map>
