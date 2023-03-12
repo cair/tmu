@@ -1,10 +1,11 @@
 <map id="TMBaseClassifier" name="TMBaseClassifier">
-<area shape="rect" id="node1" title=" " alt="" coords="131,107,265,133"/>
+<area shape="rect" id="node1" title=" " alt="" coords="131,132,265,159"/>
 <area shape="rect" id="node3" href="$classtmu_1_1models_1_1classification_1_1coalesced__classifier_1_1TMCoalescedClassifier.html" title=" " alt="" coords="323,5,492,32"/>
 <area shape="rect" id="node4" href="$classtmu_1_1models_1_1classification_1_1multichannel__classifier_1_1TMMultiChannelClassifier.html" title=" " alt="" coords="313,56,501,83"/>
 <area shape="rect" id="node5" href="$classtmu_1_1models_1_1classification_1_1multitask__classifier_1_1TMMultiTaskClassifier.html" title=" " alt="" coords="325,107,489,133"/>
 <area shape="rect" id="node6" href="$classtmu_1_1models_1_1classification_1_1one__vs__one__classifier_1_1TMOneVsOneClassifier.html" title=" " alt="" coords="322,157,493,184"/>
 <area shape="rect" id="node7" href="$classtmu_1_1models_1_1classification_1_1vanilla__classifier_1_1TMClassifier.html" title=" " alt="" coords="356,208,459,235"/>
 <area shape="rect" id="node8" href="$classtmu_1_1models_1_1regression_1_1vanilla__regressor_1_1TMRegressor.html" title=" " alt="" coords="354,259,461,285"/>
-<area shape="rect" id="node2" href="$classtmu_1_1models_1_1base_1_1TMBasis.html" title=" " alt="" coords="5,107,83,133"/>
+<area shape="rect" id="node9" href="$classvanilla__relational_1_1TMRelational.html" title=" " alt="" coords="353,309,461,336"/>
+<area shape="rect" id="node2" href="$classtmu_1_1models_1_1base_1_1TMBasis.html" title=" " alt="" coords="5,132,83,159"/>
 </map>

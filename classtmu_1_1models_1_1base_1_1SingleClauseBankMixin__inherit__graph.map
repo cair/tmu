@@ -1,8 +1,9 @@
 <map id="SingleClauseBankMixin" name="SingleClauseBankMixin">
-<area shape="rect" id="node1" title=" " alt="" coords="5,81,180,108"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,180,133"/>
 <area shape="rect" id="node2" href="$classtmu_1_1models_1_1classification_1_1coalesced__classifier_1_1TMCoalescedClassifier.html" title=" " alt="" coords="237,5,407,32"/>
 <area shape="rect" id="node3" href="$classtmu_1_1models_1_1classification_1_1multichannel__classifier_1_1TMMultiChannelClassifier.html" title=" " alt="" coords="228,56,416,83"/>
 <area shape="rect" id="node4" href="$classtmu_1_1models_1_1classification_1_1multitask__classifier_1_1TMMultiTaskClassifier.html" title=" " alt="" coords="240,107,404,133"/>
 <area shape="rect" id="node5" href="$classtmu_1_1models_1_1classification_1_1one__vs__one__classifier_1_1TMOneVsOneClassifier.html" title=" " alt="" coords="237,157,407,184"/>
 <area shape="rect" id="node6" href="$classtmu_1_1models_1_1regression_1_1vanilla__regressor_1_1TMRegressor.html" title=" " alt="" coords="269,208,375,235"/>
+<area shape="rect" id="node7" href="$classvanilla__relational_1_1TMRelational.html" title=" " alt="" coords="268,259,376,285"/>
 </map>
