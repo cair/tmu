@@ -284,6 +284,8 @@ void cwb_type_i_and_ii_feedback(unsigned int *ta_state, int *weights, unsigned i
 	}
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
+	// Update clauses
+
 	for (int j = 0; j < number_of_clauses; ++j) {
 		if (!clause_active[j]) {
 			continue;
@@ -326,7 +328,6 @@ void cwb_type_i_and_ii_feedback(unsigned int *ta_state, int *weights, unsigned i
 
 			 			cwb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta[k], number_of_state_bits);
 					}
-					weights[i*number_of_clauses + j] += (weights[i*number_of_clauses + j] >= 0) - (weights[i*number_of_clauses + j] < 0);
 				} else {
 					// Type Ib Feedback
 						
@@ -343,7 +344,6 @@ void cwb_type_i_and_ii_feedback(unsigned int *ta_state, int *weights, unsigned i
 						unsigned int ta_pos = k*number_of_state_bits;
 						cwb_inc(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]), number_of_state_bits);
 					}
-					weights[i*number_of_clauses + j] -= (weights[i*number_of_clauses + j] >= 0) - (weights[i*number_of_clauses + j] < 0);
 				}
 			}
 

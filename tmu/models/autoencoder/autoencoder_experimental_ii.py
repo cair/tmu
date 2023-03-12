@@ -16,19 +16,19 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 from tmu.clause_weight_bank import ClauseWeightBank
 from tmu.models.base import TMBasis
 from tmu.weight_bank import WeightBank
 import numpy as np
 from scipy.sparse import csr_matrix, csc_matrix
 
+
 class TMAutoEncoder(TMBasis):
     def __init__(self, number_of_clauses, T, s, output_active, accumulation=1, type_i_ii_ratio=1.0,
                  type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0,
                  platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1,
                  max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8,
-                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0, incremental=False):
+                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0):
         self.output_active = output_active
         self.accumulation = accumulation
         super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
@@ -37,13 +37,17 @@ class TMAutoEncoder(TMBasis):
                          boost_true_positive_feedback=boost_true_positive_feedback,
                          max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
                          number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
-                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, incremental=incremental)
+                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p)
 
     def initialize(self, X):
         self.number_of_classes = self.output_active.shape[0]
         if self.platform == 'CPU':
             self.clause_bank = ClauseWeightBank(X, self.number_of_classes, self.number_of_clauses, self.number_of_state_bits_ta,
-                                          self.number_of_state_bits_ind, self.patch_dim, batch_size=self.number_of_classes, incremental=self.incremental)
+                self.number_of_state_bits_ind, self.patch_dim, batch_size=self.number_of_classes, incremental=self.incremental)
+
+        elif self.platform == 'CUDA':
+            from clause_bank.clause_bank_cuda import ClauseBankCUDA
+            self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
         else:
             raise RuntimeError(f"Unknown platform of type: {self.platform}")
 
@@ -56,7 +60,27 @@ class TMAutoEncoder(TMBasis):
             self.max_included_literals = self.clause_bank.number_of_literals
 
         self.update_p = np.empty(self.number_of_classes, dtype=np.float32)
-        self.class_sum = np.empty(self.number_of_classes, dtype=np.int32)
+
+    def update(self, target_output, target_value, encoded_X, clause_active, literal_active):
+        all_literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
+        clause_outputs = self.clause_bank.calculate_clause_outputs_update(all_literal_active, encoded_X, 0)
+
+        class_sum = np.dot(clause_active * self.weight_banks[target_output].get_weights(), clause_outputs).astype(
+            np.int32)
+        class_sum = np.clip(class_sum, -self.T, self.T)
+
+        type_iii_feedback_selection = np.random.choice(2)
+
+        if target_value == 1:
+            update_p = (self.T - class_sum) / (2 * self.T)
+
+            self.weight_banks[target_output].increment(clause_outputs, update_p, clause_active, True)
+        else:
+            update_p = (self.T + class_sum) / (2 * self.T)
+
+            self.weight_banks[target_output].decrement(clause_outputs, update_p, clause_active, True)
+
+        return update_p
 
     def activate_clauses(self):
         # Drops clauses randomly based on clause drop probability
@@ -96,6 +120,8 @@ class TMAutoEncoder(TMBasis):
 
         class_index = np.arange(self.number_of_classes, dtype=np.uint32)
         for e in range(number_of_examples):
+            np.random.shuffle(class_index)
+
             average_absolute_weights = np.zeros(self.number_of_clauses, dtype=np.float32)
             for i in class_index:
                 average_absolute_weights += np.absolute(self.weight_banks[i].get_weights())
@@ -104,34 +130,30 @@ class TMAutoEncoder(TMBasis):
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
             Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc, self.output_active, self.accumulation)
-            for i in range(self.number_of_classes):
-                all_literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
-                clause_outputs = self.clause_bank.calculate_clause_outputs(all_literal_active, Xu, i, 1)
+            for i in class_index:
+                (target, encoded_X) = Yu[i], Xu[i].reshape((1, -1))
 
-                self.update_p[i] = np.dot(clause_active * self.weight_banks[i].get_weights(),
-                                               clause_outputs).astype(np.int32)
-                self.update_p[i] = np.clip(self.update_p[i], -self.T, self.T)
+                ta_chunk = self.output_active[i] // 32
+                chunk_pos = self.output_active[i] % 32
+                copy_literal_active_ta_chunk = literal_active[ta_chunk]
+                literal_active[ta_chunk] &= ~(1 << chunk_pos)
 
-                if Yu[i]:
-                    self.update_p[i] = 1.0 * (self.T - self.update_p[i]) / (2 * self.T)
-                else:
-                    self.update_p[i] = 1.0 * (self.T + self.update_p[i]) / (2 * self.T)
+                self.update_p[i] = self.update(i, target, encoded_X, update_clause * clause_active, literal_active)
+                literal_active[ta_chunk] = copy_literal_active_ta_chunk
 
             self.clause_bank.type_i_and_ii_feedback(self.update_p, self.s, self.boost_true_positive_feedback,
-                                         self.max_included_literals, clause_active,
-                                         literal_active, Xu, 0, Yu, autoencoder=1, output_literal_index=self.output_active)
+                self.max_included_literals, clause_active, literal_active, Xu, 0, Yu, autoencoder=1, output_literal_index=self.output_active)
+
         return
 
     def predict(self, X):
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         Y = np.ascontiguousarray(np.zeros((self.number_of_classes, X.shape[0]), dtype=np.uint32))
 
-        all_literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
-
         for e in range(X.shape[0]):
             encoded_X = self.clause_bank.prepare_X(X_csr[e, :].toarray())
 
-            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(all_literal_active, encoded_X, 0, 0)
+            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)[0]
             for i in range(self.number_of_classes):
                 class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
                 Y[i, e] = (class_sum >= 0)
@@ -167,7 +189,7 @@ class TMAutoEncoder(TMBasis):
         true_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
         false_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
 
-        weights = self.clause_bank.get_weights()[the_class]
+        weights = self.weight_banks[the_class].get_weights()
 
         clause_active = self.activate_clauses()
         literal_active = self.activate_literals()
@@ -178,7 +200,6 @@ class TMAutoEncoder(TMBasis):
                                                                             dtype=np.uint32), self.accumulation)
             (target, encoded_X) = Yu[0], Xu[0].reshape((1, -1))
 
-            #clause_outputs = self.clause_bank.calculate_clause_outputs(literal_active, encoded_X, 0, 0)
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
 
             if positive_polarity:
@@ -201,10 +222,7 @@ class TMAutoEncoder(TMBasis):
         true_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
         false_negative = np.zeros(self.number_of_clauses, dtype=np.uint32)
 
-        weights = self.clause_bank.get_weights()[the_class]
-
-        clause_active = self.activate_clauses()
-        literal_active = self.activate_literals()
+        weights = self.weight_banks[the_class].get_weights()
 
         for e in range(number_of_examples):
             Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc,
@@ -212,7 +230,6 @@ class TMAutoEncoder(TMBasis):
                                                                             dtype=np.uint32), self.accumulation)
             (target, encoded_X) = Yu[0], Xu[0].reshape((1, -1))
 
-            #clause_outputs = self.clause_bank.calculate_clause_outputs(literal_active, encoded_X, 0, 0)
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
 
             if positive_polarity:
@@ -227,10 +244,10 @@ class TMAutoEncoder(TMBasis):
         return true_positive / (true_positive + false_negative)
 
     def get_weight(self, the_class, clause):
-        return self.clause_bank.get_weights()[the_class, clause]
+        return self.weight_banks[the_class].get_weights()[clause]
 
     def get_weights(self, the_class):
-        return self.clause_bank.get_weights()[the_class]
+        return self.weight_banks[the_class].get_weights()
 
     def set_weight(self, the_class, clause, weight):
-       self.clause_bank.get_weights()[the_class, clause] = weight
+        self.weight_banks[the_class].get_weights()[clause] = weight
