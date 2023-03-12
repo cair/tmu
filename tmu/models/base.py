@@ -18,13 +18,12 @@ import typing
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from clause_weight_bank import ClauseWeightBank
+from tmu.clause_weight_bank import ClauseWeightBank
 from tmu.weight_bank import WeightBank
-
 from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
 from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
-from util.clause_dictionary import SparseFlexList
+from tmu.util.clause_dictionary import SparseFlexList
 
 
 def _validate_input_dtype(d: np.ndarray):
