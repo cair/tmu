@@ -28,7 +28,7 @@ class TMAutoEncoder(TMBasis):
                  type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0,
                  platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1,
                  max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8,
-                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0, incremental=True):
+                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0, incremental=False):
         self.output_active = output_active
         self.accumulation = accumulation
         super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
@@ -98,7 +98,7 @@ class TMAutoEncoder(TMBasis):
         for e in range(number_of_examples):
             average_absolute_weights = np.zeros(self.number_of_clauses, dtype=np.float32)
             for i in class_index:
-                average_absolute_weights += np.absolute(self.clause_bank.get_weights()[i])
+                average_absolute_weights += np.absolute(self.weight_banks[i].get_weights())
             average_absolute_weights /= self.number_of_classes
             update_clause = np.random.random(self.number_of_clauses) <= (
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
@@ -108,7 +108,7 @@ class TMAutoEncoder(TMBasis):
                 all_literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
                 clause_outputs = self.clause_bank.calculate_clause_outputs(all_literal_active, Xu, i, 1)
 
-                self.update_p[i] = np.dot(clause_active * self.clause_bank.get_weights()[i],
+                self.update_p[i] = np.dot(clause_active * self.weight_banks[i].get_weights(),
                                                clause_outputs).astype(np.int32)
                 self.update_p[i] = np.clip(self.update_p[i], -self.T, self.T)
 
@@ -133,7 +133,7 @@ class TMAutoEncoder(TMBasis):
 
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(all_literal_active, encoded_X, 0, 0)
             for i in range(self.number_of_classes):
-                class_sum = np.dot(self.clause_bank.get_weights()[i], clause_outputs).astype(np.int32)
+                class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
                 Y[i, e] = (class_sum >= 0)
         return Y
 
