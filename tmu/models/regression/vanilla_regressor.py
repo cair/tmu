@@ -1,5 +1,5 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
-from models.base import SingleClauseBankMixin, SingleWeightBankMixin
+from tmu.models.base import SingleClauseBankMixin, SingleWeightBankMixin
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -20,7 +20,7 @@ from models.base import SingleClauseBankMixin, SingleWeightBankMixin
 from tmu.weight_bank import WeightBank
 import numpy as np
 import logging
-from models.classification.base_classification import TMBaseClassifier
+from tmu.models.classification.base_classification import TMBaseClassifier
 
 _LOGGER = logging.getLogger(__name__)
 
