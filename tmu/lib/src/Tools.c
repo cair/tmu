@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2019 Ole-Christoffer Granmo
+Copyright (c) 2023 Ole-Christoffer Granmo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,41 +38,66 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 {
 	int row;
 
-	int number_of_ta_chunks;
+	int number_of_literals;
+	int number_of_literal_chunks;
 	if (append_negated) {
-		number_of_ta_chunks= (((2*number_of_cols-1)/32 + 1));
+		number_of_literals = 2*number_of_cols;
+		number_of_literal_chunks= (((number_of_literals-1)/32 + 1));
 	} else {
-		number_of_ta_chunks= (((number_of_cols-1)/32 + 1));
+		number_of_literals = number_of_cols;
+		number_of_literal_chunks= (((number_of_literals-1)/32 + 1));
 	}
 
 	// Loop over active outputs, producing one example per output
 	for (int o = 0; o < number_of_active_outputs; ++o) {
-		int output_pos = o*number_of_ta_chunks;
+		int output_pos = o*number_of_literal_chunks;
 
-		// Initialize all example literals to zero
-		for (int k = 0; k < number_of_ta_chunks; ++k) {
-			encoded_X[output_pos + k] = 0;
+		// Initialize example with false features
+		if (append_negated) {
+			int	number_of_feature_chunks = (((number_of_literals-1)/32 + 1));
+			for (int k = 0; k < number_of_feature_chunks - 1; ++k) {
+				encoded_X[output_pos + k] = 0U;
+			}
+
+			for (int k = number_of_feature_chunks - 1; k < number_of_literal_chunks; ++k) {
+				encoded_X[output_pos + k] = ~0U;
+			}
+
+			for (int k = (number_of_feature_chunks-1)*32; k < number_of_cols; ++k) {
+				int chunk_nr = k / 32;
+				int chunk_pos = k % 32;
+				encoded_X[output_pos + chunk_pos] &= ~(1U << chunk_pos);
+			}
+		} else {
+			for (int k = 0; k < number_of_literal_chunks; ++k) {
+				encoded_X[output_pos + k] = 0;
+			}
 		}
 
 		if ((indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) || (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows)) {
-			printf("No examples: %d\n", active_output[o]);
 			// If no positive/negative examples, produce a random example
 			for (int a = 0; a < accumulation; ++a) {
 				row = rand() % number_of_rows;
 				for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
 					int chunk_nr = indices_row[k] / 32;
 					int chunk_pos = indices_row[k] % 32;
-					encoded_X[output_pos + chunk_nr] |= (1 << chunk_pos);
+					encoded_X[output_pos + chunk_nr] |= (1U << chunk_pos);
+
+					if (append_negated) {
+						int chunk_nr = (indices_row[k] + number_of_cols) / 32;
+						int chunk_pos = (indices_row[k] + number_of_cols) % 32;
+						encoded_X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
+					}
 				}
 			}
 		}
 
 		if (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) {
-			// If no positive examples, produce a negative one
+			// If no positive examples, produce a negative output value
 			Y[o] = 0;
 			continue;
 		} else if (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows) {
-			// If no negative examples, produce a positive one
+			// If no negative examples, produce a positive output value
 			Y[o] = 1;
 			continue;
 		} 
@@ -90,6 +115,12 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 					int chunk_nr = indices_row[k] / 32;
 					int chunk_pos = indices_row[k] % 32;
 					encoded_X[output_pos + chunk_nr] |= (1 << chunk_pos);
+
+					if (append_negated) {
+						int chunk_nr = (indices_row[k] + number_of_cols) / 32;
+						int chunk_pos = (indices_row[k] + number_of_cols) % 32;
+						encoded_X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
+					}
 				}
 			}
 		} else {
@@ -102,6 +133,12 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 						int chunk_nr = indices_row[k] / 32;
 						int chunk_pos = indices_row[k] % 32;
 						encoded_X[output_pos + chunk_nr] |= (1 << chunk_pos);
+
+						if (append_negated) {
+							int chunk_nr = (indices_row[k] + number_of_cols) / 32;
+							int chunk_pos = (indices_row[k] + number_of_cols) % 32;
+							encoded_X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
+						}
 					}
 					a++;
 				}
@@ -116,11 +153,11 @@ void tmu_encode(unsigned int *X, unsigned int *encoded_X, int number_of_examples
 	int number_of_features = class_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
 	int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
 
-	int number_of_ta_chunks;
+	int number_of_literal_chunks;
 	if (append_negated) {
-		number_of_ta_chunks= (((2*number_of_features-1)/32 + 1));
+		number_of_literal_chunks= (((2*number_of_features-1)/32 + 1));
 	} else {
-		number_of_ta_chunks= (((number_of_features-1)/32 + 1));
+		number_of_literal_chunks= (((number_of_features-1)/32 + 1));
 	}
 
 	unsigned int *Xi;
@@ -131,7 +168,7 @@ void tmu_encode(unsigned int *X, unsigned int *encoded_X, int number_of_examples
 
 	// Fill encoded_X with zeros
 
-	memset(encoded_X, 0, number_of_examples * number_of_patches * number_of_ta_chunks * sizeof(unsigned int));
+	memset(encoded_X, 0, number_of_examples * number_of_patches * number_of_literal_chunks * sizeof(unsigned int));
 
 	unsigned int encoded_pos = 0;
 	for (int i = 0; i < number_of_examples; ++i) {
@@ -202,7 +239,7 @@ void tmu_encode(unsigned int *X, unsigned int *encoded_X, int number_of_examples
 						}
 					}
 				}
-				encoded_pos += number_of_ta_chunks;
+				encoded_pos += number_of_literal_chunks;
 				patch_nr++;
 			}
 		}
