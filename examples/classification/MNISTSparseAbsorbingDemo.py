@@ -69,7 +69,7 @@ if __name__ == "__main__":
                 absorbed_include += 1.0 * tm.number_of_absorbed_include_actions(i, j) / (
                         tm.number_of_absorbed_include_actions(i, j) + tm.number_of_include_actions(i, j))
                 include_counter += 1
-            absorbed_include = 100 * absorbed_include / include_counter
+        absorbed_include = 100 * absorbed_include / include_counter
 
         _LOGGER.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Absorbed Exclude: {absorbed_exclude}, Absorbed "
                      f"Include: {absorbed_include}, Training Time: {benchmark1.elapsed():.2f}s,"
