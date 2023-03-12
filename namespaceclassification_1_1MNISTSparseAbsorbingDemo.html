@@ -74,8 +74,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:a790625036e78110b01317f87a2a03710"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a790625036e78110b01317f87a2a03710">absorbed</a> = 0.0</td></tr>
-<tr class="separator:a790625036e78110b01317f87a2a03710"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a150aa0df0c73e27f045dd0a3576fee99"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a150aa0df0c73e27f045dd0a3576fee99">absorbed_exclude</a> = 0.0</td></tr>
+<tr class="separator:a150aa0df0c73e27f045dd0a3576fee99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85c6c4877b01144a6d7341415b0fdfef"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a85c6c4877b01144a6d7341415b0fdfef">absorbed_include</a> = 0.0</td></tr>
+<tr class="separator:a85c6c4877b01144a6d7341415b0fdfef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a659256c8fd0a9b42c930e34f059524f0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a659256c8fd0a9b42c930e34f059524f0">include_counter</a> = 0</td></tr>
+<tr class="separator:a659256c8fd0a9b42c930e34f059524f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b2e13c78efca330f06b6ddcd7464b41"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a8b2e13c78efca330f06b6ddcd7464b41">result</a> = 100*(tm.predict(<a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a52060fadf2877026846beb01c030b62a">X_test</a>) == <a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a2f1e440e987c0e18fab3e22266e49d34">Y_test</a>).mean()</td></tr>
 <tr class="separator:a8b2e13c78efca330f06b6ddcd7464b41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61b37f7b662651e4205191b8eef7aab1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a61b37f7b662651e4205191b8eef7aab1">start_testing</a> = time()</td></tr>
@@ -86,7 +90,7 @@ Variables</h2></td></tr>
 <tr class="separator:aa353ebd99726a8e290b81a14ea9953ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ffacefd85c4bf7e85685105a3a25f0b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a2ffacefd85c4bf7e85685105a3a25f0b">stop_training</a> = time()</td></tr>
 <tr class="separator:a2ffacefd85c4bf7e85685105a3a25f0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc63fbbfe6695db4891c2cfa0bd8045a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#abc63fbbfe6695db4891c2cfa0bd8045a">tm</a> = <a class="el" href="classtmu_1_1models_1_1classification_1_1vanilla__classifier_1_1TMClassifier.html">TMClassifier</a>(2000, 5000, 10.0, max_included_literals=32, platform='CPU_sparse', weighted_clauses=True, absorbing=90)</td></tr>
+<tr class="memitem:abc63fbbfe6695db4891c2cfa0bd8045a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#abc63fbbfe6695db4891c2cfa0bd8045a">tm</a> = <a class="el" href="classtmu_1_1models_1_1classification_1_1vanilla__classifier_1_1TMClassifier.html">TMClassifier</a>(2000, 5000, 10.0, max_included_literals=32, platform='CPU_sparse', weighted_clauses=True, absorbing_include=150, absorbing_exclude=90)</td></tr>
 <tr class="separator:abc63fbbfe6695db4891c2cfa0bd8045a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52060fadf2877026846beb01c030b62a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceclassification_1_1MNISTSparseAbsorbingDemo.html#a52060fadf2877026846beb01c030b62a">X_test</a> = np.where(X_test.reshape((X_test.shape[0], 28*28)) &gt; 75, 1, 0)</td></tr>
 <tr class="separator:a52060fadf2877026846beb01c030b62a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -98,14 +102,42 @@ Variables</h2></td></tr>
 <tr class="separator:a6fc3c3c4d72d20105185b84cad75d83c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Variable Documentation</h2>
-<a id="a790625036e78110b01317f87a2a03710"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a790625036e78110b01317f87a2a03710">&#9670;&nbsp;</a></span>absorbed</h2>
+<a id="a150aa0df0c73e27f045dd0a3576fee99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a150aa0df0c73e27f045dd0a3576fee99">&#9670;&nbsp;</a></span>absorbed_exclude</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int absorbed = 0.0</td>
+          <td class="memname">int absorbed_exclude = 0.0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a85c6c4877b01144a6d7341415b0fdfef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a85c6c4877b01144a6d7341415b0fdfef">&#9670;&nbsp;</a></span>absorbed_include</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int absorbed_include = 0.0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a659256c8fd0a9b42c930e34f059524f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a659256c8fd0a9b42c930e34f059524f0">&#9670;&nbsp;</a></span>include_counter</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int include_counter = 0</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -189,7 +221,7 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">tm = <a class="el" href="classtmu_1_1models_1_1classification_1_1vanilla__classifier_1_1TMClassifier.html">TMClassifier</a>(2000, 5000, 10.0, max_included_literals=32, platform='CPU_sparse', weighted_clauses=True, absorbing=90)</td>
+          <td class="memname">tm = <a class="el" href="classtmu_1_1models_1_1classification_1_1vanilla__classifier_1_1TMClassifier.html">TMClassifier</a>(2000, 5000, 10.0, max_included_literals=32, platform='CPU_sparse', weighted_clauses=True, absorbing_include=150, absorbing_exclude=90)</td>
         </tr>
       </table>
 </div><div class="memdoc">
