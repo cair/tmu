@@ -69,7 +69,8 @@ class TMBaseClassifier(TMBasis):
                 number_of_clauses=self.number_of_clauses,
                 number_of_states=2 ** self.number_of_state_bits_ta,
                 patch_dim=self.patch_dim,
-                absorbing=self.absorbing
+                absorbing_exclude=self.absorbing_exclude,
+                absorbing_include=self.absorbing_include
             )
         else:
             raise NotImplementedError(f"Could not find platform of type {self.platform}.")
