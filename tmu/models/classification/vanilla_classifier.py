@@ -51,7 +51,8 @@ class TMClassifier(TMBaseClassifier):
             literal_drop_p=0.0,
             batch_size=100,
             incremental=True,
-            absorbing=-1
+            absorbing_include=None,
+            absorbing_exclude=None
     ):
         super().__init__(
             number_of_clauses,
@@ -73,7 +74,8 @@ class TMClassifier(TMBaseClassifier):
             literal_drop_p=literal_drop_p,
             batch_size=batch_size,
             incremental=incremental,
-            absorbing=absorbing
+            absorbing_include=absorbing_include,
+            absorbing_exclude=absorbing_exclude
         )
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
@@ -106,7 +108,8 @@ class TMClassifier(TMBaseClassifier):
                 number_of_clauses=self.number_of_clauses,
                 number_of_states=2 ** self.number_of_state_bits_ta,
                 patch_dim=self.patch_dim,
-                absorbing=self.absorbing
+                absorbing_include=self.absorbing_include,
+                absorbing_exclude=self.absorbing_exclude
             )
         else:
             raise NotImplementedError(f"Could not find platform of type {self.platform}.")
@@ -411,6 +414,9 @@ class TMClassifier(TMBaseClassifier):
 
     def number_of_include_actions(self, the_class, clause):
         return self.clause_banks[the_class].number_of_include_actions(clause)
+
+    def number_of_absorbed_include_actions(self, the_class, clause):
+        return self.clause_banks[the_class].number_of_absorbed_include_actions(clause)
 
     def number_of_exclude_actions(self, the_class, clause):
         return self.clause_banks[the_class].number_of_exclude_actions(clause)
