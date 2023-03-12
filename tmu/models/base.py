@@ -85,7 +85,8 @@ class TMBasis:
             literal_drop_p=0.0,
             batch_size=100,
             incremental=True,
-            absorbing=-1
+            absorbing_include=None,
+            absorbing_exclude=None
     ):
         self.number_of_clauses = number_of_clauses
         self.number_of_state_bits_ta = number_of_state_bits_ta
@@ -116,7 +117,8 @@ class TMBasis:
         self.literal_drop_p = literal_drop_p
         self.batch_size = batch_size
         self.incremental = incremental
-        self.absorbing = absorbing
+        self.absorbing_include = absorbing_include
+        self.absorbing_exclude = absorbing_exclude
         self.initialized = False
 
         # TODO - Change to checksum

@@ -47,7 +47,8 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             literal_drop_p=0.0,
             batch_size=100,
             incremental=True,
-            absorbing=-1
+            absorbing_include=None,
+            absorbing_exclude=None
     ):
         super().__init__(
             number_of_clauses,
@@ -69,7 +70,8 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             literal_drop_p=literal_drop_p,
             batch_size=batch_size,
             incremental=incremental,
-            absorbing=absorbing
+            absorbing_include=absorbing_include,
+            absorbing_exclude=absorbing_exclude
         )
         MultiClauseBankMixin.__init__(self)
         MultiWeightBankMixin.__init__(self)
@@ -376,6 +378,9 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
     def number_of_include_actions(self, the_class, clause):
         return self.clause_banks[the_class].number_of_include_actions(clause)
+
+    def number_of_absorbed_include_actions(self, the_class, clause):
+        return self.clause_banks[the_class].number_of_absorbed_include_actions(clause)
 
     def number_of_exclude_actions(self, the_class, clause):
         return self.clause_banks[the_class].number_of_exclude_actions(clause)

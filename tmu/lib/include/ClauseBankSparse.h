@@ -27,13 +27,18 @@ https://arxiv.org/abs/1905.09688
 
 void cbs_prepare_Xi(unsigned int *indices, int number_of_indices, unsigned int *Xi, int number_of_features);
 void cbs_restore_Xi(unsigned int *indices, int number_of_indices, unsigned int *Xi, int number_of_features);
-void cbs_calculate_clause_outputs_predict_packed_X(unsigned int *packed_X, int number_of_clauses, int number_of_literals, unsigned int *clause_output_batch, unsigned short *clause_bank_included, unsigned short *clause_bank_included_length);
+void cbs_calculate_clause_outputs_predict_packed_X(unsigned int *packed_X, int number_of_clauses, int number_of_literals, unsigned int *clause_output_batch, unsigned short *clause_bank_included, unsigned short *clause_bank_included_length, unsigned short *clause_bank_included_absorbed,
+                    unsigned short *clause_bank_included_absorbed_length);
 void cbs_unpack_clause_output(int e, unsigned int *clause_output, unsigned int *clause_output_batch, int number_of_clauses);
 void cbs_pack_X(int *indptr, int *indices, int number_of_examples, int e, unsigned int *packed_X, int number_of_literals);
-void cbs_calculate_clause_outputs_update(unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, unsigned int *clause_output, unsigned short *clause_bank_included, unsigned short *clause_bank_included_length);
-void cbs_calculate_clause_outputs_predict(unsigned int *Xi, int number_of_clauses, int number_of_literals, unsigned int *clause_output, unsigned short *clause_bank_included, unsigned short *clause_bank_included_length);
-void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int absorbing, int *clause_active,
+void cbs_calculate_clause_outputs_update(unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, unsigned int *clause_output, unsigned short *clause_bank_included, unsigned short *clause_bank_included_length, unsigned short *clause_bank_included_absorbed,
+                    unsigned short *clause_bank_included_absorbed_length);
+void cbs_calculate_clause_outputs_predict(unsigned int *Xi, int number_of_clauses, int number_of_literals, unsigned int *clause_output, unsigned short *clause_bank_included, unsigned short *clause_bank_included_length, unsigned short *clause_bank_included_absorbed,
+                    unsigned short *clause_bank_included_absorbed_length);
+void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int absorbing_include, int absorbing_exclude, int *clause_active,
                     unsigned int *literal_active, unsigned int *feedback_to_ta, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
-                    unsigned short *clause_bank_included_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length);
+                    unsigned short *clause_bank_included_length, unsigned short *clause_bank_included_absorbed,
+                    unsigned short *clause_bank_included_absorbed_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length);
 void cbs_type_ii_feedback(float update_p, int *clause_active, unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
-                    unsigned short *clause_bank_included_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length);
+                    unsigned short *clause_bank_included_length, unsigned short *clause_bank_included_absorbed,
+                    unsigned short *clause_bank_included_absorbed_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length);
