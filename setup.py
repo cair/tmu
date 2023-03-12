@@ -45,7 +45,7 @@ setup(
     cffi_modules=[
         "tmu/lib/tmulib_extension_build.py:ffibuilder"
     ],
-    data_files=[('tmu', ['tmu/*.json'])],
+    data_files=[('tmu', ['tmu/logging_example.json'])],
     install_requires=[
         "cffi>=1.0.0",
         "numpy",
