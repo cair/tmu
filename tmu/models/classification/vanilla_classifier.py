@@ -20,6 +20,7 @@ from tmu.weight_bank import WeightBank
 import numpy as np
 import tmu.tools
 import logging
+import random
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,9 +194,9 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                     target=0
                 )
 
-            not_target = np.random.randint(self.number_of_classes)
+            not_target = random.choice(list(self.clause_banks))
             while not_target == target:
-                not_target = np.random.randint(self.number_of_classes)
+                not_target = random.choice(list(self.clause_banks))
 
             clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(
                 literal_active,
