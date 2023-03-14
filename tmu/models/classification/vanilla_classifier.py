@@ -83,12 +83,13 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         self.clause_banks.populate(list(range(self.number_of_classes)))
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
-        for i in range(self.number_of_classes):
-            self.weight_banks.insert(
-                key=i,
-                value=WeightBank(np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
-                                                 -1 * np.ones(self.number_of_clauses // 2,
-                                                              dtype=np.int32)))))
+
+        self.weight_banks.set_clause_init(WeightBank, dict(
+            weights=np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
+                                    -1 * np.ones(self.number_of_clauses // 2,
+                                                 dtype=np.int32))))
+        )
+        self.weight_banks.populate(list(range(self.number_of_classes)))
 
     def init_after(self, X: np.ndarray, Y: np.ndarray):
         if self.max_included_literals is None:
