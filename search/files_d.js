@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['vanilla_5fclassifier_2epy_858',['vanilla_classifier.py',['../vanilla__classifier_8py.html',1,'']]],
-  ['vanilla_5fregressor_2epy_859',['vanilla_regressor.py',['../vanilla__regressor_8py.html',1,'']]],
-  ['vanilla_5frelational_2epy_860',['vanilla_relational.py',['../vanilla__relational_8py.html',1,'']]]
+  ['vanilla_5fclassifier_2epy_863',['vanilla_classifier.py',['../vanilla__classifier_8py.html',1,'']]],
+  ['vanilla_5fregressor_2epy_864',['vanilla_regressor.py',['../vanilla__regressor_8py.html',1,'']]],
+  ['vanilla_5frelational_2epy_865',['vanilla_relational.py',['../vanilla__relational_8py.html',1,'']]]
 ];
