@@ -114,7 +114,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
         # Drops clauses randomly based on clause drop probability
         clause_active = []
-        for i in range(self.number_of_classes):
+        for i in list(self.weight_banks):
             clause_active.append((np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32))
 
         # Literals are dropped based on literal drop probability
@@ -194,9 +194,9 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                     target=0
                 )
 
-            not_target = random.choice(list(self.clause_banks))
+            not_target = random.choice(list(self.weight_banks))
             while not_target == target:
-                not_target = random.choice(list(self.clause_banks))
+                not_target = random.choice(list(self.weight_banks))
 
             clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(
                 literal_active,
@@ -265,7 +265,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         for e in range(X.shape[0]):
             max_class_sum = -self.T
             max_class = 0
-            for i in range(self.number_of_classes):
+            for i in list(self.weight_banks):
                 class_sum = np.dot(self.weight_banks[i].get_weights(),
                                    self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test,
                                                                                          e)).astype(np.int32)
@@ -278,28 +278,28 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
     def transform(self, X):
         encoded_X = self.clause_banks[0].prepare_X(X)
-        transformed_X = np.empty((X.shape[0], self.number_of_classes, self.number_of_clauses), dtype=np.uint32)
+        transformed_X = np.empty((X.shape[0], len(self.weight_banks), self.number_of_clauses), dtype=np.uint32)
         for e in range(X.shape[0]):
-            for i in range(self.number_of_classes):
+            for i in list(self.weight_banks):
                 transformed_X[e, i, :] = self.clause_banks[i].calculate_clause_outputs_predict(encoded_X, e)
-        return transformed_X.reshape((X.shape[0], self.number_of_classes * self.number_of_clauses))
+        return transformed_X.reshape((X.shape[0], len(self.weight_banks) * self.number_of_clauses))
 
     def transform_patchwise(self, X):
         # TODO - This needs to be fixed.
         encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim,
                                      self.patch_dim, 0)
         transformed_X = np.empty(
-            (X.shape[0], self.number_of_classes, self.number_of_clauses // 2 * self.number_of_patches), dtype=np.uint32)
+            (X.shape[0], len(self.weight_banks), self.number_of_clauses // 2 * self.number_of_patches), dtype=np.uint32)
         for e in range(X.shape[0]):
-            for i in range(self.number_of_classes):
+            for i in range(len(self.weight_banks)):
                 transformed_X[e, i, :] = self.clause_bank[i].calculate_clause_outputs_patchwise(encoded_X, e)
         return transformed_X.reshape(
-            (X.shape[0], self.number_of_classes * self.number_of_clauses, self.number_of_patches))
+            (X.shape[0], len(self.clause_bank) * self.number_of_clauses, self.number_of_patches))
 
     def literal_clause_frequency(self):
         clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
         literal_frequency = np.zeros(self.clause_banks[0].number_of_literals, dtype=np.uint32)
-        for i in range(self.number_of_classes):
+        for i in list(clause_banks):
             literal_frequency += self.clause_banks[i].calculate_literal_clause_frequency(clause_active)
         return literal_frequency
 
@@ -329,7 +329,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
     def clause_precision(self, the_class, polarity, X, Y):
         clause_outputs = self.transform(X).reshape(
             X.shape[0],
-            self.number_of_classes,
+            len(self.weight_banks),
             2,
             self.number_of_clauses // 2
         )[:, the_class, polarity, :]
@@ -346,7 +346,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
     def clause_recall(self, the_class, polarity, X, Y):
         clause_outputs = self.transform(X).reshape(
             X.shape[0],
-            self.number_of_classes,
+            len(self.weight_banks),
             2,
             self.number_of_clauses // 2
         )[:, the_class, polarity, :]
