@@ -16,6 +16,12 @@ class SparseFlexList:
     def n_classes(self):
         return len(self._classes)
 
+    def classes(self):
+        return self._classes
+
+    def __len__(self):
+        return len(self._classes)
+
     def sample(self, n=1):
         if n == 1:
             return self._rng.choice(self._classes)
@@ -28,7 +34,7 @@ class SparseFlexList:
 
             if self._clause_type is None:
                 raise RuntimeError("You must call set_clause_init before running fit()")
-
+            print(item)
             self._d[item] = self._clause_type(**self._clause_args)
 
             return self._d[item]

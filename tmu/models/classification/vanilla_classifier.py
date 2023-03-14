@@ -114,7 +114,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
         # Drops clauses randomly based on clause drop probability
         clause_active = []
-        for i in self.weight_banks.items():
+        for i in self.weight_banks.classes():
             clause_active.append((np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32))
 
         # Literals are dropped based on literal drop probability
@@ -265,7 +265,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         for e in range(X.shape[0]):
             max_class_sum = -self.T
             max_class = 0
-            for i in list(self.weight_banks):
+            for i in self.weight_banks.classes():
                 class_sum = np.dot(self.weight_banks[i].get_weights(),
                                    self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test,
                                                                                          e)).astype(np.int32)
@@ -280,7 +280,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         encoded_X = self.clause_banks[0].prepare_X(X)
         transformed_X = np.empty((X.shape[0], len(self.weight_banks), self.number_of_clauses), dtype=np.uint32)
         for e in range(X.shape[0]):
-            for i in list(self.weight_banks):
+            for i in self.weight_banks.classes():
                 transformed_X[e, i, :] = self.clause_banks[i].calculate_clause_outputs_predict(encoded_X, e)
         return transformed_X.reshape((X.shape[0], len(self.weight_banks) * self.number_of_clauses))
 
