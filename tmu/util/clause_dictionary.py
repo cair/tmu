@@ -9,11 +9,16 @@ class SparseFlexList:
         self._classes = []
         self._d = dict()
 
+    def items(self):
+        return self._d.items()
+
     @property
     def n_classes(self):
         return len(self._classes)
 
     def sample(self, n=1):
+        if n == 1:
+            return self._rng.choice(self._classes)
         return self._rng.choices(self._classes, k=n)
 
     def __getitem__(self, item):

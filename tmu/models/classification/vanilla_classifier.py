@@ -83,7 +83,6 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         self.clause_banks.populate(list(range(self.number_of_classes)))
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
-
         self.weight_banks.set_clause_init(WeightBank, dict(
             weights=np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
                                     -1 * np.ones(self.number_of_clauses // 2,
@@ -115,7 +114,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
         # Drops clauses randomly based on clause drop probability
         clause_active = []
-        for i in list(self.weight_banks):
+        for i in self.weight_banks.items():
             clause_active.append((np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32))
 
         # Literals are dropped based on literal drop probability
@@ -195,9 +194,9 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                     target=0
                 )
 
-            not_target = random.choice(list(self.weight_banks))
+            not_target = self.weight_banks.sample()
             while not_target == target:
-                not_target = random.choice(list(self.weight_banks))
+                not_target = self.weight_banks.sample()
 
             clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(
                 literal_active,

@@ -75,11 +75,10 @@ class TMMultiTaskClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = len(X)
-        for i in range(self.number_of_classes):
-            self.weight_banks.insert(
-                i,
-                WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32))
-            )
+        self.weight_banks.set_clause_init(WeightBank, dict(
+            weights=WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32))
+        ))
+        self.weight_banks.populate(list(range(self.number_of_classes)))
 
     def init_after(self, X: np.ndarray, Y: np.ndarray):
         if self.max_included_literals is None:

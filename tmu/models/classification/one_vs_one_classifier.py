@@ -62,11 +62,10 @@ class TMOneVsOneClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeightB
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = int(np.max(Y) + 1)
         self.number_of_outputs = self.number_of_classes * (self.number_of_classes - 1)
-        for i in range(self.number_of_outputs):
-            self.weight_banks.insert(
-                i,
-                WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
-            )
+        self.weight_banks.set_clause_init(WeightBank, dict(
+            weights=WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
+        ))
+        self.weight_banks.populate(list(range(self.number_of_classes)))
 
     def init_after(self, X: np.ndarray, Y: np.ndarray):
         if self.max_included_literals is None:

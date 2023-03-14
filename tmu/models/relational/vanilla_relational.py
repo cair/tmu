@@ -81,11 +81,11 @@ class TMRelational(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixin
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = X.shape[1]
-        for i in range(self.number_of_classes):
-            self.weight_banks.insert(
-                i,
-                WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32))
-            )
+        self.weight_banks.set_clause_init(WeightBank, dict(
+            weights=np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32))
+        )
+        self.weight_banks.populate(list(range(self.number_of_classes)))
+
 
     def init_after(self, X: np.ndarray, Y: np.ndarray):
         self.output_active = np.empty(len(self.output_active_facts), dtype=np.uint32)
