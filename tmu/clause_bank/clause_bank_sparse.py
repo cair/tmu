@@ -166,5 +166,5 @@ class ClauseBankSparse:
         X_csr = csr_matrix(X, dtype=np.uint32)
         X_p = []
         for e in range(X.shape[0]):
-            X_p.append(ffi.cast("unsigned int *",X_csr.indices[X_csr.indptr[e]:X_csr.indptr[e+1]].ctypes.data))
+            X_p.append(ffi.cast("unsigned int *", X_csr.indices[X_csr.indptr[e]:X_csr.indptr[e+1]].ctypes.data))
         return (X_csr, X_p)
