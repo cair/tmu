@@ -163,7 +163,7 @@ class ClauseBankSparse:
             return self.clause_bank_included[clause, nonzero(literals == ta)[0][0], 1]
 
     def prepare_X(self, X):
-        X_csr = csr_matrix(X, dtype=np.uint32)
+        X_csr = csr_matrix(X.reshape(X.shape[0], -1), dtype=np.uint32)
         X_p = []
         for e in range(X.shape[0]):
             X_p.append(ffi.cast("unsigned int *", X_csr.indices[X_csr.indptr[e]:X_csr.indptr[e+1]].ctypes.data))
