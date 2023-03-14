@@ -66,8 +66,10 @@ class TMMultiChannelClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWei
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = int(np.max(Y) + 1)
         for i in range(self.number_of_classes):
-            self.weight_banks.append(
-                WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)))
+            self.weight_banks.insert(
+                i,
+                WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32))
+            )
 
     def init_after(self, X: np.ndarray, Y: np.ndarray):
         self.X_train = {}
