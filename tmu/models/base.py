@@ -84,6 +84,7 @@ class TMBasis:
             literal_drop_p=0.0,
             batch_size=100,
             incremental=True,
+            type_ia_ii_feedback_ratio=0,
             absorbing_include=None,
             absorbing_exclude=None
     ):
@@ -116,6 +117,7 @@ class TMBasis:
         self.literal_drop_p = literal_drop_p
         self.batch_size = batch_size
         self.incremental = incremental
+        self.type_ia_ii_feedback_ratio = type_ia_ii_feedback_ratio
         self.absorbing_include = absorbing_include
         self.absorbing_exclude = absorbing_exclude
         self.initialized = False

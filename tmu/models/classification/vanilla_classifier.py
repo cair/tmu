@@ -48,6 +48,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             literal_drop_p=0.0,
             batch_size=100,
             incremental=True,
+            type_ia_ii_feedback_ratio=0,
             absorbing_include=None,
             absorbing_exclude=None
     ):
@@ -71,6 +72,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             literal_drop_p=literal_drop_p,
             batch_size=batch_size,
             incremental=incremental,
+            type_ia_ii_feedback_ratio=type_ia_ii_feedback_ratio,
             absorbing_include=absorbing_include,
             absorbing_exclude=absorbing_exclude
         )

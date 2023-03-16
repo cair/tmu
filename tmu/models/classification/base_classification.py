@@ -50,7 +50,8 @@ class TMBaseClassifier(TMBasis):
                 number_of_state_bits_ind=self.number_of_state_bits_ind,
                 patch_dim=self.patch_dim,
                 batch_size=self.batch_size,
-                incremental=self.incremental
+                incremental=self.incremental,
+                type_ia_ii_feedback_ratio = self.type_ia_ii_feedback_ratio
             )
         elif self.platform in ["GPU", "CUDA"]:
             from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
