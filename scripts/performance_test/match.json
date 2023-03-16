@@ -1,0 +1,9 @@
+{
+  "MNISTDemo.json": {
+    "regex_patterns": [
+      "Epoch: \\d+, Accuracy: ([\\d.]+), Training Time: ([\\d.]+)s,"
+    ]
+  }
+
+
+}
