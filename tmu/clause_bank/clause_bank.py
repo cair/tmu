@@ -44,7 +44,7 @@ class ClauseBank(BaseClauseBank):
             number_of_state_bits_ind: int,
             batch_size: int = 100,
             incremental: bool = True,
-            type_ia_ii_feedback_ratio: int = 1,
+            type_ia_ii_feedback_ratio: int = 0,
             **kwargs
     ):
         super().__init__(**kwargs)
