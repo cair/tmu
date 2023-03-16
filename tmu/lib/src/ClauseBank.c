@@ -273,7 +273,7 @@ static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_s
 }
 
 
-void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
+void cb_type_i_feedback(unsigned int *ta_state, unsigned int *type_ia_ii_feedback_counter, int type_ia_ii_feedback_ratio, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
 {
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {
@@ -299,6 +299,11 @@ void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, un
 
 		if (clause_output && cb_number_of_include_actions(ta_state, j, number_of_literals, number_of_state_bits) <= max_included_literals) {
 			// Type Ia Feedback
+
+			if (type_ia_ii_feedback_ratio > 0) {
+				type_ia_ii_feedback_counter[j] += type_ia_ii_feedback_ratio;
+			}
+
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int ta_pos = k*number_of_state_bits;
 
@@ -322,7 +327,7 @@ void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, un
 	}
 }
 
-void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
+void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *type_ia_ii_feedback_counter, int type_ia_ii_feedback_ratio, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
 {
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {
@@ -343,7 +348,11 @@ void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patche
 		unsigned int clause_patch;
 		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
 
-		if (clause_output) {				
+		if (clause_output && ((type_ia_ii_feedback_ratio == 0) || (type_ia_ii_feedback_counter[j] > 0))) {				
+			if (type_ia_ii_feedback_ratio > 0) {
+				type_ia_ii_feedback_counter[j]--;
+			}
+
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int ta_pos = k*number_of_state_bits;
 				cb_inc(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]), number_of_state_bits);
