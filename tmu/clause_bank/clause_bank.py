@@ -20,12 +20,12 @@
 
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
+
 from tmu.tmulib import ffi, lib
 import tmu.tools
 from tmu.clause_bank.base_clause_bank import BaseClauseBank
 
 import numpy as np
-
 
 class ClauseBank(BaseClauseBank):
     clause_bank: np.ndarray
@@ -44,6 +44,7 @@ class ClauseBank(BaseClauseBank):
             number_of_state_bits_ind: int,
             batch_size: int = 100,
             incremental: bool = True,
+            type_ia_ii_feedback_ratio = 0,
             **kwargs
     ):
         super().__init__(**kwargs)
@@ -51,6 +52,7 @@ class ClauseBank(BaseClauseBank):
         self.number_of_state_bits_ind = int(number_of_state_bits_ind)
         self.batch_size = batch_size
         self.incremental = incremental
+        self.type_ia_ii_feedback_ratio = type_ia_ii_feedback_ratio
 
         self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
         self.clause_output_batch = np.empty(self.number_of_clauses * batch_size, dtype=np.uint32, order="c")
@@ -60,6 +62,8 @@ class ClauseBank(BaseClauseBank):
         self.feedback_to_ta = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
         self.output_one_patches = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
         self.literal_clause_count = np.empty(self.number_of_literals, dtype=np.uint32, order="c")
+
+        self.type_ia_ii_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
 
         self.initialize_clauses()
 
@@ -78,6 +82,8 @@ class ClauseBank(BaseClauseBank):
         # Clause Initialization
         self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
         self.cbi_p = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
+
+        self.tiaiifc_p = ffi.cast("unsigned int *", self.type_ia_ii_feedback_counter.ctypes.data)
 
         # Action Initialization
         self.ac_p = ffi.cast("unsigned int *", self.actions.ctypes.data)
@@ -218,6 +224,8 @@ class ClauseBank(BaseClauseBank):
         la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
         lib.cb_type_i_feedback(
             self.cb_p,
+            self.tiaiifc_p,
+            self.type_ia_ii_feedback_ratio,
             self.ft_p,
             self.o1p_p,
             self.number_of_clauses,
@@ -242,6 +250,8 @@ class ClauseBank(BaseClauseBank):
 
         lib.cb_type_ii_feedback(
             self.cb_p,
+            self.tiaiifc_p,
+            self.type_ia_ii_feedback_ratio,
             self.o1p_p,
             self.number_of_clauses,
             self.number_of_literals,
