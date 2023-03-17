@@ -304,7 +304,7 @@ class TMClassifier(TMBaseClassifier):
                 class_sum = np.dot(self.weight_banks[i].get_weights(),
                                    self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test,
                                                                                          e)).astype(np.int32)
-                class_sum = np.clip(class_sum, -self.T, self.T)
+                #class_sum = np.clip(class_sum, -self.T, self.T)
                 if class_sum > max_class_sum:
                     max_class_sum = class_sum
                     max_class = i
