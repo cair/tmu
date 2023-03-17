@@ -29,14 +29,14 @@ class TMCoalescedClassifier(TMBasis):
                  focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None,
                  feature_negation=True, boost_true_positive_feedback=1, max_positive_clauses=None, max_included_literals=None,
                  number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p=0.0,
-                 literal_drop_p=0.0):
+                 literal_drop_p=0.0, type_ia_ii_feedback_ratio=0):
         super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
                          focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d,
                          platform=platform, patch_dim=patch_dim, feature_negation=feature_negation,
                          boost_true_positive_feedback=boost_true_positive_feedback,
                          max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
                          number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
-                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p)
+                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, type_ia_ii_feedback_ratio=type_ia_ii_feedback_ratio)
         self.max_positive_clauses = max_positive_clauses
 
     def initialize(self, X, Y):
@@ -48,7 +48,8 @@ class TMCoalescedClassifier(TMBasis):
                 number_of_clauses=self.number_of_clauses,
                 number_of_state_bits_ind=self.number_of_state_bits_ind,
                 number_of_state_bits_ta=self.number_of_state_bits_ta,
-                patch_dim=self.patch_dim)
+                patch_dim=self.patch_dim,
+                type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio)
 
         elif self.platform == 'CUDA':
             self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
@@ -98,26 +99,31 @@ class TMCoalescedClassifier(TMBasis):
                                                self.clause_active * (self.weight_banks[target].get_weights() < 0),
                                                self.literal_active, self.encoded_X_train, e, 0)
 
-        for i in range(self.number_of_classes):
-            if i == target:
-                self.update_ps[i] = 0.0
-            else:
-                self.update_ps[i] = np.dot(self.clause_active * self.weight_banks[i].get_weights(),
-                                           clause_outputs).astype(np.int32)
-                self.update_ps[i] = np.clip(self.update_ps[i], -self.T, self.T)
-                self.update_ps[i] = 1.0 * (self.T + self.update_ps[i]) / (2 * self.T)
+        # for i in range(self.number_of_classes):
+        #     if i == target:
+        #         self.update_ps[i] = 0.0
+        #     else:
+        #         self.update_ps[i] = np.dot(self.clause_active * self.weight_banks[i].get_weights(),
+        #                                    clause_outputs).astype(np.int32)
+        #         self.update_ps[i] = np.clip(self.update_ps[i], -self.T, self.T)
+        #         self.update_ps[i] = 1.0 * (self.T + self.update_ps[i]) / (2 * self.T)
 
-        if self.update_ps.sum() == 0:
-            return
+        # if self.update_ps.sum() == 0:
+        #     return
 
-        if self.focused_negative_sampling:
-            not_target = np.random.choice(self.number_of_classes, p=self.update_ps / self.update_ps.sum())
-            update_p = self.update_ps[not_target]
-        else:
+        # if self.focused_negative_sampling:
+        #     not_target = np.random.choice(self.number_of_classes, p=self.update_ps / self.update_ps.sum())
+        #     update_p = self.update_ps[not_target]
+        # else:
+        not_target = np.random.randint(self.number_of_classes)
+        while not_target == target:
             not_target = np.random.randint(self.number_of_classes)
-            while not_target == target:
-                not_target = np.random.randint(self.number_of_classes)
-            update_p = self.update_ps[not_target]
+        #update_p = self.update_ps[not_target]
+
+        print("Hello")
+        class_sum = np.dot(self.clause_active * self.weight_banks[not_target].get_weights(), clause_outputs).astype(np.int32)
+        class_sum = np.clip(class_sum, -self.T, self.T)
+        update_p = (self.T + class_sum) / (2 * self.T)
 
         self.clause_bank.type_i_feedback(update_p * self.type_i_p, self.s, self.boost_true_positive_feedback,
                                          self.max_included_literals,
