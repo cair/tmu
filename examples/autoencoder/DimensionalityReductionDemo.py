@@ -9,23 +9,24 @@ from tmu.models.autoencoder.autoencoder import TMAutoEncoder
 
 number_of_features = 12
 
+noise = 0.1
+
 clause_weight_threshold = 0
 
 number_of_examples = 250
 accumulation = 1
 
 clauses = 10
-T = 8
-s = 2.5
+T = 8*10
+s = 2.0
 
 print("Number of clauses:", clauses)
 
 output_active = np.array([0, 1], dtype=np.uint32)
 
 X_train = np.random.randint(0, 2, size=(5000, number_of_features), dtype=np.uint32)
-X_train[:,0] = X_train[:,1]
-X_train = csr_matrix(X_train).astype(np.uint32)
-print("**", X_train.indptr.shape)
+X_train[:,0] = np.where(np.random.rand(5000) <= noise, 1- X_train[:,1],  X_train[:,1])
+print(X_train[:,0:2])
 
 tm = TMAutoEncoder(clauses, T, s, output_active, max_included_literals=3, accumulation=accumulation, feature_negation=True, platform='CPU', output_balancing=True)
 
