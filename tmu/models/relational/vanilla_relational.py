@@ -151,23 +151,26 @@ class TMRelational(TMBasis):
         output_index = np.arange(self.output_active.shape[0])
         np.random.shuffle(output_index)
         for e in range(number_of_examples):
-            average_absolute_weights = np.zeros(self.number_of_clauses, dtype=np.float32)
-            for i in output_index:
-                average_absolute_weights += np.absolute(self.weight_banks[i].get_weights())
-            average_absolute_weights /= self.number_of_classes
-            update_clause = np.random.random(self.number_of_clauses) <= (
-                    self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
-
             Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc, self.output_active, 1)
             for i in output_index:
                 (target, encoded_X) = Yu[i], Xu[i].reshape((1, -1))
 
-                ta_chunk = self.output_active[i] // 32
+                 ta_chunk = self.output_active[i] // 32
                 chunk_pos = self.output_active[i] % 32
                 copy_literal_active_ta_chunk = literal_active[ta_chunk]
+
+                if self.feature_negation:
+                    ta_chunk_negated = (self.output_active[i] + self.clause_bank.number_of_features) // 32
+                    chunk_pos_negated = (self.output_active[i] + self.clause_bank.number_of_features) % 32
+                    copy_literal_active_ta_chunk_negated = literal_active[ta_chunk_negated]
+                    literal_active[ta_chunk_negated] &= ~(1 << chunk_pos_negated)
+                
                 literal_active[ta_chunk] &= ~(1 << chunk_pos)
 
-                self.update(i, target, encoded_X, update_clause * clause_active, literal_active)
+                self.update(i, target, encoded_X, clause_active, literal_active)
+
+                if self.feature_negation:
+                    literal_active[ta_chunk_negated] = copy_literal_active_ta_chunk_negated
                 literal_active[ta_chunk] = copy_literal_active_ta_chunk
         return
 
