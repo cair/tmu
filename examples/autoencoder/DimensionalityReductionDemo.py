@@ -9,7 +9,7 @@ from tmu.models.autoencoder.autoencoder import TMAutoEncoder
 
 number_of_features = 12
 
-noise = 0.1
+noise = 1.0
 
 clause_weight_threshold = 0
 
@@ -18,7 +18,7 @@ accumulation = 1
 
 clauses = 10
 T = 8*10
-s = 2.0
+s = 1.5
 
 print("Number of clauses:", clauses)
 
@@ -73,10 +73,10 @@ for e in range(40):
 	print("\nWord Similarity\n")
 
 	for i in range(output_active.shape[0]):
-		print("x%d" % (i), end=': ')
+		print("x%d" % (output_active[i]), end=': ')
 		sorted_index = np.argsort(-1*similarity[i,:])
 		for j in range(1, output_active.shape[0]):
-			print("x%d(%.2f) " % (j, similarity[i,sorted_index[j]]), end=' ')
+			print("x%d(%.2f) " % (output_active[sorted_index[j]], similarity[i,sorted_index[j]]), end=' ')
 		print()
 
 	print("\nTraining Time: %.2f" % (stop_training - start_training))
