@@ -66,7 +66,7 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 			for (int k = (number_of_feature_chunks-1)*32; k < number_of_cols; ++k) {
 				int chunk_nr = k / 32;
 				int chunk_pos = k % 32;
-				encoded_X[output_pos + chunk_pos] &= ~(1U << chunk_pos);
+				encoded_X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
 			}
 		} else {
 			for (int k = 0; k < number_of_literal_chunks; ++k) {
