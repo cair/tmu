@@ -128,7 +128,7 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 			while (a < accumulation) {
 				row = rand() % number_of_rows;
 
-				if (bsearch(&row, &indices_col[active_output[o]], indptr_col[active_output[o]+1] - indptr_col[active_output[o]], sizeof(unsigned int), compareints) == NULL) {
+				if (bsearch(&row, &indices_col[indptr_col[active_output[o]]], indptr_col[active_output[o]+1] - indptr_col[active_output[o]], sizeof(unsigned int), compareints) == NULL) {
 					for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
 						int chunk_nr = indices_row[k] / 32;
 						int chunk_pos = indices_row[k] % 32;
