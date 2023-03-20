@@ -9,11 +9,11 @@ from tmu.models.autoencoder.autoencoder import TMAutoEncoder
 
 number_of_features = 12
 
-noise = 1.0
+noise = 0.1
 
 clause_weight_threshold = 0
 
-number_of_examples = 250
+number_of_examples = 2500
 accumulation = 1
 
 clauses = 10
