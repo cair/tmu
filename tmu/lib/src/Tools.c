@@ -24,7 +24,7 @@ This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.096
 https://arxiv.org/abs/1905.09688
 
 */
-
+#include "Tools.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

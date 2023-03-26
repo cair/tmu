@@ -50,7 +50,8 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             incremental=True,
             type_ia_ii_feedback_ratio=0,
             absorbing_include=None,
-            absorbing_exclude=None
+            absorbing_exclude=None,
+            ta_state_ind_init_value=~0
     ):
         super().__init__(
             number_of_clauses,
@@ -74,7 +75,8 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             incremental=incremental,
             type_ia_ii_feedback_ratio=type_ia_ii_feedback_ratio,
             absorbing_include=absorbing_include,
-            absorbing_exclude=absorbing_exclude
+            absorbing_exclude=absorbing_exclude,
+            ta_state_ind_init_value=ta_state_ind_init_value
         )
         MultiClauseBankMixin.__init__(self)
         MultiWeightBankMixin.__init__(self)

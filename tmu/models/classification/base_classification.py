@@ -1,4 +1,3 @@
-
 import numpy as np
 from tmu.models.base import TMBasis
 import logging
@@ -51,7 +50,8 @@ class TMBaseClassifier(TMBasis):
                 patch_dim=self.patch_dim,
                 batch_size=self.batch_size,
                 incremental=self.incremental,
-                type_ia_ii_feedback_ratio = self.type_ia_ii_feedback_ratio
+                type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio,
+                ta_state_ind_init_value=self.ta_state_ind_init_value
             )
         elif self.platform in ["GPU", "CUDA"]:
             from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA

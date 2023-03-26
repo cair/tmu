@@ -86,11 +86,13 @@ class TMBasis:
             incremental=True,
             type_ia_ii_feedback_ratio=0,
             absorbing_include=None,
-            absorbing_exclude=None
+            absorbing_exclude=None,
+            ta_state_ind_init_value=~0
     ):
         self.number_of_clauses = number_of_clauses
         self.number_of_state_bits_ta = number_of_state_bits_ta
         self.number_of_state_bits_ind = number_of_state_bits_ind
+        self.ta_state_ind_init_value = ta_state_ind_init_value
         self.T = int(T)
         self.s = s
 

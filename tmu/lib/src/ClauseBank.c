@@ -30,9 +30,6 @@ https://arxiv.org/abs/1905.09688
 #  define __builtin_popcount __popcnt
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
 #include <math.h>
 #include <string.h>
 #include "fast_rand.h"
@@ -609,6 +606,40 @@ void cb_calculate_clause_outputs_patchwise(unsigned int *ta_state, int number_of
 	}
 }
 
+// This function retrieves the count of literals from the given Tsetlin Automaton state.
+// ta_state: an array representing the state of the Tsetlin Automaton.
+// number_of_clauses: the total number of clauses in the TA.
+// number_of_literals: the total number of literals in the TA.
+// number_of_state_bits: the number of bits used to represent each state in the TA.
+// result: an array to store the count of each literal.
+void cb_get_literals(const unsigned int *ta_state, unsigned int number_of_clauses, unsigned int number_of_literals, unsigned int number_of_state_bits, unsigned int *result)
+{
+    // Calculate the number of chunks required to represent all literals.
+    unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+    // Iterate through all the clauses.
+    for (unsigned int j = 0; j < number_of_clauses; j++) {
+        // Iterate through all the literals.
+        for (unsigned int k = 0; k < number_of_literals; k++) {
+
+            // Determine which chunk the literal is in and its position within the chunk.
+            unsigned int ta_chunk = k / 32;
+            unsigned int chunk_pos = k % 32;
+
+            // Calculate the position of the literal in the TA state array.
+            unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits-1;
+
+            // Check if the literal is present (bit is set) in the TA state array.
+            if ((ta_state[pos] & (1 << chunk_pos)) > 0) {
+                // Increment the count of the literal in the result array.
+                unsigned int result_pos = j * number_of_literals + k;
+                result[result_pos] += 1;
+            }
+        }
+    }
+}
+
+
 void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *clause_active, unsigned int *literal_count)
 {
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
@@ -633,7 +664,7 @@ void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clause
 	}
 }
 
-void cb_included_literals(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *actions) 
+void cb_included_literals(const unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *actions)
 {
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
@@ -641,7 +672,7 @@ void cb_included_literals(unsigned int *ta_state, int number_of_clauses, int num
 		actions[k] = 0;
 	}
 	
-	for (int j = 0; j < number_of_clauses; j++) {	
+	for (int j = 0; j < number_of_clauses; j++) {
 		for (int k = 0; k < number_of_ta_chunks; k++) {
 			unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + k * number_of_state_bits + number_of_state_bits-1;
 			actions[k] |= ta_state[pos];

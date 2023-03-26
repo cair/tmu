@@ -30,6 +30,11 @@ To install on windows, you will need the MSVC build tools, [found here](https://
 ).  When prompted, select the `Workloads → Desktop development with C++` package, 
 which is roughly 6-7GB of size, install it and you should be able to compile the cffi modules.
 
+## Installing dependencies using Anaconda
+```
+conda install -c conda-forge pycuda
+```
+
 ## Installing TMU
 ```bash
 pip install git+https://github.com/cair/tmu.git

@@ -42,6 +42,7 @@ class ClauseBank(BaseClauseBank):
     def __init__(
             self,
             number_of_state_bits_ind: int,
+            ta_state_ind_init_value: int = ~0,
             batch_size: int = 100,
             incremental: bool = True,
             type_ia_ii_feedback_ratio: int = 0,
@@ -49,6 +50,7 @@ class ClauseBank(BaseClauseBank):
     ):
         super().__init__(**kwargs)
 
+        self.ta_state_ind_init_value = ta_state_ind_init_value
         self.number_of_state_bits_ind = int(number_of_state_bits_ind)
         self.batch_size = batch_size
         self.incremental = incremental
@@ -99,15 +101,15 @@ class ClauseBank(BaseClauseBank):
         self.clause_bank[:, :, 0: self.number_of_state_bits_ta - 1] = np.uint32(~0)
         self.clause_bank[:, :, self.number_of_state_bits_ta - 1] = 0
         self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape(
-            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta)))
+            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta))) # TODO -why this? yopu can do this directly?
 
         self.actions = np.ascontiguousarray(np.zeros(self.number_of_ta_chunks, dtype=np.uint32))
 
         self.clause_bank_ind = np.empty(
             (self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ind), dtype=np.uint32)
-        self.clause_bank_ind[:, :, :] = np.uint32(~0)
+        self.clause_bank_ind[:, :, :] = np.uint32(self.ta_state_ind_init_value)
         self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape(
-            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))
+            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))  # TODO why this? you can do this directly?
 
         self.incremental_clause_evaluation_initialized = False
 
@@ -290,6 +292,31 @@ class ClauseBank(BaseClauseBank):
         )
 
         self.incremental_clause_evaluation_initialized = False
+
+    def get_literals(self, independent=False):
+
+        result = np.zeros((self.number_of_clauses, self.number_of_literals), dtype=np.uint32, order="c")
+        result_p = ffi.cast("unsigned int *", result.ctypes.data)
+        lib.cb_get_literals(
+            self.cbi_p if independent else self.cb_p,
+            self.number_of_clauses,
+            self.number_of_literals,
+            self.number_of_state_bits_ta,
+            result_p
+        )
+        return result
+
+    def calculate_independent_literal_clause_frequency(self, clause_active):
+        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        lib.cb_calculate_literal_frequency(
+            self.cbi_p,
+            self.number_of_clauses,
+            self.number_of_literals,
+            self.number_of_state_bits_ta,
+            ca_p,
+            self.lcc_p
+        )
+        return self.literal_clause_count
 
     def calculate_literal_clause_frequency(self, clause_active):
         ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
