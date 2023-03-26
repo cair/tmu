@@ -26,11 +26,11 @@ if __name__ == "__main__":
     parser.add_argument("--number-of-state-bits-ta", default=8, type=int)
     parser.add_argument("--number-of-state-bits-ind", default=8, type=int)
     parser.add_argument("--iii", default=True, type=bool)
-    parser.add_argument("--mysql-user", default=os.environ["MYSQL_USER"])
-    parser.add_argument("--mysql-pass", default=os.environ["MYSQL_PASS"])
-    parser.add_argument("--mysql-host", default=os.environ["MYSQL_HOST"])
-    parser.add_argument("--mysql-db", default=os.environ["MYSQL_DB"])
-    parser.add_argument("--optuna-storage", default="mysql", choices=["sqlite", "mysql"])
+    parser.add_argument("--mysql-user", default=os.getenv("MYSQL_USER", default=None))
+    parser.add_argument("--mysql-pass", default=os.getenv("MYSQL_PASS", default=None))
+    parser.add_argument("--mysql-host", default=os.getenv("MYSQL_HOST", default=None))
+    parser.add_argument("--mysql-db", default=os.getenv("MYSQL_DB", default=None))
+    parser.add_argument("--optuna-storage", default="sqlite", choices=["sqlite", "mysql"])
     args = parser.parse_args("")
 
     bn_model, bn_target = models.toy_bn()
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     sampler = BayesianModelSampling(bn_model)
 
     # Sample data from the model
-    data = sampler.forward_sample(size=50000)
+    data = sampler.forward_sample(size=5000)
 
     TARGET = bn_target if isinstance(bn_target, list) else [bn_target]
     FEATURES = list(bn_model.nodes)

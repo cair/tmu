@@ -107,7 +107,7 @@ class ClauseBank(BaseClauseBank):
 
         self.clause_bank_ind = np.empty(
             (self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ind), dtype=np.uint32)
-        self.clause_bank_ind[:, :, :] = np.uint32(self.ta_state_ind_init_value)
+        self.clause_bank_ind[:, :, :] = np.uint32(~0)
         self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape(
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))  # TODO why this? you can do this directly?
 
