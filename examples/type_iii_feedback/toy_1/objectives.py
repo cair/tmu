@@ -45,7 +45,6 @@ def evaluate_rule(clause, labels=None, blanket=None):
 
     # Blanket must be present if the size of the blanket is in diff to inclusions without blanket
     blanket_present = incl_diff >= len(blanket)
-
     blanket_ratio = incl_diff / len(inclusions)
 
     # generate final string
@@ -84,9 +83,26 @@ def type_iii_optimizer_v2(model, X, y):
     clauses_inclusions = type_iii_optimizer_base(model)
 
     blanket_ratio = np.zeros(shape=(len(clauses_inclusions, )))
-    print(blanket_ratio)
+
     for i, clause in enumerate(clauses_inclusions):
         rule_data = evaluate_rule(clause, labels=X, blanket=y)
         blanket_ratio[i] = int(rule_data["blanket_present"])
 
     return blanket_ratio.sum() / len(blanket_ratio)
+
+
+def type_iii_optimizer_v3(model, X, y):
+    """
+    This optimizer will only count fill blanket clauses
+    :param model:
+    :return:
+    """
+    clauses_inclusions = type_iii_optimizer_base(model)
+
+    blanket_clauses = 0
+    for i, clause in enumerate(clauses_inclusions):
+        rule_data = evaluate_rule(clause, labels=X, blanket=y)
+        if rule_data["blanket_ratio"] >= 1.0:
+            blanket_clauses += 1
+
+    return blanket_clauses / len(clauses_inclusions)

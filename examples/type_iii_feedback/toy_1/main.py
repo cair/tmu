@@ -8,7 +8,7 @@ from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 import time
 import optuna
 from tqdm import tqdm
-from examples.type_iii_feedback.toy_1.objectives import type_iii_optimizer_v1, type_iii_optimizer_v2
+from examples.type_iii_feedback.toy_1.objectives import type_iii_optimizer_v1, type_iii_optimizer_v2, type_iii_optimizer_v3
 import models
 from examples.type_iii_feedback.utils import draw_bayesian_network, get_boundary, DummyTrial
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     sampler = BayesianModelSampling(bn_model)
 
     # Sample data from the model
-    data = sampler.forward_sample(size=5000)
+    data = sampler.forward_sample(size=100000)
 
     TARGET = bn_target if isinstance(bn_target, list) else [bn_target]
     FEATURES = list(bn_model.nodes)
@@ -66,8 +66,8 @@ if __name__ == "__main__":
         sensitivity = trial.suggest_float("sensitivity", 1.0, 300.0)  # s
         threshold = trial.suggest_int("threshold", 1, 200)  # T
         max_included_literals = args.max_included_literals
-        number_of_state_bits_ta = trial.suggest_int("number_of_state_bits_ta", 1, 64)  # args.number_of_state_bits_ta
-        number_of_state_bits_ind = trial.suggest_int("number_of_state_bits_ind", 1, 64)  # args.number_of_state_bits_ind
+        number_of_state_bits_ta = trial.suggest_int("number_of_state_bits_ta", 1, 20)  # args.number_of_state_bits_ta
+        number_of_state_bits_ind = trial.suggest_int("number_of_state_bits_ind", 1, 20)  # args.number_of_state_bits_ind
         platform = trial.suggest_categorical("platform", ["CPU"])
         weighted_clauses = True
         type_iii_feedback = True  # trial.suggest_categorical("type-iii", [True, False])
@@ -118,9 +118,10 @@ if __name__ == "__main__":
 
     study.optimize(
         lambda trial: run_experiment(trial, lambda m: (
-            type_iii_optimizer_v1(m, FEATURES, target_boundary),
-            type_iii_optimizer_v2(m, FEATURES, target_boundary))
-                                     ),
+            #type_iii_optimizer_v1(m, FEATURES, target_boundary),
+            #type_iii_optimizer_v2(m, FEATURES, target_boundary),
+            type_iii_optimizer_v3(m, FEATURES, target_boundary))
+        ),
         n_trials=100000,
         show_progress_bar=False,
         n_jobs=os.cpu_count() * 3

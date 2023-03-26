@@ -38,7 +38,7 @@ https://arxiv.org/abs/1905.09688
 
 static inline void cb_initialize_random_streams(unsigned int *feedback_to_ta, int number_of_literals, int number_of_ta_chunks, float s)
 {
-	// Initialize all bits to zero	
+	// Initialize all bits to zero
 	memset(feedback_to_ta, 0, number_of_ta_chunks*sizeof(unsigned int));
 
 	int n = number_of_literals;
@@ -75,7 +75,7 @@ static inline void cb_inc(unsigned int *ta_state, unsigned int active, int numbe
 		for (int b = 0; b < number_of_state_bits; ++b) {
 			ta_state[b] |= carry;
 		}
-	} 	
+	}
 }
 
 // Decrement the states of each of those 32 Tsetlin Automata flagged in the active bit vector.
@@ -97,7 +97,7 @@ static inline void cb_dec(unsigned int *ta_state, unsigned int active, int numbe
 		for (int b = 0; b < number_of_state_bits; ++b) {
 			ta_state[b] &= ~carry;
 		}
-	} 
+	}
 }
 
 /* Calculate the output of each clause using the actions of each Tsetline Automaton. */
@@ -314,7 +314,7 @@ void cb_type_i_feedback(unsigned int *ta_state, unsigned int *type_ia_ii_feedbac
 			}
 		} else {
 			// Type Ib Feedback
-				
+
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int ta_pos = k*number_of_state_bits;
 
@@ -345,7 +345,7 @@ void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *type_ia_ii_feedba
 		unsigned int clause_patch;
 		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
 
-		if (clause_output && ((type_ia_ii_feedback_ratio == 0) || (type_ia_ii_feedback_counter[j] > 0))) {				
+		if (clause_output && ((type_ia_ii_feedback_ratio == 0) || (type_ia_ii_feedback_counter[j] > 0))) {
 			if (type_ia_ii_feedback_ratio > 0) {
 				type_ia_ii_feedback_counter[j]--;
 			}
@@ -484,7 +484,7 @@ void cb_initialize_incremental_clause_calculation(unsigned int *ta_state, unsign
 		unsigned int chunk_pos = k % 32;
 
 		// For each literal, find out which clauses includes it
-		for (int j = 0; j < number_of_clauses; ++j) {	
+		for (int j = 0; j < number_of_clauses; ++j) {
 			// Obtain the clause ta chunk containing the literal decision (exclude/include)
 			unsigned int clause_ta_chunk = j * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits - 1;
 			if (ta_state[clause_ta_chunk] & (1 << chunk_pos)) {
@@ -633,7 +633,7 @@ void cb_get_literals(const unsigned int *ta_state, unsigned int number_of_clause
             if ((ta_state[pos] & (1 << chunk_pos)) > 0) {
                 // Increment the count of the literal in the result array.
                 unsigned int result_pos = j * number_of_literals + k;
-                result[result_pos] += 1;
+                result[result_pos] = 1;
             }
         }
     }
@@ -647,7 +647,7 @@ void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clause
 	for (int k = 0; k < number_of_literals; k++) {
 		literal_count[k] = 0;
 	}
-	
+
 	for (int j = 0; j < number_of_clauses; j++) {
 		if ((!clause_active[j])) {
 			continue;
@@ -671,7 +671,7 @@ void cb_included_literals(const unsigned int *ta_state, int number_of_clauses, i
 	for (int k = 0; k < number_of_ta_chunks; k++) {
 		actions[k] = 0;
 	}
-	
+
 	for (int j = 0; j < number_of_clauses; j++) {
 		for (int k = 0; k < number_of_ta_chunks; k++) {
 			unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + k * number_of_state_bits + number_of_state_bits-1;
@@ -689,7 +689,7 @@ int cb_number_of_include_actions(unsigned int *ta_state, int clause, int number_
 		filter = 0xffffffff;
 	}
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
-	
+
 	unsigned int clause_pos = clause*number_of_ta_chunks*number_of_state_bits;
 
 	int number_of_include_actions = 0;
