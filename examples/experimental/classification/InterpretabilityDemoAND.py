@@ -3,7 +3,7 @@ import numpy as np
 
 number_of_and_components = 2
 clauses = 4
-T = 15*2
+T = 15*2 # Test
 global_T = ((number_of_and_components*T,T), (T,number_of_and_components*T))
 s = (3.1, 2.1)
 number_of_features = 4
