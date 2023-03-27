@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     _LOGGER.info("Selecting Features.... Done!")
 
-    tm = TMClassifier(args.num_clauses, args.T, args.s, platform='CPU_sparse', weighted_clauses=args.weighted_clauses, clause_drop_p=args.clause_drop_p)
+    tm = TMClassifier(args.num_clauses, args.T, args.s, platform='CPU_sparse', max_included_literals=16, weighted_clauses=args.weighted_clauses, clause_drop_p=args.clause_drop_p, absorbing=90)
 
     for e in range(60):
         start_training = time()
