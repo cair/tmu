@@ -38,26 +38,6 @@ https://arxiv.org/abs/1905.09688
 #include "fast_rand.h"
 #include <stdint.h>
 
-static inline void cbs_initialize_random_streams(unsigned int *feedback_to_ta, int number_of_literals, int number_of_ta_chunks, float s)
-{
-	// Initialize all bits to zero	
-	memset(feedback_to_ta, 0, number_of_ta_chunks*sizeof(unsigned int));
-
-	int n = number_of_literals;
-	float p = 1.0 / s;
-
-	int active = normal(n * p, n * p * (1 - p));
-	active = active >= n ? n : active;
-	active = active < 0 ? 0 : active;
-	while (active--) {
-		int f = fast_rand() % (number_of_literals);
-		while (feedback_to_ta[f / 32] & (1U << (f % 32))) {
-			f = fast_rand() % (number_of_literals);
-	    }
-		feedback_to_ta[f / 32] |= (1U << (f % 32));
-	}
-}
-
 void cbs_prepare_Xi(unsigned int *indices, int number_of_indices, unsigned int *Xi, int number_of_features)
 {
     for (int k = 0; k < number_of_indices; ++k) { 
@@ -165,7 +145,7 @@ void cbs_calculate_clause_outputs_predict(unsigned int *Xi, int number_of_clause
 }
 
 void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int absorbing, int *clause_active,
-                    unsigned int *literal_active, unsigned int *feedback_to_ta, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
+                    unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
                     unsigned short *clause_bank_included_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length)
 {
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
@@ -188,8 +168,6 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
             }
         }
 
-       	cbs_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
-
         if (clause_output && (clause_bank_included_length[j] <= max_included_literals)) {
 			int k = clause_bank_included_length[j];
 			while (k--) {
@@ -198,10 +176,10 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
 	            unsigned int literal_pos = clause_bank_included[clause_included_pos] % 32;
 
             	if ((Xi[literal_chunk] & (1U << literal_pos)) != 0) {
-                   	if (clause_bank_included[clause_included_pos + 1] < number_of_states-1 && (boost_true_positive_feedback || ((feedback_to_ta[literal_chunk] & (1U << literal_pos)) == 0))) {
+                   	if (clause_bank_included[clause_included_pos + 1] < number_of_states-1 && (boost_true_positive_feedback || (((float)fast_rand())/((float)FAST_RAND_MAX) > 1.0/s))) {
                         clause_bank_included[clause_included_pos + 1] += 1;
                 	}
-                } else if (feedback_to_ta[literal_chunk] & (1U << literal_pos)) {
+                } else if (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s) {
                     clause_bank_included[clause_included_pos + 1] -= 1;
                     if (clause_bank_included[clause_included_pos + 1] < number_of_states / 2) {
                     	int clause_excluded_pos = clause_pos_base + clause_bank_excluded_length[j]*2;
@@ -224,7 +202,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
             	unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
 		
             	if ((Xi[literal_chunk] & (1U << literal_pos)) != 0) {
-	               if (boost_true_positive_feedback || ((feedback_to_ta[literal_chunk] & (1 << literal_pos)) == 0)) {
+	               if (boost_true_positive_feedback || (((float)fast_rand())/((float)FAST_RAND_MAX) > 1.0/s)) {
                         clause_bank_excluded[clause_excluded_pos + 1] += 1;
                         if (clause_bank_excluded[clause_excluded_pos + 1] >= number_of_states / 2) {
                             int clause_included_pos = clause_pos_base + clause_bank_included_length[j]*2;
@@ -238,7 +216,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
 		                    clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
                         }
                     }
-                } else if ((feedback_to_ta[literal_chunk] & (1 << literal_pos)) && (clause_bank_excluded[clause_excluded_pos + 1] > 0)) {
+                } else if ((clause_bank_excluded[clause_excluded_pos + 1] > 0) && (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s)) {
                     clause_bank_excluded[clause_excluded_pos + 1] -= 1;
                     
                     if ((int)clause_bank_excluded[clause_excluded_pos + 1] <= absorbing) {
@@ -256,7 +234,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
             	unsigned int literal_chunk = clause_bank_included[clause_included_pos] / 32;
             	unsigned int literal_pos = clause_bank_included[clause_included_pos] % 32;
 
-				if (feedback_to_ta[literal_chunk] & (1U << literal_pos)) {
+				if (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s) {
                     clause_bank_included[clause_included_pos + 1] -= 1;
                     if (clause_bank_included[clause_included_pos + 1] < number_of_states / 2) {
                     	int clause_excluded_pos = clause_pos_base + clause_bank_excluded_length[j]*2;
@@ -278,7 +256,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
             	unsigned int literal_chunk = clause_bank_excluded[clause_excluded_pos] / 32;
             	unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
 		
-            	if ((feedback_to_ta[literal_chunk] & (1 << literal_pos)) && (clause_bank_excluded[clause_excluded_pos + 1] > 0)) {
+            	if ((clause_bank_excluded[clause_excluded_pos + 1] > 0) && (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s)) {
                     clause_bank_excluded[clause_excluded_pos + 1] -= 1;
 
                     if ((int)clause_bank_excluded[clause_excluded_pos + 1] <= absorbing) {

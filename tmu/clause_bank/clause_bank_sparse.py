@@ -66,9 +66,6 @@ class ClauseBankSparse:
 
         self.literal_clause_count = np.ascontiguousarray(np.empty((int(self.number_of_literals)), dtype=np.uint32))
 
-        self.feedback_to_ta = np.ascontiguousarray(np.empty((int(self.number_of_ta_chunks)), dtype=np.uint32))
-        self.ftt_p = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)
-
         self.packed_X = np.ascontiguousarray(np.empty(self.number_of_literals, dtype=np.uint32))
         self.px_p = ffi.cast("unsigned int *", self.packed_X.ctypes.data)
 
@@ -123,7 +120,7 @@ class ClauseBankSparse:
     def type_i_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
                         literal_active, encoded_X, e):
         lib.cbs_prepare_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
-        lib.cbs_type_i_feedback(update_p, s, int(boost_true_positive_feedback), int(max_included_literals), self.absorbing, ffi.cast("int *", clause_active.ctypes.data), ffi.cast("unsigned int *", literal_active.ctypes.data), self.ftt_p, self.Xi_p, self.number_of_clauses, self.number_of_literals, self.number_of_states, self.cbi_p,
+        lib.cbs_type_i_feedback(update_p, s, int(boost_true_positive_feedback), int(max_included_literals), self.absorbing, ffi.cast("int *", clause_active.ctypes.data), ffi.cast("unsigned int *", literal_active.ctypes.data), self.Xi_p, self.number_of_clauses, self.number_of_literals, self.number_of_states, self.cbi_p,
                         self.cbil_p, self.cbe_p, self.cbel_p)
         lib.cbs_restore_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
 
