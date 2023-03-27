@@ -91,10 +91,16 @@ class ClauseBankSparse:
         self.cbe_p = ffi.cast("unsigned short *", self.clause_bank_excluded.ctypes.data)
         self.clause_bank_excluded_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint16)) # All literals excluded at start
         self.cbel_p = ffi.cast("unsigned short *", self.clause_bank_excluded_length.ctypes.data)
-        self.clause_bank_excluded_length[:] = self.number_of_literals
-        self.clause_bank_excluded[:,:,0] = np.arange(self.number_of_literals, dtype=np.uint16) # Initialize clause literals with increasing index
-        self.clause_bank_excluded[:,:,1] = self.number_of_states // 2 - 1 # Initialize excluded literals in least forgotten state
- 
+        self.clause_bank_excluded_length[:] = self.number_of_literals // 10
+
+        print("Start")
+        for j in range(self.number_of_clauses):
+            literal_indexes = np.arange(self.number_of_literals, dtype=np.uint16)
+            np.random.shuffle(literal_indexes)
+            self.clause_bank_excluded[j,:,0] = literal_indexes # Initialize clause literals with increasing index
+            self.clause_bank_excluded[j,:,1] = self.number_of_states // 2 - 1 # Initialize excluded literals in least forgotten state
+        print("Stop")
+
     def calculate_clause_outputs_predict(self, encoded_X, e):
         if not self.batching:
             lib.cbs_prepare_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
