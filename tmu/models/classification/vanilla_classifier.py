@@ -51,7 +51,8 @@ class TMClassifier(TMBaseClassifier):
             literal_drop_p=0.0,
             batch_size=100,
             incremental=True,
-            absorbing=-1
+            absorbing=-1,
+            literal_sampling=1.0
     ):
         super().__init__(
             number_of_clauses,
@@ -73,7 +74,8 @@ class TMClassifier(TMBaseClassifier):
             literal_drop_p=literal_drop_p,
             batch_size=batch_size,
             incremental=incremental,
-            absorbing=absorbing
+            absorbing=absorbing,
+            literal_sampling=literal_sampling
         )
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):

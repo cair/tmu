@@ -28,13 +28,14 @@ from scipy.sparse import csr_matrix
 
 class ClauseBankSparse:
     def __init__(self, X, number_of_clauses, number_of_states, patch_dim,
-                 batching=True, incremental=True, absorbing=-1):
+                 batching=True, incremental=True, absorbing=-1, literal_sampling=1.0):
         self.number_of_clauses = int(number_of_clauses)
         self.number_of_states = int(number_of_states)
         self.patch_dim = patch_dim
         self.batching = batching
         self.incremental = incremental
         self.absorbing = int(absorbing)
+        self.literal_sampling = float(literal_sampling)
 
         if len(X.shape) == 2:
             self.dim = (X.shape[1], 1, 1)
@@ -88,26 +89,22 @@ class ClauseBankSparse:
         self.cbe_p = ffi.cast("unsigned short *", self.clause_bank_excluded.ctypes.data)
         self.clause_bank_excluded_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint16)) # All literals excluded at start
         self.cbel_p = ffi.cast("unsigned short *", self.clause_bank_excluded_length.ctypes.data)
-        self.clause_bank_excluded_length[:] = self.number_of_literals // 10
+        self.clause_bank_excluded_length[:] = int(self.number_of_literals * self.literal_sampling)
 
-        print("Start")
         for j in range(self.number_of_clauses):
             literal_indexes = np.arange(self.number_of_literals, dtype=np.uint16)
             np.random.shuffle(literal_indexes)
             self.clause_bank_excluded[j,:,0] = literal_indexes # Initialize clause literals randomly
             self.clause_bank_excluded[j,:,1] = self.number_of_states // 2 - 1 # Initialize excluded literals in least forgotten state
-        print("Stop")
 
         self.clause_bank_unallocated = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals), dtype=np.uint16)) # Contains index and unallocated literals
         self.cbu_p = ffi.cast("unsigned short *", self.clause_bank_unallocated.ctypes.data)
         self.clause_bank_unallocated_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint16)) # All literals excluded at start
         self.cbul_p = ffi.cast("unsigned short *", self.clause_bank_unallocated_length.ctypes.data)
-        self.clause_bank_unallocated_length[:] = self.number_of_literals - self.number_of_literals // 10
+        self.clause_bank_unallocated_length[:] = self.number_of_literals - int(self.number_of_literals * self.literal_sampling)
 
-        print("Start")
         for j in range(self.number_of_clauses):
             self.clause_bank_unallocated[j,:] = np.flip(self.clause_bank_excluded[j,:,0])
-        print("Stop")
 
     def calculate_clause_outputs_predict(self, encoded_X, e):
         if not self.batching:

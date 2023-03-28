@@ -196,7 +196,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                 }
             }
 
-            if (((float)fast_rand())/((float)FAST_RAND_MAX) <= 0.5) {
+            if (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0) {
                 k = clause_bank_excluded_length[j];
     			while (k--) {
     				int clause_excluded_pos = clause_pos_base + k*2;
@@ -205,7 +205,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
     		
                 	if ((Xi[literal_chunk] & (1U << literal_pos)) != 0) {
     	               if (boost_true_positive_feedback || (((float)fast_rand())/((float)FAST_RAND_MAX) > 1.0/s)) {
-                            clause_bank_excluded[clause_excluded_pos + 1] += 2;
+                            clause_bank_excluded[clause_excluded_pos + 1] += 1;
                             if (clause_bank_excluded[clause_excluded_pos + 1] >= number_of_states / 2) {
                                 int clause_included_pos = clause_pos_base + clause_bank_included_length[j]*2;
     		                    clause_bank_included[clause_included_pos] = clause_bank_excluded[clause_excluded_pos];
@@ -218,8 +218,8 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
     		                    clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
                             }
                         }
-                    } else if ((clause_bank_excluded[clause_excluded_pos + 1] > 2) && (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s)) {
-                        clause_bank_excluded[clause_excluded_pos + 1] -= 2;
+                    } else if ((clause_bank_excluded[clause_excluded_pos + 1] > 1) && (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s)) {
+                        clause_bank_excluded[clause_excluded_pos + 1] -= 1;
                         
                         if ((int)clause_bank_excluded[clause_excluded_pos + 1] <= absorbing) {
                             if (clause_bank_unallocated_length[j] == 0) {
@@ -228,11 +228,11 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                                 clause_bank_excluded[clause_excluded_pos] = clause_bank_excluded[clause_excluded_end_pos];
                                 clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
                             } else {
-                                clause_bank_unallocated_length[j] -= 1;
-                                int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
+                                //clause_bank_unallocated_length[j] -= 1;
+                                //int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
                                 //printf("Introducing literal %d to clause %d\n", clause_bank_unallocated[clause_unallocated_end_pos], j);
-                                clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
-                                clause_bank_excluded[clause_excluded_pos + 1] = number_of_states / 2 - 5;
+                                //clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
+                                //clause_bank_excluded[clause_excluded_pos + 1] = number_of_states / 2 - 10;
                             }
                         }
                     }
@@ -261,15 +261,15 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                 }
             }
  			
-            if (((float)fast_rand())/((float)FAST_RAND_MAX) <= 0.5) {
+            if (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0) {
      			k = clause_bank_excluded_length[j];
     			while (k--) {
     				int clause_excluded_pos = clause_pos_base + k*2;
                 	unsigned int literal_chunk = clause_bank_excluded[clause_excluded_pos] / 32;
                 	unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
     		
-                	if ((clause_bank_excluded[clause_excluded_pos + 1] > 2) && (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s)) {
-                        clause_bank_excluded[clause_excluded_pos + 1] -= 2;
+                	if ((clause_bank_excluded[clause_excluded_pos + 1] > 1) && (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s)) {
+                        clause_bank_excluded[clause_excluded_pos + 1] -= 1;
 
                         if ((int)clause_bank_excluded[clause_excluded_pos + 1] <= absorbing) {
                            if (clause_bank_unallocated_length[j] == 0) {
@@ -278,11 +278,11 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                                 clause_bank_excluded[clause_excluded_pos] = clause_bank_excluded[clause_excluded_end_pos];
                                 clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
                             } else {
-                                clause_bank_unallocated_length[j] -= 1;
-                                int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
+                                //clause_bank_unallocated_length[j] -= 1;
+                                //int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
                                 //printf("Introducing literal %d to clause %d\n", clause_bank_unallocated[clause_unallocated_end_pos], j);
-                                clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
-                                clause_bank_excluded[clause_excluded_pos + 1] = number_of_states / 2 - 5;
+                                //clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
+                                //clause_bank_excluded[clause_excluded_pos + 1] = number_of_states / 2 - 10;
                             }
                         }
                     }
