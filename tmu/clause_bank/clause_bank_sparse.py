@@ -29,7 +29,7 @@ from scipy.sparse import csr_matrix
 class ClauseBankSparse:
     def __init__(self, X, number_of_clauses, number_of_states, patch_dim,
                  batching=True, incremental=True, absorbing=-1, literal_sampling=1.0,
-                 include_rate_excluded_literals=1, literal_insertion_state = 0):
+                 include_rate_excluded_literals=1, literal_insertion_state = -1):
         self.number_of_clauses = int(number_of_clauses)
         self.number_of_states = int(number_of_states)
         self.patch_dim = patch_dim
