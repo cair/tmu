@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     _LOGGER.info("Selecting Features.... Done!")
 
-    tm = TMClassifier(args.num_clauses, args.T, args.s, platform='CPU_sparse', max_included_literals=16, weighted_clauses=args.weighted_clauses, clause_drop_p=args.clause_drop_p, absorbing=90)
+    tm = TMClassifier(args.num_clauses, args.T, args.s, platform='CPU_sparse', weighted_clauses=args.weighted_clauses, clause_drop_p=args.clause_drop_p, absorbing=90)#, max_included_literals=16)
 
     for e in range(60):
         start_training = time()
@@ -97,9 +97,11 @@ if __name__ == "__main__":
         stop_testing = time()
 
         absorbed = 0.0
+        unallocated = 0
         for i in range(2):
                 for j in range(args.num_clauses):
                         absorbed += 1.0 - (tm.number_of_include_actions(i, j) + tm.number_of_exclude_actions(i, j)) / (X_train.shape[1]*2)
+                        unallocated += tm.number_of_unallocated_literals(i, j)
         absorbed = 100 * absorbed / (2*args.num_clauses)
 
-        print("#%d Accuracy: %.2f%% Absorbed: %.2f%% Training: %.2fs Testing: %.2fs" % (e+1, result, absorbed, stop_training-start_training, stop_testing-start_testing))
+        print("#%d Accuracy: %.2f%% Absorbed: %.2f%% Unallocated: %d Training: %.2fs Testing: %.2fs" % (e+1, result, absorbed, unallocated, stop_training-start_training, stop_testing-start_testing))
