@@ -144,7 +144,7 @@ void cbs_calculate_clause_outputs_predict(unsigned int *Xi, int number_of_clause
     }
 }
 
-void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int absorbing, int include_rate_excluded_literals, int *clause_active,
+void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int absorbing, int include_rate_excluded_literals, int literal_insertion_state, int *clause_active,
                     unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
                     unsigned short *clause_bank_included_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length,
                     unsigned short *clause_bank_unallocated, unsigned short *clause_bank_unallocated_length)
@@ -228,11 +228,10 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                                 clause_bank_excluded[clause_excluded_pos] = clause_bank_excluded[clause_excluded_end_pos];
                                 clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
                             } else {
-                                //clause_bank_unallocated_length[j] -= 1;
-                                //int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
-                                //printf("Introducing literal %d to clause %d\n", clause_bank_unallocated[clause_unallocated_end_pos], j);
-                                //clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
-                                //clause_bank_excluded[clause_excluded_pos + 1] = number_of_states / 2 - 10;
+                                clause_bank_unallocated_length[j] -= 1;
+                                int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
+                                clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
+                                clause_bank_excluded[clause_excluded_pos + 1] = literal_insertion_state;
                             }
                         }
                     }
@@ -278,11 +277,10 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                                 clause_bank_excluded[clause_excluded_pos] = clause_bank_excluded[clause_excluded_end_pos];
                                 clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
                             } else {
-                                //clause_bank_unallocated_length[j] -= 1;
-                                //int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
-                                //printf("Introducing literal %d to clause %d\n", clause_bank_unallocated[clause_unallocated_end_pos], j);
-                                //clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
-                                //clause_bank_excluded[clause_excluded_pos + 1] = number_of_states / 2 - 10;
+                                clause_bank_unallocated_length[j] -= 1;
+                                int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
+                                clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
+                                clause_bank_excluded[clause_excluded_pos + 1] = literal_insertion_state;
                             }
                         }
                     }

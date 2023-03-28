@@ -60,7 +60,8 @@ class TMBasis:
             incremental=True,
             absorbing=-1,
             literal_sampling=1.0,
-            include_rate_excluded_literals=1
+            include_rate_excluded_literals=1,
+            literal_insertion_state = 0
     ):
         self.number_of_clauses = number_of_clauses
         self.number_of_state_bits_ta = number_of_state_bits_ta
@@ -94,6 +95,7 @@ class TMBasis:
         self.absorbing = absorbing
         self.literal_sampling = literal_sampling
         self.include_rate_excluded_literals = include_rate_excluded_literals
+        self.literal_insertion_state = literal_insertion_state
         self.initialized = False
 
         # TODO - Change to checksum
