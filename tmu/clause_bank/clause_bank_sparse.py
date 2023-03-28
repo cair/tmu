@@ -28,13 +28,17 @@ from scipy.sparse import csr_matrix
 
 class ClauseBankSparse:
     def __init__(self, X, number_of_clauses, number_of_states, patch_dim,
-                 batching=True, incremental=True, absorbing=-1):
+                 batching=True, incremental=True, absorbing=-1, literal_sampling=1.0,
+                 include_rate_excluded_literals=1, literal_insertion_state = 0):
         self.number_of_clauses = int(number_of_clauses)
         self.number_of_states = int(number_of_states)
         self.patch_dim = patch_dim
         self.batching = batching
         self.incremental = incremental
         self.absorbing = int(absorbing)
+        self.literal_sampling = float(literal_sampling)
+        self.include_rate_excluded_literals = include_rate_excluded_literals
+        self.literal_insertion_state = literal_insertion_state
 
         if len(X.shape) == 2:
             self.dim = (X.shape[1], 1, 1)
@@ -66,9 +70,6 @@ class ClauseBankSparse:
 
         self.literal_clause_count = np.ascontiguousarray(np.empty((int(self.number_of_literals)), dtype=np.uint32))
 
-        self.feedback_to_ta = np.ascontiguousarray(np.empty((int(self.number_of_ta_chunks)), dtype=np.uint32))
-        self.ftt_p = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)
-
         self.packed_X = np.ascontiguousarray(np.empty(self.number_of_literals, dtype=np.uint32))
         self.px_p = ffi.cast("unsigned int *", self.packed_X.ctypes.data)
 
@@ -91,10 +92,23 @@ class ClauseBankSparse:
         self.cbe_p = ffi.cast("unsigned short *", self.clause_bank_excluded.ctypes.data)
         self.clause_bank_excluded_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint16)) # All literals excluded at start
         self.cbel_p = ffi.cast("unsigned short *", self.clause_bank_excluded_length.ctypes.data)
-        self.clause_bank_excluded_length[:] = self.number_of_literals
-        self.clause_bank_excluded[:,:,0] = np.arange(self.number_of_literals, dtype=np.uint16) # Initialize clause literals with increasing index
-        self.clause_bank_excluded[:,:,1] = self.number_of_states // 2 - 1 # Initialize excluded literals in least forgotten state
- 
+        self.clause_bank_excluded_length[:] = int(self.number_of_literals * self.literal_sampling)
+
+        for j in range(self.number_of_clauses):
+            literal_indexes = np.arange(self.number_of_literals, dtype=np.uint16)
+            np.random.shuffle(literal_indexes)
+            self.clause_bank_excluded[j,:,0] = literal_indexes # Initialize clause literals randomly
+            self.clause_bank_excluded[j,:,1] = self.number_of_states // 2 - 1 # Initialize excluded literals in least forgotten state
+
+        self.clause_bank_unallocated = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals), dtype=np.uint16)) # Contains index and unallocated literals
+        self.cbu_p = ffi.cast("unsigned short *", self.clause_bank_unallocated.ctypes.data)
+        self.clause_bank_unallocated_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint16)) # All literals excluded at start
+        self.cbul_p = ffi.cast("unsigned short *", self.clause_bank_unallocated_length.ctypes.data)
+        self.clause_bank_unallocated_length[:] = self.number_of_literals - int(self.number_of_literals * self.literal_sampling)
+
+        for j in range(self.number_of_clauses):
+            self.clause_bank_unallocated[j,:] = np.flip(self.clause_bank_excluded[j,:,0])
+
     def calculate_clause_outputs_predict(self, encoded_X, e):
         if not self.batching:
             lib.cbs_prepare_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
@@ -117,13 +131,13 @@ class ClauseBankSparse:
     def type_i_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
                         literal_active, encoded_X, e):
         lib.cbs_prepare_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
-        lib.cbs_type_i_feedback(update_p, s, int(boost_true_positive_feedback), int(max_included_literals), self.absorbing, ffi.cast("int *", clause_active.ctypes.data), ffi.cast("unsigned int *", literal_active.ctypes.data), self.ftt_p, self.Xi_p, self.number_of_clauses, self.number_of_literals, self.number_of_states, self.cbi_p,
-                        self.cbil_p, self.cbe_p, self.cbel_p)
+        lib.cbs_type_i_feedback(update_p, s, int(boost_true_positive_feedback), int(max_included_literals), self.absorbing, self.include_rate_excluded_literals, self.literal_insertion_state, ffi.cast("int *", clause_active.ctypes.data), ffi.cast("unsigned int *", literal_active.ctypes.data), self.Xi_p, self.number_of_clauses, self.number_of_literals, self.number_of_states, self.cbi_p,
+                        self.cbil_p, self.cbe_p, self.cbel_p, self.cbu_p, self.cbul_p)
         lib.cbs_restore_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
 
     def type_ii_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
         lib.cbs_prepare_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
-        lib.cbs_type_ii_feedback(update_p, ffi.cast("int *", clause_active.ctypes.data), ffi.cast("unsigned int *", literal_active.ctypes.data), self.Xi_p, self.number_of_clauses, self.number_of_literals, self.number_of_states, self.cbi_p,
+        lib.cbs_type_ii_feedback(update_p, self.include_rate_excluded_literals, ffi.cast("int *", clause_active.ctypes.data), ffi.cast("unsigned int *", literal_active.ctypes.data), self.Xi_p, self.number_of_clauses, self.number_of_literals, self.number_of_states, self.cbi_p,
                         self.cbil_p, self.cbe_p, self.cbel_p)
         lib.cbs_restore_Xi(encoded_X[1][e], encoded_X[0].indptr[e+1] - encoded_X[0].indptr[e], self.Xi_p, self.number_of_features)
 
@@ -132,6 +146,9 @@ class ClauseBankSparse:
 
     def number_of_exclude_actions(self, clause):
         return self.clause_bank_excluded_length[clause]
+
+    def number_of_unallocated_literals(self, clause):
+        return self.clause_bank_unallocated_length[clause]
 
     def get_ta_action(self, clause, ta):
         if ta in self.clause_bank_included[clause, :self.clause_bank_included_length[clause], 0]:
