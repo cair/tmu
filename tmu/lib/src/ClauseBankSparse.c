@@ -144,14 +144,12 @@ void cbs_calculate_clause_outputs_predict(unsigned int *Xi, int number_of_clause
     }
 }
 
-void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int absorbing, int *clause_active,
+void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int absorbing, int include_rate_excluded_literals, int *clause_active,
                     unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
                     unsigned short *clause_bank_included_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length,
                     unsigned short *clause_bank_unallocated, unsigned short *clause_bank_unallocated_length)
 {
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
-
-    int include_rate_excluded_literals = 4;
 
     for (int j = 0; j < number_of_clauses; ++j) {
         if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
@@ -294,7 +292,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
     }
 }
 
-void cbs_type_ii_feedback(float update_p, int *clause_active, unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
+void cbs_type_ii_feedback(float update_p, int include_rate_excluded_literals, int *clause_active, unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
                     unsigned short *clause_bank_included_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length)
 {
     for (int j = 0; j < number_of_clauses; ++j) {
@@ -313,7 +311,7 @@ void cbs_type_ii_feedback(float update_p, int *clause_active, unsigned int *lite
             }
         }
 
-        if (clause_output == 0) {
+        if (clause_output == 0 || (((float)fast_rand())/((float)FAST_RAND_MAX) > 1.0/include_rate_excluded_literals)) {
             continue;
         }
 
@@ -327,7 +325,7 @@ void cbs_type_ii_feedback(float update_p, int *clause_active, unsigned int *lite
             unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
 		
             if ((Xi[literal_chunk] & (1U << literal_pos)) == 0) {
-                clause_bank_excluded[clause_excluded_pos + 1] += 1;
+                clause_bank_excluded[clause_excluded_pos + 1] += include_rate_excluded_literals;
 
                 if (clause_bank_excluded[clause_excluded_pos + 1] >= number_of_states/2) {
                 	int clause_included_pos = clause_pos_base + clause_bank_included_length[j]*2;

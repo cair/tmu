@@ -52,7 +52,8 @@ class TMClassifier(TMBaseClassifier):
             batch_size=100,
             incremental=True,
             absorbing=-1,
-            literal_sampling=1.0
+            literal_sampling=1.0,
+            include_rate_excluded_literals=1
     ):
         super().__init__(
             number_of_clauses,
@@ -75,7 +76,8 @@ class TMClassifier(TMBaseClassifier):
             batch_size=batch_size,
             incremental=incremental,
             absorbing=absorbing,
-            literal_sampling=literal_sampling
+            literal_sampling=literal_sampling,
+            include_rate_excluded_literals=include_rate_excluded_literals
         )
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
@@ -109,7 +111,8 @@ class TMClassifier(TMBaseClassifier):
                 number_of_states=2 ** self.number_of_state_bits_ta,
                 patch_dim=self.patch_dim,
                 absorbing=self.absorbing,
-                literal_sampling=self.literal_sampling
+                literal_sampling=self.literal_sampling,
+                include_rate_excluded_literals=self.include_rate_excluded_literals
             )
         else:
             raise NotImplementedError(f"Could not find platform of type {self.platform}.")
