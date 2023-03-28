@@ -108,7 +108,8 @@ class TMClassifier(TMBaseClassifier):
                 number_of_clauses=self.number_of_clauses,
                 number_of_states=2 ** self.number_of_state_bits_ta,
                 patch_dim=self.patch_dim,
-                absorbing=self.absorbing
+                absorbing=self.absorbing,
+                literal_sampling=self.literal_sampling
             )
         else:
             raise NotImplementedError(f"Could not find platform of type {self.platform}.")
