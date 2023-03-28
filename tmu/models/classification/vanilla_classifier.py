@@ -54,7 +54,7 @@ class TMClassifier(TMBaseClassifier):
             absorbing=-1,
             literal_sampling=1.0,
             include_rate_excluded_literals=1,
-            literal_insertion_state=0
+            literal_insertion_state=-1
     ):
         super().__init__(
             number_of_clauses,
