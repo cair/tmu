@@ -53,7 +53,7 @@ class TMClassifier(TMBaseClassifier):
             incremental=True,
             absorbing=-1,
             literal_sampling=1.0,
-            include_rate_excluded_literals=1,
+            feedback_rate_excluded_literals=1,
             literal_insertion_state=-1
     ):
         super().__init__(
@@ -78,7 +78,7 @@ class TMClassifier(TMBaseClassifier):
             incremental=incremental,
             absorbing=absorbing,
             literal_sampling=literal_sampling,
-            include_rate_excluded_literals=include_rate_excluded_literals,
+            feedback_rate_excluded_literals=feedback_rate_excluded_literals,
             literal_insertion_state=literal_insertion_state
         )
 
@@ -114,7 +114,7 @@ class TMClassifier(TMBaseClassifier):
                 patch_dim=self.patch_dim,
                 absorbing=self.absorbing,
                 literal_sampling=self.literal_sampling,
-                include_rate_excluded_literals=self.include_rate_excluded_literals,
+                feedback_rate_excluded_literals=self.feedback_rate_excluded_literals,
                 literal_insertion_state = self.literal_insertion_state
             )
         else:
