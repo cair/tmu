@@ -222,12 +222,12 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                         clause_bank_excluded[clause_excluded_pos + 1] -= include_rate_excluded_literals;
                         
                         if ((int)clause_bank_excluded[clause_excluded_pos + 1] <= absorbing) {
-                            if (clause_bank_unallocated_length[j] == 0) {
+                            if (clause_bank_unallocated_length[j] == 0 || literal_insertion_state == -1) {
                                 clause_bank_excluded_length[j] -= 1;
                                 int clause_excluded_end_pos = clause_pos_base + clause_bank_excluded_length[j]*2;
                                 clause_bank_excluded[clause_excluded_pos] = clause_bank_excluded[clause_excluded_end_pos];
                                 clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
-                            } else if (literal_insertion_state >= 0) {
+                            } else {
                                 clause_bank_unallocated_length[j] -= 1;
                                 int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
                                 clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
@@ -271,12 +271,12 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                         clause_bank_excluded[clause_excluded_pos + 1] -= include_rate_excluded_literals;
 
                         if ((int)clause_bank_excluded[clause_excluded_pos + 1] <= absorbing) {
-                           if (clause_bank_unallocated_length[j] == 0) {
+                           if (clause_bank_unallocated_length[j] == 0 || literal_insertion_state == -1) {
                                 clause_bank_excluded_length[j] -= 1;
                                 int clause_excluded_end_pos = clause_pos_base + clause_bank_excluded_length[j]*2;
                                 clause_bank_excluded[clause_excluded_pos] = clause_bank_excluded[clause_excluded_end_pos];
                                 clause_bank_excluded[clause_excluded_pos + 1] = clause_bank_excluded[clause_excluded_end_pos + 1];
-                            } if (literal_insertion_state >= 0) {
+                            } else {
                                 clause_bank_unallocated_length[j] -= 1;
                                 int clause_unallocated_end_pos = j*number_of_literals + clause_bank_unallocated_length[j];
                                 clause_bank_excluded[clause_excluded_pos] = clause_bank_unallocated[clause_unallocated_end_pos];
