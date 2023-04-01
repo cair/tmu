@@ -99,7 +99,7 @@ void cbs_calculate_clause_outputs_update(unsigned int *literal_active, unsigned 
         	unsigned int clause_pos = j*number_of_literals*2 + k*2;
             unsigned int literal_chunk = clause_bank_included[clause_pos] / 32U;
             unsigned int literal_pos = clause_bank_included[clause_pos] % 32U;
-            if ((Xi[literal_chunk] & (1U << literal_pos)) == 0) {
+            if (((Xi[literal_chunk] & (1U << literal_pos)) == 0) && (literal_active[literal_chunk] & (1U << literal_pos))) {
                 clause_output[j] = 0;
                 break;
             }
@@ -163,7 +163,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
         	unsigned int clause_pos = clause_pos_base + k*2;
             unsigned int literal_chunk = clause_bank_included[clause_pos] / 32;
             unsigned int literal_pos = clause_bank_included[clause_pos] % 32;
-            if ((Xi[literal_chunk] & (1U << literal_pos)) == 0) {
+            if (((Xi[literal_chunk] & (1U << literal_pos)) == 0) && (literal_active[literal_chunk] & (1U << literal_pos))) {
                 clause_output = 0;
                 break;
             }
@@ -175,6 +175,10 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
 				int clause_included_pos = clause_pos_base + k*2;
 	            unsigned int literal_chunk = clause_bank_included[clause_included_pos] / 32;
 	            unsigned int literal_pos = clause_bank_included[clause_included_pos] % 32;
+
+                if (literal_active[literal_chunk] & (1U << literal_pos) == 0) {
+                    continue;
+                }
 
             	if ((Xi[literal_chunk] & (1U << literal_pos)) != 0) {
                    	if (clause_bank_included[clause_included_pos + 1] < number_of_states-1 && (boost_true_positive_feedback || (((float)fast_rand())/((float)FAST_RAND_MAX) > 1.0/s))) {
@@ -203,6 +207,10 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                 	unsigned int literal_chunk = clause_bank_excluded[clause_excluded_pos] / 32;
                 	unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
     		
+                    if (literal_active[literal_chunk] & (1U << literal_pos) == 0) {
+                        continue;
+                    }
+
                 	if ((Xi[literal_chunk] & (1U << literal_pos)) != 0) {
     	               if (boost_true_positive_feedback || (((float)fast_rand())/((float)FAST_RAND_MAX) > 1.0/s)) {
                             clause_bank_excluded[clause_excluded_pos + 1] += feedback_rate_excluded_literals;
@@ -244,6 +252,10 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
             	unsigned int literal_chunk = clause_bank_included[clause_included_pos] / 32;
             	unsigned int literal_pos = clause_bank_included[clause_included_pos] % 32;
 
+                if (literal_active[literal_chunk] & (1U << literal_pos) == 0) {
+                    continue;
+                }
+
 				if (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s) {
                     clause_bank_included[clause_included_pos + 1] -= 1;
                     if (clause_bank_included[clause_included_pos + 1] < number_of_states / 2) {
@@ -267,6 +279,10 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                 	unsigned int literal_chunk = clause_bank_excluded[clause_excluded_pos] / 32;
                 	unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
     		
+                    if (literal_active[literal_chunk] & (1U << literal_pos) == 0) {
+                        continue;
+                    }
+
                 	if ((clause_bank_excluded[clause_excluded_pos + 1] > feedback_rate_excluded_literals) && (((float)fast_rand())/((float)FAST_RAND_MAX) <= 1.0/s)) {
                         clause_bank_excluded[clause_excluded_pos + 1] -= feedback_rate_excluded_literals;
 
@@ -303,7 +319,7 @@ void cbs_type_ii_feedback(float update_p, int feedback_rate_excluded_literals, i
         	unsigned int clause_pos = j*number_of_literals*2 + k*2;
             unsigned int literal_chunk = clause_bank_included[clause_pos] / 32;
             unsigned int literal_pos = clause_bank_included[clause_pos] % 32;
-            if ((Xi[literal_chunk] & (1U << literal_pos)) == 0) {
+            if (((Xi[literal_chunk] & (1U << literal_pos)) == 0) && (literal_active[literal_chunk] & (1U << literal_pos))) {
                 clause_output = 0;
                 break;
             }
@@ -322,7 +338,7 @@ void cbs_type_ii_feedback(float update_p, int feedback_rate_excluded_literals, i
             unsigned int literal_chunk = clause_bank_excluded[clause_excluded_pos] / 32;
             unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
 		
-            if ((Xi[literal_chunk] & (1U << literal_pos)) == 0) {
+            if (((Xi[literal_chunk] & (1U << literal_pos)) == 0) && (literal_active[literal_chunk] & (1U << literal_pos))) {
                 clause_bank_excluded[clause_excluded_pos + 1] += feedback_rate_excluded_literals;
 
                 if (clause_bank_excluded[clause_excluded_pos + 1] >= number_of_states/2) {
