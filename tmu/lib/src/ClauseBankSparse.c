@@ -176,7 +176,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
 	            unsigned int literal_chunk = clause_bank_included[clause_included_pos] / 32;
 	            unsigned int literal_pos = clause_bank_included[clause_included_pos] % 32;
 
-                if (literal_active[literal_chunk] & (1U << literal_pos) == 0) {
+                if ((literal_active[literal_chunk] & (1U << literal_pos)) == 0) {
                     continue;
                 }
 
@@ -207,7 +207,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                 	unsigned int literal_chunk = clause_bank_excluded[clause_excluded_pos] / 32;
                 	unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
     		
-                    if (literal_active[literal_chunk] & (1U << literal_pos) == 0) {
+                    if ((literal_active[literal_chunk] & (1U << literal_pos)) == 0) {
                         continue;
                     }
 
@@ -252,7 +252,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
             	unsigned int literal_chunk = clause_bank_included[clause_included_pos] / 32;
             	unsigned int literal_pos = clause_bank_included[clause_included_pos] % 32;
 
-                if (literal_active[literal_chunk] & (1U << literal_pos) == 0) {
+                if ((literal_active[literal_chunk] & (1U << literal_pos)) == 0) {
                     continue;
                 }
 
@@ -279,7 +279,7 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
                 	unsigned int literal_chunk = clause_bank_excluded[clause_excluded_pos] / 32;
                 	unsigned int literal_pos = clause_bank_excluded[clause_excluded_pos] % 32;
     		
-                    if (literal_active[literal_chunk] & (1U << literal_pos) == 0) {
+                    if ((literal_active[literal_chunk] & (1U << literal_pos)) == 0) {
                         continue;
                     }
 
