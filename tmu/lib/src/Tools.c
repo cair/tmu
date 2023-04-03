@@ -147,6 +147,24 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 	}
 }
 
+void tmu_decode(unsigned int *X, unsigned int *encoded_X, int number_of_patches, int number_of_literals)
+{
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	for (int patch = 0; patch < number_of_patches; ++patch) {	
+		for (int k = 0; k < number_of_literals; ++k) {
+			int chunk_nr = k / 32;
+			int chunk_pos = k % 32;
+
+			if (encoded_X[patch * number_of_ta_chunks + chunk_nr] & (1 << chunk_pos)) {
+				X[patch * number_of_literals + k] = 1;
+			} else {
+				X[patch * number_of_literals + k] = 0;
+			}
+		}
+	}
+}
+
 void tmu_encode(unsigned int *X, unsigned int *encoded_X, int number_of_examples, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features)
 {
 	int global_number_of_features = dim_x * dim_y * dim_z;
