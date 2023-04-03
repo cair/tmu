@@ -320,13 +320,3 @@ class ClauseBank(BaseClauseBank):
             self.patch_dim,
             0
         )
-
-    # TODO - Move.
-    def prepare_autoencoder_examples(self, X_csr, X_csc, active_output, accumulation):
-        return tmu.tools.produce_autoencoder_examples(
-            X_csr,
-            X_csc,
-            active_output,
-            accumulation,
-            self.number_of_ta_chunks
-        )

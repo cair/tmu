@@ -22,6 +22,7 @@
 # https://arxiv.org/abs/1905.09688
 
 from tmu.tmulib import ffi, lib
+import tmu.tools
 
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -157,13 +158,13 @@ class ClauseBankSparse:
             return 0
 
     def get_ta_state(self, clause, ta):
-        action = self.get_action(clause, ta)
+        action = self.get_ta_action(clause, ta)
         if action == 0:
             literals = self.clause_bank_excluded[clause, :self.clause_bank_excluded_length[clause], 0]
-            return self.clause_bank_excluded[clause, nonzero(literals == ta)[0][0], 1]
+            return self.clause_bank_excluded[clause, np.nonzero(literals == ta)[0][0], 1]
         else:
             literals = self.clause_bank_included[clause, :self.clause_bank_included_length[clause], 0]
-            return self.clause_bank_included[clause, nonzero(literals == ta)[0][0], 1]
+            return self.clause_bank_included[clause, np.nonzero(literals == ta)[0][0], 1]
 
     def prepare_X(self, X):
         X_csr = csr_matrix(X, dtype=np.uint32)
