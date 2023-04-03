@@ -34,44 +34,18 @@ unsigned int compareints(const void * a, const void * b)
   return(*(unsigned int*)a - *(unsigned int*)b);
 }
 
-void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of_active_outputs, unsigned int *indptr_row, unsigned int *indices_row, int number_of_rows, unsigned int *indptr_col, unsigned int *indices_col, int number_of_cols, unsigned int *encoded_X, unsigned int *Y, int accumulation, int append_negated)
+void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of_active_outputs, unsigned int *indptr_row, unsigned int *indices_row, int number_of_rows, unsigned int *indptr_col, unsigned int *indices_col, int number_of_cols, unsigned int *X, unsigned int *Y, int accumulation)
 {
 	int row;
 
-	int number_of_literals;
-	int number_of_literal_chunks;
-	if (append_negated) {
-		number_of_literals = 2*number_of_cols;
-		number_of_literal_chunks= (((number_of_literals-1)/32 + 1));
-	} else {
-		number_of_literals = number_of_cols;
-		number_of_literal_chunks= (((number_of_literals-1)/32 + 1));
-	}
-
+	int number_of_features = number_of_cols;
+	
 	// Loop over active outputs, producing one example per output
 	for (int o = 0; o < number_of_active_outputs; ++o) {
-		int output_pos = o*number_of_literal_chunks;
+		int output_pos = o*number_of_features;
 
-		// Initialize example with false features
-		if (append_negated) {
-			int	number_of_feature_chunks = (((number_of_literals-1)/32 + 1));
-			for (int k = 0; k < number_of_feature_chunks - 1; ++k) {
-				encoded_X[output_pos + k] = 0U;
-			}
-
-			for (int k = number_of_feature_chunks - 1; k < number_of_literal_chunks; ++k) {
-				encoded_X[output_pos + k] = ~0U;
-			}
-
-			for (int k = (number_of_feature_chunks-1)*32; k < number_of_cols; ++k) {
-				int chunk_nr = k / 32;
-				int chunk_pos = k % 32;
-				encoded_X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
-			}
-		} else {
-			for (int k = 0; k < number_of_literal_chunks; ++k) {
-				encoded_X[output_pos + k] = 0;
-			}
+		for (int k = 0; k < number_of_features; ++k) {
+				X[output_pos + k] = 0;
 		}
 
 		if ((indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) || (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows)) {
@@ -79,15 +53,7 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 			for (int a = 0; a < accumulation; ++a) {
 				row = rand() % number_of_rows;
 				for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-					int chunk_nr = indices_row[k] / 32;
-					int chunk_pos = indices_row[k] % 32;
-					encoded_X[output_pos + chunk_nr] |= (1U << chunk_pos);
-
-					if (append_negated) {
-						int chunk_nr = (indices_row[k] + number_of_cols) / 32;
-						int chunk_pos = (indices_row[k] + number_of_cols) % 32;
-						encoded_X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
-					}
+					X[output_pos + indices_row[k]] = 1;
 				}
 			}
 		}
@@ -112,15 +78,7 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 				row = indices_col[random_index];
 				
 				for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-					int chunk_nr = indices_row[k] / 32;
-					int chunk_pos = indices_row[k] % 32;
-					encoded_X[output_pos + chunk_nr] |= (1 << chunk_pos);
-
-					if (append_negated) {
-						int chunk_nr = (indices_row[k] + number_of_cols) / 32;
-						int chunk_pos = (indices_row[k] + number_of_cols) % 32;
-						encoded_X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
-					}
+					X[output_pos + indices_row[k]] = 1;
 				}
 			}
 		} else {
@@ -130,15 +88,7 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 
 				if (bsearch(&row, &indices_col[indptr_col[active_output[o]]], indptr_col[active_output[o]+1] - indptr_col[active_output[o]], sizeof(unsigned int), compareints) == NULL) {
 					for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-						int chunk_nr = indices_row[k] / 32;
-						int chunk_pos = indices_row[k] % 32;
-						encoded_X[output_pos + chunk_nr] |= (1 << chunk_pos);
-
-						if (append_negated) {
-							int chunk_nr = (indices_row[k] + number_of_cols) / 32;
-							int chunk_pos = (indices_row[k] + number_of_cols) % 32;
-							encoded_X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
-						}
+						X[output_pos + indices_row[k]] = 1;
 					}
 					a++;
 				}

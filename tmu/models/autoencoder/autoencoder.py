@@ -21,14 +21,16 @@ from tmu.models.base import TMBasis
 from tmu.weight_bank import WeightBank
 import numpy as np
 from scipy.sparse import csr_matrix, csc_matrix
-
+from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
+import tmu.tools
 
 class TMAutoEncoder(TMBasis):
     def __init__(self, number_of_clauses, T, s, output_active, accumulation=1, type_i_ii_ratio=1.0,
                  type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0,
                  platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1,
                  max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8,
-                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0):
+                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0, absorbing=-1, literal_sampling=1.0, feedback_rate_excluded_literals=1,
+                 literal_insertion_state=-1):
         self.output_active = output_active
         self.accumulation = accumulation
         super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
@@ -37,7 +39,8 @@ class TMAutoEncoder(TMBasis):
                          boost_true_positive_feedback=boost_true_positive_feedback,
                          max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
                          number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
-                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p)
+                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, absorbing=absorbing, literal_sampling=literal_sampling,
+                         feedback_rate_excluded_literals=feedback_rate_excluded_literals, literal_insertion_state=literal_insertion_state)
 
     def initialize(self, X):
         self.number_of_classes = self.output_active.shape[0]
@@ -48,6 +51,17 @@ class TMAutoEncoder(TMBasis):
                 number_of_state_bits_ta=self.number_of_state_bits_ta,
                 number_of_state_bits_ind=self.number_of_state_bits_ind,
                 patch_dim=self.patch_dim
+            )
+        elif self.platform == "CPU_sparse":
+            self.clause_bank = ClauseBankSparse(
+                X=X,
+                number_of_clauses=self.number_of_clauses,
+                number_of_states=2**self.number_of_state_bits_ta,
+                patch_dim=self.patch_dim,
+                absorbing=self.absorbing,
+                literal_sampling=self.literal_sampling,
+                feedback_rate_excluded_literals=self.feedback_rate_excluded_literals,
+                literal_insertion_state = self.literal_insertion_state
             )
         elif self.platform == 'CUDA':
             from clause_bank.clause_bank_cuda import ClauseBankCUDA
@@ -156,9 +170,11 @@ class TMAutoEncoder(TMBasis):
             update_clause = np.random.random(self.number_of_clauses) <= (
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
-            Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc, self.output_active, self.accumulation)
+
+            Xu, Yu = tmu.tools.produce_autoencoder_examples(X_csr, X_csc, self.output_active, self.accumulation)
             for i in class_index:
-                (target, encoded_X) = Yu[i], Xu[i].reshape((1, -1))
+                (target, X) = Yu[i], Xu[i].reshape((1, -1))
+                encoded_X = self.clause_bank.prepare_X(X)
 
                 ta_chunk = self.output_active[i] // 32
                 chunk_pos = self.output_active[i] % 32
@@ -228,10 +244,10 @@ class TMAutoEncoder(TMBasis):
         literal_active = self.activate_literals()
 
         for e in range(number_of_examples):
-            Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc,
+            Xu, Yu = tmu.tools.produce_autoencoder_examples(X_csr, X_csc,
                                                                    np.array([self.output_active[the_class]],
                                                                             dtype=np.uint32), self.accumulation)
-            (target, encoded_X) = Yu[0], Xu[0].reshape((1, -1))
+            (target, encoded_X) = Yu[0], self.clause_bank.prepare_X(Xu[0].reshape((1, -1)))
 
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
 
@@ -258,10 +274,10 @@ class TMAutoEncoder(TMBasis):
         weights = self.weight_banks[the_class].get_weights()
 
         for e in range(number_of_examples):
-            Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc,
+            Xu, Yu = tmu.tools.produce_autoencoder_examples(X_csr, X_csc,
                                                                    np.array([self.output_active[the_class]],
                                                                             dtype=np.uint32), self.accumulation)
-            (target, encoded_X) = Yu[0], Xu[0].reshape((1, -1))
+            (target, encoded_X) = Yu[0], self.clause_bank.prepare_X(Xu[0].reshape((1, -1)))
 
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
 
