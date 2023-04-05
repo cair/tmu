@@ -8,18 +8,22 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 from tmu.models.classification.vanilla_classifier import TMClassifier
 
-target_word = 'awful' #'frightening'#'comedy'#'romance'#"scary"
+target_word = 'car' #'frightening'#'comedy'#'romance'#"scary"
 #target_word = 'brilliant'
 
 examples = 20000
 context_size = 25
 profile_size = 50
 
+max_included_literals = 3
+
+type_i_ii_ratio = 1.0
+
 clause_drop_p = 0.0
 
 clauses = int(20/(1.0 - clause_drop_p))
 T = 40
-s = 5.0
+s = 20.0
 
 print("Number of clauses:", clauses)
 
@@ -111,7 +115,7 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
 		Y_test[i] = 0
 
-tm = TMClassifier(clauses, T, s, feature_negation=False, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
+tm = TMClassifier(clauses, T, s,  max_included_literals = max_included_literals, feature_negation = False, type_i_ii_ratio = type_i_ii_ratio, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
 
 print("\nAccuracy Over 40 Epochs:")
 for i in range(40):
