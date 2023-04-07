@@ -32,6 +32,7 @@ jobs:
       #    done
 
       - name: Prefix wheels with branch name
+        if: github.event_name != 'release' || github.event.action == 'created'
         shell: pwsh
         run: |
           $branchName = "${{ github.ref }}".Replace("refs/heads/", "")
