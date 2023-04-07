@@ -1,0 +1,39 @@
+name: Publish Wheels to Release Page
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Build Wheels
+    types:
+      - completed
+  release:
+    types:
+      - created
+
+
+jobs:
+  publish_wheels_to_release_page:
+    name: Publish wheels to Release Page
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: wheels
+          path: wheelhouse
+
+      - name: Install gh CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Upload wheels to Release Page
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for wheel in wheelhouse/*.whl; do
+            echo "Uploading $wheel"
+            gh release upload ${{ github.event.release.tag_name }} $wheel --clobber --repo ${{ github.repository }} -R ${{ github.repository }} --token $GITHUB_TOKEN
+          done
