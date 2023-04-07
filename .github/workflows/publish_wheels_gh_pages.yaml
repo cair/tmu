@@ -1,10 +1,10 @@
 name: Upload Wheels to GitHub Pages
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - dev
-  workflow_dispatch:
 
 jobs:
   upload_wheels:

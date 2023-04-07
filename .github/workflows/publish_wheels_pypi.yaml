@@ -13,9 +13,9 @@ jobs:
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v2
         with:
-          name: artifact
+          name: wheels
           path: wheelhouse
 
       - name: Publish to PyPI
@@ -24,4 +24,3 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages_dir: wheelhouse
-
