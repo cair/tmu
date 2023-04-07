@@ -7,6 +7,10 @@ on:
       - Build Wheels
     types:
       - completed
+  release:
+    types:
+      - created
+
 
 jobs:
   publish_wheels_to_release_page:

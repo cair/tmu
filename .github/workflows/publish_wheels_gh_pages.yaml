@@ -1,9 +1,11 @@
 name: Upload Wheels to GitHub Pages
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows:
       - Build Wheels
+      - Build Doxygen GitHub Pages
     types:
       - completed
 jobs:
