@@ -1,8 +1,6 @@
 name: Upload Wheels to GitHub Pages
 
 on:
-  push:
-  workflow_dispatch:
   workflow_run:
     workflows:
       - Build Wheels
