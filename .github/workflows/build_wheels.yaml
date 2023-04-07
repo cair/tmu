@@ -24,12 +24,21 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
 
+      #- name: Prefix wheels with branch name
+      #  run: |
+      #    BRANCH_NAME=$(echo "${{ github.ref }}" | sed -r "s/^refs\/heads\///")
+      #    for wheel in wheelhouse/*.whl; do
+      #      mv "$wheel" "wheelhouse/${BRANCH_NAME}-$(basename $wheel)"
+      #    done
+
       - name: Prefix wheels with branch name
+        shell: pwsh
         run: |
-          BRANCH_NAME=$(echo "${{ github.ref }}" | sed -r "s/^refs\/heads\///")
-          for wheel in wheelhouse/*.whl; do
-            mv "$wheel" "wheelhouse/${BRANCH_NAME}-$(basename $wheel)"
-          done
+          $branchName = "${{ github.ref }}".Replace("refs/heads/", "")
+          Get-ChildItem -Path wheelhouse -Filter *.whl | ForEach-Object {
+            $newName = "${branchName}-$($_.Name)"
+            Rename-Item -Path $_.FullName -NewName $newName
+          }
 
       - uses: actions/upload-artifact@v2
         with:
