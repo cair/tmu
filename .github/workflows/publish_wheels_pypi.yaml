@@ -1,0 +1,27 @@
+name: Publish Wheels to PyPI
+
+on:
+  workflow_dispatch:
+  release:
+    types:
+      - created
+
+jobs:
+  publish_wheels_to_pypi:
+    name: Publish wheels to PyPI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: wheelhouse
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: wheelhouse
+
