@@ -3,6 +3,9 @@ name: Build Wheels
 on:
   workflow_dispatch:
   push:
+  release:
+    types:
+      - created
 
 jobs:
   build_wheels:
@@ -49,7 +52,7 @@ jobs:
   publish_wheels_to_release_page:
     name: Publish wheels to Release Page
     needs: build_wheels
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' && github.event.action == 'created'
     runs-on: ubuntu-latest
 
     steps:
@@ -79,7 +82,7 @@ jobs:
   publish_wheels_to_pypi:
     name: Publish wheels to PyPI
     needs: build_wheels
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' && github.event.action == 'created'
     runs-on: ubuntu-latest
 
     steps:
