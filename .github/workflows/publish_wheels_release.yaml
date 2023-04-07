@@ -24,16 +24,7 @@ jobs:
           name: wheels
           path: wheelhouse
 
-      - name: Install gh CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-
-      - name: Upload wheels to Release Page
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for wheel in wheelhouse/*.whl; do
-            echo "Uploading $wheel"
-            gh release upload ${{ github.event.release.tag_name }} $wheel --clobber --repo ${{ github.repository }} -R ${{ github.repository }} --token $GITHUB_TOKEN
-          done
+      - uses: shogo82148/actions-upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: wheelhouse/*.whl
