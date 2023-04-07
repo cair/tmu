@@ -3,13 +3,6 @@ name: Build Wheels
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-      - dev
-  pull_request:
-    branches:
-      - main
-      - dev
 
 jobs:
   build_wheels:
@@ -21,9 +14,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v2
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
@@ -31,6 +24,14 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
 
-      - uses: actions/upload-artifact@v3
+      - name: Prefix wheels with branch name
+        run: |
+          BRANCH_NAME=$(echo "${{ github.ref }}" | sed -r "s/^refs\/heads\///")
+          for wheel in wheelhouse/*.whl; do
+            mv "$wheel" "wheelhouse/${BRANCH_NAME}-$(basename $wheel)"
+          done
+
+      - uses: actions/upload-artifact@v2
         with:
-          path: ./wheelhouse/*.whl
+          name: wheels
+          path: wheelhouse/*.whl
