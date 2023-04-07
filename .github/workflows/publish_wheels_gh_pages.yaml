@@ -2,10 +2,11 @@ name: Upload Wheels to GitHub Pages
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - dev
-
+  workflow_run:
+    workflows:
+      - Build Wheels
+    types:
+      - completed
 jobs:
   upload_wheels:
     runs-on: ubuntu-latest

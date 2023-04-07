@@ -2,9 +2,11 @@ name: Publish Wheels to PyPI
 
 on:
   workflow_dispatch:
-  release:
+  workflow_run:
+    workflows:
+      - Build Wheels
     types:
-      - created
+      - completed
 
 jobs:
   publish_wheels_to_pypi:
