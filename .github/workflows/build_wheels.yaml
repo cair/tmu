@@ -96,17 +96,20 @@ jobs:
 
 
   publish_wheels_to_gh_pages:
+    name: Publish wheels to GitHub Pages
     runs-on: ubuntu-latest
     needs: build_wheels
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
-          name: artifact
-          path: wheels
+          name: wheels
+          path: wheelhouse
+
 
       - name: Checkout gh-pages branch
         uses: actions/checkout@v2
