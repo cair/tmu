@@ -120,7 +120,7 @@ jobs:
       - name: Copy wheels to gh-pages branch
         run: |
           mkdir -p gh-pages/wheels
-          cp wheels/*.whl gh-pages/wheels/
+          cp wheelhouse/*.whl gh-pages/wheels/
 
       - name: Create index.html for wheels directory
         run: |
