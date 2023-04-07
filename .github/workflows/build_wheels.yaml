@@ -78,6 +78,7 @@ jobs:
   publish_wheels_to_pypi:
     name: Publish wheels to PyPI
     needs: build_wheels
+    if: github.event_name == 'release' && github.event.action == 'created'
     runs-on: ubuntu-latest
 
     steps:
@@ -90,7 +91,6 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages_dir: wheelhouse
 
