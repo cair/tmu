@@ -12,18 +12,19 @@ target_word = 'car' #'frightening'#'comedy'#'romance'#"scary"
 #target_word = 'brilliant'
 
 examples = 20000
-context_size = 25
+context_size = 1
 profile_size = 50
 
-max_included_literals = 3
+max_included_literals = 1
 
 type_i_ii_ratio = 1.0
 
 clause_drop_p = 0.0
 
-clauses = int(20/(1.0 - clause_drop_p))
-T = 40
-s = 20.0
+factor = 4
+clauses = int(factor*20/(1.0 - clause_drop_p))
+T = 3
+s = 150.0
 
 print("Number of clauses:", clauses)
 
@@ -115,10 +116,10 @@ for i in range(examples):
 			X_test[i] = np.logical_or(X_test[i], X_test_0[np.random.randint(X_test_0.shape[0])])
 		Y_test[i] = 0
 
-tm = TMClassifier(clauses, T, s,  max_included_literals = max_included_literals, feature_negation = False, type_i_ii_ratio = type_i_ii_ratio, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=True)
+tm = TMClassifier(clauses, T, s,  max_included_literals = max_included_literals, feature_negation = False, type_i_ii_ratio = type_i_ii_ratio, clause_drop_p = clause_drop_p, platform='CPU', weighted_clauses=False)
 
-print("\nAccuracy Over 40 Epochs:")
-for i in range(40):
+print("\nAccuracy Over 100 Epochs:")
+for i in range(100):
 	start_training = time()
 	tm.fit(X_train, Y_train)
 	stop_training = time()
@@ -126,6 +127,70 @@ for i in range(40):
 	start_testing = time()
 	result = 100*(tm.predict(X_test) == Y_test).mean()
 	stop_testing = time()
+
+	print("\nClass 0 Positive Clauses:\n")
+
+	precision = tm.clause_precision(0, 0, X_test, Y_test)
+	recall = tm.clause_recall(0, 0, X_test, Y_test)
+
+	for j in range(clauses//2):
+		print("Clause #%d W:%d P:%.2f R:%.3f " % (j, tm.get_weight(0, 0, j), precision[j], recall[j]), end=' ')
+		l = []
+		for k in range(number_of_features*2):
+			if tm.get_ta_action(j, k, the_class = 0, polarity = 0):
+				if k < number_of_features:
+					l.append(" %s(%d)" % (feature_names[k], tm.get_ta_state(j, k, the_class = 0, polarity = 0)))
+				else:
+					l.append("¬%s(%d)" % (feature_names[k-number_of_features], tm.get_ta_state(j, k, the_class = 0, polarity = 0) ))
+		print(" ∧ ".join(l))
+
+	print("\nClass 0 Negative Clauses:\n")
+
+	precision = tm.clause_precision(0, 1, X_test, Y_test)
+	recall = tm.clause_recall(0, 1, X_test, Y_test)
+
+	for j in range(clauses//2):
+		print("Clause #%d W:%d P:%.2f R:%.3f " % (j, tm.get_weight(0, 1, j), precision[j], recall[j]), end=' ')
+		l = []
+		for k in range(number_of_features*2):
+			if tm.get_ta_action(j, k, the_class = 0, polarity = 1):
+				if k < number_of_features:
+					l.append(" %s(%d)" % (feature_names[k], tm.get_ta_state(j, k, the_class = 0, polarity = 1)))
+				else:
+					l.append("¬%s(%d)" % (feature_names[k-number_of_features], tm.get_ta_state(j, k, the_class = 0, polarity = 1)))
+		print(" ∧ ".join(l))
+
+	print("\nClass 1 Positive Clauses:\n")
+
+	precision = tm.clause_precision(1, 0, X_test, Y_test)
+	recall = tm.clause_recall(1, 0, X_test, Y_test)
+
+	for j in range(clauses//2):
+		print("Clause #%d W:%d P:%.2f R:%.3f " % (j, tm.get_weight(1, 0, j), precision[j], recall[j]), end=' ')
+		l = []
+		for k in range(number_of_features*2):
+			if tm.get_ta_action(j, k, the_class = 1, polarity = 0):
+				if k < number_of_features:
+					l.append(" %s(%d)" % (feature_names[k], tm.get_ta_state(j, k, the_class = 1, polarity = 0)))
+				else:
+					l.append("¬%s(%d)" % (feature_names[k-number_of_features], tm.get_ta_state(j, k, the_class = 1, polarity = 0)))
+		print(" ∧ ".join(l))
+
+	print("\nClass 1 Negative Clauses:\n")
+
+	precision = tm.clause_precision(1, 1, X_test, Y_test)
+	recall = tm.clause_recall(1, 1, X_test, Y_test)
+
+	for j in range(clauses//2):
+		print("Clause #%d W:%d P:%.2f R:%.3f " % (j, tm.get_weight(1, 1, j), precision[j], recall[j]), end=' ')
+		l = []
+		for k in range(number_of_features*2):
+			if tm.get_ta_action(j, k, the_class = 1, polarity = 1):
+				if k < number_of_features:
+					l.append(" %s(%d)" % (feature_names[k], tm.get_ta_state(j, k, the_class = 1, polarity = 1)))
+				else:
+					l.append("¬%s(%d)" % (feature_names[k-number_of_features], tm.get_ta_state(j, k, the_class = 1, polarity = 1)))
+		print(" ∧ ".join(l))
 
 	print("\nPositive Polarity:", end=' ')
 	literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
