@@ -103,7 +103,6 @@ class TMClassifier(TMBaseClassifier):
                 X=X,
                 number_of_clauses=self.number_of_clauses,
                 number_of_state_bits_ta=self.number_of_state_bits_ta,
-                number_of_state_bits_ind=self.number_of_state_bits_ind,
                 patch_dim=self.patch_dim
             )
         elif self.platform == "CPU_sparse":
