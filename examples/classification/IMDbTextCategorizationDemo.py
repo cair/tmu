@@ -7,7 +7,7 @@ from sklearn.feature_selection import chi2
 from keras.datasets import imdb
 from sklearn.feature_extraction.text import CountVectorizer
 from tmu.models.classification.vanilla_classifier import TMClassifier
-from tools import BenchmarkTimer
+from tmu.tools import BenchmarkTimer
 
 _LOGGER = logging.getLogger(__name__)
 
