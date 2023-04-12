@@ -20,7 +20,7 @@ accumulation = 25
 factor = 4
 clauses = factor*20
 T = factor*40
-s = 5.0
+s = 20.0
 
 print("Number of clauses:", clauses)
 
@@ -77,7 +77,7 @@ for i in range(len(target_words)):
 	target_id = vectorizer_X.vocabulary_[target_word]
 	output_active[i] = target_id
 
-tm = TMAutoEncoder(clauses, T, s, output_active, max_included_literals=3, accumulation=accumulation, feature_negation=False, platform='CPU', output_balancing=True)
+tm = TMAutoEncoder(clauses, T, s, output_active, max_included_literals=3, accumulation=accumulation, feature_negation=False, platform='CPU', output_balancing=True, squared_weight_update_p=True)
 
 print("\nAccuracy Over 40 Epochs:")
 for e in range(40):

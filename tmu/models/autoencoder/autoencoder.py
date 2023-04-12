@@ -30,7 +30,7 @@ class TMAutoEncoder(TMBasis):
                  platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1,
                  max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8,
                  weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0, absorbing=-1, literal_sampling=1.0, feedback_rate_excluded_literals=1,
-                 literal_insertion_state=-1):
+                 literal_insertion_state=-1, squared_weight_update_p=False):
         self.output_active = output_active
         self.accumulation = accumulation
         super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
@@ -40,7 +40,7 @@ class TMAutoEncoder(TMBasis):
                          max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
                          number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
                          clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, absorbing=absorbing, literal_sampling=literal_sampling,
-                         feedback_rate_excluded_literals=feedback_rate_excluded_literals, literal_insertion_state=literal_insertion_state)
+                         feedback_rate_excluded_literals=feedback_rate_excluded_literals, literal_insertion_state=literal_insertion_state, squared_weight_update_p=squared_weight_update_p)
 
     def initialize(self, X):
         self.number_of_classes = self.output_active.shape[0]
@@ -61,7 +61,8 @@ class TMAutoEncoder(TMBasis):
                 absorbing=self.absorbing,
                 literal_sampling=self.literal_sampling,
                 feedback_rate_excluded_literals=self.feedback_rate_excluded_literals,
-                literal_insertion_state = self.literal_insertion_state
+                literal_insertion_state = self.literal_insertion_state,
+                squared_weight_update_p = self.squared_weight_update_p
             )
         elif self.platform == 'CUDA':
             from clause_bank.clause_bank_cuda import ClauseBankCUDA
@@ -89,6 +90,8 @@ class TMAutoEncoder(TMBasis):
 
         if target_value == 1:
             update_p = (self.T - class_sum) / (2 * self.T)
+            if self.squared_weight_update_p:
+                update_p = update_p**2
 
             self.clause_bank.type_i_feedback(update_p * self.type_i_p, self.s, self.boost_true_positive_feedback,
                                              self.max_included_literals,
@@ -106,6 +109,8 @@ class TMAutoEncoder(TMBasis):
                                                    literal_active, encoded_X, 0, 0)
         else:
             update_p = (self.T + class_sum) / (2 * self.T)
+            if self.squared_weight_update_p:
+                update_p = update_p**2
 
             self.clause_bank.type_i_feedback(update_p * self.type_i_p, self.s, self.boost_true_positive_feedback,
                                              self.max_included_literals,
