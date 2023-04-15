@@ -17,7 +17,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from tmu.clause_bank import ClauseBank
+from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.models.base import TMBasis
 from tmu.weight_bank import WeightBank
 import numpy as np
@@ -37,11 +37,16 @@ class TMRegressor(TMBasis):
         self.min_y = np.min(Y)
 
         if self.platform == 'CPU':
-            self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta,
-                                          self.number_of_state_bits_ind, self.patch_dim)
+            self.clause_bank = ClauseBank(
+                X=X,
+                number_of_clauses=self.number_of_clauses,
+                number_of_state_bits_ind=self.number_of_state_bits_ind,
+                number_of_state_bits_ta=self.number_of_state_bits_ta,
+                patch_dim=self.patch_dim)
+
         elif self.platform == 'CUDA':
             from clause_bank.clause_bank_cuda import ClauseBankCUDA
-            self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
+            self.clause_bank = ClauseBankCUDA(X=X, number_of_clauses=self.number_of_clauses, number_of_ta_bits_ta=self.number_of_state_bits_ta, patch_dim=self.patch_dim)
         else:
             print("Unknown Platform")
             sys.exit(-1)
