@@ -15,4 +15,4 @@ except ImportError:
     raise ImportError("Could not import cffi compiled libraries. To fix this problem, run pip install -e .")
 
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"
