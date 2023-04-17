@@ -1,1 +1,2 @@
 include tmu/*.h
+recursive-include tmu/clause_bank/cuda *.cu
