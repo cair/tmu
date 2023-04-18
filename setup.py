@@ -41,6 +41,7 @@ setup(
                      'autoencoder (https://arxiv.org/abs/2301.00709), literal budget (https://arxiv.org/abs/2301.08190), incremental '
                      'clause evaluation (to be published), sparse computation with absorbing exclude (to be published), and one-vs-one multi-class classifier (to be published). '
                      'TMU is written in Python with wrappers for C and CUDA-based clause evaluation and updating.',
+    include_package_data=True,
     packages=find_packages(),
     data_files=[('tmu', ['tmu/logging_example.json'])],
     cffi_modules=[
