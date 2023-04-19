@@ -18,7 +18,6 @@ epochs = 250
 clauses = 8000 // 4
 T = 10000 // 4
 s = 5.0
-max_included_literals = 1
 
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 
