@@ -65,8 +65,6 @@ for ensemble in range(ensembles):
                 tm.fit(X_train, Y_train)
                 stop_training = time()
 
-                print(tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_features)
-
                 start_testing = time()
                 result_test = 100*(tm.predict(X_test) == Y_test).mean()
                 stop_testing = time()
