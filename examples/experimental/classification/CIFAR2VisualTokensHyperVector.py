@@ -42,8 +42,6 @@ X_train_org = X_train_org[0:5000]
 X_test_org = X_test_org[0:5000]
 Y_train = np.where(np.isin(Y_train, animals), 1, 0)[0:5000]
 Y_test = np.where(np.isin(Y_test, animals), 1, 0)[0:5000]
-#Y_train = Y_train[0:2000]
-#Y_test = Y_test[0:2000]
 
 X_train = np.zeros((X_train_org.shape[0], 32, 32, 3), dtype=np.uint32)
 Y_train=Y_train.reshape(Y_train.shape[0])
