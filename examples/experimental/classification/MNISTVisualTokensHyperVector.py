@@ -15,7 +15,7 @@ s = 5.0
 
 # Produces hypervector codes
 
-scaling = 0.25
+scaling = 0.5
 unique_patches = 2**9 # Total number of unique patches
 hypervector_size = int(512*scaling)
 bits = np.maximum(5, int(5*scaling))
