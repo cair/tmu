@@ -18,7 +18,7 @@ s = 5.0
 scaling = 0.25
 unique_patches = 2**9 # Total number of unique patches
 hypervector_size = int(512*scaling)
-bits = np.min(5, int(5*scaling))
+bits = np.minimum(5, int(5*scaling))
 
 indexes = np.arange(hypervector_size, dtype=np.uint32)
 encoding = np.zeros((unique_patches, hypervector_size), dtype=np.uint32)
