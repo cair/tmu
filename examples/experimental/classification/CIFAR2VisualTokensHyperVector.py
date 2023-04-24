@@ -30,9 +30,10 @@ animals = np.array([2, 3, 4, 5, 6, 7])
 ensembles = 5
 epochs = 250
 
+max_included_literals = 32
 clauses = 2000
 T = 5000
-s = 5.0
+s = 1.5
 step = 1
 visual_tokens = True
 
@@ -91,9 +92,9 @@ for ensemble in range(ensembles):
         print("\nAccuracy over %d epochs:\n" % (epochs))
 
         if visual_tokens:
-                tm = TMClassifier(clauses, T, s, patch_dim=(1,1), platform='CPU', weighted_clauses=True)
+                tm = TMClassifier(clauses, T, s, max_included_literals=max_included_literals, patch_dim=(1,1), platform='CPU', weighted_clauses=True)
         else:
-                tm = TMClassifier(clauses, T, s, patch_dim=(3,3), platform='CPU', weighted_clauses=True)
+                tm = TMClassifier(clauses, T, s, max_included_literals=max_included_literals, patch_dim=(3,3), platform='CPU', weighted_clauses=True)
 
         for epoch in range(epochs):
                 start_training = time()
