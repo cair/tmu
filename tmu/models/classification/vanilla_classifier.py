@@ -297,7 +297,7 @@ class TMClassifier(TMBaseClassifier):
                 )
         return
 
-    def predict(self, X):
+    def predict(self, X, clip_T=False):
         if not np.array_equal(self.X_test, X):
             self.encoded_X_test = self.clause_banks[0].prepare_X(X)
             self.X_test = X.copy()
@@ -310,7 +310,9 @@ class TMClassifier(TMBaseClassifier):
                 class_sum = np.dot(self.weight_banks[i].get_weights(),
                                    self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test,
                                                                                          e)).astype(np.int32)
-                class_sum = np.clip(class_sum, -self.T, self.T)
+                if clip_T:
+                    class_sum = np.clip(class_sum, -self.T, self.T)
+    
                 if class_sum > max_class_sum:
                     max_class_sum = class_sum
                     max_class = i
