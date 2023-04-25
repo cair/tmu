@@ -304,7 +304,7 @@ class TMClassifier(TMBaseClassifier):
 
         Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
         for e in range(X.shape[0]):
-            max_class_sum = -self.T
+            max_class_sum = -self.T*self.number_of_clauses
             max_class = 0
             for i in range(self.number_of_classes):
                 class_sum = np.dot(self.weight_banks[i].get_weights(),
