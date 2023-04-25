@@ -9,9 +9,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 ensembles = 5
 epochs = 250
 
+max_included_literals = 32
 clauses = 8000 // 4
 T = 10000 // 4
-s = 5.0
+s = 1.5
 
 # Produces hypervector codes
 
@@ -66,8 +67,7 @@ f = open("mnist_%.1f_%d_%d_%d_%d.txt" % (s, clauses, T, bits, hypervector_size),
 for ensemble in range(ensembles):
         print("\nAccuracy over %d epochs:\n" % (epochs))
 
-        #tm = TMClassifier(clauses, T, s, patch_dim=(1,1), platform='CPU', weighted_clauses=True)
-        tm = TMClassifier(clauses, T, s, patch_dim=(1,1), platform='CPU', weighted_clauses=True)
+        tm = TMClassifier(clauses, T, s, max_included_literals = max_included_literals, patch_dim=(1,1), platform='CPU', weighted_clauses=True)
 
         for epoch in range(epochs):
                 start_training = time()
