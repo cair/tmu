@@ -273,7 +273,7 @@ static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_s
 }
 
 
-void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
+void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int reuse_random_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)
 {
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {
@@ -282,6 +282,10 @@ void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, un
 		filter = 0xffffffff;
 	}
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	if (reuse_random_feedback) {
+		cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
+	}
 
 	for (int j = 0; j < number_of_clauses; ++j) {
 		if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
@@ -295,7 +299,9 @@ void cb_type_i_feedback(unsigned int *ta_state, unsigned int *feedback_to_ta, un
 
 		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
 
-		cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
+		if (!reuse_random_feedback) {
+			cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
+		}
 
 		if (clause_output && cb_number_of_include_actions(ta_state, j, number_of_literals, number_of_state_bits) <= max_included_literals) {
 			// Type Ia Feedback

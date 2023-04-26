@@ -27,13 +27,14 @@ import numpy as np
 class TMCoalescedClassifier(TMBasis):
     def __init__(self, number_of_clauses, T, s, type_i_ii_ratio=1.0, type_iii_feedback=False,
                  focused_negative_sampling=False, output_balancing=False, d=200.0, platform='CPU', patch_dim=None,
-                 feature_negation=True, boost_true_positive_feedback=1, max_positive_clauses=None, max_included_literals=None,
+                 feature_negation=True, boost_true_positive_feedback=1, reuse_random_feedback=0, max_positive_clauses=None, max_included_literals=None,
                  number_of_state_bits_ta=8, number_of_state_bits_ind=8, weighted_clauses=False, clause_drop_p=0.0,
                  literal_drop_p=0.0):
         super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
                          focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d,
                          platform=platform, patch_dim=patch_dim, feature_negation=feature_negation,
                          boost_true_positive_feedback=boost_true_positive_feedback,
+                         reuse_random_feedback=reuse_random_feedback,
                          max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
                          number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
                          clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p)
@@ -80,9 +81,10 @@ class TMCoalescedClassifier(TMBasis):
         type_iii_feedback_selection = np.random.choice(2)
 
         self.clause_bank.type_i_feedback(update_p * self.type_i_p, self.s, self.boost_true_positive_feedback,
-                                         self.max_included_literals,
-                                         self.clause_active * (self.weight_banks[target].get_weights() >= 0),
-                                         self.literal_active, self.encoded_X_train, e)
+                                        self.reuse_random_feedback,
+                                        self.max_included_literals,
+                                        self.clause_active * (self.weight_banks[target].get_weights() >= 0),
+                                        self.literal_active, self.encoded_X_train, e)
         self.clause_bank.type_ii_feedback(update_p * self.type_ii_p,
                                           self.clause_active * (self.weight_banks[target].get_weights() < 0),
                                           self.literal_active, self.encoded_X_train, e)
@@ -120,9 +122,10 @@ class TMCoalescedClassifier(TMBasis):
             update_p = self.update_ps[not_target]
 
         self.clause_bank.type_i_feedback(update_p * self.type_i_p, self.s, self.boost_true_positive_feedback,
-                                         self.max_included_literals,
-                                         self.clause_active * (self.weight_banks[not_target].get_weights() < 0),
-                                         self.literal_active, self.encoded_X_train, e)
+                                        self.reuse_random_feedback,
+                                        self.max_included_literals,
+                                        self.clause_active * (self.weight_banks[not_target].get_weights() < 0),
+                                        self.literal_active, self.encoded_X_train, e)
         self.clause_bank.type_ii_feedback(update_p * self.type_ii_p,
                                           self.clause_active * (self.weight_banks[not_target].get_weights() >= 0),
                                           self.literal_active, self.encoded_X_train, e)

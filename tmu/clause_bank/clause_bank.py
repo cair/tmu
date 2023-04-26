@@ -211,7 +211,7 @@ class ClauseBank(BaseClauseBank):
 
         return self.clause_output_patchwise
 
-    def type_i_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
+    def type_i_feedback(self, update_p, s, boost_true_positive_feedback, reuse_random_feedback, max_included_literals, clause_active,
                         literal_active, encoded_X, e):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
         ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
@@ -227,6 +227,7 @@ class ClauseBank(BaseClauseBank):
             update_p,
             s,
             boost_true_positive_feedback,
+            reuse_random_feedback,
             max_included_literals,
             ca_p,
             la_p,

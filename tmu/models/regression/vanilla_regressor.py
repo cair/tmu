@@ -25,11 +25,11 @@ import numpy as np
 
 class TMRegressor(TMBasis):
     def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, feature_negation=True,
-                 boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8,
+                 boost_true_positive_feedback=1, reuse_random_feedback=0, max_included_literals=None, number_of_state_bits_ta=8,
                  weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0):
         super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim,
                          feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback,
-                         max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
+                         reuse_random_feedback=reuse_random_feedback, max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
                          weighted_clauses=weighted_clauses, clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p)
 
     def initialize(self, X, Y):
@@ -103,7 +103,7 @@ class TMRegressor(TMBasis):
             update_p = (1.0 * prediction_error / self.T) ** 2
 
             if pred_y < encoded_Y[e]:
-                self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback,
+                self.clause_bank.type_i_feedback(update_p, self.s, self.boost_true_positive_feedback, self.reuse_random_feedback,
                                                  self.max_included_literals, clause_active, literal_active,
                                                  self.encoded_X_train, e)
                 if self.weighted_clauses:

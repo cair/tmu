@@ -50,6 +50,7 @@ class TMBasis:
             patch_dim=None,
             feature_negation=True,
             boost_true_positive_feedback=1,
+            reuse_random_feedback=0,
             max_included_literals=None,
             number_of_state_bits_ta=8,
             number_of_state_bits_ind=8,
@@ -87,6 +88,7 @@ class TMBasis:
         self.patch_dim = patch_dim
         self.feature_negation = feature_negation
         self.boost_true_positive_feedback = boost_true_positive_feedback
+        self.reuse_random_feedback = reuse_random_feedback
         self.max_included_literals = max_included_literals
         self.weighted_clauses = weighted_clauses
         self.clause_drop_p = clause_drop_p
