@@ -13,11 +13,13 @@ import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 from keras.datasets import cifar10
 
-scaling = 0.5
+scaling = 1.0
 unique_patches = 2**9
 hypervector_size = int(512*scaling)
 bits = np.maximum(5, int(5*scaling))
 print(bits)
+
+resolution = 8
 
 indexes = np.arange(hypervector_size, dtype=np.uint32)
 encoding = np.zeros((unique_patches, hypervector_size), dtype=np.uint32)
@@ -38,47 +40,49 @@ step = 1
 visual_tokens = True
 
 (X_train_org, Y_train), (X_test_org, Y_test) = cifar10.load_data()
-
 X_train_org = X_train_org[0:5000]
 X_test_org = X_test_org[0:5000]
-Y_train = np.where(np.isin(Y_train, animals), 1, 0)[0:5000]
-Y_test = np.where(np.isin(Y_test, animals), 1, 0)[0:5000]
+Y_train = Y_train.reshape(Y_train.shape[0])[0:5000]
+Y_test = Y_test.reshape(Y_test.shape[0])[0:5000]
 
-X_train = np.zeros((X_train_org.shape[0], 32, 32, 3), dtype=np.uint32)
-Y_train=Y_train.reshape(Y_train.shape[0])
-for i in range(X_train_org.shape[0]):
-        for j in range(X_train_org.shape[3]):
-                X_train[i,:,:,j] = cv2.adaptiveThreshold(X_train_org[i,:,:,j], 1, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+Y_train = np.where(np.isin(Y_train, animals), 1, 0)
+Y_test = np.where(np.isin(Y_test, animals), 1, 0)
 
-X_test = np.zeros((X_test_org.shape[0], 32, 32, 3), dtype=np.uint32)
-Y_test=Y_test.reshape(Y_test.shape[0])
-for i in range(X_test_org.shape[0]):
-        for j in range(X_test_org.shape[3]):
-                X_test[i,:,:,j] = cv2.adaptiveThreshold(X_test_org[i,:,:,j], 1, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+X_train = np.empty((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], X_train_org.shape[3], resolution),
+                   dtype=np.uint8)
+for z in range(resolution):
+    X_train[:, :, :, :, z] = X_train_org[:, :, :, :] >= (z + 1) * 255 / (resolution + 1)
+
+X_test = np.empty((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], X_test_org.shape[3], resolution),
+                  dtype=np.uint8)
+for z in range(resolution):
+    X_test[:, :, :, :, z] = X_test_org[:, :, :, :] >= (z + 1) * 255 / (resolution + 1)
 
 if visual_tokens:
         X_train_tokenized = np.zeros((X_train.shape[0], 30//step, 30//step, hypervector_size), dtype=np.uint32)
 
         for i in range(X_train.shape[0]):
                 for c in range(3):
-                        windows = view_as_windows(X_train[i,:,:,c], (3, 3), step=step)
-                        for q in range(windows.shape[0]):
-                                for r in range(windows.shape[1]):
-                                        patch = windows[q,r].reshape(-1).astype(np.uint32)
-                                        patch_id = patch.dot(1 << np.arange(patch.shape[-1] - 1, -1, -1))
-                                        X_train_tokenized[i, q, r, :] |= np.roll(encoding[patch_id], c)
+                        for z in range(resolution):
+                                windows = view_as_windows(X_train[i,:,:,c,z], (3, 3), step=step)
+                                for u in range(windows.shape[0]):
+                                        for v in range(windows.shape[1]):
+                                                patch = windows[u,v].reshape(-1).astype(np.uint32)
+                                                patch_id = patch.dot(1 << np.arange(patch.shape[-1] - 1, -1, -1))
+                                                X_train_tokenized[i, u, v, :] |= np.roll(encoding[patch_id], c + z*10)
         print("Training data produced")
 
         X_test_tokenized = np.zeros((X_test.shape[0], 30//step, 30//step, hypervector_size), dtype=np.uint32)
 
         for i in range(X_test.shape[0]):
                 for c in range(3):
-                        windows = view_as_windows(X_test[i,:,:,c], (3, 3), step=step)
-                        for q in range(windows.shape[0]):
-                                for r in range(windows.shape[1]):
-                                        patch = windows[q,r].reshape(-1).astype(np.uint32)
-                                        patch_id = patch.dot(1 << np.arange(patch.shape[-1] - 1, -1, -1))
-                                        X_test_tokenized[i, q, r, :] |= np.roll(encoding[patch_id], c)
+                        for z in range(resolution):
+                                windows = view_as_windows(X_test[i,:,:,c,z], (3, 3), step=step)
+                                for u in range(windows.shape[0]):
+                                        for v in range(windows.shape[1]):
+                                                patch = windows[u,v].reshape(-1).astype(np.uint32)
+                                                patch_id = patch.dot(1 << np.arange(patch.shape[-1] - 1, -1, -1))
+                                                X_test_tokenized[i, u, v, :] |= np.roll(encoding[patch_id], c + z*10)
 
         print("Testing data produced")
 
