@@ -180,8 +180,7 @@ class TMAutoEncoder(TMBasis):
             update_clause = np.random.random(self.number_of_clauses) <= (
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
-
-            Xu, Yu = tmu.tools.produce_autoencoder_examples(X_csr, X_csc, self.output_active, self.accumulation)
+            Xu, Yu = self.clause_bank.produce_autoencoder_examples(X_csr, X_csc, self.output_active, self.accumulation)
             for i in class_index:
                 (target, X) = Yu[i], Xu[i].reshape((1, -1))
                 encoded_X = self.clause_bank.prepare_X(X)
@@ -254,7 +253,7 @@ class TMAutoEncoder(TMBasis):
         literal_active = self.activate_literals()
 
         for e in range(number_of_examples):
-            Xu, Yu = tmu.tools.produce_autoencoder_examples(X_csr, X_csc,
+            Xu, Yu = self.clause_bank.produce_autoencoder_examples(X_csr, X_csc,
                                                                    np.array([self.output_active[the_class]],
                                                                             dtype=np.uint32), self.accumulation)
             (target, encoded_X) = Yu[0], self.clause_bank.prepare_X(Xu[0].reshape((1, -1)))
@@ -284,7 +283,7 @@ class TMAutoEncoder(TMBasis):
         weights = self.weight_banks[the_class].get_weights()
 
         for e in range(number_of_examples):
-            Xu, Yu = tmu.tools.produce_autoencoder_examples(X_csr, X_csc,
+            Xu, Yu = self.clause_bank.produce_autoencoder_examples(X_csr, X_csc,
                                                                    np.array([self.output_active[the_class]],
                                                                             dtype=np.uint32), self.accumulation)
             (target, encoded_X) = Yu[0], self.clause_bank.prepare_X(Xu[0].reshape((1, -1)))

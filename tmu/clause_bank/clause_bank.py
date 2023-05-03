@@ -321,3 +321,18 @@ class ClauseBank(BaseClauseBank):
             self.patch_dim,
             0
         )
+
+    def produce_autoencoder_examples(self, X_csr, X_csc, active_output, accumulation):
+        X = np.ascontiguousarray(np.empty(int(X_csc.shape[1] * active_output.shape[0]), dtype=np.uint32))
+        Y = np.ascontiguousarray(np.empty(int(active_output.shape[0]), dtype=np.uint32))
+
+        lib.tmu_produce_autoencoder_examples(ffi.cast("unsigned int *", active_output.ctypes.data), active_output.shape[0],
+                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csr.indptr).ctypes.data),
+                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csr.indices).ctypes.data),
+                                             int(X_csr.shape[0]),
+                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indptr).ctypes.data),
+                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indices).ctypes.data),
+                                             int(X_csc.shape[1]), ffi.cast("unsigned int *", X.ctypes.data),
+                                             ffi.cast("unsigned int *", Y.ctypes.data), int(accumulation));
+    
+        return X.reshape((len(active_output), -1)), Y
