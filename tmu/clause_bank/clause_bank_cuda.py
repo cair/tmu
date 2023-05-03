@@ -323,8 +323,6 @@ class ImplClauseBankCUDA(BaseClauseBank):
     
         return X.reshape((len(active_output), -1)), Y
 
-
-
 if cuda_installed:
     ClauseBankCUDA = ImplClauseBankCUDA
 else:
