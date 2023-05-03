@@ -88,6 +88,9 @@ if visual_tokens:
 
         X_train = X_train_tokenized
         X_test = X_test_tokenized
+else:
+        X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], X_train.shape[2], -1))
+        X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], X_test.shape[2], -1))
 
 print(X_train.shape, X_test.shape)
 
