@@ -308,7 +308,21 @@ class ImplClauseBankCUDA(BaseClauseBank):
         cuda.memcpy_htod(encoded_X_gpu, encoded_X)
         return encoded_X_gpu
 
-       def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
+   def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
+        X_csr_indptr_gpu = cuda.mem_alloc(X_csr.indptr.nbytes)
+        cuda.memcpy_htod(X_csr_indptr_gpu, X_csr.indptr)
+        
+        X_csr_indices_gpu = cuda.mem_alloc(X_csr.indices.nbytes)
+        cuda.memcpy_htod(X_csr_indices_gpu, X_csr.indices)
+
+        X_csc_indptr_gpu = cuda.mem_alloc(X_csc.indptr.nbytes)
+        cuda.memcpy_htod(X_csc_indptr_gpu, X_csc.indptr)
+
+        X_csc_indices_gpu = cuda.mem_alloc(X_csc.indices.nbytes)
+        cuda.memcpy_htod(X_csc_indices_gpu, X_csc.indices)
+
+        active_output_gpu = cuda.mem_alloc(active_output.nbytes)
+
         return (X_csr, X_csc, active_output)
 
     def produce_autoencoder_examples(self, encoded_X, accumulation):
