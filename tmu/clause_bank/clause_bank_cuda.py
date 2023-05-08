@@ -204,7 +204,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
         )
         return self.clause_output_patchwise
 
-    def type_i_feedback(self, update_p, s, boost_true_positive_feedback, max_included_literals, clause_active,
+    def type_i_feedback(self, update_p, s, boost_true_positive_feedback, reuse_random_feedback, max_included_literals, clause_active,
                         literal_active, encoded_X, e):
         cuda.memcpy_htod(self.clause_active_gpu, clause_active)
         cuda.memcpy_htod(self.literal_active_gpu, literal_active)
