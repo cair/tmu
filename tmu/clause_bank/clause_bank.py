@@ -322,7 +322,11 @@ class ClauseBank(BaseClauseBank):
             0
         )
 
-    def produce_autoencoder_examples(self, X_csr, X_csc, active_output, accumulation):
+    def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
+        return (X_csr, X_csc, active_output)
+
+    def produce_autoencoder_examples(self, encoded_X, accumulation):
+        (X_csr, X_csc, active_output) = encoded_X
         X = np.ascontiguousarray(np.empty(int(X_csc.shape[1] * active_output.shape[0]), dtype=np.uint32))
         Y = np.ascontiguousarray(np.empty(int(active_output.shape[0]), dtype=np.uint32))
 

@@ -166,6 +166,10 @@ class TMAutoEncoder(TMBasis):
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
 
+        if not np.array_equal(self.X_train, np.concatenate((X_csr.indptr, X_csr.indices))):
+            self.encoded_X_train = self.clause_bank.prepare_X_autoencoder(X_csr, X_csc, self.output_active)
+            self.X_train = np.concatenate((X_csr.indptr, X_csr.indices))
+
         clause_active = self.activate_clauses()
         literal_active = self.activate_literals()
 
@@ -180,7 +184,7 @@ class TMAutoEncoder(TMBasis):
             update_clause = np.random.random(self.number_of_clauses) <= (
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
-            Xu, Yu = self.clause_bank.produce_autoencoder_examples(X_csr, X_csc, self.output_active, self.accumulation)
+            Xu, Yu = self.clause_bank.produce_autoencoder_examples_new(self.encoded_X_train, self.accumulation)
             for i in class_index:
                 (target, X) = Yu[i], Xu[i].reshape((1, -1))
                 encoded_X = self.clause_bank.prepare_X(X)
@@ -244,6 +248,10 @@ class TMAutoEncoder(TMBasis):
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
 
+        if not np.array_equal(self.X_test, np.concatenate((X_csr.indptr, X_csr.indices))):
+            self.encoded_X_test = self.clause_bank.prepare_X_autoencoder(X_csr, X_csc, self.output_active)
+            self.X_test = np.concatenate((X_csr.indptr, X_csr.indices))
+
         true_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
         false_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
 
@@ -253,9 +261,7 @@ class TMAutoEncoder(TMBasis):
         literal_active = self.activate_literals()
 
         for e in range(number_of_examples):
-            Xu, Yu = self.clause_bank.produce_autoencoder_examples(X_csr, X_csc,
-                                                                   np.array([self.output_active[the_class]],
-                                                                            dtype=np.uint32), self.accumulation)
+            Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_test, self.accumulation)
             (target, encoded_X) = Yu[0], self.clause_bank.prepare_X(Xu[0].reshape((1, -1)))
 
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
@@ -277,15 +283,17 @@ class TMAutoEncoder(TMBasis):
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
 
+        if not np.array_equal(self.X_test, np.concatenate((X_csr.indptr, X_csr.indices))):
+            self.encoded_X_test = self.clause_bank.prepare_X_autoencoder(X_csr, X_csc, self.output_active)
+            self.X_test = np.concatenate((X_csr.indptr, X_csr.indices))
+
         true_positive = np.zeros(self.number_of_clauses, dtype=np.uint32)
         false_negative = np.zeros(self.number_of_clauses, dtype=np.uint32)
 
         weights = self.weight_banks[the_class].get_weights()
 
         for e in range(number_of_examples):
-            Xu, Yu = self.clause_bank.produce_autoencoder_examples(X_csr, X_csc,
-                                                                   np.array([self.output_active[the_class]],
-                                                                            dtype=np.uint32), self.accumulation)
+            Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_test, self.accumulation)
             (target, encoded_X) = Yu[0], self.clause_bank.prepare_X(Xu[0].reshape((1, -1)))
 
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
