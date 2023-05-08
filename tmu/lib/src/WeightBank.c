@@ -32,7 +32,14 @@ https://arxiv.org/abs/1905.09688
 #include <string.h>
 #include "fast_rand.h"
 
-void wb_increment(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active, unsigned int positive_weights)
+void wb_increment(
+        int *clause_weights,
+        int number_of_clauses,
+        unsigned int *clause_output,
+        float update_p,
+        unsigned int *clause_active,
+        unsigned int positive_weights
+)
 {
 	for (int j = 0; j < number_of_clauses; ++j) {
 		if (clause_active[j] && clause_output[j] && (positive_weights || (clause_weights[j] != -1)) && (((float)fast_rand())/((float)FAST_RAND_MAX) <= update_p)) {
@@ -41,7 +48,14 @@ void wb_increment(int *clause_weights, int number_of_clauses, unsigned int *clau
 	}
 }
 
-void wb_decrement(int *clause_weights, int number_of_clauses, unsigned int *clause_output, float update_p, unsigned int *clause_active, unsigned int negative_weights)
+void wb_decrement(
+        int *clause_weights,
+        int number_of_clauses,
+        unsigned int *clause_output,
+        float update_p,
+        unsigned int *clause_active,
+        unsigned int negative_weights
+)
 {
 	for (int j = 0; j < number_of_clauses; j++) {
 		if (clause_active[j] && clause_output[j] && (negative_weights || (clause_weights[j] != 1)) && (((float)fast_rand())/((float)FAST_RAND_MAX) <= update_p)) {

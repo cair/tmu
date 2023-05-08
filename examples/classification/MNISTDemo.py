@@ -4,6 +4,7 @@ from tmu.data import MNIST
 from tmu.models.classification.vanilla_classifier import TMClassifier
 from tmu.tools import BenchmarkTimer
 
+
 _LOGGER = logging.getLogger(__name__)
 
 if __name__ == "__main__":

@@ -5,7 +5,6 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 
@@ -19,7 +18,7 @@
 
 from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
-
+from models.base import MultiClauseBankMixin, MultiWeightBankMixin
 from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
 import numpy as np
@@ -29,7 +28,7 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 
-class TMClassifier(TMBaseClassifier):
+class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin):
     def __init__(
             self,
             number_of_clauses,
@@ -52,7 +51,10 @@ class TMClassifier(TMBaseClassifier):
             literal_drop_p=0.0,
             batch_size=100,
             incremental=True,
+            type_ia_ii_feedback_ratio=0,
             absorbing=-1,
+            absorbing_include=None,
+            absorbing_exclude=None,
             literal_sampling=1.0,
             feedback_rate_excluded_literals=1,
             literal_insertion_state=-1
@@ -78,60 +80,33 @@ class TMClassifier(TMBaseClassifier):
             literal_drop_p=literal_drop_p,
             batch_size=batch_size,
             incremental=incremental,
+            type_ia_ii_feedback_ratio=type_ia_ii_feedback_ratio,
             absorbing=absorbing,
+            absorbing_include=absorbing_include,
+            absorbing_exclude=absorbing_exclude,
             literal_sampling=literal_sampling,
             feedback_rate_excluded_literals=feedback_rate_excluded_literals,
             literal_insertion_state=literal_insertion_state
         )
+        MultiClauseBankMixin.__init__(self)
+        MultiWeightBankMixin.__init__(self)
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
-        _LOGGER.debug("Initializing clause bank....")
-
-        if self.platform == "CPU":
-            clause_bank_type = ClauseBank
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-                number_of_state_bits_ind=self.number_of_state_bits_ind,
-                patch_dim=self.patch_dim,
-                batch_size=self.batch_size,
-                incremental=self.incremental
-            )
-        elif self.platform in ["GPU", "CUDA"]:
-            from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
-            clause_bank_type = ClauseBankCUDA
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-                patch_dim=self.patch_dim
-            )
-        elif self.platform == "CPU_sparse":
-            clause_bank_type = ClauseBankSparse
-            clause_bank_args = dict(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_states=2 ** self.number_of_state_bits_ta,
-                patch_dim=self.patch_dim,
-                absorbing=self.absorbing,
-                literal_sampling=self.literal_sampling,
-                feedback_rate_excluded_literals=self.feedback_rate_excluded_literals,
-                literal_insertion_state = self.literal_insertion_state
-            )
-        else:
-            raise NotImplementedError(f"Could not find platform of type {self.platform}.")
-
-        assert len(self.clause_banks) == 0, "There should be no existing clause banks when init_clause_bank is called!"
-
-        # Create clause banks for TM
-        self.clause_banks = [clause_bank_type(**clause_bank_args) for _ in range(self.number_of_classes)]
+        clause_bank_type, clause_bank_args = self.build_clause_bank(X=X)
+        self.clause_banks.set_clause_init(clause_bank_type, clause_bank_args)
+        self.clause_banks.populate(list(range(self.number_of_classes)))
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
-        for i in range(self.number_of_classes):
-            self.weight_banks.append(WeightBank(np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
-                                                                -1 * np.ones(self.number_of_clauses // 2,
-                                                                             dtype=np.int32)))))
+        self.weight_banks.set_clause_init(
+            WeightBank,
+            dict(
+                weights=np.concatenate((
+                    np.ones(self.number_of_clauses // 2, dtype=np.int32),
+                    -1 * np.ones(self.number_of_clauses // 2, dtype=np.int32)
+                ))
+            )
+        )
+        self.weight_banks.populate(list(range(self.number_of_classes)))
 
     def init_after(self, X: np.ndarray, Y: np.ndarray):
         if self.max_included_literals is None:
@@ -157,12 +132,13 @@ class TMClassifier(TMBaseClassifier):
 
         # Drops clauses randomly based on clause drop probability
         clause_active = []
-        for i in range(self.number_of_classes):
+        for i in self.weight_banks.classes():
             clause_active.append((np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32))
 
         # Literals are dropped based on literal drop probability
         literal_active = np.zeros(self.clause_banks[0].number_of_ta_chunks, dtype=np.uint32)
         literal_active_integer = np.random.rand(self.clause_banks[0].number_of_literals) >= self.literal_drop_p
+
         for k in range(self.clause_banks[0].number_of_literals):
             if literal_active_integer[k] == 1:
                 ta_chunk = k // 32
@@ -195,7 +171,12 @@ class TMClassifier(TMBaseClassifier):
                 update_p = (self.T - class_sum) / (2 * self.T)
 
             if self.weighted_clauses:
-                self.weight_banks[target].increment(clause_outputs, update_p, clause_active[target], False)
+                self.weight_banks[target].increment(
+                    clause_output=clause_outputs,
+                    update_p=update_p,
+                    clause_active=clause_active[target],
+                    positive_weights=False
+                )
 
             self.clause_banks[target].type_i_feedback(
                 update_p=update_p * self.type_i_p,
@@ -238,17 +219,20 @@ class TMClassifier(TMBaseClassifier):
                     target=0
                 )
 
-            not_target = np.random.randint(self.number_of_classes)
+            not_target = self.weight_banks.sample()
             while not_target == target:
-                not_target = np.random.randint(self.number_of_classes)
+                not_target = self.weight_banks.sample()
 
             clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(
-                literal_active,
-                self.encoded_X_train,
-                e
+                literal_active=literal_active,
+                encoded_X=self.encoded_X_train,
+                e=e
             )
-            class_sum = np.dot(clause_active[not_target] * self.weight_banks[not_target].get_weights(),
-                               clause_outputs).astype(np.int32)
+            class_sum = np.dot(
+                clause_active[not_target] * self.weight_banks[not_target].get_weights(),
+                clause_outputs
+            ).astype(np.int32)
+
             class_sum = np.clip(class_sum, -self.T, self.T)
 
             if self.confidence_driven_updating:
@@ -257,7 +241,12 @@ class TMClassifier(TMBaseClassifier):
                 update_p = (self.T + class_sum) / (2 * self.T)
 
             if self.weighted_clauses:
-                self.weight_banks[not_target].decrement(clause_outputs, update_p, clause_active[not_target], False)
+                self.weight_banks[not_target].decrement(
+                    clause_output=clause_outputs,
+                    update_p=update_p,
+                    clause_active=clause_active[not_target],
+                    negative_weights=False
+                )
 
             self.clause_banks[not_target].type_i_feedback(
                 update_p=update_p * self.type_i_p,
@@ -301,7 +290,7 @@ class TMClassifier(TMBaseClassifier):
                 )
         return
 
-    def predict(self, X, clip_class_sum=False):
+    def predict(self, X, clip_class_sum=False, **kwargs):
         if not np.array_equal(self.X_test, X):
             self.encoded_X_test = self.clause_banks[0].prepare_X(X)
             self.X_test = X.copy()
@@ -310,13 +299,13 @@ class TMClassifier(TMBaseClassifier):
         for e in range(X.shape[0]):
             max_class_sum = -self.T*self.number_of_clauses
             max_class = 0
-            for i in range(self.number_of_classes):
+            for i in self.weight_banks.classes():
                 class_sum = np.dot(self.weight_banks[i].get_weights(),
                                    self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test,
                                                                                          e)).astype(np.int32)
                 if clip_class_sum:
                     class_sum = np.clip(class_sum, -self.T, self.T)
-    
+
                 if class_sum > max_class_sum:
                     max_class_sum = class_sum
                     max_class = i
@@ -325,28 +314,28 @@ class TMClassifier(TMBaseClassifier):
 
     def transform(self, X):
         encoded_X = self.clause_banks[0].prepare_X(X)
-        transformed_X = np.empty((X.shape[0], self.number_of_classes, self.number_of_clauses), dtype=np.uint32)
+        transformed_X = np.empty((X.shape[0], len(self.weight_banks), self.number_of_clauses), dtype=np.uint32)
         for e in range(X.shape[0]):
-            for i in range(self.number_of_classes):
+            for i in self.weight_banks.classes():
                 transformed_X[e, i, :] = self.clause_banks[i].calculate_clause_outputs_predict(encoded_X, e)
-        return transformed_X.reshape((X.shape[0], self.number_of_classes * self.number_of_clauses))
+        return transformed_X.reshape((X.shape[0], len(self.weight_banks) * self.number_of_clauses))
 
     def transform_patchwise(self, X):
         # TODO - This needs to be fixed.
         encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim,
                                      self.patch_dim, 0)
         transformed_X = np.empty(
-            (X.shape[0], self.number_of_classes, self.number_of_clauses // 2 * self.number_of_patches), dtype=np.uint32)
+            (X.shape[0], len(self.weight_banks), self.number_of_clauses // 2 * self.number_of_patches), dtype=np.uint32)
         for e in range(X.shape[0]):
-            for i in range(self.number_of_classes):
+            for i in self.weight_banks.classes():
                 transformed_X[e, i, :] = self.clause_bank[i].calculate_clause_outputs_patchwise(encoded_X, e)
         return transformed_X.reshape(
-            (X.shape[0], self.number_of_classes * self.number_of_clauses, self.number_of_patches))
+            (X.shape[0], len(self.weight_banks) * self.number_of_clauses, self.number_of_patches))
 
     def literal_clause_frequency(self):
         clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
         literal_frequency = np.zeros(self.clause_banks[0].number_of_literals, dtype=np.uint32)
-        for i in range(self.number_of_classes):
+        for i in self.weight_banks.classes():
             literal_frequency += self.clause_banks[i].calculate_literal_clause_frequency(clause_active)
         return literal_frequency
 
@@ -376,7 +365,7 @@ class TMClassifier(TMBaseClassifier):
     def clause_precision(self, the_class, polarity, X, Y):
         clause_outputs = self.transform(X).reshape(
             X.shape[0],
-            self.number_of_classes,
+            len(self.weight_banks),
             2,
             self.number_of_clauses // 2
         )[:, the_class, polarity, :]
@@ -387,13 +376,16 @@ class TMClassifier(TMBaseClassifier):
         else:
             true_positive_clause_outputs = clause_outputs[Y != the_class].sum(axis=0)
             false_positive_clause_outputs = clause_outputs[Y == the_class].sum(axis=0)
-        return np.where(true_positive_clause_outputs + false_positive_clause_outputs == 0, 0,
-                        true_positive_clause_outputs / (true_positive_clause_outputs + false_positive_clause_outputs))
+        return np.where(
+            true_positive_clause_outputs + false_positive_clause_outputs == 0,
+            0,
+            true_positive_clause_outputs / (true_positive_clause_outputs + false_positive_clause_outputs)
+        )
 
     def clause_recall(self, the_class, polarity, X, Y):
         clause_outputs = self.transform(X).reshape(
             X.shape[0],
-            self.number_of_classes,
+            len(self.weight_banks),
             2,
             self.number_of_clauses // 2
         )[:, the_class, polarity, :]
@@ -435,3 +427,6 @@ class TMClassifier(TMBaseClassifier):
 
     def _get_polarized_clause_index(self, clause, polarity):
         return clause if polarity == 0 else self.number_of_clauses // 2 + clause
+
+    def number_of_absorbed_include_actions(self, the_class, clause):
+        return self.clause_banks[the_class].number_of_absorbed_include_actions(clause)
