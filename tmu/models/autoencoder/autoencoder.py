@@ -184,7 +184,7 @@ class TMAutoEncoder(TMBasis):
             update_clause = np.random.random(self.number_of_clauses) <= (
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
-            Xu, Yu = self.clause_bank.produce_autoencoder_examples_new(self.encoded_X_train, self.accumulation)
+            Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_train, self.accumulation)
             for i in class_index:
                 (target, X) = Yu[i], Xu[i].reshape((1, -1))
                 encoded_X = self.clause_bank.prepare_X(X)
