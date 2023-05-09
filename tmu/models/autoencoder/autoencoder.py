@@ -137,40 +137,105 @@ class TMAutoEncoder(TMBasis):
             if self.squared_weight_update_p:
                 update_p = update_p**2
 
-            self.clause_bank.type_i_feedback(update_p * self.type_i_p, self.s, self.boost_true_positive_feedback,
-                                             self.reuse_random_feedback, self.max_included_literals,
-                                             clause_active * (self.weight_banks[target_output].get_weights() >= 0),
-                                             literal_active, encoded_X, 0)
-            self.clause_bank.type_ii_feedback(update_p * self.type_ii_p,
-                                              clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                                              literal_active, encoded_X, 0)
-            self.weight_banks[target_output].increment(clause_outputs, update_p, clause_active, True)
+            self.clause_bank.type_i_feedback(
+                update_p * self.type_i_p, 
+                self.s,
+                self.boost_true_positive_feedback,
+                self.reuse_random_feedback, self.max_included_literals,
+                clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                literal_active, 
+                encoded_X, 
+                0
+            )
+            
+            self.clause_bank.type_ii_feedback(
+                update_p * self.type_ii_p,
+                clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                literal_active, 
+                encoded_X,
+                0
+            )
+            
+            self.weight_banks[target_output].increment(
+                clause_outputs,
+                update_p, 
+                clause_active,
+                True
+            )
+            
             if self.type_iii_feedback and type_iii_feedback_selection == 0:
-                self.clause_bank.type_iii_feedback(update_p, self.d, clause_active * (
-                        self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0, 1)
-                self.clause_bank.type_iii_feedback(update_p, self.d,
-                                                   clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                                                   literal_active, encoded_X, 0, 0)
+                self.clause_bank.type_iii_feedback(
+                    update_p,
+                    self.d, 
+                    clause_active * (self.weight_banks[target_output].get_weights() >= 0), 
+                    literal_active, 
+                    encoded_X, 
+                    0, 
+                    1
+                )
+                
+                self.clause_bank.type_iii_feedback(
+                    update_p,
+                    self.d,
+                    clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                    literal_active, 
+                    encoded_X,
+                    0,
+                    0
+                )
         else:
             update_p = (self.T + class_sum) / (2 * self.T)
             if self.squared_weight_update_p:
                 update_p = update_p**2
 
-            self.clause_bank.type_i_feedback(update_p * self.type_i_p, self.s, self.boost_true_positive_feedback,
-                                             self.reuse_random_feedback, self.max_included_literals,
-                                             clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                                             literal_active, encoded_X, 0)
-            self.clause_bank.type_ii_feedback(update_p * self.type_ii_p,
-                                              clause_active * (self.weight_banks[target_output].get_weights() >= 0),
-                                              literal_active, encoded_X, 0)
-            self.weight_banks[target_output].decrement(clause_outputs, update_p, clause_active, True)
+            self.clause_bank.type_i_feedback(
+                update_p * self.type_i_p,
+                self.s, 
+                self.boost_true_positive_feedback,
+                self.reuse_random_feedback, 
+                self.max_included_literals,
+                clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                literal_active, 
+                encoded_X,
+                0
+            )
+            
+            self.clause_bank.type_ii_feedback(
+                update_p * self.type_ii_p,
+                clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                literal_active,
+                encoded_X, 
+                0
+            )
+            
+            self.weight_banks[target_output].decrement(
+                clause_outputs,
+                update_p, 
+                clause_active,
+                True
+            )
+            
             if self.type_iii_feedback and type_iii_feedback_selection == 1:
-                self.clause_bank.type_iii_feedback(update_p, self.d,
-                                                   clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                                                   literal_active, encoded_X, 0, 1)
-                self.clause_bank.type_iii_feedback(update_p, self.d, clause_active * (
-                        self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0, 0)
-        return
+                self.clause_bank.type_iii_feedback(
+                    update_p,
+                    self.d,
+                    clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                    literal_active, 
+                    encoded_X,
+                    0, 
+                    1
+                )
+                
+                self.clause_bank.type_iii_feedback(
+                    update_p,
+                    self.d, 
+                    clause_active * (self.weight_banks[target_output].get_weights() >= 0), 
+                    literal_active, 
+                    encoded_X, 
+                    0,
+                    0
+                )
+
 
     def activate_clauses(self):
         # Drops clauses randomly based on clause drop probability
