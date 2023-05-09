@@ -18,7 +18,7 @@
 
 from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
-from models.base import MultiClauseBankMixin, MultiWeightBankMixin
+from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin
 from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
 import numpy as np

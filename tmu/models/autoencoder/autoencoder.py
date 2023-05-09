@@ -25,22 +25,61 @@ from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
 import tmu.tools
 
 class TMAutoEncoder(TMBasis):
-    def __init__(self, number_of_clauses, T, s, output_active, accumulation=1, type_i_ii_ratio=1.0,
-                 type_iii_feedback=False, focused_negative_sampling=False, output_balancing=False, d=200.0,
-                 platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, reuse_random_feedback=0,
-                 max_included_literals=None, number_of_state_bits_ta=8, number_of_state_bits_ind=8,
-                 weighted_clauses=False, clause_drop_p=0.0, literal_drop_p=0.0, absorbing=-1, literal_sampling=1.0, feedback_rate_excluded_literals=1,
-                 literal_insertion_state=-1, squared_weight_update_p=False):
+    def __init__(
+        self, 
+        number_of_clauses, 
+        T,
+        s,
+        output_active, 
+        accumulation=1,
+        type_i_ii_ratio=1.0,
+        type_iii_feedback=False, 
+        focused_negative_sampling=False, 
+        output_balancing=False, 
+        d=200.0,
+        platform='CPU',
+        patch_dim=None, 
+        feature_negation=True, 
+        boost_true_positive_feedback=1, 
+        reuse_random_feedback=0,
+        max_included_literals=None, 
+        number_of_state_bits_ta=8, 
+        number_of_state_bits_ind=8,
+        weighted_clauses=False,
+        clause_drop_p=0.0, 
+        literal_drop_p=0.0, 
+        absorbing=-1, 
+        literal_sampling=1.0, 
+        feedback_rate_excluded_literals=1,
+        literal_insertion_state=-1,
+        squared_weight_update_p=False
+    ):
         self.output_active = output_active
         self.accumulation = accumulation
-        super().__init__(number_of_clauses, T, s, type_i_ii_ratio=type_i_ii_ratio, type_iii_feedback=type_iii_feedback,
-                         focused_negative_sampling=focused_negative_sampling, output_balancing=output_balancing, d=d,
-                         platform=platform, patch_dim=patch_dim, feature_negation=feature_negation,
-                         boost_true_positive_feedback=boost_true_positive_feedback, reuse_random_feedback=reuse_random_feedback,
-                         max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta,
-                         number_of_state_bits_ind=number_of_state_bits_ind, weighted_clauses=weighted_clauses,
-                         clause_drop_p=clause_drop_p, literal_drop_p=literal_drop_p, absorbing=absorbing, literal_sampling=literal_sampling,
-                         feedback_rate_excluded_literals=feedback_rate_excluded_literals, literal_insertion_state=literal_insertion_state, squared_weight_update_p=squared_weight_update_p)
+        super().__init__(
+            number_of_clauses, 
+            T, 
+            s, 
+            type_i_ii_ratio=type_i_ii_ratio, 
+            type_iii_feedback=type_iii_feedback,
+            focused_negative_sampling=focused_negative_sampling,
+            output_balancing=output_balancing, d=d,
+            platform=platform, patch_dim=patch_dim, 
+            feature_negation=feature_negation,
+            boost_true_positive_feedback=boost_true_positive_feedback,
+            reuse_random_feedback=reuse_random_feedback,
+            max_included_literals=max_included_literals,
+            number_of_state_bits_ta=number_of_state_bits_ta,
+            number_of_state_bits_ind=number_of_state_bits_ind, 
+            weighted_clauses=weighted_clauses,
+            clause_drop_p=clause_drop_p, 
+            literal_drop_p=literal_drop_p, 
+            absorbing=absorbing, 
+            literal_sampling=literal_sampling,
+            feedback_rate_excluded_literals=feedback_rate_excluded_literals, 
+            literal_insertion_state=literal_insertion_state, 
+            squared_weight_update_p=squared_weight_update_p
+        )
 
     def initialize(self, X):
         self.number_of_classes = self.output_active.shape[0]

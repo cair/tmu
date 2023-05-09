@@ -90,7 +90,8 @@ class TMBasis:
             type_ia_ii_feedback_ratio=0,
             absorbing=-1,
             absorbing_include=None,
-            absorbing_exclude=None
+            absorbing_exclude=None,
+            squared_weight_update_p=False
     ):
         self.number_of_clauses = number_of_clauses
         self.number_of_state_bits_ta = number_of_state_bits_ta
@@ -130,6 +131,7 @@ class TMBasis:
         self.literal_sampling = literal_sampling
         self.feedback_rate_excluded_literals = feedback_rate_excluded_literals
         self.literal_insertion_state = literal_insertion_state
+        self.squared_weight_update_p = squared_weight_update_p
 
         # TODO - Change to checksum
         self.X_train = np.zeros(0, dtype=np.uint32)
