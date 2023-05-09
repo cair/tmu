@@ -1,6 +1,9 @@
 
 import numpy as np
 from tmu.models.base import TMBasis
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TMBaseClassifier(TMBasis):
@@ -34,3 +37,62 @@ class TMBaseClassifier(TMBasis):
         self.init_after(X, Y)
         self.initialized = True
 
+
+    def _build_cpu_bank(self, X: np.ndarray):
+        from tmu.clause_bank.clause_bank import ClauseBank
+        clause_bank_type = ClauseBank
+        clause_bank_args = dict(
+            X=X,
+            number_of_clauses=self.number_of_clauses,
+            number_of_state_bits_ta=self.number_of_state_bits_ta,
+            number_of_state_bits_ind=self.number_of_state_bits_ind,
+            patch_dim=self.patch_dim,
+            batch_size=self.batch_size,
+            incremental=self.incremental,
+            type_ia_ii_feedback_ratio = self.type_ia_ii_feedback_ratio
+        )
+        return clause_bank_type, clause_bank_args
+
+    def _build_gpu_bank(self, X: np.ndarray):
+        from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA, cuda_installed
+
+        if not cuda_installed:
+            _LOGGER.warning("CUDA not installed, using CPU clause bank")
+            return self._build_cpu_bank(X=X)
+
+        clause_bank_type = ClauseBankCUDA
+        clause_bank_args = dict(
+            X=X,
+            number_of_clauses=self.number_of_clauses,
+            number_of_state_bits_ta=self.number_of_state_bits_ta,
+            patch_dim=self.patch_dim
+        )
+        return clause_bank_type, clause_bank_args
+
+    def _build_cpu_sparse_bank(self, X: np.ndarray):
+        from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
+        clause_bank_type = ClauseBankSparse
+        clause_bank_args = dict(
+            X=X,
+            number_of_clauses=self.number_of_clauses,
+            number_of_states=2 ** self.number_of_state_bits_ta,
+            patch_dim=self.patch_dim,
+            absorbing_exclude=self.absorbing_exclude,
+            absorbing_include=self.absorbing_include
+        )
+        return clause_bank_type, clause_bank_args
+
+    def build_clause_bank(self, X: np.ndarray):
+        _LOGGER.debug("Initializing clause bank....")
+
+        if self.platform == "CPU":
+            clause_bank_type, clause_bank_args = self._build_cpu_bank(X=X)
+
+        elif self.platform in ["GPU", "CUDA"]:
+            clause_bank_type, clause_bank_args = self._build_gpu_bank(X=X)
+        elif self.platform == "CPU_sparse":
+            clause_bank_type, clause_bank_args = self._build_cpu_sparse_bank(X=X)
+        else:
+            raise NotImplementedError(f"Could not find platform of type {self.platform}.")
+
+        return clause_bank_type, clause_bank_args

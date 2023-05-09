@@ -25,8 +25,25 @@ https://arxiv.org/abs/1905.09688
 
 */
 
-void at_get_attention(unsigned int *ranking, int number_of_literals, unsigned int attention_span, unsigned int *included_literals, unsigned int *Xi);
+void at_get_attention(
+    unsigned int *ranking,
+    int number_of_literals,
+    unsigned int attention_span,
+    unsigned int *included_literals,
+    unsigned int *Xi
+);
 
-void at_type_i_feedback(unsigned int *ranking, int number_of_literals, float update_p, float s, unsigned int *Xi);
+void at_type_i_feedback(
+    unsigned int *ranking,
+    int number_of_literals,
+    float update_p,
+    float s,
+    unsigned int *Xi
+);
 
-void at_type_ii_feedback(unsigned int *ranking, int number_of_literals, float update_p, unsigned int *Xi);
+void at_type_ii_feedback(
+    unsigned int *ranking,
+    int number_of_literals,
+    float update_p,
+    unsigned int *Xi
+);

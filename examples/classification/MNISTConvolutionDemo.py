@@ -32,7 +32,7 @@ if __name__ == "__main__":
         patch_dim=tuple(args.patch_dim),
         max_included_literals=args.max_included_literals,
         platform=args.device,
-        weighted_clauses=args.weighted_clauses
+        weighted_clauses=args.weighted_clauses,
     )
 
     _LOGGER.info(f"Running {TMClassifier} for {args.epochs}")

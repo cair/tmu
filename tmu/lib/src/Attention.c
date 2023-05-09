@@ -32,8 +32,14 @@ https://arxiv.org/abs/1905.09688
 #include <string.h>
 #include "fast_rand.h"
 
-void at_get_attention(unsigned int *ranking, int number_of_literals, unsigned int attention_span, unsigned int *included_literals, unsigned int *Xi) 
-{	
+void at_get_attention(
+        unsigned int *ranking,
+        int number_of_literals,
+        unsigned int attention_span,
+        unsigned int *included_literals,
+        unsigned int *Xi
+)
+{
 	for (int k = attention_span; k < number_of_literals; ++k) {
 		int chunk = ranking[k] / 32;
 		int pos = ranking[k] % 32;
@@ -44,7 +50,13 @@ void at_get_attention(unsigned int *ranking, int number_of_literals, unsigned in
 	}
 }
 
-void at_type_i_feedback(unsigned int *ranking, int number_of_literals, float update_p, float s, unsigned int *Xi)
+void at_type_i_feedback(
+        unsigned int *ranking,
+        int number_of_literals,
+        float update_p,
+        float s,
+        unsigned int *Xi
+)
 {
 	if (((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) {
 		return;
@@ -70,7 +82,12 @@ void at_type_i_feedback(unsigned int *ranking, int number_of_literals, float upd
 	}                    
 }
 
-void at_type_ii_feedback(unsigned int *ranking, int number_of_literals, float update_p, unsigned int *Xi)
+void at_type_ii_feedback(
+        unsigned int *ranking,
+        int number_of_literals,
+        float update_p,
+        unsigned int *Xi
+)
 {
 	if (((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) {
 		return;

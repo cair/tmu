@@ -38,7 +38,12 @@ https://arxiv.org/abs/1905.09688
 #include "fast_rand.h"
 #include <stdint.h>
 
-void cbs_prepare_Xi(unsigned int *indices, int number_of_indices, unsigned int *Xi, int number_of_features)
+void cbs_prepare_Xi(
+        unsigned int *indices,
+        int number_of_indices,
+        unsigned int *Xi,
+        int number_of_features
+)
 {
     for (int k = 0; k < number_of_indices; ++k) { 
         unsigned int chunk = indices[k] / 32;
@@ -50,7 +55,12 @@ void cbs_prepare_Xi(unsigned int *indices, int number_of_indices, unsigned int *
     }
 }
 
-void cbs_restore_Xi(unsigned int *indices, int number_of_indices, unsigned int *Xi, int number_of_features)
+void cbs_restore_Xi(
+        unsigned int *indices,
+        int number_of_indices,
+        unsigned int *Xi,
+        int number_of_features
+)
 {
     for (int k = 0; k < number_of_indices; ++k) { 
         unsigned int chunk = indices[k] / 32;
@@ -62,7 +72,14 @@ void cbs_restore_Xi(unsigned int *indices, int number_of_indices, unsigned int *
     }
 }
 
-void cbs_pack_X(int *indptr, int *indices, int number_of_examples, int e, unsigned int *packed_X, int number_of_literals)
+void cbs_pack_X(
+        int *indptr,
+        int *indices,
+        int number_of_examples,
+        int e,
+        unsigned int *packed_X,
+        int number_of_literals
+)
 {
     for (int k = 0; k < number_of_literals/2; ++k) {
     	packed_X[k] = 0U;
@@ -84,14 +101,27 @@ void cbs_pack_X(int *indptr, int *indices, int number_of_examples, int e, unsign
     }
 }
 
-void cbs_unpack_clause_output(int e, unsigned int *clause_output, unsigned int *clause_output_batch, int number_of_clauses)
+void cbs_unpack_clause_output(
+        int e,
+        unsigned int *clause_output,
+        unsigned int *clause_output_batch,
+        int number_of_clauses
+)
 {
 	for (int j = 0; j < number_of_clauses; ++j) {
 		clause_output[j] = ((clause_output_batch[j] & (1U << (e % 32U))) > 0);
 	}
 }
 
-void cbs_calculate_clause_outputs_update(unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, unsigned int *clause_output, unsigned short *clause_bank_included, unsigned short *clause_bank_included_length)
+void cbs_calculate_clause_outputs_update(
+        unsigned int *literal_active,
+        unsigned int *Xi,
+        int number_of_clauses,
+        int number_of_literals,
+        unsigned int *clause_output,
+        unsigned short *clause_bank_included,
+        unsigned short *clause_bank_included_length
+)
 {
     for (int j = 0; j < number_of_clauses; ++j) {
         clause_output[j] = 1;
@@ -107,7 +137,14 @@ void cbs_calculate_clause_outputs_update(unsigned int *literal_active, unsigned 
     }
 }
 
-void cbs_calculate_clause_outputs_predict_packed_X(unsigned int *packed_X, int number_of_clauses, int number_of_literals, unsigned int *clause_output_batch, unsigned short *clause_bank_included, unsigned short *clause_bank_included_length)
+void cbs_calculate_clause_outputs_predict_packed_X(
+        unsigned int *packed_X,
+        int number_of_clauses,
+        int number_of_literals,
+        unsigned int *clause_output_batch,
+        unsigned short *clause_bank_included,
+        unsigned short *clause_bank_included_length
+)
 {
      for (int j = 0; j < number_of_clauses; ++j) {
          if (clause_bank_included_length[j] == 0) {
@@ -123,7 +160,14 @@ void cbs_calculate_clause_outputs_predict_packed_X(unsigned int *packed_X, int n
     }
 }
 
-void cbs_calculate_clause_outputs_predict(unsigned int *Xi, int number_of_clauses, int number_of_literals, unsigned int *clause_output, unsigned short *clause_bank_included, unsigned short *clause_bank_included_length)
+void cbs_calculate_clause_outputs_predict(
+        unsigned int *Xi,
+        int number_of_clauses,
+        int number_of_literals,
+        unsigned int *clause_output,
+        unsigned short *clause_bank_included,
+        unsigned short *clause_bank_included_length
+)
 {
     for (int j = 0; j < number_of_clauses; ++j) {
         if (clause_bank_included_length[j] == 0) {
@@ -144,10 +188,27 @@ void cbs_calculate_clause_outputs_predict(unsigned int *Xi, int number_of_clause
     }
 }
 
-void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedback, int max_included_literals, int absorbing, int feedback_rate_excluded_literals, int literal_insertion_state, int *clause_active,
-                    unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
-                    unsigned short *clause_bank_included_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length,
-                    unsigned short *clause_bank_unallocated, unsigned short *clause_bank_unallocated_length)
+void cbs_type_i_feedback(
+        float update_p,
+        float s,
+        int boost_true_positive_feedback,
+        int max_included_literals,
+        int absorbing,
+        int feedback_rate_excluded_literals,
+        int literal_insertion_state,
+        int *clause_active,
+        unsigned int *literal_active,
+        unsigned int *Xi,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_states,
+        unsigned short *clause_bank_included,
+        unsigned short *clause_bank_included_length,
+        unsigned short *clause_bank_excluded,
+        unsigned short *clause_bank_excluded_length,
+        unsigned short *clause_bank_unallocated,
+        unsigned short *clause_bank_unallocated_length
+)
 {
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
@@ -306,8 +367,20 @@ void cbs_type_i_feedback(float update_p, float s, int boost_true_positive_feedba
     }
 }
 
-void cbs_type_ii_feedback(float update_p, int feedback_rate_excluded_literals, int *clause_active, unsigned int *literal_active, unsigned int *Xi, int number_of_clauses, int number_of_literals, int number_of_states, unsigned short *clause_bank_included,
-                    unsigned short *clause_bank_included_length, unsigned short *clause_bank_excluded, unsigned short *clause_bank_excluded_length)
+void cbs_type_ii_feedback(
+        float update_p,
+        int feedback_rate_excluded_literals,
+        int *clause_active,
+        unsigned int *literal_active,
+        unsigned int *Xi,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_states,
+        unsigned short *clause_bank_included,
+        unsigned short *clause_bank_included_length,
+        unsigned short *clause_bank_excluded,
+        unsigned short *clause_bank_excluded_length
+)
 {
     for (int j = 0; j < number_of_clauses; ++j) {
     	if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {

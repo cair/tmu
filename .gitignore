@@ -133,3 +133,6 @@ dmypy.json
 
 html/
 wheelhouse/
+
+cmake-build-debug
+cmake-build-release

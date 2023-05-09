@@ -1,18 +1,12 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
-import collections
-import typing
-from collections.abc import Mapping, Iterable
-
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,9 +14,15 @@ from collections.abc import Mapping, Iterable
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import typing
 import numpy as np
 from scipy.sparse import csr_matrix
+
 from tmu.weight_bank import WeightBank
+from tmu.clause_bank.clause_bank import ClauseBank
+from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
+from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
+from tmu.util.sparse_clause_container import SparseClauseContainer
 
 
 def _validate_input_dtype(d: np.ndarray):
@@ -30,10 +30,35 @@ def _validate_input_dtype(d: np.ndarray):
         raise RuntimeError(f"The data input is of type {d.dtype}, but should be {np.uint32}")
 
 
-class TMBasis:
+class MultiWeightBankMixin:
+    weight_banks: SparseClauseContainer
 
-    weight_banks: typing.List[WeightBank]
-    clause_banks: typing.List[typing.Union["ClauseBank", "ClauseBankCUDA"]]
+    def __init__(self):
+        self.weight_banks = SparseClauseContainer()
+
+
+class MultiClauseBankMixin:
+    clause_banks: SparseClauseContainer
+
+    def __init__(self):
+        self.clause_banks = SparseClauseContainer()
+
+
+class SingleWeightBankMixin:
+    weight_bank: WeightBank
+
+    def __init__(self):
+        pass
+
+
+class SingleClauseBankMixin:
+    clause_bank: typing.Union[ClauseBank, ClauseBankSparse, ClauseBankCUDA]
+
+    def __init__(self):
+        pass
+
+
+class TMBasis:
 
     def __init__(
             self,
@@ -57,13 +82,15 @@ class TMBasis:
             weighted_clauses=False,
             clause_drop_p=0.0,
             literal_drop_p=0.0,
-            batch_size=100,
-            incremental=True,
-            absorbing=-1,
             literal_sampling=1.0,
             feedback_rate_excluded_literals=1,
-            literal_insertion_state = 0,
-            squared_weight_update_p = False
+            literal_insertion_state=0,
+            batch_size=100,
+            incremental=True,
+            type_ia_ii_feedback_ratio=0,
+            absorbing=-1,
+            absorbing_include=None,
+            absorbing_exclude=None
     ):
         self.number_of_clauses = number_of_clauses
         self.number_of_state_bits_ta = number_of_state_bits_ta
@@ -88,26 +115,25 @@ class TMBasis:
         self.patch_dim = patch_dim
         self.feature_negation = feature_negation
         self.boost_true_positive_feedback = boost_true_positive_feedback
-        self.reuse_random_feedback = reuse_random_feedback
         self.max_included_literals = max_included_literals
         self.weighted_clauses = weighted_clauses
         self.clause_drop_p = clause_drop_p
         self.literal_drop_p = literal_drop_p
         self.batch_size = batch_size
         self.incremental = incremental
+        self.type_ia_ii_feedback_ratio = type_ia_ii_feedback_ratio
         self.absorbing = absorbing
+        self.absorbing_include = absorbing_include
+        self.absorbing_exclude = absorbing_exclude
+        self.reuse_random_feedback = reuse_random_feedback
+        self.initialized = False
         self.literal_sampling = literal_sampling
         self.feedback_rate_excluded_literals = feedback_rate_excluded_literals
         self.literal_insertion_state = literal_insertion_state
-        self.squared_weight_update_p = squared_weight_update_p
-        self.initialized = False
 
         # TODO - Change to checksum
         self.X_train = np.zeros(0, dtype=np.uint32)
         self.X_test = np.zeros(0, dtype=np.uint32)
-
-        self.weight_banks = []
-        self.clause_banks = []
 
     def clause_co_occurrence(self, X, percentage=False):
         clause_outputs = csr_matrix(self.transform(X))
@@ -138,6 +164,9 @@ class TMBasis:
 
     def fit(self, X, Y, *args, **kwargs):
         raise NotImplementedError("fit(self, X, Y, *args, **kwargs) is not implemented for your model")
+
+    def predict(self, X, shuffle=True) -> np.ndarray:
+        raise NotImplementedError("predict(self, X: np.ndarray")
 
     def init(self, X: np.ndarray, Y: np.ndarray):
         raise NotImplementedError("init(self, X: np.ndarray, Y: np.ndarray)")

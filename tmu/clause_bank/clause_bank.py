@@ -32,18 +32,19 @@ class ClauseBank(BaseClauseBank):
     incremental_clause_evaluation_initialized: bool
     co_p = None  # _cffi_backend._CDataBase
     cob_p = None  # _cffi_backend._CDataBase
-    ct_p = None  # _cffi_backend._CDataBase
+    ptr_clause_and_target = None  # _cffi_backend._CDataBase
     cop_p = None  # _cffi_backend._CDataBase
-    ft_p = None  # _cffi_backend._CDataBase
-    o1p_p = None  # _cffi_backend._CDataBase
-    lcc_p = None  # _cffi_backend._CDataBase
-    ac_p = None  # _cffi_backend._CDataBase
+    ptr_feedback_to_ta = None  # _cffi_backend._CDataBase
+    ptr_output_one_patches = None  # _cffi_backend._CDataBase
+    ptr_literal_clause_count = None  # _cffi_backend._CDataBase
+    ptr_actions = None  # _cffi_backend._CDataBase
 
     def __init__(
             self,
             number_of_state_bits_ind: int,
             batch_size: int = 100,
             incremental: bool = True,
+            type_ia_ii_feedback_ratio: int = 0,
             **kwargs
     ):
         super().__init__(**kwargs)
@@ -51,6 +52,7 @@ class ClauseBank(BaseClauseBank):
         self.number_of_state_bits_ind = int(number_of_state_bits_ind)
         self.batch_size = batch_size
         self.incremental = incremental
+        self.type_ia_ii_feedback_ratio = type_ia_ii_feedback_ratio
 
         self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
         self.clause_output_batch = np.empty(self.number_of_clauses * batch_size, dtype=np.uint32, order="c")
@@ -60,6 +62,7 @@ class ClauseBank(BaseClauseBank):
         self.feedback_to_ta = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
         self.output_one_patches = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
         self.literal_clause_count = np.empty(self.number_of_literals, dtype=np.uint32, order="c")
+        self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
 
         self.initialize_clauses()
 
@@ -69,18 +72,19 @@ class ClauseBank(BaseClauseBank):
     def _cffi_init(self):
         self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)  # clause_output
         self.cob_p = ffi.cast("unsigned int *", self.clause_output_batch.ctypes.data)  # clause_output_batch
-        self.ct_p = ffi.cast("unsigned int *", self.clause_and_target.ctypes.data)  # clause_and_target
+        self.ptr_clause_and_target = ffi.cast("unsigned int *", self.clause_and_target.ctypes.data)  # clause_and_target
         self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)  # clause_output_patchwise
-        self.ft_p = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)  # feedback_to_ta
-        self.o1p_p = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)  # output_one_patches
-        self.lcc_p = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)  # literal_clause_count
+        self.ptr_feedback_to_ta = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)  # feedback_to_ta
+        self.ptr_output_one_patches = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)  # output_one_patches
+        self.ptr_literal_clause_count = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)  # literal_clause_count
+        self.tiafc_p = ffi.cast("unsigned int *", self.type_ia_feedback_counter.ctypes.data)  # literal_clause_count
 
         # Clause Initialization
-        self.cb_p = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
-        self.cbi_p = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
+        self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
+        self.ptr_ta_state_int = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
 
         # Action Initialization
-        self.ac_p = ffi.cast("unsigned int *", self.actions.ctypes.data)
+        self.ptr_actions = ffi.cast("unsigned int *", self.actions.ctypes.data)
 
     def initialize_clauses(self):
         self.clause_bank = np.empty(
@@ -109,7 +113,7 @@ class ClauseBank(BaseClauseBank):
 
         if not self.incremental:
             lib.cb_calculate_clause_outputs_predict(
-                self.cb_p,
+                self.ptr_ta_state,
                 self.number_of_clauses,
                 self.number_of_literals,
                 self.number_of_state_bits_ta,
@@ -151,7 +155,7 @@ class ClauseBank(BaseClauseBank):
             self.previous_xi_p = ffi.cast("unsigned int *", self.previous_xi.ctypes.data)
 
             lib.cb_initialize_incremental_clause_calculation(
-                self.cb_p,
+                self.ptr_ta_state,
                 self.lcm_p,
                 self.lcmp_p,
                 self.flpc_p,
@@ -184,7 +188,7 @@ class ClauseBank(BaseClauseBank):
         la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
 
         lib.cb_calculate_clause_outputs_update(
-            self.cb_p,
+            self.ptr_ta_state,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
@@ -200,7 +204,7 @@ class ClauseBank(BaseClauseBank):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
 
         lib.cb_calculate_clause_outputs_patchwise(
-            self.cb_p,
+            self.ptr_ta_state,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
@@ -211,15 +215,25 @@ class ClauseBank(BaseClauseBank):
 
         return self.clause_output_patchwise
 
-    def type_i_feedback(self, update_p, s, boost_true_positive_feedback, reuse_random_feedback, max_included_literals, clause_active,
-                        literal_active, encoded_X, e):
-        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
-        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
-        la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
+    def type_i_feedback(
+        self,
+        update_p,
+        s,
+        boost_true_positive_feedback,
+        reuse_random_feedback,
+        max_included_literals,
+        clause_active,
+        literal_active,
+        encoded_X,
+        e
+    ):
+        ptr_xi = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+        ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
         lib.cb_type_i_feedback(
-            self.cb_p,
-            self.ft_p,
-            self.o1p_p,
+            self.ptr_ta_state,
+            self.ptr_feedback_to_ta,
+            self.ptr_output_one_patches,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
@@ -229,43 +243,59 @@ class ClauseBank(BaseClauseBank):
             boost_true_positive_feedback,
             reuse_random_feedback,
             max_included_literals,
-            ca_p,
-            la_p,
-            xi_p
+            ptr_clause_active,
+            ptr_literal_active,
+            ptr_xi
         )
 
         self.incremental_clause_evaluation_initialized = False
 
-    def type_ii_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
-        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
-        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
-        la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
+    def type_ii_feedback(
+        self,
+        update_p,
+        clause_active,
+        literal_active,
+        encoded_X,
+        e
+    ):
+        ptr_xi = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+        ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
 
         lib.cb_type_ii_feedback(
-            self.cb_p,
-            self.o1p_p,
+            self.ptr_ta_state,
+            self.ptr_output_one_patches,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
             self.number_of_patches,
             update_p,
-            ca_p,
-            la_p,
-            xi_p
+            ptr_clause_active,
+            ptr_literal_active,
+            ptr_xi
         )
 
         self.incremental_clause_evaluation_initialized = False
 
-    def type_iii_feedback(self, update_p, d, clause_active, literal_active, encoded_X, e, target):
-        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
-        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
-        la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
+    def type_iii_feedback(
+            self,
+            update_p,
+            d,
+            clause_active,
+            literal_active,
+            encoded_X,
+            e,
+            target
+    ):
+        ptr_xi = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+        ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
 
         lib.cb_type_iii_feedback(
-            self.cb_p,
-            self.cbi_p,
-            self.ct_p,
-            self.o1p_p,
+            self.ptr_ta_state,
+            self.ptr_ta_state_int,
+            self.ptr_clause_and_target,
+            self.ptr_output_one_patches,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
@@ -273,45 +303,54 @@ class ClauseBank(BaseClauseBank):
             self.number_of_patches,
             update_p,
             d,
-            ca_p,
-            la_p,
-            xi_p,
+            ptr_clause_active,
+            ptr_literal_active,
+            ptr_xi,
             target
         )
 
         self.incremental_clause_evaluation_initialized = False
 
-    def calculate_literal_clause_frequency(self, clause_active):
-        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+    def calculate_literal_clause_frequency(
+            self,
+            clause_active
+    ):
+        ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
         lib.cb_calculate_literal_frequency(
-            self.cb_p,
+            self.ptr_ta_state,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
-            ca_p,
-            self.lcc_p
+            ptr_clause_active,
+            self.ptr_literal_clause_count
         )
         return self.literal_clause_count
 
     def included_literals(self):
         lib.cb_included_literals(
-            self.cb_p,
+            self.ptr_ta_state,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
-            self.ac_p
+            self.ptr_actions
         )
         return self.actions
 
-    def number_of_include_actions(self, clause):
+    def number_of_include_actions(
+            self,
+            clause
+    ):
         return lib.cb_number_of_include_actions(
-            self.cb_p,
+            self.ptr_ta_state,
             clause,
             self.number_of_literals,
             self.number_of_state_bits_ta
         )
 
-    def prepare_X(self, X):
+    def prepare_X(
+            self,
+            X
+    ):
         return tmu.tools.encode(
             X,
             X.shape[0],
@@ -322,10 +361,19 @@ class ClauseBank(BaseClauseBank):
             0
         )
 
-    def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
-        return (X_csr, X_csc, active_output)
+    def prepare_X_autoencoder(
+            self,
+            X_csr,
+            X_csc,
+            active_output
+    ):
+        return X_csr, X_csc, active_output
 
-    def produce_autoencoder_examples(self, encoded_X, accumulation):
+    def produce_autoencoder_examples(
+            self,
+            encoded_X,
+            accumulation
+    ):
         (X_csr, X_csc, active_output) = encoded_X
         X = np.ascontiguousarray(np.empty(int(X_csc.shape[1] * active_output.shape[0]), dtype=np.uint32))
         Y = np.ascontiguousarray(np.empty(int(active_output.shape[0]), dtype=np.uint32))
@@ -338,5 +386,5 @@ class ClauseBank(BaseClauseBank):
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indices).ctypes.data),
                                              int(X_csc.shape[1]), ffi.cast("unsigned int *", X.ctypes.data),
                                              ffi.cast("unsigned int *", Y.ctypes.data), int(accumulation));
-    
+
         return X.reshape((len(active_output), -1)), Y

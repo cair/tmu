@@ -34,7 +34,19 @@ unsigned int compareints(const void * a, const void * b)
   return(*(unsigned int*)a - *(unsigned int*)b);
 }
 
-void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of_active_outputs, unsigned int *indptr_row, unsigned int *indices_row, int number_of_rows, unsigned int *indptr_col, unsigned int *indices_col, int number_of_cols, unsigned int *X, unsigned int *Y, int accumulation)
+void tmu_produce_autoencoder_examples(
+        unsigned int *active_output,
+        int number_of_active_outputs,
+        unsigned int *indptr_row,
+        unsigned int *indices_row,
+        int number_of_rows,
+        unsigned int *indptr_col,
+        unsigned int *indices_col,
+        int number_of_cols,
+        unsigned int *X,
+        unsigned int *Y,
+        int accumulation
+)
 {
 	int row;
 
@@ -97,7 +109,18 @@ void tmu_produce_autoencoder_examples(unsigned int *active_output, int number_of
 	}
 }
 
-void tmu_encode(unsigned int *X, unsigned int *encoded_X, int number_of_examples, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features)
+void tmu_encode(
+        unsigned int *X,
+        unsigned int *encoded_X,
+        int number_of_examples,
+        int dim_x,
+        int dim_y,
+        int dim_z,
+        int patch_dim_x,
+        int patch_dim_y,
+        int append_negated,
+        int class_features
+)
 {
 	int global_number_of_features = dim_x * dim_y * dim_z;
 	int number_of_features = class_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
