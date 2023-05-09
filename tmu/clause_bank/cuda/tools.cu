@@ -101,17 +101,27 @@ extern "C"
 		}
 	}
 
-	__global__ void encode(
-        unsigned int *X,
-        unsigned int *encoded_X,
-        int number_of_examples,
-        int dim_x,
-        int dim_y,
-        int dim_z,
-        int patch_dim_x,
-        int patch_dim_y,
-        int append_negated,
-        int class_features)
+	__global__ void prepare_encode(unsigned int *X, unsigned int *encoded_X, int number_of_examples, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features)
+	{
+		int index = blockIdx.x * blockDim.x + threadIdx.x;
+		int stride = blockDim.x * gridDim.x;
+
+		int number_of_features = class_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
+		int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
+
+		int number_of_ta_chunks;
+		if (append_negated) {
+			number_of_ta_chunks= (((2*number_of_features-1)/32 + 1));
+		} else {
+			number_of_ta_chunks= (((number_of_features-1)/32 + 1));
+		}
+
+		for (int i = index; i < number_of_examples * number_of_patches * number_of_ta_chunks; i += stride) {
+			encoded_X[i] = 0;
+		}
+	}
+
+	__global__ void encode(unsigned int *X, unsigned int *encoded_X, int number_of_examples, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features)
 	{
 		int index = blockIdx.x * blockDim.x + threadIdx.x;
 		int stride = blockDim.x * gridDim.x;
@@ -120,26 +130,21 @@ extern "C"
 		int number_of_features = class_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
 		int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
 
-		int number_of_literal_chunks;
+		int number_of_ta_chunks;
 		if (append_negated) {
-			number_of_literal_chunks= (((2*number_of_features-1)/32 + 1));
+			number_of_ta_chunks= (((2*number_of_features-1)/32 + 1));
 		} else {
-			number_of_literal_chunks= (((number_of_features-1)/32 + 1));
+			number_of_ta_chunks= (((number_of_features-1)/32 + 1));
 		}
 
 		unsigned int *Xi;
 		unsigned int *encoded_Xi;
 
-		unsigned int input_pos = 0;
 		unsigned int input_step_size = global_number_of_features;
 
-		// Fill encoded_X with zeros
-
-		memset(encoded_X, 0, number_of_examples * number_of_patches * number_of_literal_chunks * sizeof(unsigned int));
-
-		unsigned int encoded_pos = 0;
 		for (int i = index; i < number_of_examples; i += stride) {
-			//printf("%d\n", i);
+			unsigned int encoded_pos = i * number_of_patches * number_of_ta_chunks;
+			unsigned int input_pos = i * input_step_size;
 
 			int patch_nr = 0;
 			// Produce the patches of the current image
@@ -206,12 +211,12 @@ extern "C"
 							}
 						}
 					}
-					encoded_pos += number_of_literal_chunks;
+					encoded_pos += number_of_ta_chunks;
 					patch_nr++;
 				}
 			}
-			input_pos += input_step_size;
 		}
 	}
 }
+	
 
