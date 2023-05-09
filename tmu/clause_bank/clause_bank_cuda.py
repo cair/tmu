@@ -310,7 +310,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
 
     def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
         print("Copying sparse data to GPU memory")
-        
+
         X_csr_indptr_gpu = cuda.mem_alloc(X_csr.indptr.nbytes)
         cuda.memcpy_htod(X_csr_indptr_gpu, X_csr.indptr)
         
@@ -324,22 +324,30 @@ class ImplClauseBankCUDA(BaseClauseBank):
         cuda.memcpy_htod(X_csc_indices_gpu, X_csc.indices)
 
         active_output_gpu = cuda.mem_alloc(active_output.nbytes)
+        cuda.memcpy_htod(active_output_gpu, active_output)
 
-        return (X_csr, X_csc, active_output)
+        X = np.ascontiguousarray(np.zeros(int(X_csc.shape[1] * active_output.shape[0]), dtype=np.uint32))
+        X_gpu = cuda.mem_alloc(X.nbytes)
+
+        Y = np.ascontiguousarray(np.zeros(int(active_output.shape[0]), dtype=np.uint32))
+        Y_gpu = cuda.mem_alloc(Y.nbytes)
+
+        return (active_output_gpu, int(active_output.shape[0]), X_csr_indptr_gpu, X_csr_indices_gpu, int(X_csr.shape[0]), X_csc_indptr_gpu,  X_csc_indices_gpu, int(X_csc.shape[1]), X_gpu, Y_gpu)
 
     def produce_autoencoder_examples(self, encoded_X, accumulation):
-        (X_csr, X_csc, active_output) = encoded_X
-        X = np.ascontiguousarray(np.empty(int(X_csc.shape[1] * active_output.shape[0]), dtype=np.uint32))
-        Y = np.ascontiguousarray(np.empty(int(active_output.shape[0]), dtype=np.uint32))
 
-        lib.tmu_produce_autoencoder_examples(ffi.cast("unsigned int *", active_output.ctypes.data), active_output.shape[0],
-                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csr.indptr).ctypes.data),
-                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csr.indices).ctypes.data),
-                                             int(X_csr.shape[0]),
-                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indptr).ctypes.data),
-                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indices).ctypes.data),
-                                             int(X_csc.shape[1]), ffi.cast("unsigned int *", X.ctypes.data),
-                                             ffi.cast("unsigned int *", Y.ctypes.data), int(accumulation));
+        (active_output_gpu, number_of_active_outputs, X_csr_indptr_gpu, X_csr_indices_gpu, number_of_rows, X_csc_indptr_gpu,  X_csc_indices_gpu, number_of_columns, X_gpu, Y_gpu) = encoded_X
+        
+        lib.tmu_produce_autoencoder_examples(active_output_gpu, number_of_active_outputs,
+                                             X_csr_indptr_gpu,
+                                             X_csr_indices_gpu,
+                                             number_of_rows,
+                                             X_csc_indptr_gpu,
+                                             X_csc_indices_gpu,
+                                             number_of_columns,
+                                             X_gpu,
+                                             Y_gpu,
+                                             int(accumulation));
     
         return X.reshape((len(active_output), -1)), Y
 
