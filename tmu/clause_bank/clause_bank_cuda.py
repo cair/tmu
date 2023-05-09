@@ -105,6 +105,10 @@ class ImplClauseBankCUDA(BaseClauseBank):
         self.type_ii_feedback_gpu = mod.get_function("type_ii_feedback")
         self.type_ii_feedback_gpu.prepare("PPiiifPPPi")
 
+        mod = load_cuda_kernel(parameters, "cuda/tools.cu")
+        self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_examples")
+        self.produce_autoencoder_examples_gpu.prepare("PiPPiPPiPPi")
+
         self.clause_output = np.empty(
             int(self.number_of_clauses),
             dtype=np.uint32,
@@ -338,18 +342,23 @@ class ImplClauseBankCUDA(BaseClauseBank):
 
         (active_output_gpu, number_of_active_outputs, X_csr_indptr_gpu, X_csr_indices_gpu, number_of_rows, X_csc_indptr_gpu,  X_csc_indices_gpu, number_of_columns, X_gpu, Y_gpu) = encoded_X
         
-        lib.tmu_produce_autoencoder_examples(active_output_gpu, number_of_active_outputs,
-                                             X_csr_indptr_gpu,
-                                             X_csr_indices_gpu,
-                                             number_of_rows,
-                                             X_csc_indptr_gpu,
-                                             X_csc_indices_gpu,
-                                             number_of_columns,
-                                             X_gpu,
-                                             Y_gpu,
-                                             int(accumulation));
-    
-        return X.reshape((len(active_output), -1)), Y
+        self.produce_autoencoder_examples_gpu.prepared_call(
+                                            self.grid,
+                                            self.block,
+                                            active_output_gpu, number_of_active_outputs,
+                                            X_csr_indptr_gpu,
+                                            X_csr_indices_gpu,
+                                            number_of_rows,
+                                            X_csc_indptr_gpu,
+                                            X_csc_indices_gpu,
+                                            number_of_columns,
+                                            X_gpu,
+                                            Y_gpu,
+                                            int(accumulation));
+
+        self.cuda_ctx.synchronize()
+        
+        return X_gpu, Y_gpu
 
 if cuda_installed:
     ClauseBankCUDA = ImplClauseBankCUDA
