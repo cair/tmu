@@ -35,6 +35,11 @@ class ClauseBankSparse:
             X,
             number_of_clauses,
             number_of_states,
+            d: float,
+            s: float,
+            boost_true_positive_feedback: bool,
+            reuse_random_feedback: bool,
+            max_included_literals: int,
             patch_dim,
             batching=True,
             incremental=True,
@@ -43,8 +48,8 @@ class ClauseBankSparse:
             absorbing_include=None,
             literal_sampling=1.0,
             feedback_rate_excluded_literals=1,
-            literal_insertion_state=-1,
-            reuse_random_feedback=False
+            literal_insertion_state=-1
+
     ):
         self.number_of_clauses = int(number_of_clauses)
         self.number_of_states = int(number_of_states)
@@ -57,7 +62,12 @@ class ClauseBankSparse:
         self.literal_sampling = float(literal_sampling)
         self.feedback_rate_excluded_literals = feedback_rate_excluded_literals
         self.literal_insertion_state = literal_insertion_state
-        self.reuse_random_feedback = reuse_random_feedback
+
+        self.d = d
+        self.s = s
+        self.boost_true_positive_feedback = int(boost_true_positive_feedback)
+        self.reuse_random_feedback = int(reuse_random_feedback)
+
 
 
         LOGGER.warning("reuse_random_feedback is not implemented yet")
@@ -76,6 +86,8 @@ class ClauseBankSparse:
             self.patch_dim[0] * self.patch_dim[1] * self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (
                     self.dim[1] - self.patch_dim[1]))
         self.number_of_literals = self.number_of_features * 2
+
+        self.max_included_literals = max_included_literals if max_included_literals is not None else self.number_of_literals
 
         self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))
         self.number_of_ta_chunks = int((self.number_of_literals - 1) / 32 + 1)
@@ -228,10 +240,6 @@ class ClauseBankSparse:
     def type_i_feedback(
             self,
             update_p,
-            s,
-            boost_true_positive_feedback,
-            reuse_random_feedback,
-            max_included_literals,
             clause_active,
             literal_active,
             encoded_X,
@@ -248,9 +256,9 @@ class ClauseBankSparse:
 
         lib.cbs_type_i_feedback(
             update_p,
-            s,
-            int(boost_true_positive_feedback),
-            int(max_included_literals),
+            self.s,
+            self.boost_true_positive_feedback,
+            self.max_included_literals,
             self.absorbing,
             #self.absorbing_include,
             #self.absorbing_exclude,

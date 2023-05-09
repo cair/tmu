@@ -65,7 +65,7 @@ class TMOneVsOneClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeightB
         self.number_of_classes = int(np.max(Y) + 1)
         self.number_of_outputs = self.number_of_classes * (self.number_of_classes - 1)
         self.weight_banks.set_clause_init(WeightBank, dict(
-            weights=WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
+            weights=np.ones(self.number_of_clauses).astype(np.int32)
         ))
         self.weight_banks.populate(list(range(self.number_of_classes)))
 
@@ -122,10 +122,6 @@ class TMOneVsOneClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeightB
 
             self.clause_bank.type_i_feedback(
                 update_p=update_p * self.type_i_p,
-                s=self.s,
-                boost_true_positive_feedback=self.boost_true_positive_feedback,
-                reuse_random_feedback=self.reuse_random_feedback,
-                max_included_literals=self.max_included_literals,
                 clause_active=clause_active * (self.weight_banks[output].get_weights() >= 0),
                 literal_active=literal_active,
                 encoded_X=self.encoded_X_train,
@@ -155,10 +151,6 @@ class TMOneVsOneClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeightB
 
             self.clause_bank.type_i_feedback(
                 update_p=update_p * self.type_i_p,
-                s=self.s,
-                boost_true_positive_feedback=self.boost_true_positive_feedback,
-                reuse_random_feedback=self.reuse_random_feedback,
-                max_included_literals=self.max_included_literals,
                 clause_active=clause_active * (self.weight_banks[output].get_weights() < 0),
                 literal_active=literal_active,
                 encoded_X=self.encoded_X_train,

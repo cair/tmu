@@ -22,14 +22,11 @@
 # https://arxiv.org/abs/1905.09688
 
 from tmu.tmulib import ffi, lib
-
-import numpy as np
-
 from tmu.tools import CFFISerializable
+import numpy as np
 
 
 class WeightBank(CFFISerializable):
-
 
     def __init__(self, weights):
         self.number_of_clauses = weights.shape[0]

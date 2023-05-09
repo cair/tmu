@@ -76,7 +76,7 @@ class TMMultiTaskClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = len(X)
         self.weight_banks.set_clause_init(WeightBank, dict(
-            weights=WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32))
+            weights=np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
         ))
         self.weight_banks.populate(list(range(self.number_of_classes)))
 
@@ -151,9 +151,6 @@ class TMMultiTaskClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
 
                     self.clause_bank.type_i_feedback(
                         update_p=update_p * self.type_i_p,
-                        s=self.s,
-                        boost_true_positive_feedback=self.boost_true_positive_feedback,
-                        max_included_literals=self.max_included_literals,
                         clause_active=update_clause * self.clause_active * (self.weight_banks[i].get_weights() >= 0),
                         literal_active=self.literal_active,
                         encoded_X=encoded_X,
@@ -178,7 +175,6 @@ class TMMultiTaskClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
                     if self.type_iii_feedback and type_iii_feedback_selection == 0:
                         self.clause_bank.type_iii_feedback(
                             update_p=update_p,
-                            d=self.d,
                             clause_active=update_clause * self.clause_active * (self.weight_banks[i].get_weights() >= 0),
                             literal_active=self.literal_active,
                             encoded_X=encoded_X,
@@ -188,7 +184,6 @@ class TMMultiTaskClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
 
                         self.clause_bank.type_iii_feedback(
                             update_p=update_p,
-                            d=self.d,
                             clause_active=update_clause * self.clause_active * (self.weight_banks[i].get_weights() < 0),
                             literal_active=self.literal_active,
                             encoded_X=encoded_X,
@@ -204,8 +199,6 @@ class TMMultiTaskClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
 
                     self.clause_bank.type_i_feedback(
                         update_p=update_p * self.type_i_p,
-                        boost_true_positive_feedback=self.boost_true_positive_feedback,
-                        max_included_literals=self.max_included_literals,
                         clause_active=update_clause * self.clause_active * (self.weight_banks[i].get_weights() < 0),
                         literal_active=self.literal_active,
                         encoded_X=encoded_X,
@@ -230,7 +223,6 @@ class TMMultiTaskClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
                     if self.type_iii_feedback and type_iii_feedback_selection == 1:
                         self.clause_bank.type_iii_feedback(
                             update_p=update_p,
-                            d=self.d,
                             clause_active=update_clause * self.clause_active * ( self.weight_banks[i].get_weights() < 0),
                             literal_active=self.literal_active,
                             encoded_X=encoded_X,
@@ -240,7 +232,6 @@ class TMMultiTaskClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
 
                         self.clause_bank.type_iii_feedback(
                             update_p=update_p,
-                            d=self.d,
                             clause_active=update_clause * self.clause_active * (self.weight_banks[i].get_weights() >= 0),
                             literal_active=self.literal_active,
                             encoded_X=encoded_X,

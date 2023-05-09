@@ -66,7 +66,7 @@ class TMMultiChannelClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWei
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = int(np.max(Y) + 1)
         self.weight_banks.set_clause_init(WeightBank, dict(
-            weights=WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32))
+            weights=np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
         ))
         self.weight_banks.populate(list(range(self.number_of_classes)))
 
@@ -144,8 +144,6 @@ class TMMultiChannelClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWei
 
                 self.clause_bank.type_i_feedback(
                     update_p=update_p * self.type_i_p,
-                    s=self.s[target],
-                    boost_true_positive_feedback=self.boost_true_positive_feedback,
                     clause_active=clause_active * (self.weight_banks[target].get_weights() >= 0),
                     literal_active=literal_active,
                     encoded_X=self.encoded_X_train[c],
@@ -187,9 +185,6 @@ class TMMultiChannelClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWei
 
                 self.clause_bank.type_i_feedback(
                     update_p=update_p * self.type_i_p,
-                    s=self.s[not_target],
-                    boost_true_positive_feedback=self.boost_true_positive_feedback,
-                    max_included_literals=self.max_included_literals,
                     clause_active=clause_active * (self.weight_banks[not_target].get_weights() < 0),
                     literal_active=literal_active,
                     encoded_X=self.encoded_X_train[c],
@@ -212,7 +207,7 @@ class TMMultiChannelClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWei
                 )
         return
 
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         for c in range(X.shape[0]):
             if not np.array_equal(self.X_test[c], X[c]):
                 self.encoded_X_test[c] = self.clause_bank.prepare_X(X[c])

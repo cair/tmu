@@ -1,4 +1,3 @@
-
 import numpy as np
 from tmu.models.base import TMBasis
 import logging
@@ -30,6 +29,7 @@ class TMBaseClassifier(TMBasis):
     def init(self, X: np.ndarray, Y: np.ndarray):
         if self.initialized:
             return
+
         self.init_before(X, Y)
         self.number_of_classes = self.init_num_classes(X, Y)
         self.init_clause_bank(X, Y)
@@ -37,19 +37,23 @@ class TMBaseClassifier(TMBasis):
         self.init_after(X, Y)
         self.initialized = True
 
-
     def _build_cpu_bank(self, X: np.ndarray):
         from tmu.clause_bank.clause_bank import ClauseBank
         clause_bank_type = ClauseBank
         clause_bank_args = dict(
             X=X,
+            d=self.d,
+            s=self.s,
+            boost_true_positive_feedback=self.boost_true_positive_feedback,
+            reuse_random_feedback=self.reuse_random_feedback,
+            max_included_literals=self.max_included_literals,
             number_of_clauses=self.number_of_clauses,
             number_of_state_bits_ta=self.number_of_state_bits_ta,
             number_of_state_bits_ind=self.number_of_state_bits_ind,
             patch_dim=self.patch_dim,
             batch_size=self.batch_size,
             incremental=self.incremental,
-            type_ia_ii_feedback_ratio = self.type_ia_ii_feedback_ratio
+            type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio
         )
         return clause_bank_type, clause_bank_args
 
@@ -74,11 +78,20 @@ class TMBaseClassifier(TMBasis):
         clause_bank_type = ClauseBankSparse
         clause_bank_args = dict(
             X=X,
+            d=self.d,
+            s=self.s,
+            boost_true_positive_feedback=self.boost_true_positive_feedback,
+            reuse_random_feedback=self.reuse_random_feedback,
+            max_included_literals=self.max_included_literals,
             number_of_clauses=self.number_of_clauses,
             number_of_states=2 ** self.number_of_state_bits_ta,
             patch_dim=self.patch_dim,
+            absorbing=self.absorbing,
             absorbing_exclude=self.absorbing_exclude,
-            absorbing_include=self.absorbing_include
+            absorbing_include=self.absorbing_include,
+            literal_sampling=self.literal_sampling,
+            feedback_rate_excluded_literals=self.feedback_rate_excluded_literals,
+            literal_insertion_state=self.literal_insertion_state,
         )
         return clause_bank_type, clause_bank_args
 

@@ -15,6 +15,7 @@ class BaseClauseBank(CFFISerializable):
             X,
             number_of_clauses: int,
             number_of_state_bits_ta: int,
+            max_included_literals: int,
             patch_dim: typing.Union[tuple, None],
             **kwargs
     ):
@@ -26,6 +27,7 @@ class BaseClauseBank(CFFISerializable):
         self.number_of_clauses = number_of_clauses
         self.number_of_state_bits_ta = number_of_state_bits_ta
         self.patch_dim = patch_dim
+
 
         if len(X.shape) == 2:
             self.dim = (X.shape[1], 1, 1)
@@ -46,6 +48,8 @@ class BaseClauseBank(CFFISerializable):
 
         self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))
         self.number_of_ta_chunks = int((self.number_of_literals - 1) / 32 + 1)
+
+        self.max_included_literals = max_included_literals if max_included_literals else self.number_of_literals
 
     def _warn_unknown_arguments(self, **kwargs):
         for k, v in kwargs.items():

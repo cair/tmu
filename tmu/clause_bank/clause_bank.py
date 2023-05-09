@@ -41,13 +41,22 @@ class ClauseBank(BaseClauseBank):
 
     def __init__(
             self,
+            d: float,
+            s: float,
+            boost_true_positive_feedback: bool,
+            reuse_random_feedback: bool,
             number_of_state_bits_ind: int,
-            batch_size: int = 100,
-            incremental: bool = True,
-            type_ia_ii_feedback_ratio: int = 0,
+            batch_size: int,
+            incremental: bool,
+            type_ia_ii_feedback_ratio: int,
             **kwargs
     ):
         super().__init__(**kwargs)
+
+        self.d = d
+        self.s = s
+        self.boost_true_positive_feedback = int(boost_true_positive_feedback)
+        self.reuse_random_feedback = int(reuse_random_feedback)
 
         self.number_of_state_bits_ind = int(number_of_state_bits_ind)
         self.batch_size = batch_size
@@ -218,10 +227,6 @@ class ClauseBank(BaseClauseBank):
     def type_i_feedback(
         self,
         update_p,
-        s,
-        boost_true_positive_feedback,
-        reuse_random_feedback,
-        max_included_literals,
         clause_active,
         literal_active,
         encoded_X,
@@ -239,10 +244,10 @@ class ClauseBank(BaseClauseBank):
             self.number_of_state_bits_ta,
             self.number_of_patches,
             update_p,
-            s,
-            boost_true_positive_feedback,
-            reuse_random_feedback,
-            max_included_literals,
+            self.s,
+            self.boost_true_positive_feedback,
+            self.reuse_random_feedback,
+            self.max_included_literals,
             ptr_clause_active,
             ptr_literal_active,
             ptr_xi
@@ -280,7 +285,6 @@ class ClauseBank(BaseClauseBank):
     def type_iii_feedback(
             self,
             update_p,
-            d,
             clause_active,
             literal_active,
             encoded_X,
@@ -302,7 +306,7 @@ class ClauseBank(BaseClauseBank):
             self.number_of_state_bits_ind,
             self.number_of_patches,
             update_p,
-            d,
+            self.d,
             ptr_clause_active,
             ptr_literal_active,
             ptr_xi,

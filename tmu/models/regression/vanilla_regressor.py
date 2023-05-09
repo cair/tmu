@@ -46,9 +46,9 @@ class TMRegressor(TMBaseClassifier, SingleClauseBankMixin, SingleWeightBankMixin
             clause_drop_p=0.0,
             literal_drop_p=0.0):
         super().__init__(
-            number_of_clauses,
-            T,
-            s,
+            number_of_clauses=number_of_clauses,
+            T=T,
+            s=s,
             platform=platform,
             patch_dim=patch_dim,
             feature_negation=feature_negation,
@@ -127,10 +127,6 @@ class TMRegressor(TMBaseClassifier, SingleClauseBankMixin, SingleWeightBankMixin
             if pred_y < encoded_Y[e]:
                 self.clause_bank.type_i_feedback(
                     update_p=update_p,
-                    s=self.s,
-                    boost_true_positive_feedback=self.boost_true_positive_feedback,
-                    reuse_random_feedback=self.reuse_random_feedback,
-                    max_included_literals=self.max_included_literals,
                     clause_active=clause_active,
                     literal_active=literal_active,
                     encoded_X=self.encoded_X_train,

@@ -109,9 +109,6 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         self.weight_banks.populate(list(range(self.number_of_classes)))
 
     def init_after(self, X: np.ndarray, Y: np.ndarray):
-        if self.max_included_literals is None:
-            self.max_included_literals = self.clause_banks[0].number_of_literals
-
         self.positive_clauses = np.concatenate((np.ones(self.number_of_clauses // 2, dtype=np.int32),
                                                 np.zeros(self.number_of_clauses // 2, dtype=np.int32)))
 
@@ -180,10 +177,6 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
             self.clause_banks[target].type_i_feedback(
                 update_p=update_p * self.type_i_p,
-                s=self.s,
-                boost_true_positive_feedback=self.boost_true_positive_feedback,
-                reuse_random_feedback=self.reuse_random_feedback,
-                max_included_literals=self.max_included_literals,
                 clause_active=clause_active[target] * self.positive_clauses,
                 literal_active=literal_active,
                 encoded_X=self.encoded_X_train,
@@ -201,7 +194,6 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             if self.type_iii_feedback:
                 self.clause_banks[target].type_iii_feedback(
                     update_p=update_p,
-                    d=self.d,
                     clause_active=clause_active[target] * self.positive_clauses,
                     literal_active=literal_active,
                     encoded_X=self.encoded_X_train,
@@ -211,7 +203,6 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
                 self.clause_banks[target].type_iii_feedback(
                     update_p=update_p,
-                    d=self.d,
                     clause_active=clause_active[target] * self.negative_clauses,
                     literal_active=literal_active,
                     encoded_X=self.encoded_X_train,
@@ -250,10 +241,6 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
             self.clause_banks[not_target].type_i_feedback(
                 update_p=update_p * self.type_i_p,
-                s=self.s,
-                boost_true_positive_feedback=self.boost_true_positive_feedback,
-                reuse_random_feedback=self.reuse_random_feedback,
-                max_included_literals=self.max_included_literals,
                 clause_active=clause_active[not_target] * self.negative_clauses,
                 literal_active=literal_active,
                 encoded_X=self.encoded_X_train,
@@ -271,7 +258,6 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             if self.type_iii_feedback:
                 self.clause_banks[not_target].type_iii_feedback(
                     update_p=update_p,
-                    d=self.d,
                     clause_active=clause_active[not_target] * self.negative_clauses,
                     literal_active=literal_active,
                     encoded_X=self.encoded_X_train,
@@ -281,7 +267,6 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
                 self.clause_banks[not_target].type_iii_feedback(
                     update_p=update_p,
-                    d=self.d,
                     clause_active=clause_active[not_target] * self.positive_clauses,
                     literal_active=literal_active,
                     encoded_X=self.encoded_X_train,

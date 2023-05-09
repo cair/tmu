@@ -5,7 +5,6 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 
@@ -16,113 +15,99 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from tmu.clause_bank.clause_bank import ClauseBank
-from tmu.models.base import TMBasis
+from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
+from tmu.models.base import MultiWeightBankMixin, SingleClauseBankMixin
 import numpy as np
 from scipy.sparse import csr_matrix, csc_matrix
-from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
-import tmu.tools
 
-class TMAutoEncoder(TMBasis):
+
+class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixin):
     def __init__(
-        self, 
-        number_of_clauses, 
-        T,
-        s,
-        output_active, 
-        accumulation=1,
-        type_i_ii_ratio=1.0,
-        type_iii_feedback=False, 
-        focused_negative_sampling=False, 
-        output_balancing=False, 
-        d=200.0,
-        platform='CPU',
-        patch_dim=None, 
-        feature_negation=True, 
-        boost_true_positive_feedback=1, 
-        reuse_random_feedback=0,
-        max_included_literals=None, 
-        number_of_state_bits_ta=8, 
-        number_of_state_bits_ind=8,
-        weighted_clauses=False,
-        clause_drop_p=0.0, 
-        literal_drop_p=0.0, 
-        absorbing=-1, 
-        literal_sampling=1.0, 
-        feedback_rate_excluded_literals=1,
-        literal_insertion_state=-1,
-        squared_weight_update_p=False
+            self,
+            number_of_clauses,
+            T,
+            s,
+            output_active,
+            accumulation=1,
+            type_i_ii_ratio=1.0,
+            type_iii_feedback=False,
+            focused_negative_sampling=False,
+            output_balancing=False,
+            d=200.0,
+            platform='CPU',
+            patch_dim=None,
+            feature_negation=True,
+            boost_true_positive_feedback=1,
+            reuse_random_feedback=0,
+            max_included_literals=None,
+            number_of_state_bits_ta=8,
+            number_of_state_bits_ind=8,
+            weighted_clauses=False,
+            clause_drop_p=0.0,
+            literal_drop_p=0.0,
+            absorbing=-1,
+            literal_sampling=1.0,
+            feedback_rate_excluded_literals=1,
+            literal_insertion_state=-1,
+            squared_weight_update_p=False
     ):
         self.output_active = output_active
         self.accumulation = accumulation
         super().__init__(
-            number_of_clauses, 
-            T, 
-            s, 
-            type_i_ii_ratio=type_i_ii_ratio, 
+            number_of_clauses=number_of_clauses,
+            T=T,
+            s=s,
+            type_i_ii_ratio=type_i_ii_ratio,
             type_iii_feedback=type_iii_feedback,
             focused_negative_sampling=focused_negative_sampling,
             output_balancing=output_balancing, d=d,
-            platform=platform, patch_dim=patch_dim, 
+            platform=platform, patch_dim=patch_dim,
             feature_negation=feature_negation,
             boost_true_positive_feedback=boost_true_positive_feedback,
             reuse_random_feedback=reuse_random_feedback,
             max_included_literals=max_included_literals,
             number_of_state_bits_ta=number_of_state_bits_ta,
-            number_of_state_bits_ind=number_of_state_bits_ind, 
+            number_of_state_bits_ind=number_of_state_bits_ind,
             weighted_clauses=weighted_clauses,
-            clause_drop_p=clause_drop_p, 
-            literal_drop_p=literal_drop_p, 
-            absorbing=absorbing, 
+            clause_drop_p=clause_drop_p,
+            literal_drop_p=literal_drop_p,
+            absorbing=absorbing,
             literal_sampling=literal_sampling,
-            feedback_rate_excluded_literals=feedback_rate_excluded_literals, 
-            literal_insertion_state=literal_insertion_state, 
+            feedback_rate_excluded_literals=feedback_rate_excluded_literals,
+            literal_insertion_state=literal_insertion_state,
             squared_weight_update_p=squared_weight_update_p
         )
+        SingleClauseBankMixin.__init__(self)
+        MultiWeightBankMixin.__init__(self)
+        self.max_positive_clauses = number_of_clauses
 
-    def initialize(self, X):
+    def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
+        clause_bank_type, clause_bank_args = self.build_clause_bank(X=X)
+        self.clause_bank = clause_bank_type(**clause_bank_args)
+
+    def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = self.output_active.shape[0]
-        if self.platform == 'CPU':
-            self.clause_bank = ClauseBank(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-                number_of_state_bits_ind=self.number_of_state_bits_ind,
-                patch_dim=self.patch_dim
-            )
-        elif self.platform == "CPU_sparse":
-            self.clause_bank = ClauseBankSparse(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_states=2**self.number_of_state_bits_ta,
-                patch_dim=self.patch_dim,
-                absorbing=self.absorbing,
-                literal_sampling=self.literal_sampling,
-                feedback_rate_excluded_literals=self.feedback_rate_excluded_literals,
-                literal_insertion_state = self.literal_insertion_state,
-                squared_weight_update_p = self.squared_weight_update_p
-            )
-        elif self.platform == 'CUDA':
-            from tmu.clause_bank.clause_bank_cuda import ClauseBankCUDA
-            self.clause_bank = ClauseBankCUDA(
-                X=X,
-                number_of_clauses=self.number_of_clauses,
-                number_of_state_bits_ta=self.number_of_state_bits_ta,
-                patch_dim=self.patch_dim
-            )
-        else:
-            raise RuntimeError(f"Unknown platform of type: {self.platform}")
+        self.weight_banks.set_clause_init(WeightBank, dict(
+            weights=np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
+        ))
+        self.weight_banks.populate(list(range(self.number_of_classes)))
 
-        self.weight_banks = []
-        for i in range(self.number_of_classes):
-            self.weight_banks.append(
-                WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)))
-
-        if self.max_included_literals == None:
+    def init_after(self, X: np.ndarray, Y: np.ndarray):
+        if self.max_included_literals is None:
             self.max_included_literals = self.clause_bank.number_of_literals
 
-    def update(self, target_output, target_value, encoded_X, clause_active, literal_active):
+        if self.max_positive_clauses is None:
+            self.max_positive_clauses = self.number_of_clauses
+
+    def update(
+            self,
+            target_output,
+            target_value,
+            encoded_X,
+            clause_active,
+            literal_active
+    ):
         all_literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
         clause_outputs = self.clause_bank.calculate_clause_outputs_update(all_literal_active, encoded_X, 0)
 
@@ -135,113 +120,101 @@ class TMAutoEncoder(TMBasis):
         if target_value == 1:
             update_p = (self.T - class_sum) / (2 * self.T)
             if self.squared_weight_update_p:
-                update_p = update_p**2
+                update_p = update_p ** 2
 
             self.clause_bank.type_i_feedback(
-                update_p * self.type_i_p, 
-                self.s,
-                self.boost_true_positive_feedback,
-                self.reuse_random_feedback, self.max_included_literals,
-                clause_active * (self.weight_banks[target_output].get_weights() >= 0),
-                literal_active, 
-                encoded_X, 
-                0
+                update_p=update_p * self.type_i_p,
+                clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                literal_active=literal_active,
+                encoded_X=encoded_X,
+                e=0
             )
-            
+
             self.clause_bank.type_ii_feedback(
-                update_p * self.type_ii_p,
-                clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                literal_active, 
-                encoded_X,
-                0
+                update_p=update_p * self.type_ii_p,
+                clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                literal_active=literal_active,
+                encoded_X=encoded_X,
+                e=0
             )
-            
+
             self.weight_banks[target_output].increment(
-                clause_outputs,
-                update_p, 
-                clause_active,
-                True
+                clause_output=clause_outputs,
+                update_p=update_p,
+                clause_active=clause_active,
+                positive_weights=True
             )
-            
+
             if self.type_iii_feedback and type_iii_feedback_selection == 0:
                 self.clause_bank.type_iii_feedback(
-                    update_p,
-                    self.d, 
-                    clause_active * (self.weight_banks[target_output].get_weights() >= 0), 
-                    literal_active, 
-                    encoded_X, 
-                    0, 
-                    1
+                    update_p=update_p,
+                    clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                    literal_active=literal_active,
+                    encoded_X=encoded_X,
+                    e=0,
+                    target=1
                 )
-                
+
                 self.clause_bank.type_iii_feedback(
-                    update_p,
-                    self.d,
-                    clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                    literal_active, 
-                    encoded_X,
-                    0,
-                    0
+                    update_p=update_p,
+                    clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                    literal_active=literal_active,
+                    encoded_X=encoded_X,
+                    e=0,
+                    target=0
                 )
         else:
             update_p = (self.T + class_sum) / (2 * self.T)
             if self.squared_weight_update_p:
-                update_p = update_p**2
+                update_p = update_p ** 2
 
             self.clause_bank.type_i_feedback(
-                update_p * self.type_i_p,
-                self.s, 
-                self.boost_true_positive_feedback,
-                self.reuse_random_feedback, 
-                self.max_included_literals,
-                clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                literal_active, 
-                encoded_X,
-                0
+                update_p=update_p * self.type_i_p,
+                clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                literal_active=literal_active,
+                encoded_X=encoded_X,
+                e=0
             )
-            
+
             self.clause_bank.type_ii_feedback(
-                update_p * self.type_ii_p,
-                clause_active * (self.weight_banks[target_output].get_weights() >= 0),
-                literal_active,
-                encoded_X, 
-                0
+                update_p=update_p * self.type_ii_p,
+                clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                literal_active=literal_active,
+                encoded_X=encoded_X,
+                e=0
             )
-            
+
             self.weight_banks[target_output].decrement(
-                clause_outputs,
-                update_p, 
-                clause_active,
-                True
+                clause_output=clause_outputs,
+                update_p=update_p,
+                clause_active=clause_active,
+                negative_weights=True
             )
-            
+
             if self.type_iii_feedback and type_iii_feedback_selection == 1:
                 self.clause_bank.type_iii_feedback(
-                    update_p,
-                    self.d,
-                    clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                    literal_active, 
-                    encoded_X,
-                    0, 
-                    1
-                )
-                
-                self.clause_bank.type_iii_feedback(
-                    update_p,
-                    self.d, 
-                    clause_active * (self.weight_banks[target_output].get_weights() >= 0), 
-                    literal_active, 
-                    encoded_X, 
-                    0,
-                    0
+                    update_p=update_p,
+                    clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                    literal_active=literal_active,
+                    encoded_X=encoded_X,
+                    e=0,
+                    target=1
                 )
 
+                self.clause_bank.type_iii_feedback(
+                    update_p=update_p,
+                    clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                    literal_active=literal_active,
+                    encoded_X=encoded_X,
+                    e=0,
+                    target=0
+                )
 
     def activate_clauses(self):
         # Drops clauses randomly based on clause drop probability
         clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
-        return clause_active 
+        return clause_active
 
     def activate_literals(self):
         # Literals are dropped based on literal drop probability
@@ -262,10 +235,8 @@ class TMAutoEncoder(TMBasis):
 
         return literal_active
 
-    def fit(self, X, number_of_examples=2000, shuffle=True):
-        if self.initialized == False:
-            self.initialize(X)
-            self.initialized = True
+    def fit(self, X, number_of_examples=2000, shuffle=True, *kwargs):
+        self.init(X, Y=None)
 
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
@@ -302,7 +273,7 @@ class TMAutoEncoder(TMBasis):
                     chunk_pos_negated = (self.output_active[i] + self.clause_bank.number_of_features) % 32
                     copy_literal_active_ta_chunk_negated = literal_active[ta_chunk_negated]
                     literal_active[ta_chunk_negated] &= ~(1 << chunk_pos_negated)
-                
+
                 literal_active[ta_chunk] &= ~(1 << chunk_pos)
 
                 self.update(i, target, encoded_X, update_clause * clause_active, literal_active)
@@ -312,7 +283,7 @@ class TMAutoEncoder(TMBasis):
                 literal_active[ta_chunk] = copy_literal_active_ta_chunk
         return
 
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         Y = np.ascontiguousarray(np.zeros((self.number_of_classes, X.shape[0]), dtype=np.uint32))
 

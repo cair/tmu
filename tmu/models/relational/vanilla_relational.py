@@ -17,14 +17,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from tmu.models.base import TMBasis
+from tmu.models.base import SingleClauseBankMixin, MultiWeightBankMixin
+from tmu.models.classification.base_classification import TMBaseClassifier
+
 from tmu.weight_bank import WeightBank
 import numpy as np
 from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
-from clause_bank.clause_bank import ClauseBank
-from clause_bank.clause_bank_cuda import ClauseBankCUDA
 
-class TMRelational(TMBasis):
+
+class TMRelational(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixin):
     def __init__(
             self,
             number_of_clauses,
@@ -50,9 +51,9 @@ class TMRelational(TMBasis):
         self.output_active_facts = output_active_facts
 
         super().__init__(
-            number_of_clauses,
-            T,
-            s,
+            number_of_clauses=number_of_clauses,
+            T=T,
+            s=s,
             type_i_ii_ratio=type_i_ii_ratio,
             type_iii_feedback=type_iii_feedback,
             focused_negative_sampling=focused_negative_sampling,
@@ -70,27 +71,19 @@ class TMRelational(TMBasis):
             literal_drop_p=literal_drop_p
         )
 
-    def initialize(self, X):
+    def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
+        clause_bank_type, clause_bank_args = self.build_clause_bank(X=X)
+        self.clause_bank = clause_bank_type(**clause_bank_args)
+
+    def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = X.shape[1]
-        if self.platform == 'CPU':
-            self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta,
-                                          self.number_of_state_bits_ind, self.patch_dim)
-        elif self.platform == 'CUDA':
+        self.weight_banks.set_clause_init(WeightBank, dict(
+            weights=np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
+        ))
+        self.weight_banks.populate(list(range(self.number_of_classes)))
 
-            self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
-        else:
-            raise RuntimeError(f"Unknown platform of type: {self.platform}")
-
-        self.weight_banks = []
-        for i in range(self.number_of_classes):
-            self.weight_banks.append(
-                WeightBank(np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)))
-
-        if self.max_included_literals == None:
-            self.max_included_literals = self.clause_bank.number_of_literals
-
+    def init_after(self, X: np.ndarray, Y: np.ndarray):
         self.output_active = np.empty(len(self.output_active_facts), dtype=np.uint32)
-
         for i in range(len(self.output_active_facts)):
             self.output_active[i] = self.fact_id[self.output_active_facts[i]]
 
@@ -107,70 +100,93 @@ class TMRelational(TMBasis):
         if target_value == 1:
             update_p = (self.T - class_sum) / (2 * self.T)
 
-            self.clause_bank.type_i_feedback(update_p * self.type_i_p, self.s, self.boost_true_positive_feedback,
-                                             self.max_included_literals,
-                                             clause_active * (self.weight_banks[target_output].get_weights() >= 0),
-                                             literal_active, encoded_X, 0)
-            self.clause_bank.type_ii_feedback(update_p * self.type_ii_p,
-                                              clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                                              literal_active, encoded_X, 0)
-            self.weight_banks[target_output].increment(clause_outputs, update_p, clause_active, True)
+            self.clause_bank.type_i_feedback(
+                update_p=update_p * self.type_i_p,
+                clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                literal_active=literal_active,
+                encoded_X=encoded_X,
+                e=0
+            )
+
+
+            self.clause_bank.type_ii_feedback(
+                update_p=update_p * self.type_ii_p,
+                clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                literal_active=literal_active,
+                encoded_X=encoded_X,
+                e=0
+            )
+
+            self.weight_banks[target_output].increment(
+                clause_output=clause_outputs,
+                update_p=update_p,
+                clause_active=clause_active,
+                positive_weights=True
+            )
+
+
             if self.type_iii_feedback and type_iii_feedback_selection == 0:
-                self.clause_bank.type_iii_feedback(update_p, self.d, clause_active * (
-                        self.weight_banks[target_output].get_weights() >= 0), literal_active, encoded_X, 0, 1)
-                self.clause_bank.type_iii_feedback(update_p, self.d,
-                                                   clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                                                   literal_active, encoded_X, 0, 0)
+                self.clause_bank.type_iii_feedback(
+                    update_p=update_p,
+                    clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                    literal_active=literal_active,
+                    encoded_X=encoded_X,
+                    e=0,
+                    target=1
+                )
+
+                self.clause_bank.type_iii_feedback(
+                    update_p=update_p,
+                    clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                    literal_active=literal_active,
+                    encoded_X=encoded_X,
+                    e=0,
+                    target=0
+                )
         else:
             update_p = (self.T + class_sum) / (2 * self.T)
 
             self.clause_bank.type_i_feedback(
-                update_p * self.type_i_p,
-                self.s,
-                self.boost_true_positive_feedback,
-                self.max_included_literals,
-                clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                literal_active,
-                encoded_X,
-                0
+                update_p=update_p * self.type_i_p,
+                clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                literal_active=literal_active,
+                encoded_X=encoded_X,
+                e=0
             )
 
             self.clause_bank.type_ii_feedback(
-                update_p * self.type_ii_p,
-                clause_active * (self.weight_banks[target_output].get_weights() >= 0),
-                literal_active,
-                encoded_X,
-                0
+                update_p=update_p * self.type_ii_p,
+                clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                literal_active=literal_active,
+                encoded_X=encoded_X,
+                e=0
             )
 
             self.weight_banks[target_output].decrement(
-                clause_outputs,
-                update_p,
-                clause_active,
-                True
+                clause_output=clause_outputs,
+                update_p=update_p,
+                clause_active=clause_active,
+                negative_weights=True
             )
 
             if self.type_iii_feedback and type_iii_feedback_selection == 1:
                 self.clause_bank.type_iii_feedback(
-                    update_p,
-                    self.d,
-                    clause_active * (self.weight_banks[target_output].get_weights() < 0),
-                    literal_active,
-                    encoded_X,
-                    0,
-                    1
+                    update_p=update_p,
+                    clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
+                    literal_active=literal_active,
+                    encoded_X=encoded_X,
+                    e=0,
+                    target=1
                 )
 
                 self.clause_bank.type_iii_feedback(
-                    update_p,
-                    self.d,
-                    clause_active * ( self.weight_banks[target_output].get_weights() >= 0),
-                    literal_active,
-                    encoded_X,
-                    0,
-                    0
+                    update_p=update_p,
+                    clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
+                    literal_active=literal_active,
+                    encoded_X=encoded_X,
+                    e=0,
+                    target=0
                 )
-
 
     def activate_clauses(self):
         # Drops clauses randomly based on clause drop probability
@@ -199,10 +215,7 @@ class TMRelational(TMBasis):
 
     def fit(self, X, number_of_examples=2000, shuffle=True, **kwargs):
         (X, X_active) = self.propositionalize(X)
-
-        if self.initialized == False:
-            self.initialize(X)
-            self.initialized = True
+        self.init(X=X, Y=None)
 
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
@@ -235,8 +248,7 @@ class TMRelational(TMBasis):
                     literal_active[ta_chunk_negated] = copy_literal_active_ta_chunk_negated
                 literal_active[ta_chunk] = copy_literal_active_ta_chunk
 
-
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         Y = np.ascontiguousarray(np.zeros((self.number_of_classes, X.shape[0]), dtype=np.uint32))
 
@@ -342,7 +354,6 @@ class TMRelational(TMBasis):
     def set_weight(self, the_class, clause, weight):
         self.weight_banks[the_class].get_weights()[clause] = weight
 
-
     def propositionalize(self, X):
         # Identify relations and symbols
         self.relation_id = {}
@@ -370,7 +381,7 @@ class TMRelational(TMBasis):
         self.id_fact = {}
         self.number_of_features = 0
         for relation in self.relation_id.keys():
-            number_of_relation_facts = len(self.symbol_id)**(self.relation_arity[relation])
+            number_of_relation_facts = len(self.symbol_id) ** (self.relation_arity[relation])
             for relation_fact_id in range(number_of_relation_facts):
                 fact = [relation]
                 symbol_id_remainder = relation_fact_id
