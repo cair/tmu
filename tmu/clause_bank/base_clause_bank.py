@@ -13,20 +13,27 @@ class BaseClauseBank(CFFISerializable):
     def __init__(
             self,
             X,
+            s: float,
+            boost_true_positive_feedback: bool,
+            reuse_random_feedback: bool,
+            type_ia_ii_feedback_ratio: int,
             number_of_clauses: int,
-            number_of_state_bits_ta: int,
             max_included_literals: int,
             patch_dim: typing.Union[tuple, None],
             **kwargs
     ):
         self._warn_unknown_arguments(**kwargs)
         assert isinstance(number_of_clauses, int)
-        assert isinstance(number_of_state_bits_ta, int)
         assert isinstance(patch_dim, tuple) or patch_dim is None
+
         self.X = X
-        self.number_of_clauses = number_of_clauses
-        self.number_of_state_bits_ta = number_of_state_bits_ta
+        self.number_of_clauses = int(number_of_clauses)
+
         self.patch_dim = patch_dim
+        self.s = s
+        self.boost_true_positive_feedback = int(boost_true_positive_feedback)
+        self.reuse_random_feedback = int(reuse_random_feedback)
+        self.type_ia_ii_feedback_ratio = type_ia_ii_feedback_ratio
 
 
         if len(X.shape) == 2:

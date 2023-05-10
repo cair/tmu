@@ -67,9 +67,13 @@ class TMBaseClassifier(TMBasis):
         clause_bank_type = ClauseBankCUDA
         clause_bank_args = dict(
             X=X,
+            s=self.s,
+            boost_true_positive_feedback=self.boost_true_positive_feedback,
+            reuse_random_feedback=self.reuse_random_feedback,
             number_of_clauses=self.number_of_clauses,
             number_of_state_bits_ta=self.number_of_state_bits_ta,
             patch_dim=self.patch_dim,
+            type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio,
             max_included_literals=self.max_included_literals,
         )
         return clause_bank_type, clause_bank_args
@@ -93,6 +97,7 @@ class TMBaseClassifier(TMBasis):
             literal_sampling=self.literal_sampling,
             feedback_rate_excluded_literals=self.feedback_rate_excluded_literals,
             literal_insertion_state=self.literal_insertion_state,
+            type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio
         )
         return clause_bank_type, clause_bank_args
 

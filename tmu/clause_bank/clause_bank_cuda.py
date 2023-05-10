@@ -70,11 +70,13 @@ class ImplClauseBankCUDA(BaseClauseBank):
 
     def __init__(
             self,
+            number_of_state_bits_ta: int,
             **kwargs
     ):
         super().__init__(**kwargs)
         self.grid = (16 * 13, 1, 1)
         self.block = (128, 1, 1)
+        self.number_of_state_bits_ta = number_of_state_bits_ta
 
         self.clause_output_patchwise = np.empty(
             int(self.number_of_clauses * self.number_of_patches),
@@ -108,7 +110,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
         #mod = load_cuda_kernel(parameters, "cuda/tools.cu")
         #self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_examples")
         #self.produce_autoencoder_examples_gpu.prepare("PiPPiPPiPPi")
-        
+
         #self.prepare_encode_gpu = mod.get_function("prepare_encode")
         #self.prepare_encode_gpu.prepare("PPiiiiiiii")
 
@@ -138,12 +140,10 @@ class ImplClauseBankCUDA(BaseClauseBank):
         )
         self.literal_clause_count_gpu = cuda.mem_alloc(self.literal_clause_count.nbytes)
 
-        self.initialize_clauses()
+        self._cffi_init()
 
     def _cffi_init(self):
-        pass
 
-    def initialize_clauses(self):
         self.clause_bank = np.empty(
             shape=(self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ta),
             dtype=np.uint32,
@@ -330,7 +330,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
 
         X_csr_indptr_gpu = cuda.mem_alloc(X_csr.indptr.nbytes)
         cuda.memcpy_htod(X_csr_indptr_gpu, X_csr.indptr)
-        
+
         X_csr_indices_gpu = cuda.mem_alloc(X_csr.indices.nbytes)
         cuda.memcpy_htod(X_csr_indices_gpu, X_csr.indices)
 
@@ -354,7 +354,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
     def produce_autoencoder_examples(self, encoded_X, accumulation):
 
         (active_output_gpu, number_of_active_outputs, X_csr_indptr_gpu, X_csr_indices_gpu, number_of_rows, X_csc_indptr_gpu,  X_csc_indices_gpu, number_of_columns, X_gpu, Y_gpu) = encoded_X
-        
+
         self.produce_autoencoder_examples_gpu.prepared_call(
                                             self.grid,
                                             self.block,
@@ -367,10 +367,10 @@ class ImplClauseBankCUDA(BaseClauseBank):
                                             number_of_columns,
                                             X_gpu,
                                             Y_gpu,
-                                            int(accumulation));
+                                            int(accumulation))
 
         self.cuda_ctx.synchronize()
-        
+
         return X_gpu, Y_gpu
 
 if cuda_installed:

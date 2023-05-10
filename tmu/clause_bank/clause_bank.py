@@ -42,26 +42,21 @@ class ClauseBank(BaseClauseBank):
     def __init__(
             self,
             d: float,
-            s: float,
-            boost_true_positive_feedback: bool,
-            reuse_random_feedback: bool,
             number_of_state_bits_ind: int,
+            number_of_state_bits_ta: int,
             batch_size: int,
             incremental: bool,
-            type_ia_ii_feedback_ratio: int,
             **kwargs
     ):
         super().__init__(**kwargs)
 
         self.d = d
-        self.s = s
-        self.boost_true_positive_feedback = int(boost_true_positive_feedback)
-        self.reuse_random_feedback = int(reuse_random_feedback)
-
+        assert isinstance(number_of_state_bits_ta, int)
+        self.number_of_state_bits_ta = number_of_state_bits_ta
         self.number_of_state_bits_ind = int(number_of_state_bits_ind)
         self.batch_size = batch_size
         self.incremental = incremental
-        self.type_ia_ii_feedback_ratio = type_ia_ii_feedback_ratio
+
 
         self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
         self.clause_output_batch = np.empty(self.number_of_clauses * batch_size, dtype=np.uint32, order="c")
@@ -389,6 +384,6 @@ class ClauseBank(BaseClauseBank):
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indptr).ctypes.data),
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indices).ctypes.data),
                                              int(X_csc.shape[1]), ffi.cast("unsigned int *", X.ctypes.data),
-                                             ffi.cast("unsigned int *", Y.ctypes.data), int(accumulation));
+                                             ffi.cast("unsigned int *", Y.ctypes.data), int(accumulation))
 
         return X.reshape((len(active_output), -1)), Y

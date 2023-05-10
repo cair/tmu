@@ -20,7 +20,7 @@
 
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
-
+from tmu.clause_bank.base_clause_bank import BaseClauseBank
 from tmu.tmulib import ffi, lib
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -29,18 +29,11 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class ClauseBankSparse:
+class ClauseBankSparse(BaseClauseBank):
     def __init__(
             self,
-            X,
-            number_of_clauses,
             number_of_states,
             d: float,
-            s: float,
-            boost_true_positive_feedback: bool,
-            reuse_random_feedback: bool,
-            max_included_literals: int,
-            patch_dim,
             batching=True,
             incremental=True,
             absorbing=-1,
@@ -48,12 +41,11 @@ class ClauseBankSparse:
             absorbing_include=None,
             literal_sampling=1.0,
             feedback_rate_excluded_literals=1,
-            literal_insertion_state=-1
-
+            literal_insertion_state=-1,
+            **kwargs
     ):
-        self.number_of_clauses = int(number_of_clauses)
+        super().__init__(**kwargs)
         self.number_of_states = int(number_of_states)
-        self.patch_dim = patch_dim
         self.batching = batching
         self.incremental = incremental
         self.absorbing = int(absorbing)
@@ -64,20 +56,15 @@ class ClauseBankSparse:
         self.literal_insertion_state = literal_insertion_state
 
         self.d = d
-        self.s = s
-        self.boost_true_positive_feedback = int(boost_true_positive_feedback)
-        self.reuse_random_feedback = int(reuse_random_feedback)
-
-
 
         LOGGER.warning("reuse_random_feedback is not implemented yet")
 
-        if len(X.shape) == 2:
-            self.dim = (X.shape[1], 1, 1)
-        elif len(X.shape) == 3:
-            self.dim = (X.shape[1], X.shape[2], 1)
-        elif len(X.shape) == 4:
-            self.dim = (X.shape[1], X.shape[2], X.shape[3])
+        if len(self.X.shape) == 2:
+            self.dim = (self.X.shape[1], 1, 1)
+        elif len(self.X.shape) == 3:
+            self.dim = (self.X.shape[1], self.X.shape[2], 1)
+        elif len(self.X.shape) == 4:
+            self.dim = (self.X.shape[1], self.X.shape[2], self.X.shape[3])
 
         if self.patch_dim is None:
             self.patch_dim = (self.dim[0] * self.dim[1] * self.dim[2], 1)
@@ -86,8 +73,6 @@ class ClauseBankSparse:
             self.patch_dim[0] * self.patch_dim[1] * self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (
                     self.dim[1] - self.patch_dim[1]))
         self.number_of_literals = self.number_of_features * 2
-
-        self.max_included_literals = max_included_literals if max_included_literals is not None else self.number_of_literals
 
         self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))
         self.number_of_ta_chunks = int((self.number_of_literals - 1) / 32 + 1)
@@ -114,14 +99,15 @@ class ClauseBankSparse:
             pos = k % 32
             self.Xi[chunk] |= (1 << pos)
 
-        self.initialize_clauses()
+        self._cffi_init()
 
-    def initialize_clauses(self):
+    def _cffi_init(self):
         self.clause_bank_included = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2),
                                                                   dtype=np.uint16))  # Contains index and state of included literals, none at start
         self.ptr_clause_bank_included = ffi.cast("unsigned short *", self.clause_bank_included.ctypes.data)
         self.clause_bank_included_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint16))
-        self.ptr_clause_bank_included_length = ffi.cast("unsigned short *", self.clause_bank_included_length.ctypes.data)
+        self.ptr_clause_bank_included_length = ffi.cast("unsigned short *",
+                                                        self.clause_bank_included_length.ctypes.data)
 
         self.clause_bank_included_absorbed = np.ascontiguousarray(
             np.zeros((self.number_of_clauses, self.number_of_literals),
@@ -136,7 +122,8 @@ class ClauseBankSparse:
         self.ptr_clause_bank_excluded = ffi.cast("unsigned short *", self.clause_bank_excluded.ctypes.data)
         self.clause_bank_excluded_length = np.ascontiguousarray(
             np.zeros(self.number_of_clauses, dtype=np.uint16))  # All literals excluded at start
-        self.ptr_clause_bank_excluded_length = ffi.cast("unsigned short *", self.clause_bank_excluded_length.ctypes.data)
+        self.ptr_clause_bank_excluded_length = ffi.cast("unsigned short *",
+                                                        self.clause_bank_excluded_length.ctypes.data)
         self.clause_bank_excluded_length[:] = int(self.number_of_literals * self.literal_sampling)
 
         for j in range(self.number_of_clauses):
@@ -151,7 +138,8 @@ class ClauseBankSparse:
         self.ptr_clause_bank_unallocated = ffi.cast("unsigned short *", self.clause_bank_unallocated.ctypes.data)
         self.clause_bank_unallocated_length = np.ascontiguousarray(
             np.zeros(self.number_of_clauses, dtype=np.uint16))  # All literals excluded at start
-        self.ptr_clause_bank_unallocated_length = ffi.cast("unsigned short *", self.clause_bank_unallocated_length.ctypes.data)
+        self.ptr_clause_bank_unallocated_length = ffi.cast("unsigned short *",
+                                                           self.clause_bank_unallocated_length.ctypes.data)
         self.clause_bank_unallocated_length[:] = self.number_of_literals - int(
             self.number_of_literals * self.literal_sampling)
 
@@ -200,8 +188,8 @@ class ClauseBankSparse:
                 self.ptr_clause_output_batch,
                 self.ptr_clause_bank_included,
                 self.ptr_clause_bank_included_length,
-                #self.cbia_p,
-                #self.cbial_p
+                # self.cbia_p,
+                # self.cbial_p
             )
         lib.cbs_unpack_clause_output(
             e,
@@ -226,8 +214,8 @@ class ClauseBankSparse:
             self.ptr_clause_output,
             self.ptr_clause_bank_included,
             self.ptr_clause_bank_included_length,
-            #self.cbia_p,
-            #self.cbial_p
+            # self.cbia_p,
+            # self.cbial_p
         )
         lib.cbs_restore_Xi(
             encoded_X[1][e],
@@ -252,16 +240,14 @@ class ClauseBankSparse:
             self.number_of_features
         )
 
-
-
         lib.cbs_type_i_feedback(
             update_p,
             self.s,
             self.boost_true_positive_feedback,
             self.max_included_literals,
             self.absorbing,
-            #self.absorbing_include,
-            #self.absorbing_exclude,
+            # self.absorbing_include,
+            # self.absorbing_exclude,
             self.feedback_rate_excluded_literals,
             self.literal_insertion_state,
             ffi.cast("int *", clause_active.ctypes.data),
@@ -276,8 +262,8 @@ class ClauseBankSparse:
             self.ptr_clause_bank_excluded_length,
             self.ptr_clause_bank_unallocated,
             self.ptr_clause_bank_unallocated_length,
-            #self.cbia_p,
-            #self.cbial_p
+            # self.cbia_p,
+            # self.cbial_p
             #       self.reuse_random_feedback,
         )
 
@@ -315,8 +301,8 @@ class ClauseBankSparse:
             self.ptr_clause_bank_included_length,
             self.ptr_clause_bank_excluded,
             self.ptr_clause_bank_excluded_length,
-            #self.cbia_p,
-            #self.cbial_p
+            # self.cbia_p,
+            # self.cbial_p
         )
         lib.cbs_restore_Xi(
             encoded_X[1][e],
