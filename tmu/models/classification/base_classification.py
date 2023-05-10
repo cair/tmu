@@ -69,7 +69,8 @@ class TMBaseClassifier(TMBasis):
             X=X,
             number_of_clauses=self.number_of_clauses,
             number_of_state_bits_ta=self.number_of_state_bits_ta,
-            patch_dim=self.patch_dim
+            patch_dim=self.patch_dim,
+            max_included_literals=self.max_included_literals,
         )
         return clause_bank_type, clause_bank_args
 

@@ -34,3 +34,20 @@ which is roughly 6-7GB of size, install it and you should be able to compile the
 ```bash
 pip install git+https://github.com/cair/tmu.git
 ```
+
+# Development
+For development we recommend to clone the repository and work directly on the codebase (Note: you should add ssh keys to github):
+
+1. Clone the repository
+```bash
+git clone git@github.com:cair/tmu.git
+```
+
+2. Compile C library
+```bash
+cd tmu && pip install -e .
+```
+Then for your specific work, create a folder in examples and start coding
+
+### Changing the C codebase?
+When changing the C codebase you must recompile using the `pip install -e .` command
