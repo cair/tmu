@@ -105,15 +105,15 @@ class ImplClauseBankCUDA(BaseClauseBank):
         self.type_ii_feedback_gpu = mod.get_function("type_ii_feedback")
         self.type_ii_feedback_gpu.prepare("PPiiifPPPi")
 
-        mod = load_cuda_kernel(parameters, "cuda/tools.cu")
-        self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_examples")
-        self.produce_autoencoder_examples_gpu.prepare("PiPPiPPiPPi")
+        #mod = load_cuda_kernel(parameters, "cuda/tools.cu")
+        #self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_examples")
+        #self.produce_autoencoder_examples_gpu.prepare("PiPPiPPiPPi")
         
-        self.prepare_encode_gpu = mod.get_function("prepare_encode")
-        self.prepare_encode_gpu.prepare("PPiiiiiiii")
+        #self.prepare_encode_gpu = mod.get_function("prepare_encode")
+        #self.prepare_encode_gpu.prepare("PPiiiiiiii")
 
-        self.encode_gpu = mod.get_function("encode")
-        self.encode_gpu.prepare("PPiiiiiiii")
+        #self.encode_gpu = mod.get_function("encode")
+        #self.encode_gpu.prepare("PPiiiiiiii")
 
         self.clause_output = np.empty(
             int(self.number_of_clauses),
@@ -304,7 +304,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
         cuda.memcpy_htod(self.clause_bank_gpu, self.clause_bank)
 
     def prepare_X(self, X):
-        
+
         encoded_X = tmu.tools.encode(
             X,
             X.shape[0],
