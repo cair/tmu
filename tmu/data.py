@@ -160,9 +160,6 @@ class TMUDatasetSource:
         _LOGGER.debug(f"Dataset directory {dataset_dir} not found. Downloading release {dl_name}")
         temp_dataset_dir = self._download_release_archive(dl_url, target_dir=dataset_dir)
 
-
-
-
         return dataset_dir
 
     def _get_metadata(self, metadata, key, default, extra_info=None):
@@ -349,7 +346,7 @@ class TMUDatasetSource:
             Y_test = Y[train_ratio:test_end_index]
 
         elif isinstance(train_ratio, float):
-            train_size = int(X.shape[0]*train_ratio)
+            train_size = int(X.shape[0] * train_ratio)
             X_train = X[0:train_size]
             X_test = X[train_size:]
             Y_train = Y[0:train_size]
@@ -438,9 +435,85 @@ class MNIST(TMUDataset):
         return np.where(dataset.reshape((dataset.shape[0], 28 * 28)) > 75, 1, 0)
 
 
-if __name__ == "__main__":
+class FashionMNIST(TMUDataset):
 
+    def __init__(self):
+        super().__init__()
+        _LOGGER.warning("Threshold function is not tested yet.")
+
+    def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
+        kwargs = dict()
+        pyver = tuple([int(x) for x in sklearn.__version__.split(".")])
+
+        if pyver[0] >= 1 and pyver[1] >= 2:
+            kwargs["parser"] = "pandas"
+
+        X, y = fetch_openml(
+            "Fashion-MNIST",
+            version=1,
+            return_X_y=True,
+            as_frame=False,
+            **kwargs
+        )
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=10000)
+        y_train = y_train.astype(int)
+        y_test = y_test.astype(int)
+
+        return dict(
+            x_train=X_train,
+            y_train=y_train,
+            x_test=X_test,
+            y_test=y_test
+        )
+
+    def _transform(self, name, dataset):
+        if name.startswith("y"):
+            return dataset
+
+        return np.where(dataset.reshape((dataset.shape[0], 28 * 28)) > 75, 1, 0)
+
+
+class KuzushijiMNIST(TMUDataset):
+    def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
+        kwargs = dict()
+        pyver = tuple([int(x) for x in sklearn.__version__.split(".")])
+
+        if pyver[0] >= 1 and pyver[1] >= 2:
+            kwargs["parser"] = "pandas"
+
+        X, y = fetch_openml(
+            "Kuzushiji-MNIST",
+            version=1,
+            return_X_y=True,
+            as_frame=False,
+            **kwargs
+        )
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=10000)
+        y_train = y_train.astype(int)
+        y_test = y_test.astype(int)
+
+        return dict(
+            x_train=X_train,
+            y_train=y_train,
+            x_test=X_test,
+            y_test=y_test
+        )
+
+    def _transform(self, name, dataset):
+        if name.startswith("y"):
+            return dataset
+
+        return np.where(dataset.reshape((dataset.shape[0], 28 * 28)) > 75, 1, 0)
+
+
+
+
+
+if __name__ == "__main__":
     MNIST().get()
+
 
     class TestBase(TMUDatasetSource):
 
