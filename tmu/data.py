@@ -1,7 +1,6 @@
 import abc
 import pathlib
 import shutil
-import sys
 import tempfile
 import typing
 from typing import Dict
@@ -384,7 +383,14 @@ class TMUDatasetSource:
 class TMUDataset:
 
     def __init__(self):
+        self._custom_transforms: typing.Optional[typing.List[typing.Callable]] = None
         pass
+
+    def add_transform(self, transform: typing.Callable):
+        if self._custom_transforms is None:
+            self._custom_transforms = [transform]
+        else:
+            self._custom_transforms.append(transform)
 
     @abc.abstractmethod
     def _transform(self, name, dataset):
@@ -394,8 +400,17 @@ class TMUDataset:
     def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
         raise NotImplementedError("You should override def _retrieve_dataset()")
 
+    def _execute_transforms(self, k, v):
+        if self._custom_transforms:
+            for transform in self._custom_transforms:
+                v = transform(k, v)
+        else:
+            v = self._transform(k, v)
+
+        return v
+
     def get(self):
-        return {k: self._transform(k, v) for k, v in self._retrieve_dataset().items()}
+        return {k: self._execute_transforms(k, v) for k, v in self._retrieve_dataset().items()}
 
     def get_list(self):
         return list(self.get().values())
@@ -508,6 +523,43 @@ class KuzushijiMNIST(TMUDataset):
         return np.where(dataset.reshape((dataset.shape[0], 28 * 28)) > 75, 1, 0)
 
 
+class CIFAR100(TMUDataset):
+
+    def __init__(self):
+        super().__init__()
+        _LOGGER.warning("Threshold function is not implemented. Use add_transform(fn) to use custom transform.")
+
+    def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
+        kwargs = dict()
+        pyver = tuple([int(x) for x in sklearn.__version__.split(".")])
+
+        if pyver[0] >= 1 and pyver[1] >= 2:
+            kwargs["parser"] = "pandas"
+
+        X, y = fetch_openml(
+            "CIFAR-100",  # name of CIFAR-100 on OpenML
+            version=1,
+            return_X_y=True,
+            as_frame=False,
+            **kwargs
+        )
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=10000)
+        y_train = y_train.astype(int)
+        y_test = y_test.astype(int)
+
+        return dict(
+            x_train=X_train,
+            y_train=y_train,
+            x_test=X_test,
+            y_test=y_test
+        )
+
+    def _transform(self, name, dataset):
+        if name.startswith("y"):
+            return dataset
+
+        return np.where(dataset.reshape((dataset.shape[0], 32 * 32 * 3)) > 75, 1, 0)
 
 
 
