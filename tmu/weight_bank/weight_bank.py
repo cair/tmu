@@ -28,9 +28,11 @@ import numpy as np
 
 class WeightBank(CFFISerializable):
 
-    def __init__(self, weights):
+    def __init__(self, weights: np.ndarray, copy: bool = True):
         self.number_of_clauses = weights.shape[0]
-        self.weights = np.ascontiguousarray(weights, dtype=np.int32)
+        self.weights = weights.copy(order="C") if copy else weights
+        
+        
         self._cffi_init()
 
     def _cffi_init(self):
