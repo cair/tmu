@@ -45,13 +45,23 @@ extern "C"
 		int row;
 
 		int number_of_features = number_of_cols;
+		int number_of_literals = 2*number_of_features;
+
+		unsigned int number_of_literal_chunks = (number_of_literals-1)/32 + 1;
 
 		// Loop over active outputs, producing one example per output
 		for (int o = index; o < number_of_active_outputs; o += stride) {
-			int output_pos = o*number_of_features;
+			int output_pos = o*number_of_literal_chunks;
 
-			for (int k = 0; k < number_of_features; ++k) {
-					X[output_pos + k] = 0;
+			// Initialize example vector X
+			for (int k = 0; k < number_of_literal_chunks; ++k) {
+				X[output_pos + k] = 0;
+			}
+
+			for (int k = number_of_features; k < number_of_literals; ++k) {
+				int chunk_nr = k / 32;
+				int chunk_pos = k % 32;
+				X[output_pos + chunk_nr] |= (1U << chunk_pos);
 			}
 
 			if ((indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) || (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows)) {
@@ -59,7 +69,13 @@ extern "C"
 				for (int a = 0; a < accumulation; ++a) {
 					row = curand(&localState) % number_of_rows;
 					for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-						X[output_pos + indices_row[k]] = 1;
+						int chunk_nr = indices_row[k] / 32;
+						int chunk_pos = indices_row[k] % 32;
+						X[output_pos + chunk_nr] |= (1U << chunk_pos);
+
+						chunk_nr = (indices_row[k] + number_of_features) / 32;
+						chunk_pos = (indices_row[k] + number_of_features) % 32;
+						X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
 					}
 				}
 			}
@@ -84,7 +100,13 @@ extern "C"
 					row = indices_col[random_index];
 					
 					for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-						X[output_pos + indices_row[k]] = 1;
+						int chunk_nr = indices_row[k] / 32;
+						int chunk_pos = indices_row[k] % 32;
+						X[output_pos + chunk_nr] |= (1U << chunk_pos);
+
+						chunk_nr = (indices_row[k] + number_of_features) / 32;
+						chunk_pos = (indices_row[k] + number_of_features) % 32;
+						X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
 					}
 				}
 			} else {
@@ -94,7 +116,13 @@ extern "C"
 
 					if (search(&row, &indices_col[indptr_col[active_output[o]]], indptr_col[active_output[o]+1] - indptr_col[active_output[o]]) == NULL) {
 						for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-							X[output_pos + indices_row[k]] = 1;
+							int chunk_nr = indices_row[k] / 32;
+							int chunk_pos = indices_row[k] % 32;
+							X[output_pos + chunk_nr] |= (1U << chunk_pos);
+
+							chunk_nr = (indices_row[k] + number_of_features) / 32;
+							chunk_pos = (indices_row[k] + number_of_features) % 32;
+							X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
 						}
 						a++;
 					}
