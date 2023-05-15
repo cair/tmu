@@ -107,9 +107,9 @@ class ImplClauseBankCUDA(BaseClauseBank):
         self.type_ii_feedback_gpu = mod.get_function("type_ii_feedback")
         self.type_ii_feedback_gpu.prepare("PPiiifPPPi")
 
-        #mod = load_cuda_kernel(parameters, "cuda/tools.cu")
-        #self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_examples")
-        #self.produce_autoencoder_examples_gpu.prepare("PiPPiPPiPPi")
+        mod = load_cuda_kernel(parameters, "cuda/tools.cu")
+        self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_examples")
+        self.produce_autoencoder_examples_gpu.prepare("PPiPPiPPiPPi")
 
         #self.prepare_encode_gpu = mod.get_function("prepare_encode")
         #self.prepare_encode_gpu.prepare("PPiiiiiiii")
@@ -343,7 +343,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
         active_output_gpu = cuda.mem_alloc(active_output.nbytes)
         cuda.memcpy_htod(active_output_gpu, active_output)
 
-        X = np.ascontiguousarray(np.zeros(int(X_csc.shape[1] * active_output.shape[0]), dtype=np.uint32))
+        X = np.ascontiguousarray(np.zeros(int(self.number_of_ta_chunks * active_output.shape[0]), dtype=np.uint32))
         X_gpu = cuda.mem_alloc(X.nbytes)
 
         Y = np.ascontiguousarray(np.zeros(int(active_output.shape[0]), dtype=np.uint32))
@@ -351,14 +351,18 @@ class ImplClauseBankCUDA(BaseClauseBank):
 
         return (active_output_gpu, int(active_output.shape[0]), X_csr_indptr_gpu, X_csr_indices_gpu, int(X_csr.shape[0]), X_csc_indptr_gpu,  X_csc_indices_gpu, int(X_csc.shape[1]), X_gpu, Y_gpu)
 
-    def produce_autoencoder_examples(self, encoded_X, accumulation):
-
+    def produce_autoencoder_examples(
+            self,
+            encoded_X,
+            accumulation
+        ):
         (active_output_gpu, number_of_active_outputs, X_csr_indptr_gpu, X_csr_indices_gpu, number_of_rows, X_csc_indptr_gpu,  X_csc_indices_gpu, number_of_columns, X_gpu, Y_gpu) = encoded_X
 
         self.produce_autoencoder_examples_gpu.prepared_call(
                                             self.grid,
                                             self.block,
-                                            active_output_gpu, number_of_active_outputs,
+                                            active_output_gpu,
+                                            number_of_active_outputs,
                                             X_csr_indptr_gpu,
                                             X_csr_indices_gpu,
                                             number_of_rows,
