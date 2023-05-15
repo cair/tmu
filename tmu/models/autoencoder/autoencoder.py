@@ -261,8 +261,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
 
             Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_train, self.accumulation)
             for i in class_index:
-                (target, X) = Yu[i], Xu[i].reshape((1, -1))
-                encoded_X = self.clause_bank.prepare_X(X)
+                (target, encoded_X) = Yu[i], Xu[i].reshape((1, -1))
 
                 ta_chunk = self.output_active[i] // 32
                 chunk_pos = self.output_active[i] % 32

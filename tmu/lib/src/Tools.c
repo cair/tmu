@@ -51,21 +51,38 @@ void tmu_produce_autoencoder_examples(
 	int row;
 
 	int number_of_features = number_of_cols;
-	
+	int number_of_literals = 2*number_of_features;
+
+	unsigned int number_of_literal_chunks = (number_of_literals-1)/32 + 1;
+
+	// Initialize example vector X
+	memset(X, 0, number_of_active_outputs * number_of_literal_chunks * sizeof(unsigned int));
+	for (int o = 0; o < number_of_active_outputs; ++o) {
+		int output_pos = o*number_of_literal_chunks;
+
+		for (int k = number_of_features; k < number_of_literals; ++k) {
+			int chunk_nr = k / 32;
+			int chunk_pos = k % 32;
+			X[output_pos + chunk_nr] |= (1U << chunk_pos);
+		}
+	}
+
 	// Loop over active outputs, producing one example per output
 	for (int o = 0; o < number_of_active_outputs; ++o) {
-		int output_pos = o*number_of_features;
-
-		for (int k = 0; k < number_of_features; ++k) {
-				X[output_pos + k] = 0;
-		}
+		int output_pos = o*number_of_literal_chunks;
 
 		if ((indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) || (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows)) {
 			// If no positive/negative examples, produce a random example
 			for (int a = 0; a < accumulation; ++a) {
 				row = rand() % number_of_rows;
 				for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-					X[output_pos + indices_row[k]] = 1;
+					int chunk_nr = indices_row[k] / 32;
+					int chunk_pos = indices_row[k] % 32;
+					X[output_pos + chunk_nr] |= (1U << chunk_pos);
+
+					chunk_nr = (indices_row[k] + number_of_features) / 32;
+					chunk_pos = (indices_row[k] + number_of_features) % 32;
+					X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
 				}
 			}
 		}
@@ -90,7 +107,13 @@ void tmu_produce_autoencoder_examples(
 				row = indices_col[random_index];
 				
 				for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-					X[output_pos + indices_row[k]] = 1;
+					int chunk_nr = indices_row[k] / 32;
+					int chunk_pos = indices_row[k] % 32;
+					X[output_pos + chunk_nr] |= (1U << chunk_pos);
+
+					chunk_nr = (indices_row[k] + number_of_features) / 32;
+					chunk_pos = (indices_row[k] + number_of_features) % 32;
+					X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
 				}
 			}
 		} else {
@@ -100,7 +123,13 @@ void tmu_produce_autoencoder_examples(
 
 				if (bsearch(&row, &indices_col[indptr_col[active_output[o]]], indptr_col[active_output[o]+1] - indptr_col[active_output[o]], sizeof(unsigned int), compareints) == NULL) {
 					for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-						X[output_pos + indices_row[k]] = 1;
+						int chunk_nr = indices_row[k] / 32;
+						int chunk_pos = indices_row[k] % 32;
+						X[output_pos + chunk_nr] |= (1U << chunk_pos);
+
+						chunk_nr = (indices_row[k] + number_of_features) / 32;
+						chunk_pos = (indices_row[k] + number_of_features) % 32;
+						X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
 					}
 					a++;
 				}

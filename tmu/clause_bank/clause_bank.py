@@ -366,16 +366,18 @@ class ClauseBank(BaseClauseBank):
             X_csc,
             active_output
     ):
-        return X_csr, X_csc, active_output
+        X = np.ascontiguousarray(np.empty(int(self.number_of_ta_chunks * active_output.shape[0]), dtype=np.uint32))
+        Y = np.ascontiguousarray(np.empty(int(active_output.shape[0]), dtype=np.uint32))
+        
+        return X_csr, X_csc, active_output, X, Y
 
     def produce_autoencoder_examples(
             self,
             encoded_X,
             accumulation
     ):
-        (X_csr, X_csc, active_output) = encoded_X
-        X = np.ascontiguousarray(np.empty(int(X_csc.shape[1] * active_output.shape[0]), dtype=np.uint32))
-        Y = np.ascontiguousarray(np.empty(int(active_output.shape[0]), dtype=np.uint32))
+        (X_csr, X_csc, active_output, X, Y) = encoded_X
+        
 
         lib.tmu_produce_autoencoder_examples(ffi.cast("unsigned int *", active_output.ctypes.data), active_output.shape[0],
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csr.indptr).ctypes.data),
