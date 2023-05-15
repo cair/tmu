@@ -29,9 +29,25 @@ https://arxiv.org/abs/1905.09688
 
 extern "C"
 {
-	__device__ inline unsigned int *search(int *index, unsigned int *indices, int number_of_elements)
+	__device__ int binary_search(unsigned int *indices, int index, int size)
 	{
-	  return NULL;
+			int l = 0;
+			int r = size-1;
+
+	    while (l <= r) {
+	        int m = l + (r - l) / 2;
+	 
+	        if (indices[m] == index)
+	            return m;
+	 
+	        if (indices[m] < index)
+	            l = m + 1;
+	 
+	        else
+	            r = m - 1;
+	    }
+	 
+	    return -1;
 	}
 
 	__global__ void produce_autoencoder_examples(curandState *state, unsigned int *active_output, int number_of_active_outputs, unsigned int *indptr_row, unsigned int *indices_row, int number_of_rows, unsigned int *indptr_col, unsigned int *indices_col, int number_of_cols, unsigned int *X, unsigned int *Y, int accumulation)
@@ -114,7 +130,7 @@ extern "C"
 				while (a < accumulation) {
 					row = curand(&localState) % number_of_rows;
 
-					if (search(&row, &indices_col[indptr_col[active_output[o]]], indptr_col[active_output[o]+1] - indptr_col[active_output[o]]) == NULL) {
+					if (binary_search(&indices_col[indptr_col[active_output[o]]], row, indptr_col[active_output[o]+1] - indptr_col[active_output[o]]) == -1) {
 						for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
 							int chunk_nr = indices_row[k] / 32;
 							int chunk_pos = indices_row[k] % 32;
