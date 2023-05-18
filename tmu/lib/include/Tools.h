@@ -35,7 +35,9 @@ void tmu_produce_autoencoder_examples(
     unsigned int *indices_col,
     int number_of_cols,
     unsigned int *X,
-    unsigned int *Y,
+    unsigned int *random_number_stream,
+    int random_number_stream_length,
+    int random_number_stream_start,
     int accumulation
 );
 

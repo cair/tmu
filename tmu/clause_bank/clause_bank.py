@@ -367,17 +367,20 @@ class ClauseBank(BaseClauseBank):
             active_output
     ):
         X = np.ascontiguousarray(np.empty(int(self.number_of_ta_chunks * active_output.shape[0]), dtype=np.uint32))
-        Y = np.ascontiguousarray(np.empty(int(active_output.shape[0]), dtype=np.uint32))
-        
-        return X_csr, X_csc, active_output, X, Y
+        self.random_stream_length = 1000
+        random_stream = np.random.choice(2, self.random_stream_length).astype(dtype=np.uint32)
+        return X_csr, X_csc, active_output, X, random_stream
 
     def produce_autoencoder_examples(
             self,
             encoded_X,
             accumulation
     ):
-        (X_csr, X_csc, active_output, X, Y) = encoded_X
+        (X_csr, X_csc, active_output, X, random_stream) = encoded_X
         
+        random_stream_start = np.random.choice(self.random_stream_length)
+
+        Y = random_stream.take(np.arange(random_stream_start, random_stream_start + active_output.shape[0]), mode='wrap')
 
         lib.tmu_produce_autoencoder_examples(ffi.cast("unsigned int *", active_output.ctypes.data), active_output.shape[0],
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csr.indptr).ctypes.data),
@@ -386,6 +389,7 @@ class ClauseBank(BaseClauseBank):
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indptr).ctypes.data),
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indices).ctypes.data),
                                              int(X_csc.shape[1]), ffi.cast("unsigned int *", X.ctypes.data),
-                                             ffi.cast("unsigned int *", Y.ctypes.data), int(accumulation))
+                                             ffi.cast("unsigned int *", random_stream.ctypes.data), int(self.random_stream_length),
+                                             int(random_stream_start), int(accumulation))
 
         return X.reshape((len(active_output), -1)), Y

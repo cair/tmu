@@ -44,7 +44,9 @@ void tmu_produce_autoencoder_examples(
         unsigned int *indices_col,
         int number_of_cols,
         unsigned int *X,
-        unsigned int *Y,
+        unsigned int *random_number_stream,
+        int random_stream_length,
+	int random_number_stream_start,
         int accumulation
 )
 {
@@ -85,22 +87,10 @@ void tmu_produce_autoencoder_examples(
 					X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
 				}
 			}
+			continue;
 		}
-
-		if (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) {
-			// If no positive examples, produce a negative output value
-			Y[o] = 0;
-			continue;
-		} else if (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows) {
-			// If no negative examples, produce a positive output value
-			Y[o] = 1;
-			continue;
-		} 
-		
-		// Randomly select either positive or negative example
-		Y[o] = rand() % 2;
 	
-		if (Y[o]) {
+		if (random_number_stream[(random_number_stream_start + o) % random_stream_length]) {
 			for (int a = 0; a < accumulation; ++a) {
 				// Pick example randomly among positive examples
 				int random_index = indptr_col[active_output[o]] + (rand() % (indptr_col[active_output[o]+1] - indptr_col[active_output[o]]));

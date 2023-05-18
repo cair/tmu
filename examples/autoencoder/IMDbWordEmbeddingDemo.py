@@ -20,7 +20,7 @@ accumulation = 25
 factor = 4
 clauses = factor*20
 T = factor*40
-s = 20.0
+s = 5.0
 
 print("Number of clauses:", clauses)
 
@@ -79,8 +79,8 @@ for i in range(len(target_words)):
 
 tm = TMAutoEncoder(clauses, T, s, output_active, max_included_literals=3, accumulation=accumulation, feature_negation=False, platform='CPU', output_balancing=True)
 
-print("\nAccuracy Over 40 Epochs:")
-for e in range(40):
+print("\nAccuracy Over 250 Epochs:")
+for e in range(250):
 	start_training = time()
 	tm.fit(X_train, number_of_examples=number_of_examples)
 	stop_training = time()
