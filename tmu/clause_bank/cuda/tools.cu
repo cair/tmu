@@ -41,8 +41,7 @@ extern "C"
 	            return m;
 	 
 	        if (indices[m] < index)
-	            l = m + 1;
-	 
+	            l = m + 1;	 
 	        else
 	            r = m - 1;
 	    }
