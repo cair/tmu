@@ -109,7 +109,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
             literal_active
     ):
         all_literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
-        clause_outputs = self.clause_bank.calculate_clause_outputs_update(all_literal_active, encoded_X, target_output)
+        clause_outputs = self.clause_bank.calculate_clause_outputs_update(all_literal_active, encoded_X, 0)
 
         class_sum = np.dot(clause_active * self.weight_banks[target_output].get_weights(), clause_outputs).astype(
             np.int32)
@@ -117,7 +117,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
 
         type_iii_feedback_selection = np.random.choice(2)
 
-        if Y[target_output] == 1:
+        if Y == 1:
             update_p = (self.T - class_sum) / (2 * self.T)
             if self.squared_weight_update_p:
                 update_p = update_p ** 2
@@ -127,7 +127,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                 clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
                 literal_active=literal_active,
                 encoded_X=encoded_X,
-                e=target_output
+                e=0
             )
 
             self.clause_bank.type_ii_feedback(
@@ -135,7 +135,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                 clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
                 literal_active=literal_active,
                 encoded_X=encoded_X,
-                e=target_output
+                e=0
             )
 
             self.weight_banks[target_output].increment(
@@ -151,7 +151,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                     clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
                     literal_active=literal_active,
                     encoded_X=encoded_X,
-                    e=target_output,
+                    e=0,
                     target=1
                 )
 
@@ -160,7 +160,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                     clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
                     literal_active=literal_active,
                     encoded_X=encoded_X,
-                    e=target_output,
+                    e=0,
                     target=0
                 )
         else:
@@ -173,7 +173,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                 clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
                 literal_active=literal_active,
                 encoded_X=encoded_X,
-                e=target_output
+                e=0
             )
 
             self.clause_bank.type_ii_feedback(
@@ -181,7 +181,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                 clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
                 literal_active=literal_active,
                 encoded_X=encoded_X,
-                e=target_output
+                e=0
             )
 
             self.weight_banks[target_output].decrement(
@@ -197,7 +197,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                     clause_active=clause_active * (self.weight_banks[target_output].get_weights() < 0),
                     literal_active=literal_active,
                     encoded_X=encoded_X,
-                    e=target_output,
+                    e=0,
                     target=1
                 )
 
@@ -206,7 +206,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                     clause_active=clause_active * (self.weight_banks[target_output].get_weights() >= 0),
                     literal_active=literal_active,
                     encoded_X=encoded_X,
-                    e=target_output,
+                    e=0,
                     target=0
                 )
 
@@ -259,8 +259,9 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
             update_clause = np.random.random(self.number_of_clauses) <= (
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
-            Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_train, self.accumulation)
             for i in class_index:
+                Xu, Yu = self.clause_bank.produce_autoencoder_example(self.encoded_X_train, i, self.accumulation)
+                
                 ta_chunk = self.output_active[i] // 32
                 chunk_pos = self.output_active[i] % 32
                 copy_literal_active_ta_chunk = literal_active[ta_chunk]
@@ -333,16 +334,16 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
         literal_active = self.activate_literals()
 
         for e in range(number_of_examples):
-            Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_test, self.accumulation)
-            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(Xu, the_class)
+            Xu, Yu = self.clause_bank.produce_autoencoder_example(self.encoded_X_test, the_class, self.accumulation)
+            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(Xu, 0)
 
             if positive_polarity:
-                if Yu[the_class] == 1:
+                if Yu == 1:
                     true_positive += (weights >= 0) * clause_outputs
                 else:
                     false_positive += (weights >= 0) * clause_outputs
             else:
-                if Yu[the_class] == 0:
+                if Yu == 0:
                     true_positive += (weights < 0) * clause_outputs
                 else:
                     false_positive += (weights < 0) * clause_outputs
@@ -363,16 +364,16 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
         weights = self.weight_banks[the_class].get_weights()
 
         for e in range(number_of_examples):
-            Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_test, self.accumulation)
+            Xu, Yu = self.clause_bank.produce_autoencoder_example(self.encoded_X_test, the_class, self.accumulation)
 
-            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(Xu, the_class)
+            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(Xu, 0)
 
             if positive_polarity:
-                if Yu[the_class] == 1:
+                if Yu == 1:
                     true_positive += (weights >= 0) * clause_outputs
                     false_negative += (weights >= 0) * (1 - clause_outputs)
             else:
-                if Yu[the_class] == 0:
+                if Yu == 0:
                     true_positive += (weights < 0) * clause_outputs
                     false_negative += (weights < 0) * (1 - clause_outputs)
 
