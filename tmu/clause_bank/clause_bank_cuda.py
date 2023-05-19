@@ -366,6 +366,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
         self.produce_autoencoder_examples_gpu.prepared_call(
                                             self.grid,
                                             self.block,
+                                            self.rng_gen.state,
                                             active_output_gpu,
                                             number_of_active_outputs,
                                             X_csr_indptr_gpu,
