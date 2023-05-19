@@ -34,7 +34,7 @@ unsigned int compareints(const void * a, const void * b)
   return(*(unsigned int*)a - *(unsigned int*)b);
 }
 
-void tmu_produce_autoencoder_examples(
+void tmu_produce_autoencoder_example(
         unsigned int *active_output,
         int number_of_active_outputs,
         unsigned int *indptr_row,
@@ -44,9 +44,8 @@ void tmu_produce_autoencoder_examples(
         unsigned int *indices_col,
         int number_of_cols,
         unsigned int *X,
-        unsigned int *random_stream,
-        int random_stream_length,
-	int random_stream_start,
+        int target,
+        int target_value,
         int accumulation
 )
 {
@@ -58,71 +57,62 @@ void tmu_produce_autoencoder_examples(
 	unsigned int number_of_literal_chunks = (number_of_literals-1)/32 + 1;
 
 	// Initialize example vector X
-	memset(X, 0, number_of_active_outputs * number_of_literal_chunks * sizeof(unsigned int));
-	for (int o = 0; o < number_of_active_outputs; ++o) {
-		int output_pos = o*number_of_literal_chunks;
+	memset(X, 0, number_of_literal_chunks * sizeof(unsigned int));
+	for (int k = number_of_features; k < number_of_literals; ++k) {
+		int chunk_nr = k / 32;
+		int chunk_pos = k % 32;
+		X[chunk_nr] |= (1U << chunk_pos);
+	}
+	
+	if ((indptr_col[active_output[target]+1] - indptr_col[active_output[target]] == 0) || (indptr_col[active_output[target]+1] - indptr_col[active_output[target]] == number_of_rows)) {
+		// If no positive/negative examples, produce a random example
+		for (int a = 0; a < accumulation; ++a) {
+			row = rand() % number_of_rows;
+			for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
+				int chunk_nr = indices_row[k] / 32;
+				int chunk_pos = indices_row[k] % 32;
+				X[chunk_nr] |= (1U << chunk_pos);
 
-		for (int k = number_of_features; k < number_of_literals; ++k) {
-			int chunk_nr = k / 32;
-			int chunk_pos = k % 32;
-			X[output_pos + chunk_nr] |= (1U << chunk_pos);
+				chunk_nr = (indices_row[k] + number_of_features) / 32;
+				chunk_pos = (indices_row[k] + number_of_features) % 32;
+				X[chunk_nr] &= ~(1U << chunk_pos);
+			}
 		}
+		return;
 	}
 
-	// Loop over active outputs, producing one example per output
-	for (int o = 0; o < number_of_active_outputs; ++o) {
-		int output_pos = o*number_of_literal_chunks;
+	if (target_value) {
+		for (int a = 0; a < accumulation; ++a) {
+			// Pick example randomly among positive examples
+			int random_index = indptr_col[active_output[target]] + (rand() % (indptr_col[active_output[target]+1] - indptr_col[active_output[target]]));
+			row = indices_col[random_index];
+			
+			for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
+				int chunk_nr = indices_row[k] / 32;
+				int chunk_pos = indices_row[k] % 32;
+				X[chunk_nr] |= (1U << chunk_pos);
 
-		if ((indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) || (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows)) {
-			// If no positive/negative examples, produce a random example
-			for (int a = 0; a < accumulation; ++a) {
-				row = rand() % number_of_rows;
-				for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-					int chunk_nr = indices_row[k] / 32;
-					int chunk_pos = indices_row[k] % 32;
-					X[output_pos + chunk_nr] |= (1U << chunk_pos);
-
-					chunk_nr = (indices_row[k] + number_of_features) / 32;
-					chunk_pos = (indices_row[k] + number_of_features) % 32;
-					X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
-				}
+				chunk_nr = (indices_row[k] + number_of_features) / 32;
+				chunk_pos = (indices_row[k] + number_of_features) % 32;
+				X[chunk_nr] &= ~(1U << chunk_pos);
 			}
-			continue;
 		}
-	
-		if (random_stream[(random_stream_start + o) % random_stream_length]) {
-			for (int a = 0; a < accumulation; ++a) {
-				// Pick example randomly among positive examples
-				int random_index = indptr_col[active_output[o]] + (rand() % (indptr_col[active_output[o]+1] - indptr_col[active_output[o]]));
-				row = indices_col[random_index];
-				
+	} else {
+		int a = 0;
+		while (a < accumulation) {
+			row = rand() % number_of_rows;
+
+			if (bsearch(&row, &indices_col[indptr_col[active_output[target]]], indptr_col[active_output[target]+1] - indptr_col[active_output[target]], sizeof(unsigned int), compareints) == NULL) {
 				for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
 					int chunk_nr = indices_row[k] / 32;
 					int chunk_pos = indices_row[k] % 32;
-					X[output_pos + chunk_nr] |= (1U << chunk_pos);
+					X[chunk_nr] |= (1U << chunk_pos);
 
 					chunk_nr = (indices_row[k] + number_of_features) / 32;
 					chunk_pos = (indices_row[k] + number_of_features) % 32;
-					X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
+					X[chunk_nr] &= ~(1U << chunk_pos);
 				}
-			}
-		} else {
-			int a = 0;
-			while (a < accumulation) {
-				row = rand() % number_of_rows;
-
-				if (bsearch(&row, &indices_col[indptr_col[active_output[o]]], indptr_col[active_output[o]+1] - indptr_col[active_output[o]], sizeof(unsigned int), compareints) == NULL) {
-					for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-						int chunk_nr = indices_row[k] / 32;
-						int chunk_pos = indices_row[k] % 32;
-						X[output_pos + chunk_nr] |= (1U << chunk_pos);
-
-						chunk_nr = (indices_row[k] + number_of_features) / 32;
-						chunk_pos = (indices_row[k] + number_of_features) % 32;
-						X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
-					}
-					a++;
-				}
+				a++;
 			}
 		}
 	}
