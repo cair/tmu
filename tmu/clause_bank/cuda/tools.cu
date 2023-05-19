@@ -49,7 +49,7 @@ extern "C"
 	    return -1;
 	}
 
-	__global__ void produce_autoencoder_examples(
+	__global__ void produce_autoencoder_example(
 		curandState *state,
 		unsigned int *active_output,
 		int number_of_active_outputs,
@@ -60,9 +60,8 @@ extern "C"
 		unsigned int *indices_col,
 		int number_of_cols,
 		unsigned int *X,
-		unsigned int *random_stream,
-		int random_stream_length,
-    	int random_stream_start,
+		int target,
+        int target_value,
 		int accumulation
 	)
 	{
@@ -80,76 +79,68 @@ extern "C"
 		unsigned int number_of_literal_chunks = (number_of_literals-1)/32 + 1;
 
 		// Initialize example vector X
-		for (int o = index; o < number_of_active_outputs; o += stride) {
-			int output_pos = o*number_of_literal_chunks;
-
-			for (int k = 0; k < number_of_features; ++k) {
-				int chunk_nr = k / 32;
-				int chunk_pos = k % 32;
-				X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
-			}
-
-			for (int k = number_of_features; k < number_of_literals; ++k) {
-				int chunk_nr = k / 32;
-				int chunk_pos = k % 32;
-				X[output_pos + chunk_nr] |= (1U << chunk_pos);
-			}
+		
+		for (int k = 0; k < number_of_features; ++k) {
+			int chunk_nr = k / 32;
+			int chunk_pos = k % 32;
+			X[chunk_nr] &= ~(1U << chunk_pos);
 		}
 
-		// Loop over active outputs, producing one example per output
-		for (int o = index; o < number_of_active_outputs; o += stride) {
-			int output_pos = o*number_of_literal_chunks;
+		for (int k = number_of_features; k < number_of_literals; ++k) {
+			int chunk_nr = k / 32;
+			int chunk_pos = k % 32;
+			X[chunk_nr] |= (1U << chunk_pos);
+		}
 
-			if ((indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) || (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows)) {
-				// If no positive/negative examples, produce a random example
-				for (int a = 0; a < accumulation; ++a) {
-					row = curand(&localState) % number_of_rows;
-					for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-						int chunk_nr = indices_row[k] / 32;
-						int chunk_pos = indices_row[k] % 32;
-						X[output_pos + chunk_nr] |= (1U << chunk_pos);
+		if ((indptr_col[active_output[target]+1] - indptr_col[active_output[target]] == 0) || (indptr_col[active_output[target]+1] - indptr_col[active_output[target]] == number_of_rows)) {
+			// If no positive/negative examples, produce a random example
+			for (int a = 0; a < accumulation; ++a) {
+				row = curand(&localState) % number_of_rows;
+				for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
+					int chunk_nr = indices_row[k] / 32;
+					int chunk_pos = indices_row[k] % 32;
+					X[chunk_nr] |= (1U << chunk_pos);
 
-						chunk_nr = (indices_row[k] + number_of_features) / 32;
-						chunk_pos = (indices_row[k] + number_of_features) % 32;
-						X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
-					}
+					chunk_nr = (indices_row[k] + number_of_features) / 32;
+					chunk_pos = (indices_row[k] + number_of_features) % 32;
+					X[chunk_nr] &= ~(1U << chunk_pos);
 				}
-				continue;
 			}
-		
-			if (random_stream[(random_stream_start + o) % random_stream_length]) {
-				for (int a = 0; a < accumulation; ++a) {
-					// Pick example randomly among positive examples
-					int random_index = indptr_col[active_output[o]] + (curand(&localState) % (indptr_col[active_output[o]+1] - indptr_col[active_output[o]]));
-					row = indices_col[random_index];
-					
+			return;
+		}
+	
+		if (target_value) {
+			for (int a = 0; a < accumulation; ++a) {
+				// Pick example randomly among positive examples
+				int random_index = indptr_col[active_output[target]] + (curand(&localState) % (indptr_col[active_output[target]+1] - indptr_col[active_output[target]]));
+				row = indices_col[random_index];
+				
+				for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
+					int chunk_nr = indices_row[k] / 32;
+					int chunk_pos = indices_row[k] % 32;
+					X[chunk_nr] |= (1U << chunk_pos);
+
+					chunk_nr = (indices_row[k] + number_of_features) / 32;
+					chunk_pos = (indices_row[k] + number_of_features) % 32;
+					X[chunk_nr] &= ~(1U << chunk_pos);
+				}
+			}
+		} else {
+			int a = 0;
+			while (a < accumulation) {
+				row = curand(&localState) % number_of_rows;
+
+				if (binary_search(&indices_col[indptr_col[active_output[target]]], row, indptr_col[active_output[target]+1] - indptr_col[active_output[target]]) == -1) {
 					for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
 						int chunk_nr = indices_row[k] / 32;
 						int chunk_pos = indices_row[k] % 32;
-						X[output_pos + chunk_nr] |= (1U << chunk_pos);
+						X[chunk_nr] |= (1U << chunk_pos);
 
 						chunk_nr = (indices_row[k] + number_of_features) / 32;
 						chunk_pos = (indices_row[k] + number_of_features) % 32;
-						X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
+						X[chunk_nr] &= ~(1U << chunk_pos);
 					}
-				}
-			} else {
-				int a = 0;
-				while (a < accumulation) {
-					row = curand(&localState) % number_of_rows;
-
-					if (binary_search(&indices_col[indptr_col[active_output[o]]], row, indptr_col[active_output[o]+1] - indptr_col[active_output[o]]) == -1) {
-						for (int k = indptr_row[row]; k < indptr_row[row+1]; ++k) {
-							int chunk_nr = indices_row[k] / 32;
-							int chunk_pos = indices_row[k] % 32;
-							X[output_pos + chunk_nr] |= (1U << chunk_pos);
-
-							chunk_nr = (indices_row[k] + number_of_features) / 32;
-							chunk_pos = (indices_row[k] + number_of_features) % 32;
-							X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
-						}
-						a++;
-					}
+					a++;
 				}
 			}
 		}
