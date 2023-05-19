@@ -25,7 +25,7 @@ https://arxiv.org/abs/1905.09688
 
 */
 
-void tmu_produce_autoencoder_examples(
+void tmu_produce_autoencoder_example(
     unsigned int *active_output,
     int number_of_active_outputs,
     unsigned int *indptr_row,
@@ -35,9 +35,8 @@ void tmu_produce_autoencoder_examples(
     unsigned int *indices_col,
     int number_of_cols,
     unsigned int *X,
-    unsigned int *random_stream,
-    int random_stream_length,
-    int random_stream_start,
+    int target,
+    int target_value,
     int accumulation
 );
 
