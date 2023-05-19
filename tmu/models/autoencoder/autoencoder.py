@@ -334,17 +334,15 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
 
         for e in range(number_of_examples):
             Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_test, self.accumulation)
-            (target, encoded_X) = Yu[0], self.clause_bank.prepare_X(Xu[0].reshape((1, -1)))
-
-            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
+            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, the_class)
 
             if positive_polarity:
-                if target == 1:
+                if Yu[the_class] == 1:
                     true_positive += (weights >= 0) * clause_outputs
                 else:
                     false_positive += (weights >= 0) * clause_outputs
             else:
-                if target == 0:
+                if Yu[the_class] == 0:
                     true_positive += (weights < 0) * clause_outputs
                 else:
                     false_positive += (weights < 0) * clause_outputs
@@ -366,16 +364,15 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
 
         for e in range(number_of_examples):
             Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_test, self.accumulation)
-            (target, encoded_X) = Yu[0], self.clause_bank.prepare_X(Xu[0].reshape((1, -1)))
 
-            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
+            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, the_class)
 
             if positive_polarity:
-                if target == 1:
+                if Yu[the_class] == 1:
                     true_positive += (weights >= 0) * clause_outputs
                     false_negative += (weights >= 0) * (1 - clause_outputs)
             else:
-                if target == 0:
+                if Yu[the_class] == 0:
                     true_positive += (weights < 0) * clause_outputs
                     false_negative += (weights < 0) * (1 - clause_outputs)
 
