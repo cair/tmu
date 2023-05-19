@@ -334,7 +334,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
 
         for e in range(number_of_examples):
             Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_test, self.accumulation)
-            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, the_class)
+            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(Xu, the_class)
 
             if positive_polarity:
                 if Yu[the_class] == 1:
@@ -365,7 +365,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
         for e in range(number_of_examples):
             Xu, Yu = self.clause_bank.produce_autoencoder_examples(self.encoded_X_test, self.accumulation)
 
-            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, the_class)
+            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(Xu, the_class)
 
             if positive_polarity:
                 if Yu[the_class] == 1:
