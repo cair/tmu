@@ -389,7 +389,9 @@ class ClauseBank(BaseClauseBank):
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indptr).ctypes.data),
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indices).ctypes.data),
                                              int(X_csc.shape[1]), ffi.cast("unsigned int *", X.ctypes.data),
-                                             ffi.cast("unsigned int *", random_stream.ctypes.data), int(self.random_stream_length),
-                                             int(random_stream_start), int(accumulation))
+                                             ffi.cast("unsigned int *", random_stream.ctypes.data),
+                                             int(self.random_stream_length),
+                                             int(random_stream_start),
+                                             int(accumulation))
 
         return X.reshape((len(active_output), -1)), Y
