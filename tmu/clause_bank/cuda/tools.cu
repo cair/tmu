@@ -68,6 +68,10 @@ extern "C"
 		int index = blockIdx.x * blockDim.x + threadIdx.x;
 		int stride = blockDim.x * gridDim.x;
 
+		if (index != 0) {
+			return
+		}
+		
 		/* Copy state to local memory for efficiency */
     	curandState localState = state[index];
 
