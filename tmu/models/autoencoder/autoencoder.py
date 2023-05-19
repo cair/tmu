@@ -103,7 +103,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
     def update(
             self,
             target_output,
-            target_value,
+            Y,
             encoded_X,
             clause_active,
             literal_active
@@ -117,7 +117,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
 
         type_iii_feedback_selection = np.random.choice(2)
 
-        if target_value[target_output] == 1:
+        if Y[target_output] == 1:
             update_p = (self.T - class_sum) / (2 * self.T)
             if self.squared_weight_update_p:
                 update_p = update_p ** 2
