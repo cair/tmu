@@ -80,9 +80,14 @@ extern "C"
 		unsigned int number_of_literal_chunks = (number_of_literals-1)/32 + 1;
 
 		// Initialize example vector X
-		memset(X, 0, number_of_active_outputs * number_of_literal_chunks * sizeof(unsigned int));
 		for (int o = index; o < number_of_active_outputs; o += stride) {
 			int output_pos = o*number_of_literal_chunks;
+
+			for (int k = 0; k < number_of_features; ++k) {
+				int chunk_nr = k / 32;
+				int chunk_pos = k % 32;
+				X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
+			}
 
 			for (int k = number_of_features; k < number_of_literals; ++k) {
 				int chunk_nr = k / 32;
