@@ -44,9 +44,9 @@ void tmu_produce_autoencoder_examples(
         unsigned int *indices_col,
         int number_of_cols,
         unsigned int *X,
-        unsigned int *random_number_stream,
+        unsigned int *random_stream,
         int random_stream_length,
-	int random_number_stream_start,
+	int random_stream_start,
         int accumulation
 )
 {
@@ -90,7 +90,7 @@ void tmu_produce_autoencoder_examples(
 			continue;
 		}
 	
-		if (random_number_stream[(random_number_stream_start + o) % random_stream_length]) {
+		if (random_stream[(random_stream_start + o) % random_stream_length]) {
 			for (int a = 0; a < accumulation; ++a) {
 				// Pick example randomly among positive examples
 				int random_index = indptr_col[active_output[o]] + (rand() % (indptr_col[active_output[o]+1] - indptr_col[active_output[o]]));

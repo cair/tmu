@@ -49,13 +49,28 @@ extern "C"
 	    return -1;
 	}
 
-	__global__ void produce_autoencoder_examples(curandState *state, unsigned int *active_output, int number_of_active_outputs, unsigned int *indptr_row, unsigned int *indices_row, int number_of_rows, unsigned int *indptr_col, unsigned int *indices_col, int number_of_cols, unsigned int *X, unsigned int *Y, int accumulation)
+	__global__ void produce_autoencoder_examples(
+		curandState *state,
+		unsigned int *active_output,
+		int number_of_active_outputs,
+		unsigned int *indptr_row,
+		unsigned int *indices_row,
+		int number_of_rows,
+		unsigned int *indptr_col,
+		unsigned int *indices_col,
+		int number_of_cols,
+		unsigned int *X,
+		unsigned int *random_stream,
+		int random_stream_length,
+    	int random_stream_start,
+		int accumulation
+	)
 	{
 		int index = blockIdx.x * blockDim.x + threadIdx.x;
 		int stride = blockDim.x * gridDim.x;
 
 		/* Copy state to local memory for efficiency */
-    curandState localState = state[index];
+    	curandState localState = state[index];
 
 		int row;
 
@@ -64,20 +79,21 @@ extern "C"
 
 		unsigned int number_of_literal_chunks = (number_of_literals-1)/32 + 1;
 
-		// Loop over active outputs, producing one example per output
-		for (int o = index; o < number_of_active_outputs; o += stride) {
+		// Initialize example vector X
+		memset(X, 0, number_of_active_outputs * number_of_literal_chunks * sizeof(unsigned int));
+		for (int o = 0; o < number_of_active_outputs; ++o) {
 			int output_pos = o*number_of_literal_chunks;
-
-			// Initialize example vector X
-			for (int k = 0; k < number_of_literal_chunks; ++k) {
-				X[output_pos + k] = 0;
-			}
 
 			for (int k = number_of_features; k < number_of_literals; ++k) {
 				int chunk_nr = k / 32;
 				int chunk_pos = k % 32;
 				X[output_pos + chunk_nr] |= (1U << chunk_pos);
 			}
+		}
+
+		// Loop over active outputs, producing one example per output
+		for (int o = index; o < number_of_active_outputs; o += stride) {
+			int output_pos = o*number_of_literal_chunks;
 
 			if ((indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) || (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows)) {
 				// If no positive/negative examples, produce a random example
@@ -93,22 +109,10 @@ extern "C"
 						X[output_pos + chunk_nr] &= ~(1U << chunk_pos);
 					}
 				}
+				continue;
 			}
-
-			if (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == 0) {
-				// If no positive examples, produce a negative output value
-				Y[o] = 0;
-				continue;
-			} else if (indptr_col[active_output[o]+1] - indptr_col[active_output[o]] == number_of_rows) {
-				// If no negative examples, produce a positive output value
-				Y[o] = 1;
-				continue;
-			} 
-			
-			// Randomly select either positive or negative example
-			Y[o] = curand(&localState) % 2;
 		
-			if (Y[o]) {
+			if (random_stream[(random_stream_start + o) % random_stream_length]) {
 				for (int a = 0; a < accumulation; ++a) {
 					// Pick example randomly among positive examples
 					int random_index = indptr_col[active_output[o]] + (curand(&localState) % (indptr_col[active_output[o]+1] - indptr_col[active_output[o]]));
