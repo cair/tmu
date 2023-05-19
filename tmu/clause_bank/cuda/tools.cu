@@ -81,7 +81,7 @@ extern "C"
 
 		// Initialize example vector X
 		memset(X, 0, number_of_active_outputs * number_of_literal_chunks * sizeof(unsigned int));
-		for (int o = 0; o < number_of_active_outputs; ++o) {
+		for (int o = index; o < number_of_active_outputs; o += stride) {
 			int output_pos = o*number_of_literal_chunks;
 
 			for (int k = number_of_features; k < number_of_literals; ++k) {
