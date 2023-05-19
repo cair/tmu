@@ -383,7 +383,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
 
         self.cuda_ctx.synchronize()
 
-        return X_gpu, Y_gpu
+        return X_gpu, Y
 
 if cuda_installed:
     ClauseBankCUDA = ImplClauseBankCUDA
