@@ -108,8 +108,8 @@ class ImplClauseBankCUDA(BaseClauseBank):
         self.type_ii_feedback_gpu.prepare("PPiiifPPPi")
 
         mod = load_cuda_kernel(parameters, "cuda/tools.cu")
-        self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_examples")
-        self.produce_autoencoder_examples_gpu.prepare("PPiPPiPPiPPiii")
+        self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_example")
+        self.produce_autoencoder_examples_gpu.prepare("PPiPPiPPiPiii")
 
         #self.prepare_encode_gpu = mod.get_function("prepare_encode")
         #self.prepare_encode_gpu.prepare("PPiiiiiiii")
@@ -343,25 +343,20 @@ class ImplClauseBankCUDA(BaseClauseBank):
         active_output_gpu = cuda.mem_alloc(active_output.nbytes)
         cuda.memcpy_htod(active_output_gpu, active_output)
 
-        X = np.ascontiguousarray(np.zeros(int(self.number_of_ta_chunks * active_output.shape[0]), dtype=np.uint32))
+        X = np.ascontiguousarray(np.zeros(int(self.number_of_ta_chunks), dtype=np.uint32))
         X_gpu = cuda.mem_alloc(X.nbytes)
 
-        self.random_stream_length = 1000
-        random_stream = np.random.choice(2, self.random_stream_length).astype(dtype=np.uint32)
-        random_stream_gpu = cuda.mem_alloc(random_stream.nbytes)
-        cuda.memcpy_htod(random_stream_gpu, random_stream)
+        return (active_output_gpu, active_output, int(active_output.shape[0]), X_csr_indptr_gpu, X_csr_indices_gpu, int(X_csr.shape[0]), X_csc_indptr_gpu,  X_csc_indices_gpu, int(X_csc.shape[1]), X_gpu)
 
-        return (active_output_gpu, active_output, int(active_output.shape[0]), X_csr_indptr_gpu, X_csr_indices_gpu, int(X_csr.shape[0]), X_csc_indptr_gpu,  X_csc_indices_gpu, int(X_csc.shape[1]), X_gpu, random_stream_gpu, random_stream)
-
-    def produce_autoencoder_examples(
+    def produce_autoencoder_example(
             self,
             encoded_X,
+            target,
             accumulation
         ):
-        (active_output_gpu, active_output, number_of_active_outputs, X_csr_indptr_gpu, X_csr_indices_gpu, number_of_rows, X_csc_indptr_gpu,  X_csc_indices_gpu, number_of_columns, X_gpu, random_stream_gpu, random_stream) = encoded_X
+        (active_output_gpu, active_output, number_of_active_outputs, X_csr_indptr_gpu, X_csr_indices_gpu, number_of_rows, X_csc_indptr_gpu,  X_csc_indices_gpu, number_of_columns, X_gpu) = encoded_X
 
-        random_stream_start = np.random.choice(self.random_stream_length)
-        Y = random_stream.take(np.arange(random_stream_start, random_stream_start + active_output.shape[0]), mode='wrap')
+        target_value = np.random.choice(2)
 
         self.produce_autoencoder_examples_gpu.prepared_call(
                                             self.grid,
@@ -376,14 +371,13 @@ class ImplClauseBankCUDA(BaseClauseBank):
                                             X_csc_indices_gpu,
                                             number_of_columns,
                                             X_gpu,
-                                            random_stream_gpu,
-                                            int(self.random_stream_length),
-                                            int(random_stream_start),
+                                            int(target),
+                                            int(target_value),
                                             int(accumulation))
 
         self.cuda_ctx.synchronize()
 
-        return X_gpu, Y
+        return X_gpu, target_value
 
 if cuda_installed:
     ClauseBankCUDA = ImplClauseBankCUDA
