@@ -69,7 +69,7 @@ extern "C"
 		int stride = blockDim.x * gridDim.x;
 
 		if (index != 0) {
-			return
+			return;
 		}
 
 		/* Copy state to local memory for efficiency */
