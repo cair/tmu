@@ -71,7 +71,7 @@ extern "C"
 		if (index != 0) {
 			return
 		}
-		
+
 		/* Copy state to local memory for efficiency */
     	curandState localState = state[index];
 
@@ -110,6 +110,9 @@ extern "C"
 					X[chunk_nr] &= ~(1U << chunk_pos);
 				}
 			}
+
+			state[index] = localState;
+
 			return;
 		}
 	
