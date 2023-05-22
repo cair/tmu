@@ -122,7 +122,7 @@ for i in range(testing_examples):
 		X_test[i] = np.logical_or(X_test[i], X_test_full[np.random.choice(target_rows)])
 	Y_test[i] = target_class
 
-tm = TMCoalescedClassifier(clauses, T, s, max_included_literals=max_included_literals, feature_negation=False, clause_drop_p=clause_drop_p, platform='CPU', weighted_clauses=True)
+tm = TMCoalescedClassifier(clauses, T, s, max_included_literals=max_included_literals, feature_negation=False, clause_drop_p=clause_drop_p, platform='GPU', weighted_clauses=True)
 
 for e in range(40):
 	start_training = time()
