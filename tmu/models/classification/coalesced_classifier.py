@@ -329,6 +329,9 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
 
         return true_positive_clause_outputs
 
+    def get_weights(self, the_class):
+        return self.weight_banks[the_class].get_weights()
+
     def get_weight(self, the_class, clause):
         return self.weight_banks[the_class].get_weights()[clause]
 
