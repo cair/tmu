@@ -263,7 +263,7 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
                     self.update(Ym[batch_example], batch_example)
         return
 
-    def predict(self, X, **kwargs):
+    def predict(self, X, clip_class_sum=False, **kwargs):
         if not np.array_equal(self.X_test, X):
             self.encoded_X_test = self.clause_bank.prepare_X(X)
             self.X_test = X.copy()
@@ -276,7 +276,10 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(self.encoded_X_test, e)
             for i in range(self.number_of_classes):
                 class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
-                class_sum = np.clip(class_sum, -self.T, self.T)
+                
+                if clip_class_sum:
+                    class_sum = np.clip(class_sum, -self.T, self.T)
+                
                 if class_sum > max_class_sum:
                     max_class_sum = class_sum
                     max_class = i
