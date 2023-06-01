@@ -275,28 +275,52 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                     target=0
                 )
         return
+    
 
-    def predict(self, X, clip_class_sum=False, **kwargs):
+    def predict(self, X, clip_class_sum=False, return_class_sums: bool = False, **kwargs):
         if not np.array_equal(self.X_test, X):
             self.encoded_X_test = self.clause_banks[0].prepare_X(X)
             self.X_test = X.copy()
 
-        Y = np.ascontiguousarray(np.zeros(X.shape[0], dtype=np.uint32))
-        for e in range(X.shape[0]):
-            max_class_sum = -self.T*self.number_of_clauses
-            max_class = 0
-            for i in self.weight_banks.classes():
-                class_sum = np.dot(self.weight_banks[i].get_weights(),
-                                   self.clause_banks[i].calculate_clause_outputs_predict(self.encoded_X_test,
-                                                                                         e)).astype(np.int32)
-                if clip_class_sum:
-                    class_sum = np.clip(class_sum, -self.T, self.T)
+        class_sums = np.array([
+            self.compute_class_sums(
+                ith_sample=i, 
+                clip_class_sum=clip_class_sum
+            ) for i in range(X.shape[0])
+        ])
 
-                if class_sum > max_class_sum:
-                    max_class_sum = class_sum
-                    max_class = i
-            Y[e] = max_class
-        return Y
+        max_classes = np.argmax(class_sums, axis=1)
+
+        if return_class_sums:
+            return max_classes, class_sums
+        else:
+            return max_classes
+
+
+    
+    def compute_class_sums(self, ith_sample: int, clip_class_sum: bool)-> list[int]:
+        """The following function evaluates the resulting class sum votes.
+
+        Args:
+            ith_sample (int): The index of the sample
+            clip_class_sum (bool): Wether to clip class sums
+
+        Returns:
+            list[int]: list of all class sums
+        """
+        class_sums = []
+        for ith_class in self.weight_banks.classes():
+            
+            class_sum = np.dot(
+                self.weight_banks[ith_class].get_weights(),
+                self.clause_banks[ith_class].calculate_clause_outputs_predict(self.encoded_X_test, ith_sample)
+            ).astype(np.int32)
+            
+            if clip_class_sum:
+                class_sum = np.clip(class_sum, -self.T, self.T)
+            class_sums.append(class_sum)
+        return class_sums
+        
 
     def transform(self, X):
         encoded_X = self.clause_banks[0].prepare_X(X)

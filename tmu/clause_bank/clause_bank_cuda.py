@@ -340,7 +340,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
         return encoded_X_gpu
 
     def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
-        print("Copying sparse data to GPU memory")
+        _LOGGER.info("Copying sparse data to GPU memory")
 
         X_csr_indptr_gpu = self._profiler.profile(cuda.mem_alloc, X_csr.indptr.nbytes)
         self._profiler.profile(cuda.memcpy_htod, X_csr_indptr_gpu, X_csr.indptr)
