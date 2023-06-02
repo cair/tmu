@@ -15,6 +15,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import typing
 from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin
 from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
@@ -298,7 +299,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
 
     
-    def compute_class_sums(self, ith_sample: int, clip_class_sum: bool)-> list[int]:
+    def compute_class_sums(self, ith_sample: int, clip_class_sum: bool)-> typing.List[int]:
         """The following function evaluates the resulting class sum votes.
 
         Args:
