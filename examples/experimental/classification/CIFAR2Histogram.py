@@ -76,7 +76,7 @@ print("Testing data produced")
 
 print(X_train.shape, X_test.shape)
 
-f = open("cifar2_%.1f_%d_%d_%d_%d_%d.txt" % (s, clauses, T, step, visual_tokens, scaling), "w+")
+f = open("cifar2_%.1f_%d_%d_%d.txt" % (s, clauses, T, step), "w+")
 for ensemble in range(ensembles):
         print("\nAccuracy over %d epochs:\n" % (epochs))
 
