@@ -29,10 +29,10 @@ literal_drop_p = 0.0
 step = 1
 
 (X_train_org, Y_train), (X_test_org, Y_test) = cifar10.load_data()
-X_train_org = X_train_org.astype(np.uint32)[0:2500]
-X_test_org = X_test_org.astype(np.uint32)[0:2500]
-Y_train = Y_train.reshape(Y_train.shape[0])[0:2500]
-Y_test = Y_test.reshape(Y_test.shape[0])[0:2500]
+X_train_org = X_train_org.astype(np.uint32)
+X_test_org = X_test_org.astype(np.uint32)
+Y_train = Y_train.reshape(Y_train.shape[0])
+Y_test = Y_test.reshape(Y_test.shape[0])
 
 Y_train = np.where(np.isin(Y_train, animals), 1, 0)
 Y_test = np.where(np.isin(Y_test, animals), 1, 0)
