@@ -15,12 +15,6 @@ from keras.datasets import cifar10
 
 resolution = 8
 
-indexes = np.arange(hypervector_size, dtype=np.uint32)
-encoding = np.zeros((unique_patches, hypervector_size), dtype=np.uint32)
-for i in range(unique_patches):
-        selection = np.random.choice(indexes, size=(bits))
-        encoding[i][selection] = 1
-
 animals = np.array([2, 3, 4, 5, 6, 7])
 
 ensembles = 5
@@ -47,30 +41,37 @@ Y_test = np.where(np.isin(Y_test, animals), 1, 0)
 
 X_train = np.zeros((X_train_org.shape[0], 30//step, 30//step, resolution**3), dtype=np.uint32)
 for i in range(X_train.shape[0]):
-        windows = view_as_windows(X_train[i,:,:,c,z], (patch_size, patch_size), step=step)
-        for u in range(windows.shape[0]):
-                for v in range(windows.shape[1]):
-                        patch = windows[u,v].reshape(-1).astype(np.uint32)
+        windows_r = view_as_windows(X_train_org[i,:,:,0], (patch_size, patch_size), step=step)
+        windows_g = view_as_windows(X_train_org[i,:,:,1], (patch_size, patch_size), step=step)
+        windows_b = view_as_windows(X_train_org[i,:,:,2], (patch_size, patch_size), step=step)
+
+        for u in range(windows_r.shape[0]):
+                for v in range(windows_r.shape[1]):
+                        patch_r = windows_r[u,v].astype(np.uint32)
+                        patch_g = windows_g[u,v].astype(np.uint32)
+                        patch_b = windows_b[u,v].astype(np.uint32)
                         for x in range(patch_size):
                                 for y in range(patch_size):
-                                        color_id = (patch[x, y, 0]//(256/8)) * (resolution**2) +
-                                                (patch[x, y, 1]//(256/8)) * resolution +
-                                                (patch[x, y, 2]//(256/8))
+                                        color_id = (patch_r[x, y]//(256//8)) * (resolution**2) + (patch_g[x, y]//(256//8)) * resolution + (patch_b[x, y]//(256//8))
                                         X_train[i, u, v, color_id] = 1
 
 print("Training data produced")
 
 X_test = np.zeros((X_test_org.shape[0], 30//step, 30//step, resolution**3), dtype=np.uint32)
 for i in range(X_test.shape[0]):
-        windows = view_as_windows(X_test[i,:,:,c,z], (patch_size, patch_size), step=step)
-        for u in range(windows.shape[0]):
-                for v in range(windows.shape[1]):
-                        patch = windows[u,v].reshape(-1).astype(np.uint32)
+        windows_r = view_as_windows(X_test_org[i,:,:,0], (patch_size, patch_size), step=step)
+        windows_g = view_as_windows(X_test_org[i,:,:,1], (patch_size, patch_size), step=step)
+        windows_b = view_as_windows(X_test_org[i,:,:,2], (patch_size, patch_size), step=step)
+
+        for u in range(windows_r.shape[0]):
+                for v in range(windows_r.shape[1]):
+                        patch_r = windows_r[u,v].astype(np.uint32)
+                        patch_g = windows_g[u,v].astype(np.uint32)
+                        patch_b = windows_b[u,v].astype(np.uint32)
                         for x in range(patch_size):
                                 for y in range(patch_size):
-                                        color_id = (patch[x, y, 0]//(256/8)) * (resolution**2) + (patch[x, y, 1]//(256/8)) * resolution + (patch[x, y, 2]//(256/8))
+                                        color_id = (patch_r[x, y]//(256//8)) * (resolution**2) + (patch_g[x, y]//(256//8)) * resolution + (patch_b[x, y]//(256//8))
                                         X_test[i, u, v, color_id] = 1
-
 print("Testing data produced")
 
 print(X_train.shape, X_test.shape)
