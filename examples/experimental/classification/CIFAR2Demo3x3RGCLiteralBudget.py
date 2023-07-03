@@ -26,11 +26,17 @@ classes = 10
 
 (X_train_org, Y_train), (X_test_org, Y_test) = cifar10.load_data()
 
-X_train_r = 1.0 * X_train_org[:,:,:,0] / X_train_org.sum(axis=2)
-X_train_g = 1.0 * X_train_org[:,:,:,1] / X_train_org.sum(axis=2)
+X_train_org = X_train_org.astype(np.uint32)
+X_test_org = X_test_org.astype(np.uint32)
 
-X_test_r = 1.0 * X_test_org[:,:,:,0] / X_test_org.sum(axis=2)
-X_test_g = 1.0 * X_test_org[:,:,:,1] / X_test_org.sum(axis=2)
+X_train_org += 1
+X_test_org += 1
+
+X_train_r = 1.0 * X_train_org[:,:,:,0] / X_train_org.sum(axis=3)
+X_train_g = 1.0 * X_train_org[:,:,:,1] / X_train_org.sum(axis=3)
+
+X_test_r = 1.0 * X_test_org[:,:,:,0] / X_test_org.sum(axis=3)
+X_test_g = 1.0 * X_test_org[:,:,:,1] / X_test_org.sum(axis=3)
 
 Y_train = Y_train.reshape(Y_train.shape[0])
 Y_test = Y_test.reshape(Y_test.shape[0])
