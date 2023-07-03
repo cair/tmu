@@ -58,8 +58,8 @@ for z in range(resolution):
     X_test[:, :, :, 1, z] = X_test_g[:, :, :] >= (z + 1) / (resolution + 1)
     X_test[:, :, :, 2, z] = X_test_sum[:, :, :] >= (z + 1)*256*3 / (resolution + 1)
 
-X_train = X_train.reshape((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], 2 * resolution))
-X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], 2 * resolution))
+X_train = X_train.reshape((X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], 3 * resolution))
+X_test = X_test.reshape((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], 3 * resolution))
 
 Y_train = np.where(np.isin(Y_train, animals), 1, 0)
 Y_test = np.where(np.isin(Y_test, animals), 1, 0)
