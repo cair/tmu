@@ -4,9 +4,7 @@ from tmu.models.classification.vanilla_classifier import TMClassifier
 from scipy.sparse import lil_matrix
 from skimage.util import view_as_windows
 from sklearn.feature_extraction.text import CountVectorizer
-import cv2
 from skimage.transform import pyramid_gaussian, pyramid_laplacian, downscale_local_mean
-import matplotlib.pyplot as plt
 
 import ssl
 
