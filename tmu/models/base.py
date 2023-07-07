@@ -155,11 +155,11 @@ class TMBasis:
         encoded_X = self.clause_bank.prepare_X(X)
 
         transformed_X = np.empty(
-            (X.shape[0], self.number_of_clauses * self.number_of_patches), dtype=np.uint32)
+            (X.shape[0], self.number_of_clauses * self.clause_bank.number_of_patches), dtype=np.uint32)
         for e in range(X.shape[0]):
             transformed_X[e, :] = self.clause_bank.calculate_clause_outputs_patchwise(encoded_X, e)
         return transformed_X.reshape(
-            (X.shape[0], self.number_of_clauses, self.number_of_patches))
+            (X.shape[0], self.number_of_clauses, self.clause_bank.number_of_patches))
 
     def literal_clause_frequency(self):
         clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
