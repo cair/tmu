@@ -20,22 +20,22 @@ max_included_literals = 32
 clauses = 8000
 T = int(clauses * 0.75)
 s = 10.0
-patch_size = 4
+patch_size = 8
 resolution = 8
 number_of_state_bits_ta = 8
 literal_drop_p = 0.0
-step = 1
+step = 2
 
 (X_train_org, Y_train), (X_test_org, Y_test) = cifar10.load_data()
-X_train_org = X_train_org.astype(np.uint32)
-X_test_org = X_test_org.astype(np.uint32)
-Y_train = Y_train.reshape(Y_train.shape[0])
-Y_test = Y_test.reshape(Y_test.shape[0])
+X_train_org = X_train_org.astype(np.uint32)#[:10000]
+X_test_org = X_test_org.astype(np.uint32)#[:10000]
+Y_train = Y_train.reshape(Y_train.shape[0])#[:10000]
+Y_test = Y_test.reshape(Y_test.shape[0])#[:10000]
 
 Y_train = np.where(np.isin(Y_train, animals), 1, 0)
 Y_test = np.where(np.isin(Y_test, animals), 1, 0)
 
-X_train = np.zeros((X_train_org.shape[0], (X_train_org.shape[1] - patch_size + 1)//step, (X_train_org.shape[2] - patch_size + 1)//step, resolution**3), dtype=np.uint32)
+X_train = np.zeros((X_train_org.shape[0], (X_train_org.shape[1] - patch_size)//step + 1, (X_train_org.shape[2] - patch_size)//step + 1, resolution**3), dtype=np.uint32)
 for i in range(X_train.shape[0]):
         windows_r = view_as_windows(X_train_org[i,:,:,0], (patch_size, patch_size), step=step)
         windows_g = view_as_windows(X_train_org[i,:,:,1], (patch_size, patch_size), step=step)
@@ -53,7 +53,7 @@ for i in range(X_train.shape[0]):
 
 print("Training data produced")
 
-X_test = np.zeros((X_test_org.shape[0], (X_train_org.shape[1] - patch_size + 1)//step, (X_train_org.shape[2] - patch_size + 1)//step, resolution**3), dtype=np.uint32)
+X_test = np.zeros((X_test_org.shape[0], (X_train_org.shape[1] - patch_size)//step + 1, (X_train_org.shape[2] - patch_size)//step + 1, resolution**3), dtype=np.uint32)
 for i in range(X_test.shape[0]):
         windows_r = view_as_windows(X_test_org[i,:,:,0], (patch_size, patch_size), step=step)
         windows_g = view_as_windows(X_test_org[i,:,:,1], (patch_size, patch_size), step=step)

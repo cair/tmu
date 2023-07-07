@@ -332,14 +332,13 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         return transformed_X.reshape((X.shape[0], len(self.weight_banks) * self.number_of_clauses))
 
     def transform_patchwise(self, X):
-        # TODO - This needs to be fixed.
-        encoded_X = tmu.tools.encode(X, X.shape[0], self.number_of_patches, self.number_of_ta_chunks, self.dim,
-                                     self.patch_dim, 0)
+        encoded_X = self.clause_banks[0].prepare_X(X)
+
         transformed_X = np.empty(
-            (X.shape[0], len(self.weight_banks), self.number_of_clauses // 2 * self.number_of_patches), dtype=np.uint32)
+            (X.shape[0], len(self.weight_banks), self.number_of_clauses * self.number_of_patches), dtype=np.uint32)
         for e in range(X.shape[0]):
             for i in self.weight_banks.classes():
-                transformed_X[e, i, :] = self.clause_bank[i].calculate_clause_outputs_patchwise(encoded_X, e)
+                transformed_X[e, i, :] = self.clause_banks[i].calculate_clause_outputs_patchwise(encoded_X, e)
         return transformed_X.reshape(
             (X.shape[0], len(self.weight_banks) * self.number_of_clauses, self.number_of_patches))
 
