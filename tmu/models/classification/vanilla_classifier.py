@@ -335,12 +335,12 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         encoded_X = self.clause_banks[0].prepare_X(X)
 
         transformed_X = np.empty(
-            (X.shape[0], len(self.weight_banks), self.number_of_clauses * self.number_of_patches), dtype=np.uint32)
+            (X.shape[0], len(self.weight_banks), self.number_of_clauses * self.clause_banks[0].number_of_patches), dtype=np.uint32)
         for e in range(X.shape[0]):
             for i in self.weight_banks.classes():
                 transformed_X[e, i, :] = self.clause_banks[i].calculate_clause_outputs_patchwise(encoded_X, e)
         return transformed_X.reshape(
-            (X.shape[0], len(self.weight_banks) * self.number_of_clauses, self.number_of_patches))
+            (X.shape[0], len(self.weight_banks) * self.number_of_clauses, self.clause_banks[0].number_of_patches))
 
     def literal_clause_frequency(self):
         clause_active = np.ones(self.number_of_clauses, dtype=np.uint32)
