@@ -33,7 +33,9 @@ print("Number of features:", number_of_features)
 
 output_active = np.arange(number_of_features, dtype=np.uint32)
 
-zero = np.random.randint(2, size=number_of_code_bits, dtype=np.uint32)
+#zero = np.random.randint(2, size=number_of_code_bits, dtype=np.uint32)
+
+zero = np.zeros(number_of_code_bits, dtype=np.uint32)
 one = np.logical_not(zero).astype(np.uint32)
 
 X_train = np.random.randint(0, 2, size=(number_of_examples, number_of_features), dtype=np.uint32)
@@ -46,6 +48,7 @@ for i in range(number_of_examples):
 			X_train[i,number_of_code_bits*j:number_of_code_bits*(j+1)] = zero
 		else:
 			X_train[i,number_of_code_bits*j:number_of_code_bits*(j+1)] = one
+X_train = np.where(np.random.rand(number_of_examples, number_of_features) <= noise, 1-X_train, X_train) # Adds noise
 
 X_test = np.random.randint(0, 2, size=(number_of_examples, number_of_features), dtype=np.uint32)
 Y_test = np.empty(number_of_examples, dtype=np.uint32)
@@ -57,6 +60,7 @@ for i in range(number_of_examples):
 			X_test[i,number_of_code_bits*j:number_of_code_bits*(j+1)] = zero
 		else:
 			X_test[i,number_of_code_bits*j:number_of_code_bits*(j+1)] = one
+X_test = np.where(np.random.rand(number_of_examples, number_of_features) <= noise, 1-X_test, X_test) # Adds noise
 
 tm = TMClassifier(10, 15, 3.0, platform='CPU')
 
