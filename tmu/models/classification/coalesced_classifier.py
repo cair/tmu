@@ -301,34 +301,33 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
                 Y[e, i] = (class_sum >= 0)
         return Y
 
-    def clause_precision(self, the_class, positive_polarity, X, Y):
+    def clause_precision(self, the_class, X, Y):
         clause_outputs = self.transform(X)
         weights = self.weight_banks[the_class].get_weights()
-        if positive_polarity == 0:
-            positive_clause_outputs = (weights >= 0)[:, np.newaxis].transpose() * clause_outputs
-            true_positive_clause_outputs = positive_clause_outputs[Y == the_class].sum(axis=0)
-            false_positive_clause_outputs = positive_clause_outputs[Y != the_class].sum(axis=0)
-        else:
-            positive_clause_outputs = (weights < 0)[:, np.newaxis].transpose() * clause_outputs
-            true_positive_clause_outputs = positive_clause_outputs[Y != the_class].sum(axis=0)
-            false_positive_clause_outputs = positive_clause_outputs[Y == the_class].sum(axis=0)
+
+        positive_clause_outputs = (weights >= 0)[:, np.newaxis].transpose() * clause_outputs
+        true_positive_clause_outputs = positive_clause_outputs[Y == the_class].sum(axis=0)
+        false_positive_clause_outputs = positive_clause_outputs[Y != the_class].sum(axis=0)
+
+        positive_clause_outputs = (weights < 0)[:, np.newaxis].transpose() * clause_outputs
+        true_positive_clause_outputs += positive_clause_outputs[Y != the_class].sum(axis=0)
+        false_positive_clause_outputs += positive_clause_outputs[Y == the_class].sum(axis=0)
 
         return np.where(true_positive_clause_outputs + false_positive_clause_outputs == 0, 0,
                         1.0 * true_positive_clause_outputs / (
                                 true_positive_clause_outputs + false_positive_clause_outputs))
 
-    def clause_recall(self, the_class, positive_polarity, X, Y):
+    def clause_recall(self, the_class, X, Y):
         clause_outputs = self.transform(X)
         weights = self.weight_banks[the_class].get_weights()
 
-        if positive_polarity == 0:
-            positive_clause_outputs = (weights >= 0)[:, np.newaxis].transpose() * clause_outputs
-            true_positive_clause_outputs = positive_clause_outputs[Y == the_class].sum(axis=0) / \
-                                           Y[Y == the_class].shape[0]
-        else:
-            positive_clause_outputs = (weights < 0)[:, np.newaxis].transpose() * clause_outputs
-            true_positive_clause_outputs = positive_clause_outputs[Y != the_class].sum(axis=0) / \
-                                           Y[Y != the_class].shape[0]
+        positive_clause_outputs = (weights >= 0)[:, np.newaxis].transpose() * clause_outputs
+        true_positive_clause_outputs = positive_clause_outputs[Y == the_class].sum(axis=0) / \
+                                        Y[Y == the_class].shape[0]
+
+        positive_clause_outputs = (weights < 0)[:, np.newaxis].transpose() * clause_outputs
+        true_positive_clause_outputs += positive_clause_outputs[Y != the_class].sum(axis=0) / \
+                                        Y[Y != the_class].shape[0]
 
         return true_positive_clause_outputs
 
