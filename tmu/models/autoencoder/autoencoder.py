@@ -104,7 +104,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
             self.max_positive_clauses = self.number_of_clauses
 
         if self.output_balancing == 0:
-            self.feature_true_probability  = (X.sum(axis=0)/X.shape[0])**(1.0/self.upsampling)
+            self.feature_true_probability = np.asarray(X.sum(axis=0)/X.shape[0]).reshape(-1)**(1.0/self.upsampling)
         else:
             self.feature_true_probability = np.ones(X.shape[1], dtype=np.float32)*self.output_balancing
 
@@ -244,10 +244,10 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
         return literal_active
 
     def fit(self, X, number_of_examples=2000, shuffle=True, *kwargs):
-        self.init(X, Y=None)
-
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
         X_csc = csc_matrix(X.reshape(X.shape[0], -1)).sorted_indices()
+
+        self.init(X_csr, Y=None)
 
         if not np.array_equal(self.X_train, np.concatenate((X_csr.indptr, X_csr.indices))):
             self.encoded_X_train = self.clause_bank.prepare_X_autoencoder(X_csr, X_csc, self.output_active)

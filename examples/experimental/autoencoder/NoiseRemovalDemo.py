@@ -12,15 +12,15 @@ number_of_code_chunks = 4
 
 number_of_classes = 2**number_of_code_chunks
 
-noise = 0.1
+noise = 0.2
 
-number_of_code_bits = 10
+number_of_code_bits = 32
 
 number_of_features = number_of_code_chunks * number_of_code_bits
 
 number_of_examples = 2500
 
-number_of_clauses = 256
+number_of_clauses = 512
 T = int(number_of_clauses*0.75*100)
 s = 10.0#10.0
 max_included_literals = number_of_features*2
@@ -61,7 +61,7 @@ for i in range(number_of_examples):
 			X_test[i,number_of_code_bits*j:number_of_code_bits*(j+1)] = one
 X_test_noisy = np.where(np.random.rand(number_of_examples, number_of_features) <= noise, 1-X_test, X_test) # Adds noise
 
-tm = TMAutoEncoder(number_of_clauses, T, s, output_active, max_included_literals=max_included_literals, accumulation=accumulation, platform='CPU', output_balancing=True)
+tm = TMAutoEncoder(number_of_clauses, T, s, output_active, max_included_literals=max_included_literals, feature_negation=False, accumulation=accumulation, platform='CPU', output_balancing=True)
 
 print("\nAccuracy Over 40 Epochs:")
 for e in range(100):

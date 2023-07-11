@@ -373,11 +373,12 @@ class ClauseBank(BaseClauseBank):
             self,
             encoded_X,
             target,
+            target_true_p,
             accumulation
     ):
         (X_csr, X_csc, active_output, X) = encoded_X
         
-        target_value = np.random.choice(2)
+        target_value = np.random.random() <= target_true_p
 
         lib.tmu_produce_autoencoder_example(ffi.cast("unsigned int *", active_output.ctypes.data), active_output.shape[0],
                                              ffi.cast("unsigned int *", np.ascontiguousarray(X_csr.indptr).ctypes.data),
