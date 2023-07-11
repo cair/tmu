@@ -70,6 +70,7 @@ class TMBasis:
             type_iii_feedback=False,
             focused_negative_sampling=False,
             output_balancing=False,
+            upsampling=1,
             d=200.0,
             platform='CPU',
             patch_dim=None,
@@ -111,6 +112,7 @@ class TMBasis:
         self.type_iii_feedback = type_iii_feedback
         self.focused_negative_sampling = focused_negative_sampling
         self.output_balancing = output_balancing
+        self.upsampling = upsampling
         self.d = d
         self.platform = platform
         self.patch_dim = patch_dim

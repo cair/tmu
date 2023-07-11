@@ -33,7 +33,8 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
             type_i_ii_ratio=1.0,
             type_iii_feedback=False,
             focused_negative_sampling=False,
-            output_balancing=False,
+            output_balancing=0,
+            upsampling=1,
             d=200.0,
             platform='CPU',
             patch_dim=None,
@@ -61,7 +62,9 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
             type_i_ii_ratio=type_i_ii_ratio,
             type_iii_feedback=type_iii_feedback,
             focused_negative_sampling=focused_negative_sampling,
-            output_balancing=output_balancing, d=d,
+            output_balancing=output_balancing,
+            upsampling=upsampling,
+            d=d,
             platform=platform, patch_dim=patch_dim,
             feature_negation=feature_negation,
             boost_true_positive_feedback=boost_true_positive_feedback,
@@ -99,6 +102,11 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
 
         if self.max_positive_clauses is None:
             self.max_positive_clauses = self.number_of_clauses
+
+        if self.output_balancing == 0:
+            self.feature_true_probability  = (X.sum(axis=0)/X.shape[0])**(1.0/self.upsampling)
+        else:
+            self.feature_true_probability = np.ones(X.shape[1], dtype=np.float32)*self.output_balancing
 
     def update(
             self,
@@ -260,7 +268,7 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
             for i in class_index:
-                Xu, Yu = self.clause_bank.produce_autoencoder_example(self.encoded_X_train, i, self.accumulation)
+                Xu, Yu = self.clause_bank.produce_autoencoder_example(self.encoded_X_train, i, self.feature_true_probability[self.output_active[i]], self.accumulation)
                 
                 ta_chunk = self.output_active[i] // 32
                 chunk_pos = self.output_active[i] % 32
@@ -283,15 +291,15 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
 
     def predict(self, X, **kwargs):
         X_csr = csr_matrix(X.reshape(X.shape[0], -1))
-        Y = np.ascontiguousarray(np.zeros((self.number_of_classes, X.shape[0]), dtype=np.uint32))
+        Y = np.ascontiguousarray(np.zeros((X.shape[0], self.number_of_classes), dtype=np.uint32))
 
         for e in range(X.shape[0]):
             encoded_X = self.clause_bank.prepare_X(X_csr[e, :].toarray())
 
-            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)[0]
+            clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X, 0)
             for i in range(self.number_of_classes):
                 class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
-                Y[i, e] = (class_sum >= 0)
+                Y[e, i] = (class_sum >= 0)
         return Y
 
     def literal_importance(self, the_class, negated_features=False, negative_polarity=False):

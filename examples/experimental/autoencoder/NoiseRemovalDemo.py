@@ -8,7 +8,7 @@ from scipy.sparse import csr_matrix
 from tmu.models.autoencoder.autoencoder import TMAutoEncoder
 from tmu.models.classification.coalesced_classifier import TMCoalescedClassifier
 
-number_of_code_chunks = 3
+number_of_code_chunks = 4
 
 number_of_classes = 2**number_of_code_chunks
 
