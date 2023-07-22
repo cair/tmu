@@ -210,7 +210,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
             # for incremental, and when we only have 1 sample, there is no other targets
             if self.weight_banks.n_classes == 1:
-                return
+                continue
 
             not_target = self.weight_banks.sample()
             while not_target == target:
