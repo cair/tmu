@@ -67,6 +67,34 @@ for ensemble in range(ensembles):
                 number_of_includes += tm.number_of_include_actions(i, j)
         number_of_includes /= 2 * clauses
 
+        print("\nClass 0 Positive Clauses:\n")
+
+        precision = tm.clause_precision(0, 0, X_test, Y_test)
+        recall = tm.clause_recall(0, 0, X_test, Y_test)
+
+        print(precision.mean(), recall.mean())
+
+        print("\nClass 0 Negative Clauses:\n")
+
+        precision = tm.clause_precision(0, 1, X_test, Y_test)
+        recall = tm.clause_recall(0, 1, X_test, Y_test)
+
+        print(precision.mean(), recall.mean())
+
+        print("\nClass 1 Positive Clauses:\n")
+
+        precision = tm.clause_precision(1, 0, X_test, Y_test)
+        recall = tm.clause_recall(1, 0, X_test, Y_test)
+
+        print(precision.mean(), recall.mean())
+
+        print("\nClass 1 Negative Clauses:\n")
+
+        precision = tm.clause_precision(1, 1, X_test, Y_test)
+        recall = tm.clause_recall(1, 1, X_test, Y_test)
+
+        print(precision.mean(), recall.mean())
+
         print("%d %d %.2f %.2f %.2f %.2f %.2f" % (
         ensemble, epoch, number_of_includes, result_train, result_test, stop_training - start_training, stop_testing - start_testing))
         print("%d %d %.2f %.2f %.2f %.2f %.2f" % (
