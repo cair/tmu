@@ -23,10 +23,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     (X_train, Y_train), (X_test, Y_test) = cifar10.load_data()
-    X_train = np.copy(X_train)[0:1000]
-    X_test = np.copy(X_test)[0:1000]
-    Y_train = Y_train[0:1000]
-    Y_test = Y_test[0:1000]
+    X_train = np.copy(X_train)
+    X_test = np.copy(X_test)
+    Y_train = Y_train
+    Y_test = Y_test
 
     Y_train=Y_train.reshape(Y_train.shape[0])
     Y_test=Y_test.reshape(Y_test.shape[0])
@@ -100,7 +100,7 @@ if __name__ == "__main__":
             print("\tPrecision:", precision.mean(), "(", precision[precision_sorted[p90]], recall[precision_sorted[p90]], ")", "(", precision[precision_sorted[p95]], recall[precision_sorted[p95]], ")", "(", precision[precision_sorted[p99]], recall[precision_sorted[p99]], ")")
             print("\tRecall:", recall.mean(), "(", precision[recall_sorted[p90]], recall[recall_sorted[p90]], ")", "(", precision[recall_sorted[p95]], recall[recall_sorted[p95]], ")", "(", precision[recall_sorted[p99]], recall[recall_sorted[p99]], ")")
             
-            high_precision_activations_per_example = X_test_transformed[:,precision_sorted[p90:]][Y_test==i,:].sum(axis=1)
+            high_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[p90:]][Y_test==i,:].sum(axis=1)
             print("\tHigh-precision activations per example:", np.percentile(high_precision_activations_per_example, 1), np.percentile(high_precision_activations_per_example, 5), np.percentile(high_precision_activations_per_example, 10), np.percentile(high_precision_activations_per_example, 25), high_precision_activations_per_example.mean(), np.percentile(high_precision_activations_per_example, 75), np.percentile(high_precision_activations_per_example, 90), np.percentile(high_precision_activations_per_example, 95), np.percentile(high_precision_activations_per_example, 99))
 
             print("\nClass %d Negative clauses\n" % (i))
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             
             print("\tPrecision:", precision.mean(), "(", precision[precision_sorted[p90]], recall[precision_sorted[p90]], ")", "(", precision[precision_sorted[p95]], recall[precision_sorted[p95]], ")", "(", precision[precision_sorted[p99]], recall[precision_sorted[p99]], ")")
             print("\tRecall:", recall.mean(), "(", precision[recall_sorted[p90]], recall[recall_sorted[p90]], ")", "(", precision[recall_sorted[p95]], recall[recall_sorted[p95]], ")", "(", precision[recall_sorted[p99]], recall[recall_sorted[p99]], ")")
-            high_precision_activations_per_example = X_test_transformed[:,precision_sorted[p90:]][Y_test!=i,:].sum(axis=1)
+            high_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][:,precision_sorted[p90:]][Y_test!=i,:].sum(axis=1)
             print("\tHigh-precision activations per example:", np.percentile(high_precision_activations_per_example, 1), np.percentile(high_precision_activations_per_example, 5), np.percentile(high_precision_activations_per_example, 10), np.percentile(high_precision_activations_per_example, 25), high_precision_activations_per_example.mean(), np.percentile(high_precision_activations_per_example, 75), np.percentile(high_precision_activations_per_example, 90), np.percentile(high_precision_activations_per_example, 95), np.percentile(high_precision_activations_per_example, 99))
 
         print()
