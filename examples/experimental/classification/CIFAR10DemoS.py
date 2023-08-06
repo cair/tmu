@@ -86,9 +86,16 @@ if __name__ == "__main__":
         #Y_test_predicted = np.argmax(X_test_transformed, axis=1)//args.num_clauses
         #print("Max Accuracy", (Y_test_predicted == Y_test).mean())
 
+        p25 = int(args.num_clauses//2 * 0.25)
+        p10 = int(args.num_clauses//2 * 0.1)
+        p05 = int(args.num_clauses//2 * 0.05)
+        p01 = int(args.num_clauses//2 * 0.01)
+
+        p75 = int(args.num_clauses//2 * 0.75)
         p90 = int(args.num_clauses//2 * 0.9)
         p95 = int(args.num_clauses//2 * 0.95)
         p99 = int(args.num_clauses//2 * 0.99)
+
         for i in range(10):
             print("\nClass %d positive clauses\n" % (i))
             precision = tm.clause_precision(i, 0, X_test, Y_test)
@@ -103,6 +110,9 @@ if __name__ == "__main__":
             high_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[p90:]][Y_test==i,:].sum(axis=1)
             print("\tHigh-precision activations per example:", np.percentile(high_precision_activations_per_example, 1), np.percentile(high_precision_activations_per_example, 5), np.percentile(high_precision_activations_per_example, 10), np.percentile(high_precision_activations_per_example, 25), high_precision_activations_per_example.mean(), np.percentile(high_precision_activations_per_example, 75), np.percentile(high_precision_activations_per_example, 90), np.percentile(high_precision_activations_per_example, 95), np.percentile(high_precision_activations_per_example, 99))
 
+            low_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[:p10]][Y_test==i,:].sum(axis=1)
+            print("\tLow-precision activations per example:", np.percentile(low_precision_activations_per_example, 1), np.percentile(low_precision_activations_per_example, 5), np.percentile(low_precision_activations_per_example, 10), np.percentile(low_precision_activations_per_example, 25), low_precision_activations_per_example.mean(), np.percentile(low_precision_activations_per_example, 75), np.percentile(low_precision_activations_per_example, 90), np.percentile(low_precision_activations_per_example, 95), np.percentile(low_precision_activations_per_example, 99))
+
             print("\nClass %d Negative clauses\n" % (i))
 
             precision = tm.clause_precision(i, 1, X_test, Y_test)
@@ -116,6 +126,9 @@ if __name__ == "__main__":
             
             high_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][:,precision_sorted[p90:]][Y_test!=i,:].sum(axis=1)
             print("\tHigh-precision activations per example:", np.percentile(high_precision_activations_per_example, 1), np.percentile(high_precision_activations_per_example, 5), np.percentile(high_precision_activations_per_example, 10), np.percentile(high_precision_activations_per_example, 25), high_precision_activations_per_example.mean(), np.percentile(high_precision_activations_per_example, 75), np.percentile(high_precision_activations_per_example, 90), np.percentile(high_precision_activations_per_example, 95), np.percentile(high_precision_activations_per_example, 99))
+
+            low_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][:,precision_sorted[:p10]][Y_test!=i,:].sum(axis=1)
+            print("\tLow-precision activations per example:", np.percentile(low_precision_activations_per_example, 1), np.percentile(low_precision_activations_per_example, 5), np.percentile(low_precision_activations_per_example, 10), np.percentile(low_precision_activations_per_example, 25), low_precision_activations_per_example.mean(), np.percentile(low_precision_activations_per_example, 75), np.percentile(low_precision_activations_per_example, 90), np.percentile(low_precision_activations_per_example, 95), np.percentile(low_precision_activations_per_example, 99))
 
         print()
 
