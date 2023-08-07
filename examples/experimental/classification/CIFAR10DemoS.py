@@ -264,19 +264,19 @@ if __name__ == "__main__":
                 print("(%.2f %.2f)" % (precision[recall_sorted[int(args.num_clauses//2*p)]], recall[recall_sorted[int(args.num_clauses//2*p)]]), end=' ')
             print()
             
-            correct_high_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][:,precision_sorted[int(args.num_clauses//2*0.9):]][Y_test==i,:].sum(axis=1)
+            correct_high_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][:,precision_sorted[int(args.num_clauses//2*0.9):]][Y_test!=i,:].sum(axis=1)
             print("\tCorrect high-precision activations per example:",  end=' ')
             for p in percentiles:
                 print("%.0f" % (np.percentile(correct_high_precision_activations_per_example, p*100)), end=' ')
             print()
 
-            correct_low_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][:,precision_sorted[:int(args.num_clauses//2*0.1)]][Y_test==i,:].sum(axis=1)
+            correct_low_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][:,precision_sorted[:int(args.num_clauses//2*0.1)]][Y_test!=i,:].sum(axis=1)
             print("\tCorrect low-precision activations per example:", end=' ')
             for p in percentiles:
                 print("%.0f" % (np.percentile(correct_low_precision_activations_per_example, p*100)), end=' ')
             print()
             
-            correct_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][Y_test==i,:].sum(axis=1)
+            correct_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][Y_test!=i,:].sum(axis=1)
             print("\tCorrect activations per example:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(correct_activations_per_example, p*100), end= ' ')
@@ -288,31 +288,31 @@ if __name__ == "__main__":
                 print("%.0f" % np.percentile(correct_activations_per_clause, p*100), end= ' ')
             print()
 
-            correct_activations_per_hit = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][np.logical_and(Y_test==i, Y_test == Y_test_predicted),:].sum(axis=1)
+            correct_activations_per_hit = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][np.logical_and(Y_test!=i, Y_test == Y_test_predicted),:].sum(axis=1)
             print("\tCorrect activations per correctly classified example:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(correct_activations_per_hit, p*100), end= ' ')
             print()
 
-            correct_activations_per_miss = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][np.logical_and(Y_test==i, Y_test != Y_test_predicted),:].sum(axis=1)
+            correct_activations_per_miss = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][np.logical_and(Y_test!=i, Y_test != Y_test_predicted),:].sum(axis=1)
             print("\tCorrect activations per misclassified example:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(correct_activations_per_miss, p*100), end= ' ')
             print()
             
-            incorrect_high_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[int(args.num_clauses//2*0.9):]][Y_test==i,:].sum(axis=1)
+            incorrect_high_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[int(args.num_clauses//2*0.9):]][Y_test!=i,:].sum(axis=1)
             print("\tIncorrect high-precision activations per example:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(incorrect_high_precision_activations_per_example, p*100), end= ' ')
             print()
 
-            incorrect_low_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[:int(args.num_clauses//2*0.1)]][Y_test==i,:].sum(axis=1)
+            incorrect_low_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[:int(args.num_clauses//2*0.1)]][Y_test!=i,:].sum(axis=1)
             print("\tIncorrect low-precision activations per example:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(incorrect_low_precision_activations_per_example, p*100), end= ' ')
             print()
 
-            incorrect_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][Y_test==i,:].sum(axis=1)
+            incorrect_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][Y_test!=i,:].sum(axis=1)
             print("\tIncorrect activations per example:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(incorrect_activations_per_example, p*100), end= ' ')
@@ -324,13 +324,13 @@ if __name__ == "__main__":
                 print("%.0f" % np.percentile(incorrect_activations_per_clause, p*100), end= ' ')
             print()
 
-            incorrect_activations_per_hit = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][np.logical_and(Y_test==i, Y_test==Y_test_predicted),:].sum(axis=1)
+            incorrect_activations_per_hit = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][np.logical_and(Y_test!=i, Y_test==Y_test_predicted),:].sum(axis=1)
             print("\tIncorrect activations per correctly classified example:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(incorrect_activations_per_hit, p*100), end= ' ')
             print()
 
-            incorrect_activations_per_miss = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][np.logical_and(Y_test==i, Y_test!= Y_test_predicted),:].sum(axis=1)
+            incorrect_activations_per_miss = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][np.logical_and(Y_test!=i, Y_test!= Y_test_predicted),:].sum(axis=1)
             print("\tIncorrect activations per misclassified example:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(incorrect_activations_per_miss, p*100), end= ' ')
