@@ -236,7 +236,7 @@ if __name__ == "__main__":
                 )
             print()
 
-            total_activations_per_clause = correct_activations_per_clause - incorrect_activations_per_clause
+            total_activations_per_clause = np.log((correct_activations_per_clause + 1) / (incorrect_activations_per_clause + 1))
             total_activations_per_clause_sorted = np.argsort(total_activations_per_clause)
             print("\tTotal activations per clause:", end=' ')
             for p in percentiles:
@@ -401,7 +401,7 @@ if __name__ == "__main__":
                 )
             print()
 
-            total_activations_per_clause = correct_activations_per_clause - incorrect_activations_per_clause
+            total_activations_per_clause = np.log((correct_activations_per_clause + 1) / (incorrect_activations_per_clause + 1))
             total_activations_per_clause_sorted = np.argsort(total_activations_per_clause)
             print("\tTotal activations per clause:", end=' ')
             for p in percentiles:
