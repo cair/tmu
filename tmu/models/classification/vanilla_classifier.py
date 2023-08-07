@@ -401,10 +401,9 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         )[:, the_class, polarity, :]
 
         if polarity == 0:
-            true_positive_clause_outputs = clause_outputs[Y == the_class].sum(axis=0) / Y[Y == the_class].shape[0]
+            return clause_outputs[Y == the_class].sum(axis=0) / Y[Y == the_class].shape[0]
         else:
-            true_positive_clause_outputs = clause_outputs[Y != the_class].sum(axis=0) / Y[Y != the_class].shape[0]
-        return true_positive_clause_outputs
+            return clause_outputs[Y != the_class].sum(axis=0) / Y[Y != the_class].shape[0]
 
     def get_weight(self, the_class, polarity, clause):
         polarized_clause = self._get_polarized_clause_index(clause, polarity)
