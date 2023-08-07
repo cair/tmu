@@ -176,7 +176,7 @@ if __name__ == "__main__":
                 print("%.0f" % np.percentile(incorrect_activations_per_miss, p*100), end= ' ')
             print()
 
-            total_high_precision_activations_per_example = correct_high_precision_activations_per_example + incorrect_high_precision_activations_per_example
+            total_high_precision_activations_per_example = np.log((correct_high_precision_activations_per_example + 1) / (incorrect_high_precision_activations_per_example + 1))
             total_high_precision_activations_per_example_sorted = np.argsort(total_high_precision_activations_per_example)
             print("\tTotal high-precision activations per example:", end=' ')
             for p in percentiles:
@@ -188,7 +188,7 @@ if __name__ == "__main__":
                 )
             print()
               
-            total_low_precision_activations_per_example = correct_low_precision_activations_per_example + incorrect_low_precision_activations_per_example
+            total_low_precision_activations_per_example = np.log((correct_low_precision_activations_per_example + 1) / (incorrect_low_precision_activations_per_example + 1))
             total_low_precision_activations_per_example_sorted = np.argsort(total_low_precision_activations_per_example)
             print("\tTotal low-precision activations per example:", end=' ')
             for p in percentiles:
@@ -200,7 +200,7 @@ if __name__ == "__main__":
                 )
             print()
 
-            total_activations_per_example = correct_activations_per_example + incorrect_activations_per_example
+            total_activations_per_example = np.log((correct_activations_per_example + 1) / (incorrect_activations_per_example + 1))
             total_activations_per_example_sorted = np.argsort(total_activations_per_example)
             print("\tTotal activations per example:", end=' ')
             for p in percentiles:
@@ -212,7 +212,7 @@ if __name__ == "__main__":
                 )
             print()
 
-            total_activations_per_hit = correct_activations_per_hit + incorrect_activations_per_hit
+            total_activations_per_hit = np.log((correct_activations_per_hit + 1) / (incorrect_activations_per_hit + 1))
             total_activations_per_hit_sorted = np.argsort(total_activations_per_hit)
             print("\tTotal activations per correctly classified example:", end=' ')
             for p in percentiles:
@@ -224,7 +224,7 @@ if __name__ == "__main__":
                 )
             print()
 
-            total_activations_per_miss = correct_activations_per_miss + incorrect_activations_per_miss
+            total_activations_per_miss = np.log((correct_activations_per_miss + 1) / (incorrect_activations_per_miss + 1))
             total_activations_per_miss_sorted = np.argsort(total_activations_per_miss)
             print("\tTotal activations per misclassified example:", end=' ')
             for p in percentiles:
@@ -341,7 +341,7 @@ if __name__ == "__main__":
                 print("%.0f" % np.percentile(incorrect_activations_per_miss, p*100), end= ' ')
             print()
 
-            total_high_precision_activations_per_example = correct_high_precision_activations_per_example + incorrect_high_precision_activations_per_example
+            total_high_precision_activations_per_example = np.log((correct_high_precision_activations_per_example + 1) / (incorrect_high_precision_activations_per_example + 1))
             total_high_precision_activations_per_example_sorted = np.argsort(total_high_precision_activations_per_example)
             print("\tTotal high-precision activations per example:", end=' ')
             for p in percentiles:
@@ -353,7 +353,7 @@ if __name__ == "__main__":
                 )
             print()
               
-            total_low_precision_activations_per_example = correct_low_precision_activations_per_example + incorrect_low_precision_activations_per_example
+            total_low_precision_activations_per_example = np.log((correct_low_precision_activations_per_example + 1) / (incorrect_low_precision_activations_per_example + 1))
             total_low_precision_activations_per_example_sorted = np.argsort(total_low_precision_activations_per_example)
             print("\tTotal low-precision activations per example:", end=' ')
             for p in percentiles:
@@ -365,7 +365,7 @@ if __name__ == "__main__":
                 )
             print()
 
-            total_activations_per_example = correct_activations_per_example + incorrect_activations_per_example
+            total_activations_per_example = np.log((correct_activations_per_example + 1) / (incorrect_activations_per_example + 1))
             total_activations_per_example_sorted = np.argsort(total_activations_per_example)
             print("\tTotal activations per example:", end=' ')
             for p in percentiles:
@@ -377,7 +377,7 @@ if __name__ == "__main__":
                 )
             print()
 
-            total_activations_per_hit = correct_activations_per_hit + incorrect_activations_per_hit
+            total_activations_per_hit = np.log((correct_activations_per_hit + 1) / (incorrect_activations_per_hit + 1))
             total_activations_per_hit_sorted = np.argsort(total_activations_per_hit)
             print("\tTotal activations per correctly classified example:", end=' ')
             for p in percentiles:
@@ -389,7 +389,7 @@ if __name__ == "__main__":
                 )
             print()
 
-            total_activations_per_miss = correct_activations_per_miss + incorrect_activations_per_miss
+            total_activations_per_miss = np.log((correct_activations_per_miss + 1) / (incorrect_activations_per_miss + 1))
             total_activations_per_miss_sorted = np.argsort(total_activations_per_miss)
             print("\tTotal activations per misclassified example:", end=' ')
             for p in percentiles:
