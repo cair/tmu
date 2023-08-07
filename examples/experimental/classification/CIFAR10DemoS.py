@@ -7,6 +7,8 @@ import numpy as np
 from keras.datasets import cifar10
 import cv2
 
+percentiles = [0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99]
+
 _LOGGER = logging.getLogger(__name__)
 
 if __name__ == "__main__":
@@ -136,7 +138,7 @@ if __name__ == "__main__":
             low_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][:,precision_sorted[:p10]][Y_test!=i,:].sum(axis=1)
             print("\tCorrect low-precision activations per example:", np.percentile(low_precision_activations_per_example, 1), np.percentile(low_precision_activations_per_example, 5), np.percentile(low_precision_activations_per_example, 10), np.percentile(low_precision_activations_per_example, 25), low_precision_activations_per_example.mean(), np.percentile(low_precision_activations_per_example, 75), np.percentile(low_precision_activations_per_example, 90), np.percentile(low_precision_activations_per_example, 95), np.percentile(low_precision_activations_per_example, 99))
 
-            incorrect_high_precision_activations_per_example = X_test_transformed[:i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[p90:]][Y_test!=i,:].sum(axis=1)
+            incorrect_high_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[p90:]][Y_test!=i,:].sum(axis=1)
             print("\tIncorrect high-precision activations per example:", np.percentile(incorrect_high_precision_activations_per_example, 1), np.percentile(incorrect_high_precision_activations_per_example, 5), np.percentile(incorrect_high_precision_activations_per_example, 10), np.percentile(incorrect_high_precision_activations_per_example, 25), incorrect_high_precision_activations_per_example.mean(), np.percentile(incorrect_high_precision_activations_per_example, 75), np.percentile(incorrect_high_precision_activations_per_example, 90), np.percentile(incorrect_high_precision_activations_per_example, 95), np.percentile(incorrect_high_precision_activations_per_example, 99))
 
             incorrect_low_precision_activations_per_example = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][:,precision_sorted[:p10]][Y_test!=i,:].sum(axis=1)
