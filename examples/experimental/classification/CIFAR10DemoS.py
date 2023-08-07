@@ -69,6 +69,8 @@ if __name__ == "__main__":
             _LOGGER.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Training Time: {benchmark1.elapsed():.2f}s, "
                          f"Testing Time: {benchmark2.elapsed():.2f}s")
 
+        X_test_transformed = tm.transform(X_test).astype(np.float64)
+
         for i in range(10):
             Y_test_predicted = tm.predict(X_test)
 
