@@ -158,7 +158,7 @@ if __name__ == "__main__":
                 print("%.0f" % np.percentile(incorrect_activations_per_example, p*100), end= ' ')
             print()
 
-            incorrect_activations_per_clause = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][Y_test==i,:].sum(axis=0)
+            incorrect_activations_per_clause = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][Y_test!=i,:].sum(axis=0)
             print("\tIncorrect activations per clause:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(incorrect_activations_per_clause, p*100), end= ' ')
@@ -240,14 +240,17 @@ if __name__ == "__main__":
             total_activations_per_clause_sorted = np.argsort(total_activations_per_clause)
             print("\tTotal activations per clause:", end=' ')
             for p in percentiles:
+                index = total_activations_per_clause_sorted[int(args.num_clauses//2*p)]
                 print("(%d vs %d %.2f/%.2f)" % (
-                        correct_activations_per_clause[total_activations_per_clause_sorted[int(args.num_clauses//2*p)]],
-                        incorrect_activations_per_clause[total_activations_per_clause_sorted[int(args.num_clauses//2*p)]],
-                        precision[total_activations_per_clause_sorted[int(args.num_clauses//2*p)]],
-                        recall[total_activations_per_clause_sorted[int(args.num_clauses//2*p)]]
+                        correct_activations_per_clause[index],
+                        incorrect_activations_per_clause[index],
+                        precision[index],
+                        recall[index]
                     ), end= ' '
                 )
             print()
+
+            #########
 
             print("\nClass %d Negative clauses\n" % (i))
 
@@ -284,7 +287,7 @@ if __name__ == "__main__":
                 print("%.0f" % np.percentile(correct_activations_per_example, p*100), end= ' ')
             print()
 
-            correct_activations_per_clause = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][Y_test==i,:].sum(axis=0)
+            correct_activations_per_clause = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][Y_test!=i,:].sum(axis=0)
             print("\tCorrect activations per clause:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(correct_activations_per_clause, p*100), end= ' ')
@@ -320,7 +323,7 @@ if __name__ == "__main__":
                 print("%.0f" % np.percentile(incorrect_activations_per_example, p*100), end= ' ')
             print()
 
-            incorrect_activations_per_clause = X_test_transformed[:,i*args.num_clauses:i*args.num_clauses+args.num_clauses//2][Y_test==i,:].sum(axis=0)
+            incorrect_activations_per_clause = X_test_transformed[:,i*args.num_clauses+args.num_clauses//2:(i+1)*args.num_clauses][Y_test==i,:].sum(axis=0)
             print("\tIncorrect activations per clause:", end=' ')
             for p in percentiles:
                 print("%.0f" % np.percentile(incorrect_activations_per_clause, p*100), end= ' ')
