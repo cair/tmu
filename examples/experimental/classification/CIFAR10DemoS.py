@@ -79,8 +79,8 @@ if __name__ == "__main__":
             positive_misses = (np.logical_and(Y_test==i, Y_test != Y_test_predicted)).sum()
 
             negative_examples = (Y_test!=i).sum()
-            negative_hits = (np.logical_and(Y_test!=i, Y_test != Y_test_predicted)).sum()
-            negative_misses = (np.logical_and(Y_test!=i, Y_test == Y_test_predicted)).sum()
+            negative_hits = (np.logical_and(Y_test!=i, Y_test == Y_test_predicted)).sum()
+            negative_misses = (np.logical_and(Y_test!=i, Y_test != Y_test_predicted)).sum()
 
             print("\nClass %d positive clauses\n" % (i))
 
