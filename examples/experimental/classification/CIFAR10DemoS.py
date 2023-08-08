@@ -340,10 +340,10 @@ if __name__ == "__main__":
             total_high_precision_activations_per_example_sorted = np.argsort(total_high_precision_activations_per_example)
             print("\tTotal high-precision activations per example:", end=' ')
             for p in percentiles:
-                positive_examples_p = int(positive_examples*p)
+                negative_examples_p = int(negative_examples*p)
                 print("(%d vs %d)" % (
-                    correct_high_precision_activations_per_example[total_high_precision_activations_per_example_sorted[positive_examples_p]],
-                    incorrect_high_precision_activations_per_example[total_high_precision_activations_per_example_sorted[positive_examples_p]]
+                    correct_high_precision_activations_per_example[total_high_precision_activations_per_example_sorted[negative_examples_p]],
+                    incorrect_high_precision_activations_per_example[total_high_precision_activations_per_example_sorted[negative_examples_p]]
                     ), end= ' '
                 )
             print()
@@ -352,10 +352,10 @@ if __name__ == "__main__":
             total_low_precision_activations_per_example_sorted = np.argsort(total_low_precision_activations_per_example)
             print("\tTotal low-precision activations per example:", end=' ')
             for p in percentiles:
-                positive_examples_p = int(positive_examples*p)
+                negative_examples_p = int(negative_examples*p)
                 print("(%d vs %d)" % (
-                    correct_low_precision_activations_per_example[total_low_precision_activations_per_example_sorted[positive_examples_p]],
-                    incorrect_low_precision_activations_per_example[total_low_precision_activations_per_example_sorted[positive_examples_p]]
+                    correct_low_precision_activations_per_example[total_low_precision_activations_per_example_sorted[negative_examples_p]],
+                    incorrect_low_precision_activations_per_example[total_low_precision_activations_per_example_sorted[negative_examples_p]]
                     ), end= ' '
                 )
             print()
@@ -364,10 +364,10 @@ if __name__ == "__main__":
             total_activations_per_example_sorted = np.argsort(total_activations_per_example)
             print("\tTotal activations per example:", end=' ')
             for p in percentiles:
-                positive_examples_p = int(positive_examples*p)
+                negative_examples_p = int(negative_examples*p)
                 print("(%d vs %d)" % (
-                    correct_activations_per_example[total_activations_per_example_sorted[positive_examples_p]],
-                    incorrect_activations_per_example[total_activations_per_example_sorted[positive_examples_p]]
+                    correct_activations_per_example[total_activations_per_example_sorted[negative_examples_p]],
+                    incorrect_activations_per_example[total_activations_per_example_sorted[negative_examples_p]]
                     ), end= ' '
                 )
             print()
@@ -376,10 +376,10 @@ if __name__ == "__main__":
             total_activations_per_hit_sorted = np.argsort(total_activations_per_hit)
             print("\tTotal activations per correctly classified example:", end=' ')
             for p in percentiles:
-                positive_examples_p = int(positive_hits*p)
+                negative_examples_p = int(negative_hits*p)
                 print("(%d vs %d)" % (
-                    correct_activations_per_hit[total_activations_per_hit_sorted[positive_examples_p]],
-                    incorrect_activations_per_hit[total_activations_per_hit_sorted[positive_examples_p]]
+                    correct_activations_per_hit[total_activations_per_hit_sorted[negative_examples_p]],
+                    incorrect_activations_per_hit[total_activations_per_hit_sorted[negative_examples_p]]
                     ), end= ' '
                 )
             print()
@@ -388,10 +388,10 @@ if __name__ == "__main__":
             total_activations_per_miss_sorted = np.argsort(total_activations_per_miss)
             print("\tTotal activations per misclassified example:", end=' ')
             for p in percentiles:
-                positive_examples_p = int(positive_misses*p)
+                negative_examples_p = int(negative_misses*p)
                 print("(%d vs %d)" % (
-                    correct_activations_per_miss[total_activations_per_miss_sorted[positive_examples_p]],
-                    incorrect_activations_per_miss[total_activations_per_miss_sorted[positive_examples_p]]
+                    correct_activations_per_miss[total_activations_per_miss_sorted[negative_examples_p]],
+                    incorrect_activations_per_miss[total_activations_per_miss_sorted[negative_examples_p]]
                     ), end= ' '
                 )
             print()
