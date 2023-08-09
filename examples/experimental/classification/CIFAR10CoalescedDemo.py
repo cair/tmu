@@ -54,7 +54,7 @@ if __name__ == "__main__":
         type_i_ii_ratio=args.type_i_ii_ratio
     )
 
-    _LOGGER.info(f"Running {TMClassifier} for {args.epochs}")
+    _LOGGER.info(f"Running {TMCoalescedClassifier} for {args.epochs}")
     for epoch in range(args.epochs):
         benchmark_total = BenchmarkTimer(logger=_LOGGER, text="Epoch Time")
         with benchmark_total:
