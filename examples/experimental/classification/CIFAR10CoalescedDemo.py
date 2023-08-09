@@ -1,6 +1,6 @@
 import logging
 import argparse
-from tmu.models.classification.vanilla_classifier import TMCoalescedClassifier
+from tmu.models.classification.coalesced_classifier import TMCoalescedClassifier
 from tmu.tools import BenchmarkTimer
 from tmu.util.cuda_profiler import CudaProfiler
 import numpy as np
