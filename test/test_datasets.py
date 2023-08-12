@@ -31,7 +31,7 @@ class TestMNISTDatasetobject:
 class TestFashionMNISTDataset:
 
     def setup_class(self):
-        from tmu.data import FashionMNIST
+        from tmu.data.fashion_mnist import FashionMNIST
         self.dataset_instance = FashionMNIST()
 
     def teardown_class(self):
@@ -58,7 +58,7 @@ class TestFashionMNISTDataset:
 class TestKuzushijiMNISTDataset:
 
     def setup_class(self):
-        from tmu.data import KuzushijiMNIST
+        from tmu.data.fashion_mnist import KuzushijiMNIST
         self.dataset_instance = KuzushijiMNIST()
 
     def teardown_class(self):
@@ -85,7 +85,7 @@ class TestKuzushijiMNISTDataset:
 class TestCIFAR100Dataset:
 
     def setup_class(self):
-        from tmu.data import CIFAR100
+        from tmu.data.fashion_mnist import CIFAR100
         self.dataset_instance = CIFAR100()
 
     def teardown_class(self):

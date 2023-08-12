@@ -45,7 +45,8 @@ try:
     import pycuda.compiler as compiler
 
     cuda_installed = True
-except ImportError as e:
+except Exception as e:
+    _LOGGER.exception(e)
     _LOGGER.warning("Could not import pycuda. This indicates that it is not installed! A possible fix is to run 'pip "
                     "install pycuda'. Fallback to CPU ClauseBanks.")
     cuda_installed = False

@@ -5,6 +5,7 @@ from tmu.tools import BenchmarkTimer
 _LOGGER = logging.getLogger(__name__)
 
 try:
+    import pycuda._driver
     import pycuda.autoinit
     import pycuda.driver as drv
     import os
@@ -73,7 +74,10 @@ try:
             self.timings.clear()
 
 
-except ImportError:
+except Exception as e:
+    _LOGGER.warning(f"Could not import pycuda: {e}")
+
+
     class CudaProfiler:
 
         _instance = None

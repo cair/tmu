@@ -6,8 +6,8 @@ class ClassifierTests(object):
     model: TMBasis
 
     def setUp(self) -> None:
-        from tmu.data import TMUDatasetSource
-        self.num_epochs = 10
+        from tmu.data.tmu_datasource import TMUDatasetSource
+        self.num_epochs = 20
         self.data = TMUDatasetSource().get_dataset(
             "XOR_biased",
             cache=True,

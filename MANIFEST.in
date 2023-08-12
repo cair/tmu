@@ -1,2 +1,2 @@
-include tmu/*.h
 recursive-include tmu/clause_bank/cuda *.cu
+include tmu/logging_example.json

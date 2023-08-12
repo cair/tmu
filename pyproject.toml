@@ -1,18 +1,65 @@
-[project]
-name = "tmu"
-dynamic = ["version"]
-
 [build-system]
 requires = [
     "setuptools",
     "wheel",
-    "cffi>=1.0.0"
+    "cffi>=1.0.0",
+    "tomli"
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "tmu"
+dynamic = ["version"]
+description = "Your project description"
+readme = "docs/long_description.rst"
+license.text = "MIT License"
+authors = [
+    { email = "ole.granmo@uia.no", name = "Ole-Christoffer Granmo" },
+    { email = "per.andersen@uia.no", name = "Per-Arne Andersen" }
+]
+dependencies = [
+    "cffi>=1.0.0",
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "tqdm"
+]
+
+# Include additional files
+[project.urls]
+homepage = "https://github.com/cair/tmu/"
+repository = "https://github.com/cair/tmu/"
+
+
+[tool.setuptools.package-dir]
+tmu = "tmu"
 
 [tool.setuptools.dynamic]
 version = {attr = "tmu.__version__"}
+
+[tool.cffi_builder]
+module_name = "tmu.tmulib"
+flags = [
+    "-O3"
+]
+sources = [
+    "tmu/lib/src/ClauseBank.c",
+    "tmu/lib/src/Tools.c",
+    "tmu/lib/src/WeightBank.c",
+    "tmu/lib/src/ClauseBankSparse.c"
+]
+
+headers = [
+    "tmu/lib/include/ClauseBank.h",
+    "tmu/lib/include/Tools.h",
+    "tmu/lib/include/WeightBank.h",
+    "tmu/lib/include/ClauseBankSparse.h"
+]
+
+include_dir = "tmu/lib/include"
+
+
+
 
 [tool.cibuildwheel]
 build = "*"
