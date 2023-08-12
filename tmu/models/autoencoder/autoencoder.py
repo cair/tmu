@@ -268,8 +268,13 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
             for i in class_index:
-                Xu, Yu = self.clause_bank.produce_autoencoder_example(self.encoded_X_train, i, self.feature_true_probability[self.output_active[i]], self.accumulation)
-                
+                Xu, Yu = self.clause_bank.produce_autoencoder_example(
+                    encoded_X=self.encoded_X_train,
+                    target=i,
+                    target_true_p=self.feature_true_probability[self.output_active[i]],
+                    accumulation=self.accumulation
+                )
+
                 ta_chunk = self.output_active[i] // 32
                 chunk_pos = self.output_active[i] % 32
                 copy_literal_active_ta_chunk = literal_active[ta_chunk]
@@ -342,7 +347,12 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
         literal_active = self.activate_literals()
 
         for e in range(number_of_examples):
-            Xu, Yu = self.clause_bank.produce_autoencoder_example(self.encoded_X_test, the_class,  self.feature_true_probability[self.output_active[the_class]], self.accumulation)
+            Xu, Yu = self.clause_bank.produce_autoencoder_example(
+                encoded_X=self.encoded_X_test,
+                target=the_class,
+                target_true_p=self.feature_true_probability[self.output_active[the_class]],
+                accumulation=self.accumulation
+            )
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(Xu, 0)
 
             if positive_polarity:
@@ -372,7 +382,12 @@ class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixi
         weights = self.weight_banks[the_class].get_weights()
 
         for e in range(number_of_examples):
-            Xu, Yu = self.clause_bank.produce_autoencoder_example(self.encoded_X_test, the_class, self.feature_true_probability[self.output_active[the_class]], self.accumulation)
+            Xu, Yu = self.clause_bank.produce_autoencoder_example(
+                encoded_X=self.encoded_X_test,
+                target=the_class,
+                target_true_p=self.feature_true_probability[self.output_active[the_class]],
+                accumulation=self.accumulation
+            )
 
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(Xu, 0)
 

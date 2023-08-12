@@ -1,59 +1,83 @@
-import codecs
-import os
 from pathlib import Path
 from setuptools import setup, find_packages
+from setuptools.command.develop import develop
+from setuptools.command.install import install
+import cffi
+import tomli
+from typing import Dict, Any
 
-current_dir = Path(__file__).parent
+from setuptools.dist import Distribution
+
+project_dir = Path(__file__).parent
 
 
-def read(rel_path):
-    here = os.path.abspath(os.path.dirname(__file__))
-    with codecs.open(os.path.join(here, rel_path), 'r') as fp:
-        return fp.read()
+def load_configuration(file_path: Path) -> Dict[str, Any]:
+    """Load and parse the configuration from a given TOML file."""
+    return tomli.loads(file_path.read_text())
 
 
-def get_version(rel_path):
-    for line in read(rel_path).splitlines():
-        if line.startswith('__version__'):
-            delim = '"' if '"' in line else "'"
-            return line.split(delim)[1]
-    else:
-        raise RuntimeError("Unable to find version string.")
+def build_cffi():
+    """
+    Build the CFFI modules as per the configuration in `pyproject.toml`.
+    Reads the configuration from `tool.cffi_builder` section.
+    """
+    config = load_configuration(project_dir / "pyproject.toml")
+    cffi_builder_config = config.get("tool", {}).get("cffi_builder", {})
 
+    sources = [Path(s) for s in cffi_builder_config.get("sources", [])]
+    headers = [Path(s) for s in cffi_builder_config.get("headers", [])]
+    include_dir = cffi_builder_config.get("include_dir", ".")
+
+
+    flags = cffi_builder_config.get("flags", [])
+
+    source_content = '\n'.join(s.read_text() for s in sources)
+    header_content = '\n'.join(h.read_text() for h in headers)
+    ffibuilder = cffi.FFI()
+    ffibuilder.cdef(header_content)
+    ffibuilder.set_source(
+        cffi_builder_config.get("module_name", "tmu.tmulib"),
+        source_content,
+        include_dirs=[Path(include_dir).absolute()],
+        extra_compile_args=flags
+    )
+
+    ffibuilder.compile(verbose=True)
+
+
+class TMUInstall(install):
+    """
+    Custom install command that builds the CFFI modules
+    before proceeding with the standard installation process.
+    """
+
+    def run(self):
+        build_cffi()
+        super().run()
+
+
+class TMUDevelop(develop):
+    """
+    Custom develop command that builds the CFFI modules
+    before proceeding with the standard develop process.
+    """
+
+    def run(self):
+        build_cffi()
+        super().run()
+
+
+class BinaryDistribution(Distribution):
+    """Distribution which always forces a binary package with platform name"""
+    def has_ext_modules(foo):
+        return True
 
 setup(
-    name='tmu',
-    version=get_version("tmu/__init__.py"),  # Change version in tmu/__init__.py
-    url='https://github.com/cair/tmu/',
-    author='Ole-Christoffer Granmo',
-    author_email='ole.granmo@uia.no',
-    license='MIT',
-    description='Implements the Tsetlin Machine, Coalesced Tsetlin Machine, Convolutional Tsetlin Machine, Regression '
-                'Tsetlin Machine, and Weighted Tsetlin Machine, with support for continuous features, drop clause, '
-                'Type III Feedback, focused negative sampling, multi-task classifier, autoencoder, literal budget,'
-                'incremental clause evaluation, sparse computation with absorbing exclude, and one-vs-one multi-class classifier. TMU is written in Python with '
-                'wrappers for C and CUDA-based clause evaluation and updating.',
-    long_description='Implements the Tsetlin Machine (https://arxiv.org/abs/1804.01508), Coalesced Tsetlin Machine ('
-                     'https://arxiv.org/abs/2108.07594), Convolutional Tsetlin Machine ('
-                     'https://arxiv.org/abs/1905.09688), Regression Tsetlin Machine ('
-                     'https://royalsocietypublishing.org/doi/full/10.1098/rsta.2019.0165), and Weighted Tsetlin '
-                     'Machine (https://ieeexplore.ieee.org/document/9316190), with support for continuous features ('
-                     'https://arxiv.org/abs/1905.04199), drop clause (https://arxiv.org/abs/2105.14506), '
-                     'Type III Feedback (to be published), focused negative sampling ('
-                     'https://ieeexplore.ieee.org/document/9923859), multi-task classifier (to be published), '
-                     'autoencoder (https://arxiv.org/abs/2301.00709), literal budget (https://arxiv.org/abs/2301.08190), incremental '
-                     'clause evaluation (to be published), sparse computation with absorbing exclude (to be published), and one-vs-one multi-class classifier (to be published). '
-                     'TMU is written in Python with wrappers for C and CUDA-based clause evaluation and updating.',
     include_package_data=True,
     packages=find_packages(),
-    data_files=[('tmu', ['tmu/logging_example.json'])],
-    cffi_modules=[
-        "tmu/lib/tmulib_extension_build.py:ffibuilder"
-    ],
-    install_requires=[
-        "cffi>=1.0.0",
-        "numpy",
-        "pandas",
-        "scikit-learn"
-    ]
+    cmdclass={
+        "install": TMUInstall,
+        "develop": TMUDevelop,
+    },
+    distclass=BinaryDistribution
 )
