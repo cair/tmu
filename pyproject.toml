@@ -103,7 +103,7 @@ musllinux-s390x-image = "musllinux_1_1"
 
 
 [tool.cibuildwheel.linux]
-before-all = "yum install -y libffi-devel || apt-get update && apt-get install -y libffi-dev"
+before-all = "yum install -y libffi-devel || (apt-get update && apt-get install -y libffi-dev)"
 
 #repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
