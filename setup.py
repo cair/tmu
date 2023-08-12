@@ -6,6 +6,8 @@ import cffi
 import tomli
 from typing import Dict, Any
 
+from setuptools.dist import Distribution
+
 project_dir = Path(__file__).parent
 
 
@@ -65,11 +67,17 @@ class TMUDevelop(develop):
         super().run()
 
 
+class BinaryDistribution(Distribution):
+    """Distribution which always forces a binary package with platform name"""
+    def has_ext_modules(foo):
+        return True
+
 setup(
     include_package_data=True,
     packages=find_packages(),
     cmdclass={
         "install": TMUInstall,
-        "develop": TMUDevelop
-    }
+        "develop": TMUDevelop,
+    },
+    distclass=BinaryDistribution
 )

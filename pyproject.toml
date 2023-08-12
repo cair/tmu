@@ -24,6 +24,7 @@ dependencies = [
     "scikit-learn",
     "tqdm"
 ]
+requires-python = ">=3.10"
 
 # Include additional files
 [project.urls]
@@ -67,7 +68,7 @@ skip = ""
 test-skip = ""
 
 archs = ["auto"]
-build-frontend = "pip"
+build-frontend = "build"
 config-settings = {}
 dependency-versions = "pinned"
 environment = {}
