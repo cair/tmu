@@ -1,6 +1,5 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
-import hashlib
-import pickle
+
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +26,7 @@ from tmu.tmulib import ffi, lib
 from tmu.tools import BenchmarkTimer
 from tmu.clause_bank.clause_bank import ClauseBank
 from tmu.clause_bank.base_clause_bank import BaseClauseBank
-
+import hashlib
 import numpy as np
 import logging
 import pathlib
@@ -373,12 +372,23 @@ class ImplClauseBankCUDA(BaseClauseBank):
             X_gpu
         )
 
+    _logged_unknown_args = set()
+
     def produce_autoencoder_example(
             self,
             encoded_X,
             target,
-            accumulation
+            accumulation,
+            **kwargs
     ):
+        # Log unknown arguments only once
+
+        for key, value in kwargs.items():
+            if key not in self._logged_unknown_args:
+                self._logged_unknown_args.add(key)
+                _LOGGER.error(
+                    f"Unknown positional argument for {self}: argument_name={key}, argument_value={value}, class={type(self)}")
+
         (
             active_output_gpu,
             active_output,
