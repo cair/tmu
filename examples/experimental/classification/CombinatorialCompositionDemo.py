@@ -2,6 +2,7 @@ import numpy as np
 from time import time
 from sklearn.metrics import f1_score
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.naive_bayes import BernoulliNB
 
 from scipy.sparse import csr_matrix
 
@@ -12,7 +13,7 @@ number_of_code_chunks = 2
 
 number_of_classes = 2**number_of_code_chunks
 
-noise = 0.1
+noise = 0.2
 
 number_of_code_bits = 4
 
@@ -23,9 +24,10 @@ clause_weight_threshold = 0
 number_of_examples = 2500
 accumulation = 1
 
-number_of_clauses = 10
+factor = 20
+number_of_clauses = 10*factor
 T = 8*10
-s = 1.5
+s = 20.0
 
 print("Number of classes", number_of_classes)
 print("Number of clauses:", number_of_clauses)
@@ -62,18 +64,16 @@ for i in range(number_of_examples):
 			X_test[i,number_of_code_bits*j:number_of_code_bits*(j+1)] = one
 X_test = np.where(np.random.rand(number_of_examples, number_of_features) <= noise, 1-X_test, X_test) # Adds noise
 
-tm = TMClassifier(10, 15, 3.0, platform='CPU')
+tm = TMClassifier(number_of_clauses, T, s, weighted_clauses=False, platform='CPU')
 
-for i in range(20):
+for i in range(200):
 	tm.fit(X_train, Y_train)
-
-print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
 
 np.set_printoptions(threshold=np.inf, linewidth=200, precision=2, suppress=True)
 
 print("Zero", zero)
 print("One", one)
-
+ 
 for i in range(number_of_classes):
 	print("\nClass %d Positive Clauses:\n" % (i))
 
@@ -106,3 +106,9 @@ for i in range(number_of_classes):
 				else:
 					l.append("¬x%d" % (k-number_of_features))
 		print(" ∧ ".join(l))
+
+print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
+
+nb = BernoulliNB()
+nb.fit(X_train, Y_train)
+print("NB Accuracy:", 100*(nb.predict(X_test) == Y_test).mean())
