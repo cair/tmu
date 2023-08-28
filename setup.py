@@ -41,8 +41,9 @@ def build_cffi():
         include_dirs=[Path(include_dir).absolute()],
         extra_compile_args=flags
     )
+    ffibuilder.compile(verbose=True)
     return ffibuilder
-    #ffibuilder.compile(verbose=True)
+
 
 
 class TMUInstall(install):
