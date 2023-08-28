@@ -41,8 +41,9 @@ def build_cffi():
         include_dirs=[Path(include_dir).absolute()],
         extra_compile_args=flags
     )
-
     ffibuilder.compile(verbose=True)
+    return ffibuilder
+
 
 
 class TMUInstall(install):
@@ -75,9 +76,10 @@ class BinaryDistribution(Distribution):
 setup(
     include_package_data=True,
     packages=find_packages(),
-    cmdclass={
-        "install": TMUInstall,
-        "develop": TMUDevelop,
-    },
-    distclass=BinaryDistribution
+    ext_modules=[build_cffi().distutils_extension()]
+    #cmdclass={
+    #    "install": TMUInstall,
+    #    "develop": TMUDevelop,
+    #},
+    #distclass=BinaryDistribution
 )
