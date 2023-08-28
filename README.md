@@ -33,6 +33,9 @@ Before installing TMU on Windows, ensure you have the MSVC build tools. Follow t
 1. [Download MSVC build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 2. Install the `Workloads → Desktop development with C++` package. *(Note: The package size is about 6-7GB.)*
 
+#### **Dependencies**
+Ubuntu: `sudo apt install libffi-dev`
+
 #### **Installing TMU**
 To get started with TMU, run the following command:
 ```bash
