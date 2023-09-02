@@ -18,6 +18,7 @@
 import typing
 from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin
 from tmu.models.classification.base_classification import TMBaseClassifier
+from tmu.util.encoded_data_cache import DataEncoderCache
 from tmu.weight_bank import WeightBank
 import numpy as np
 import tmu.tools
@@ -89,6 +90,11 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         MultiClauseBankMixin.__init__(self)
         MultiWeightBankMixin.__init__(self)
 
+        # These data structures cache the encoded data for the training and test sets. It also makes a fast-check if
+        # training data has changed, and only re-encodes if it has.
+        self.test_encoder_cache = DataEncoderCache()
+        self.train_encoder_cache = DataEncoderCache()
+
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
         clause_bank_type, clause_bank_args = self.build_clause_bank(X=X)
         self.clause_banks.set_clause_init(clause_bank_type, clause_bank_args)
@@ -119,9 +125,10 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
     def fit(self, X, Y, shuffle=True, *args, **kwargs):
         self.init(X, Y)
 
-        if not np.array_equal(self.X_train, X):
-            self.encoded_X_train = self.clause_banks[0].prepare_X(X)
-            self.X_train = X.copy()
+        encoded_X_train = self.train_encoder_cache.get_encoded_data(
+            X,
+            encoder_func=lambda x: self.clause_banks[0].prepare_X(x)
+        )
 
         Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
@@ -155,7 +162,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             target = Ym[e]
 
             clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(literal_active,
-                                                                                       self.encoded_X_train, e)
+                                                                                       encoded_X_train, e)
             class_sum = np.dot(clause_active[target] * self.weight_banks[target].get_weights(), clause_outputs).astype(
                 np.int32)
             class_sum = np.clip(class_sum, -self.T, self.T)
@@ -177,7 +184,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                 update_p=update_p * self.type_i_p,
                 clause_active=clause_active[target] * self.positive_clauses,
                 literal_active=literal_active,
-                encoded_X=self.encoded_X_train,
+                encoded_X=encoded_X_train,
                 e=e
             )
 
@@ -185,7 +192,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                 update_p=update_p * self.type_ii_p,
                 clause_active=clause_active[target] * self.negative_clauses,
                 literal_active=literal_active,
-                encoded_X=self.encoded_X_train,
+                encoded_X=encoded_X_train,
                 e=e
             )
 
@@ -194,7 +201,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                     update_p=update_p,
                     clause_active=clause_active[target] * self.positive_clauses,
                     literal_active=literal_active,
-                    encoded_X=self.encoded_X_train,
+                    encoded_X=encoded_X_train,
                     e=e,
                     target=1
                 )
@@ -203,7 +210,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                     update_p=update_p,
                     clause_active=clause_active[target] * self.negative_clauses,
                     literal_active=literal_active,
-                    encoded_X=self.encoded_X_train,
+                    encoded_X=encoded_X_train,
                     e=e,
                     target=0
                 )
@@ -218,7 +225,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
             clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(
                 literal_active=literal_active,
-                encoded_X=self.encoded_X_train,
+                encoded_X=encoded_X_train,
                 e=e
             )
             class_sum = np.dot(
@@ -245,7 +252,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                 update_p=update_p * self.type_i_p,
                 clause_active=clause_active[not_target] * self.negative_clauses,
                 literal_active=literal_active,
-                encoded_X=self.encoded_X_train,
+                encoded_X=encoded_X_train,
                 e=e
             )
 
@@ -253,7 +260,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                 update_p=update_p * self.type_ii_p,
                 clause_active=clause_active[not_target] * self.positive_clauses,
                 literal_active=literal_active,
-                encoded_X=self.encoded_X_train,
+                encoded_X=encoded_X_train,
                 e=e
             )
 
@@ -262,7 +269,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                     update_p=update_p,
                     clause_active=clause_active[not_target] * self.negative_clauses,
                     literal_active=literal_active,
-                    encoded_X=self.encoded_X_train,
+                    encoded_X=encoded_X_train,
                     e=e,
                     target=1
                 )
@@ -271,21 +278,23 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                     update_p=update_p,
                     clause_active=clause_active[not_target] * self.positive_clauses,
                     literal_active=literal_active,
-                    encoded_X=self.encoded_X_train,
+                    encoded_X=encoded_X_train,
                     e=e,
                     target=0
                 )
         return
-    
 
     def predict(self, X, clip_class_sum=False, return_class_sums: bool = False, **kwargs):
-        if not np.array_equal(self.X_test, X):
-            self.encoded_X_test = self.clause_banks[0].prepare_X(X)
-            self.X_test = X.copy()
+
+        encoded_X_test = self.test_encoder_cache.get_encoded_data(
+            X,
+            encoder_func=lambda x: self.clause_banks[0].prepare_X(x)
+        )
 
         class_sums = np.array([
             self.compute_class_sums(
-                ith_sample=i, 
+                encoded_X_test=encoded_X_test,
+                ith_sample=i,
                 clip_class_sum=clip_class_sum
             ) for i in range(X.shape[0])
         ])
@@ -297,9 +306,7 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         else:
             return max_classes
 
-
-    
-    def compute_class_sums(self, ith_sample: int, clip_class_sum: bool)-> typing.List[int]:
+    def compute_class_sums(self, encoded_X_test: np.array, ith_sample: int, clip_class_sum: bool) -> typing.List[int]:
         """The following function evaluates the resulting class sum votes.
 
         Args:
@@ -311,17 +318,16 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         """
         class_sums = []
         for ith_class in self.weight_banks.classes():
-            
+
             class_sum = np.dot(
                 self.weight_banks[ith_class].get_weights(),
-                self.clause_banks[ith_class].calculate_clause_outputs_predict(self.encoded_X_test, ith_sample)
+                self.clause_banks[ith_class].calculate_clause_outputs_predict(encoded_X_test, ith_sample)
             ).astype(np.int32)
-            
+
             if clip_class_sum:
                 class_sum = np.clip(class_sum, -self.T, self.T)
             class_sums.append(class_sum)
         return class_sums
-        
 
     def transform(self, X):
         encoded_X = self.clause_banks[0].prepare_X(X)
@@ -335,7 +341,8 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         encoded_X = self.clause_banks[0].prepare_X(X)
 
         transformed_X = np.empty(
-            (X.shape[0], len(self.weight_banks), self.number_of_clauses * self.clause_banks[0].number_of_patches), dtype=np.uint32)
+            (X.shape[0], len(self.weight_banks), self.number_of_clauses * self.clause_banks[0].number_of_patches),
+            dtype=np.uint32)
         for e in range(X.shape[0]):
             for i in self.weight_banks.classes():
                 transformed_X[e, i, :] = self.clause_banks[i].calculate_clause_outputs_patchwise(encoded_X, e)
