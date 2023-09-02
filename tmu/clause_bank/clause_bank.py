@@ -68,6 +68,28 @@ class ClauseBank(BaseClauseBank):
         self.literal_clause_count = np.empty(self.number_of_literals, dtype=np.uint32, order="c")
         self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
 
+        # Incremental Clause Evaluation
+        self.literal_clause_map = np.empty(
+            (int(self.number_of_literals * self.number_of_clauses)),
+            dtype=np.uint32,
+            order="c"
+        )
+        self.literal_clause_map_pos = np.empty(
+            (int(self.number_of_literals)),
+            dtype=np.uint32,
+            order="c"
+        )
+        self.false_literals_per_clause = np.empty(
+            int(self.number_of_clauses * self.number_of_patches),
+            dtype=np.uint32,
+            order="c"
+        )
+        self.previous_xi = np.empty(
+            int(self.number_of_ta_chunks) * int(self.number_of_patches),
+            dtype=np.uint32,
+            order="c"
+        )
+
         self.initialize_clauses()
 
         # Finally, map numpy arrays to CFFI compatible pointers.
@@ -89,6 +111,12 @@ class ClauseBank(BaseClauseBank):
 
         # Action Initialization
         self.ptr_actions = ffi.cast("unsigned int *", self.actions.ctypes.data)
+
+        # Incremental Clause Evaluation Initialization
+        self.lcm_p = ffi.cast("unsigned int *", self.literal_clause_map.ctypes.data)
+        self.lcmp_p = ffi.cast("unsigned int *", self.literal_clause_map_pos.ctypes.data)
+        self.flpc_p = ffi.cast("unsigned int *", self.false_literals_per_clause.ctypes.data)
+        self.previous_xi_p = ffi.cast("unsigned int *", self.previous_xi.ctypes.data)
 
     def initialize_clauses(self):
         self.clause_bank = np.empty(
@@ -130,33 +158,6 @@ class ClauseBank(BaseClauseBank):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
 
         if not self.incremental_clause_evaluation_initialized:
-            self.literal_clause_map = np.empty(
-                (int(self.number_of_literals * self.number_of_clauses)),
-                dtype=np.uint32,
-                order="c"
-            )
-            self.lcm_p = ffi.cast("unsigned int *", self.literal_clause_map.ctypes.data)
-
-            self.literal_clause_map_pos = np.empty(
-                (int(self.number_of_literals)),
-                dtype=np.uint32,
-                order="c"
-            )
-            self.lcmp_p = ffi.cast("unsigned int *", self.literal_clause_map_pos.ctypes.data)
-
-            self.false_literals_per_clause = np.empty(
-                int(self.number_of_clauses * self.number_of_patches),
-                dtype=np.uint32,
-                order="c"
-            )
-            self.flpc_p = ffi.cast("unsigned int *", self.false_literals_per_clause.ctypes.data)
-
-            self.previous_xi = np.empty(
-                int(self.number_of_ta_chunks) * int(self.number_of_patches),
-                dtype=np.uint32,
-                order="c"
-            )
-            self.previous_xi_p = ffi.cast("unsigned int *", self.previous_xi.ctypes.data)
 
             lib.cb_initialize_incremental_clause_calculation(
                 self.ptr_ta_state,
@@ -377,7 +378,7 @@ class ClauseBank(BaseClauseBank):
             accumulation
     ):
         (X_csr, X_csc, active_output, X) = encoded_X
-        
+
         target_value = np.random.random() <= target_true_p
 
         lib.tmu_produce_autoencoder_example(ffi.cast("unsigned int *", active_output.ctypes.data), active_output.shape[0],
