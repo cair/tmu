@@ -44,13 +44,9 @@ class CIFAR100(TMUDataset):
         )
 
     def _transform(self, name, dataset):
-        if name.startswith("y"):
-            return dataset
-
-        # This transformation converts the pixel values to binary based on a threshold
-        return np.where(dataset.reshape((dataset.shape[0], 32 * 32 * 3)) > 128, 1, 0)
-
+        return dataset
 
 if __name__ == "__main__":
     cifar_ds = CIFAR100()
-    cifar_ds.get()
+    data = cifar_ds.get()
+    print(data)
