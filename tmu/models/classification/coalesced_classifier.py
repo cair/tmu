@@ -5,6 +5,7 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
+import typing
 
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
@@ -18,8 +19,10 @@
 # SOFTWARE.
 
 from tmu.models.base import MultiWeightBankMixin, SingleClauseBankMixin
+from tmu.util.encoded_data_cache import DataEncoderCache
 from tmu.weight_bank import WeightBank
 from tmu.models.classification.base_classification import TMBaseClassifier
+from tmu.models.classification.vanilla_classifier import TMClassifier
 import numpy as np
 
 
@@ -70,6 +73,11 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
         SingleClauseBankMixin.__init__(self)
         MultiWeightBankMixin.__init__(self)
 
+        # These data structures cache the encoded data for the training and test sets. It also makes a fast-check if
+        # training data has changed, and only re-encodes if it has.
+        self.test_encoder_cache = DataEncoderCache()
+        self.train_encoder_cache = DataEncoderCache()
+
         self.max_positive_clauses = max_positive_clauses
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
@@ -90,8 +98,8 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
         if self.max_positive_clauses is None:
             self.max_positive_clauses = self.number_of_clauses
 
-    def update(self, target, e):
-        clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.literal_active, self.encoded_X_train, e)
+    def update(self, target, e, encoded_X_train):
+        clause_outputs = self.clause_bank.calculate_clause_outputs_update(self.literal_active, encoded_X_train, e)
 
         class_sum = np.dot(self.clause_active * self.weight_banks[target].get_weights(), clause_outputs).astype(
             np.int32)
@@ -104,7 +112,7 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
             update_p=update_p * self.type_i_p,
             clause_active=self.clause_active * (self.weight_banks[target].get_weights() >= 0),
             literal_active=self.literal_active,
-            encoded_X=self.encoded_X_train,
+            encoded_X=encoded_X_train,
             e=e
         )
 
@@ -112,7 +120,7 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
             update_p=update_p * self.type_ii_p,
             clause_active=self.clause_active * (self.weight_banks[target].get_weights() < 0),
             literal_active=self.literal_active,
-            encoded_X=self.encoded_X_train,
+            encoded_X=encoded_X_train,
             e=e
         )
 
@@ -129,7 +137,7 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
                 update_p=update_p,
                 clause_active=self.clause_active * (self.weight_banks[target].get_weights() >= 0),
                 literal_active=self.literal_active,
-                encoded_X=self.encoded_X_train,
+                encoded_X=encoded_X_train,
                 e=e,
                 target=1
             )
@@ -138,7 +146,7 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
                 update_p=update_p,
                 clause_active=self.clause_active * (self.weight_banks[target].get_weights() < 0),
                 literal_active=self.literal_active,
-                encoded_X=self.encoded_X_train,
+                encoded_X=encoded_X_train,
                 e=e,
                 target=0
             )
@@ -168,7 +176,7 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
             update_p=update_p * self.type_i_p,
             clause_active=self.clause_active * (self.weight_banks[not_target].get_weights() < 0),
             literal_active=self.literal_active,
-            encoded_X=self.encoded_X_train,
+            encoded_X=encoded_X_train,
             e=e
         )
 
@@ -176,7 +184,7 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
             update_p=update_p * self.type_ii_p,
             clause_active=self.clause_active * (self.weight_banks[not_target].get_weights() >= 0),
             literal_active=self.literal_active,
-            encoded_X=self.encoded_X_train,
+            encoded_X=encoded_X_train,
             e=e
         )
 
@@ -185,7 +193,7 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
                 update_p=update_p,
                 clause_active=self.clause_active * (self.weight_banks[not_target].get_weights() < 0),
                 literal_active=self.literal_active,
-                encoded_X=self.encoded_X_train,
+                encoded_X=encoded_X_train,
                 e=e,
                 target=1
             )
@@ -194,7 +202,7 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
                 update_p=update_p,
                 clause_active=self.clause_active * (self.weight_banks[not_target].get_weights() >= 0),
                 literal_active=self.literal_active,
-                encoded_X=self.encoded_X_train,
+                encoded_X=encoded_X_train,
                 e=e,
                 target=0
             )
@@ -209,9 +217,10 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
     def fit(self, X, Y, shuffle=True, **kwargs):
         self.init(X, Y)
 
-        if not np.array_equal(self.X_train, X):
-            self.encoded_X_train = self.clause_bank.prepare_X(X)
-            self.X_train = X.copy()
+        encoded_X_train = self.train_encoder_cache.get_encoded_data(
+            X,
+            encoder_func=lambda x: self.clause_bank.prepare_X(X)
+        )
 
         Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
@@ -260,10 +269,55 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
                 for i in range(self.number_of_classes):
                     class_observed[i] = 0
                     batch_example = example_indexes[i]
-                    self.update(Ym[batch_example], batch_example)
+                    self.update(Ym[batch_example], batch_example, encoded_X_train)
         return
 
-    def predict(self, X, clip_class_sum=False, **kwargs):
+    def predict(self, X, clip_class_sum=False, return_class_sums: bool = False, **kwargs):
+
+        # Caching the encoded test set if it's not cached already
+        if not np.array_equal(self.X_test, X):
+            self.encoded_X_test = self.clause_bank.prepare_X(X)
+            self.X_test = X.copy()
+
+        # Compute class sums for all samples
+        class_sums = np.array([
+            self.compute_class_sums(
+                encoded_X_test=self.encoded_X_test,
+                ith_sample=e,
+                clip_class_sum=clip_class_sum
+            ) for e in range(X.shape[0])
+        ])
+
+        # Find the class with the maximum sum for each sample
+        max_classes = np.argmax(class_sums, axis=1)
+
+        if return_class_sums:
+            return max_classes, class_sums
+        else:
+            return max_classes
+
+    def compute_class_sums(self, encoded_X_test: np.array, ith_sample: int, clip_class_sum: bool) -> typing.List[int]:
+        """The following function evaluates the resulting class sum votes.
+
+        Args:
+            ith_sample (int): The index of the sample
+            clip_class_sum (bool): Wether to clip class sums
+
+        Returns:
+            list[int]: list of all class sums
+        """
+        class_sums = []
+        clause_outputs = self.clause_bank.calculate_clause_outputs_predict(encoded_X_test, ith_sample)
+        for i in range(self.number_of_classes):
+            class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
+
+            if clip_class_sum:
+                class_sum = np.clip(class_sum, -self.T, self.T)
+            class_sums.append(class_sum)
+        return class_sums
+
+
+    """def predict(self, X, clip_class_sum=False, return_class_sums: bool = False, **kwargs):
         if not np.array_equal(self.X_test, X):
             self.encoded_X_test = self.clause_bank.prepare_X(X)
             self.X_test = X.copy()
@@ -276,15 +330,17 @@ class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeight
             clause_outputs = self.clause_bank.calculate_clause_outputs_predict(self.encoded_X_test, e)
             for i in range(self.number_of_classes):
                 class_sum = np.dot(self.weight_banks[i].get_weights(), clause_outputs).astype(np.int32)
-                
+
                 if clip_class_sum:
                     class_sum = np.clip(class_sum, -self.T, self.T)
-                
+
                 if class_sum > max_class_sum:
                     max_class_sum = class_sum
                     max_class = i
             Y[e] = max_class
-        return Y
+        return Y"""
+
+
 
     def predict_individual(self, X):
         if not np.array_equal(self.X_test, X):
