@@ -16,6 +16,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import typing
+from collections import defaultdict
+
 from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin
 from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.util.encoded_data_cache import DataEncoderCache
@@ -122,7 +124,8 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
     def init_num_classes(self, X: np.ndarray, Y: np.ndarray):
         return int(np.max(Y) + 1)
 
-    def fit(self, X, Y, shuffle=True, *args, **kwargs):
+    def fit(self, X, Y, shuffle=True, return_update_p=False, *args, **kwargs):
+        result = defaultdict(lambda: defaultdict(list))
         self.init(X, Y)
 
         encoded_X_train = self.train_encoder_cache.get_encoded_data(
@@ -163,14 +166,20 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
 
             clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(literal_active,
                                                                                        encoded_X_train, e)
-            class_sum = np.dot(clause_active[target] * self.weight_banks[target].get_weights(), clause_outputs).astype(
-                np.int32)
+            class_sum = np.dot(
+                clause_active[target] * self.weight_banks[target].get_weights(),
+                clause_outputs).astype(
+                np.int32
+            )
             class_sum = np.clip(class_sum, -self.T, self.T)
 
             if self.confidence_driven_updating:
                 update_p = 1.0 * (self.T - np.absolute(class_sum)) / self.T
             else:
                 update_p = (self.T - class_sum) / (2 * self.T)
+
+            if return_update_p:
+                result["update_p"][target].append(update_p)
 
             if self.weighted_clauses:
                 self.weight_banks[target].increment(
@@ -240,6 +249,9 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             else:
                 update_p = (self.T + class_sum) / (2 * self.T)
 
+            if return_update_p:
+                result["update_p"][not_target].append(update_p)
+
             if self.weighted_clauses:
                 self.weight_banks[not_target].decrement(
                     clause_output=clause_outputs,
@@ -282,7 +294,15 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                     e=e,
                     target=0
                 )
-        return
+
+        if return_update_p:
+            all_values = [np.mean(values) for key, values in result["update_p"].items()]
+            for key, avg_value in zip(result["update_p"].keys(), all_values):
+                result["update_p"][key] = avg_value
+
+            result["update_p"]["global"] = np.mean(all_values)
+
+        return result
 
     def predict(self, X, clip_class_sum=False, return_class_sums: bool = False, **kwargs):
 

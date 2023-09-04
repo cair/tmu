@@ -53,6 +53,9 @@ def get_file(path, origin, file_hash, extract=False, extract_archive_format='aut
         if total_size != 0 and t.n != total_size:
             _LOGGER.error("ERROR, something went wrong")
 
+    if fpath.suffix == ".npz":
+        return str(fpath)
+
     # If it's a .tar.gz file, we want the name without both extensions.
     if fpath.suffix == '.gz' and fpath.stem.endswith('.tar'):
         extracted_dir = fpath.parent / fpath.stem[:-4]  # Removing .tar from the stem

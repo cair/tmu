@@ -35,7 +35,8 @@ if __name__ == "__main__":
         with benchmark_total:
             benchmark1 = BenchmarkTimer(logger=_LOGGER, text="Training Time")
             with benchmark1:
-                tm.fit(data["x_train"], data["y_train"])
+                res = tm.fit(data["x_train"], data["y_train"], return_update_p=True)
+                print(res)
 
             benchmark2 = BenchmarkTimer(logger=_LOGGER, text="Testing Time")
             with benchmark2:
