@@ -291,6 +291,7 @@ void cb_type_i_feedback(
         unsigned int *Xi
 )
 {
+    // Lage mask/filter
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {
 		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
@@ -421,14 +422,30 @@ void cb_type_iii_feedback(
 
 		unsigned int clause_output;
 		unsigned int clause_patch;
-		cb_calculate_clause_output_feedback(&ta_state[clause_pos_ta], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits_ta, filter, number_of_patches, literal_active, Xi);
+		cb_calculate_clause_output_feedback(
+		    &ta_state[clause_pos_ta],
+		    output_one_patches,
+		    &clause_output,
+		    &clause_patch,
+		    number_of_ta_chunks,
+		    number_of_state_bits_ta,
+		    filter,
+		    number_of_patches,
+		    literal_active,
+		    Xi
+        );
 
 		if (clause_output) {
 			if (target) {
 				if (((float)fast_rand())/((float)FAST_RAND_MAX) <= (1.0 - 1.0/d)) {
 					for (int k = 0; k < number_of_ta_chunks; ++k) {
+
 						unsigned int ind_pos = k*number_of_state_bits_ind;
-						cb_inc(&ind_state[clause_pos_ind + ind_pos], literal_active[k] & clause_and_target[j*number_of_ta_chunks + k] & Xi[clause_patch*number_of_ta_chunks + k], number_of_state_bits_ind);
+						cb_inc(
+						    &ind_state[clause_pos_ind + ind_pos],
+						    literal_active[k] & clause_and_target[j * number_of_ta_chunks + k] & Xi[clause_patch * number_of_ta_chunks + k],
+						    number_of_state_bits_ind
+                        );
 					}
 				}
 			}
@@ -436,11 +453,13 @@ void cb_type_iii_feedback(
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int ind_pos = k*number_of_state_bits_ind;
 				// Decrease if clause is true and literal is true
-				cb_dec(&ind_state[clause_pos_ind + ind_pos], literal_active[k] & (~clause_and_target[j*number_of_ta_chunks + k]) & Xi[clause_patch*number_of_ta_chunks + k], number_of_state_bits_ind);
+				cb_dec(
+                    &ind_state[clause_pos_ind + ind_pos],
+                    literal_active[k] & (~clause_and_target[j * number_of_ta_chunks + k]) & Xi[clause_patch*number_of_ta_chunks + k],
+                    number_of_state_bits_ind);
 			}
 
 			// Invert literals
-
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int remove;
 				if (target) {
@@ -455,7 +474,6 @@ void cb_type_iii_feedback(
 		}
 
 		// Included
-
 		if (!clause_output) {
 			int offending_literal = cb_calculate_clause_output_single_false_literal(&ta_state[clause_pos_ta], output_one_patches, number_of_ta_chunks, number_of_state_bits_ta, filter, number_of_patches, literal_active, Xi);
 			if (offending_literal != - 1) {
@@ -478,8 +496,14 @@ void cb_type_iii_feedback(
 			unsigned int ta_pos = k*number_of_state_bits_ta;
 			unsigned int ind_pos = k*number_of_state_bits_ind;
 
-			cb_dec(&ta_state[clause_pos_ta + ta_pos], literal_active[k] & (~ind_state[clause_pos_ind + ind_pos + number_of_state_bits_ind - 1]), number_of_state_bits_ta);
+			cb_dec(
+			    &ta_state[clause_pos_ta + ta_pos],
+			    literal_active[k] & (~ind_state[clause_pos_ind + ind_pos + number_of_state_bits_ind - 1]),
+			    number_of_state_bits_ta
+            );
 		}
+
+
 	}
 }
 
@@ -564,6 +588,46 @@ void cb_initialize_incremental_clause_calculation(
 			false_literals_per_clause[j] = 1;
 		}
 	}
+}
+
+
+
+// This function retrieves the count of literals from the given Tsetlin Automaton state.
+// ta_state: an array representing the state of the Tsetlin Automaton.
+// number_of_clauses: the total number of clauses in the TA.
+// number_of_literals: the total number of literals in the TA.
+// number_of_state_bits: the number of bits used to represent each state in the TA.
+// result: an array to store the count of each literal.
+void cb_get_literals(
+    const unsigned int *ta_state,
+    unsigned int number_of_clauses,
+    unsigned int number_of_literals,
+    unsigned int number_of_state_bits,
+    unsigned int *result
+){
+    // Calculate the number of chunks required to represent all literals.
+    unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+    // Iterate through all the clauses.
+    for (unsigned int j = 0; j < number_of_clauses; j++) {
+        // Iterate through all the literals.
+        for (unsigned int k = 0; k < number_of_literals; k++) {
+
+            // Determine which chunk the literal is in and its position within the chunk.
+            unsigned int ta_chunk = k / 32;
+            unsigned int chunk_pos = k % 32;
+
+            // Calculate the position of the literal in the TA state array.
+            unsigned int pos = j * number_of_ta_chunks * number_of_state_bits + ta_chunk * number_of_state_bits + number_of_state_bits-1;
+
+            // Check if the literal is present (bit is set) in the TA state array.
+            if ((ta_state[pos] & (1 << chunk_pos)) > 0) {
+                // Increment the count of the literal in the result array.
+                unsigned int result_pos = j * number_of_literals + k;
+                result[result_pos] = 1;
+            }
+        }
+    }
 }
 
 void cb_calculate_clause_outputs_incremental_batch(

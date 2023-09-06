@@ -4,6 +4,13 @@ import numpy as np
 
 
 class StandardBinarizer:
+    """
+    The standard TM binarizer is detailed in https://arxiv.org/pdf/1905.04199.pdf, Section 3.3
+    Hyperparameters:
+        max_bits_per_feature: how many threshold values each feature should use.
+
+    Procedure:
+    """
 
     number_of_features: int
     max_bits_per_feature: int
@@ -49,10 +56,12 @@ class StandardBinarizer:
         self.fit(X)
         return self.transform(X)
 
+
 if __name__ == "__main__":
     import tmu.data
     from sklearn.datasets import fetch_openml
     from sklearn.model_selection import train_test_split
+
     data = tmu.data.MNIST().get()
     X, y = fetch_openml("mnist_784", version=1, return_X_y=True, as_frame=False, parser="pandas")
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=10000)

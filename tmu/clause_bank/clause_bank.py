@@ -1,5 +1,4 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
-
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -57,15 +56,15 @@ class ClauseBank(BaseClauseBank):
         self.batch_size = batch_size
         self.incremental = incremental
 
-
         self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
         self.clause_output_batch = np.empty(self.number_of_clauses * batch_size, dtype=np.uint32, order="c")
         self.clause_and_target = np.zeros(self.number_of_clauses * self.number_of_ta_chunks, dtype=np.uint32, order="c")
-        self.clause_output_patchwise = np.empty(self.number_of_clauses * self.number_of_patches, dtype=np.uint32,
-                                                order="c")
+        self.clause_output_patchwise = np.empty(self.number_of_clauses * self.number_of_patches, dtype=np.uint32, order="c")
         self.feedback_to_ta = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
         self.output_one_patches = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
         self.literal_clause_count = np.empty(self.number_of_literals, dtype=np.uint32, order="c")
+
+
         self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
 
         # Incremental Clause Evaluation
@@ -107,7 +106,8 @@ class ClauseBank(BaseClauseBank):
 
         # Clause Initialization
         self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
-        self.ptr_ta_state_int = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
+        self.ptr_ta_state_ind = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
+
 
         # Action Initialization
         self.ptr_actions = ffi.cast("unsigned int *", self.actions.ctypes.data)
@@ -135,8 +135,11 @@ class ClauseBank(BaseClauseBank):
         self.clause_bank_ind = np.empty(
             (self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ind), dtype=np.uint32)
         self.clause_bank_ind[:, :, :] = np.uint32(~0)
+
         self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape(
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))
+
+
 
         self.incremental_clause_evaluation_initialized = False
 
@@ -278,6 +281,7 @@ class ClauseBank(BaseClauseBank):
 
         self.incremental_clause_evaluation_initialized = False
 
+
     def type_iii_feedback(
             self,
             update_p,
@@ -293,7 +297,7 @@ class ClauseBank(BaseClauseBank):
 
         lib.cb_type_iii_feedback(
             self.ptr_ta_state,
-            self.ptr_ta_state_int,
+            self.ptr_ta_state_ind,
             self.ptr_clause_and_target,
             self.ptr_output_one_patches,
             self.number_of_clauses,
@@ -335,6 +339,31 @@ class ClauseBank(BaseClauseBank):
             self.ptr_actions
         )
         return self.actions
+
+    def get_literals(self, independent=False):
+
+        result = np.zeros((self.number_of_clauses, self.number_of_literals), dtype=np.uint32, order="c")
+        result_p = ffi.cast("unsigned int *", result.ctypes.data)
+        lib.cb_get_literals(
+            self.ptr_ta_state_ind if independent else self.ptr_ta_state,
+            self.number_of_clauses,
+            self.number_of_literals,
+            self.number_of_state_bits_ta,
+            result_p
+        )
+        return result
+
+    def calculate_independent_literal_clause_frequency(self, clause_active):
+        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        lib.cb_calculate_literal_frequency(
+            self.ptr_ta_state_ind,
+            self.number_of_clauses,
+            self.number_of_literals,
+            self.number_of_state_bits_ta,
+            ca_p,
+            self.ptr_literal_clause_count
+        )
+        return self.literal_clause_count
 
     def number_of_include_actions(
             self,

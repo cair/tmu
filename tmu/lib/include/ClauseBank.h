@@ -162,3 +162,11 @@ void cb_calculate_clause_outputs_incremental(
     unsigned int *previous_Xi,
     unsigned int *Xi
 );
+
+void cb_get_literals(
+    const unsigned int *ta_state,
+    unsigned int number_of_clauses,
+    unsigned int number_of_literals,
+    unsigned int number_of_state_bits,
+    unsigned int *result
+);
