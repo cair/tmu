@@ -23,7 +23,7 @@ TMU is a comprehensive repository that encompasses several Tsetlin Machine imple
     - Type III Feedback *(Upcoming)*
     - Incremental Clause Evaluation *(Upcoming)*
     - Sparse Computation with Absorbing Actions *(Upcoming)*
-    - TMComposite: Plug-and-Play Collaboration Between Specialized Tsetlin Machines *([In Progress](https://arxiv.org/abs/2309.04801))*
+    - TMComposites: Plug-and-Play Collaboration Between Specialized Tsetlin Machines *([In Progress](https://arxiv.org/abs/2309.04801))*
 
 - Wrappers for C and CUDA-based clause evaluation and updates to enable high-performance computation.
 
