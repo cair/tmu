@@ -20,7 +20,7 @@ TMU is a comprehensive repository that encompasses several Tsetlin Machine imple
     - [Drop Clause](https://arxiv.org/abs/2105.14506)
     - [Literal Budget](https://arxiv.org/abs/2301.08190)
     - [Focused Negative Sampling](https://ieeexplore.ieee.org/document/9923859)
-    - Type III Feedback *(Upcoming)*
+    - [Type III Feedback](https://arxiv.org/abs/2309.06315)
     - Incremental Clause Evaluation *(Upcoming)*
     - Sparse Computation with Absorbing Actions *(Upcoming)*
     - TMComposites: Plug-and-Play Collaboration Between Specialized Tsetlin Machines *([In Progress](https://arxiv.org/abs/2309.04801))*
