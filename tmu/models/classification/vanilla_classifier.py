@@ -18,18 +18,16 @@
 import typing
 from collections import defaultdict
 
-from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin
-from tmu.models.classification.base_classification import TMBaseClassifier
+from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin, TMBaseModel
 from tmu.util.encoded_data_cache import DataEncoderCache
 from tmu.weight_bank import WeightBank
 import numpy as np
-import tmu.tools
 import logging
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin):
+class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
     def __init__(
             self,
             number_of_clauses,

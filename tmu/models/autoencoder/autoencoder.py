@@ -15,14 +15,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from tmu.models.classification.base_classification import TMBaseClassifier
 from tmu.weight_bank import WeightBank
-from tmu.models.base import MultiWeightBankMixin, SingleClauseBankMixin
+from tmu.models.base import MultiWeightBankMixin, SingleClauseBankMixin, TMBaseModel
 import numpy as np
 from scipy.sparse import csr_matrix, csc_matrix
 
 
-class TMAutoEncoder(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixin):
+class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
     def __init__(
             self,
             number_of_clauses,
