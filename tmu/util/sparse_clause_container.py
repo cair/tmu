@@ -1,11 +1,15 @@
 import random
-
+import numpy as np
 
 class SparseClauseContainer:
 
-    def __init__(self, random_seed=None):
+    def __init__(
+            self,
+            random_seed=None
+    ):
         super().__init__()
         self._rng = random.Random(x=random_seed)
+        self._rng_np = np.random.RandomState(seed=random_seed)
         self._clause_type = None
         self._clause_args = None
         self._classes = []
@@ -24,10 +28,19 @@ class SparseClauseContainer:
     def __len__(self):
         return len(self._classes)
 
-    def sample(self, n=1):
+    def sample(self, n=1, exclude=None):
+        if exclude is None:
+            exclude = []
+
+        mask = np.isin(self._classes, exclude, invert=True)
+        available_classes = np.array(self._classes)[mask]
+
+        if not len(available_classes):
+            raise ValueError("All classes are excluded from sampling.")
+
         if n == 1:
-            return self._rng.choice(self._classes)
-        return self._rng.choices(self._classes, k=n)
+            return self._rng_np.choice(available_classes)
+        return self._rng_np.choice(available_classes, size=n, replace=True).tolist()
 
     def __iter__(self):
         return self._d.__iter__()

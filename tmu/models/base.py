@@ -70,6 +70,8 @@ class TMBaseModel:
             s,
             confidence_driven_updating=False,
             type_i_ii_ratio=1.0,
+            type_i_feedback=True,
+            type_ii_feedback=True,
             type_iii_feedback=False,
             focused_negative_sampling=False,
             output_balancing=False,
@@ -112,6 +114,8 @@ class TMBaseModel:
             self.type_i_p = type_i_ii_ratio
             self.type_ii_p = 1.0
 
+        self.type_i_feedback = type_i_feedback
+        self.type_ii_feedback = type_ii_feedback
         self.type_iii_feedback = type_iii_feedback
         self.focused_negative_sampling = focused_negative_sampling
         self.output_balancing = output_balancing
