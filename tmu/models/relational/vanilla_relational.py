@@ -45,7 +45,8 @@ class TMRelational(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
             number_of_state_bits_ind=8,
             weighted_clauses=False,
             clause_drop_p=0.0,
-            literal_drop_p=0.0
+            literal_drop_p=0.0,
+            seed=None
     ):
         self.output_active_facts = output_active_facts
 
@@ -67,7 +68,8 @@ class TMRelational(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
             number_of_state_bits_ind=number_of_state_bits_ind,
             weighted_clauses=weighted_clauses,
             clause_drop_p=clause_drop_p,
-            literal_drop_p=literal_drop_p
+            literal_drop_p=literal_drop_p,
+            seed=seed
         )
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):

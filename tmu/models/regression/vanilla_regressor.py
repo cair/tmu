@@ -43,7 +43,9 @@ class TMRegressor(TMBaseModel, SingleClauseBankMixin, SingleWeightBankMixin):
             number_of_state_bits_ta=8,
             weighted_clauses=False,
             clause_drop_p=0.0,
-            literal_drop_p=0.0):
+            literal_drop_p=0.0,
+            seed=None
+    ):
         super().__init__(
             number_of_clauses=number_of_clauses,
             T=T,
@@ -57,7 +59,8 @@ class TMRegressor(TMBaseModel, SingleClauseBankMixin, SingleWeightBankMixin):
             number_of_state_bits_ta=number_of_state_bits_ta,
             weighted_clauses=weighted_clauses,
             clause_drop_p=clause_drop_p,
-            literal_drop_p=literal_drop_p
+            literal_drop_p=literal_drop_p,
+            seed=seed
         )
         SingleClauseBankMixin.__init__(self)
         SingleWeightBankMixin.__init__(self)
@@ -91,11 +94,11 @@ class TMRegressor(TMBaseModel, SingleClauseBankMixin, SingleWeightBankMixin):
             encoded_Y = np.ascontiguousarray(((Y - self.min_y) / (self.max_y - self.min_y) * self.T).astype(np.int32))
 
         # Drops clauses randomly based on clause drop probability
-        clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
+        clause_active = (self.rng.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
         # Literals are dropped based on literal drop probability
         literal_active = np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32)
-        literal_active_integer = np.random.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
+        literal_active_integer = self.rng.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
         for k in range(self.clause_bank.number_of_literals):
             if literal_active_integer[k] == 1:
                 ta_chunk = k // 32
@@ -112,7 +115,7 @@ class TMRegressor(TMBaseModel, SingleClauseBankMixin, SingleWeightBankMixin):
 
         shuffled_index = np.arange(X.shape[0])
         if shuffle:
-            np.random.shuffle(shuffled_index)
+            self.rng.shuffle(shuffled_index)
 
         for e in shuffled_index:
             clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
