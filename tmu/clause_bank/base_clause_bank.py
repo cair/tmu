@@ -12,6 +12,7 @@ class BaseClauseBank(CFFISerializable):
 
     def __init__(
             self,
+            seed: int,
             X,
             s: float,
             boost_true_positive_feedback: bool,
@@ -26,6 +27,8 @@ class BaseClauseBank(CFFISerializable):
         assert isinstance(number_of_clauses, int)
         assert isinstance(patch_dim, tuple) or patch_dim is None
 
+        self.rng = np.random.RandomState(seed)
+        self.seed = seed
         self.X = X
         self.number_of_clauses = int(number_of_clauses)
 

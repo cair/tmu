@@ -36,7 +36,9 @@ class TMOneVsOneClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMi
             number_of_state_bits_ta=8,
             weighted_clauses=False,
             clause_drop_p=0.0,
-            literal_drop_p=0.0):
+            literal_drop_p=0.0,
+            seed=None
+    ):
         super().__init__(
             number_of_clauses,
             T,
@@ -51,10 +53,11 @@ class TMOneVsOneClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMi
             number_of_state_bits_ta=number_of_state_bits_ta,
             weighted_clauses=weighted_clauses,
             clause_drop_p=clause_drop_p,
-            literal_drop_p=literal_drop_p
+            literal_drop_p=literal_drop_p,
+            seed=seed
         )
         SingleClauseBankMixin.__init__(self)
-        MultiWeightBankMixin.__init__(self)
+        MultiWeightBankMixin.__init__(self, seed=seed)
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
         clause_bank_type, clause_bank_args = self.build_clause_bank(X=X)
@@ -82,11 +85,11 @@ class TMOneVsOneClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMi
         Ym = np.ascontiguousarray(Y).astype(np.uint32)
 
         # Drops clauses randomly based on clause drop probability
-        clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
+        clause_active = (self.rng.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
         # Literals are dropped based on literal drop probability
         literal_active = np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32)
-        literal_active_integer = np.random.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
+        literal_active_integer = self.rng.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
         for k in range(self.clause_bank.number_of_literals):
             if literal_active_integer[k] == 1:
                 ta_chunk = k // 32
@@ -103,15 +106,15 @@ class TMOneVsOneClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMi
 
         shuffled_index = np.arange(X.shape[0])
         if shuffle:
-            np.random.shuffle(shuffled_index)
+            self.rng.shuffle(shuffled_index)
 
         for e in shuffled_index:
             clause_outputs = self.clause_bank.calculate_clause_outputs_update(literal_active, self.encoded_X_train, e)
 
             target = Ym[e]
-            not_target = np.random.randint(self.number_of_classes)
+            not_target = self.rng.randint(self.number_of_classes)
             while not_target == target:
-                not_target = np.random.randint(self.number_of_classes)
+                not_target = self.rng.randint(self.number_of_classes)
 
             output = target * (self.number_of_classes - 1) + not_target - (not_target > target)
 

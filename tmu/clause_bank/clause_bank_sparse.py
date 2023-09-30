@@ -32,6 +32,7 @@ LOGGER = logging.getLogger(__name__)
 class ClauseBankSparse(BaseClauseBank):
     def __init__(
             self,
+            seed: int,
             number_of_states,
             d: float,
             batching=True,
@@ -44,7 +45,7 @@ class ClauseBankSparse(BaseClauseBank):
             literal_insertion_state=-1,
             **kwargs
     ):
-        super().__init__(**kwargs)
+        super().__init__(seed=seed, **kwargs)
         self.number_of_states = int(number_of_states)
         self.batching = batching
         self.incremental = incremental
@@ -128,7 +129,7 @@ class ClauseBankSparse(BaseClauseBank):
 
         for j in range(self.number_of_clauses):
             literal_indexes = np.arange(self.number_of_literals, dtype=np.uint16)
-            np.random.shuffle(literal_indexes)
+            self.rng.shuffle(literal_indexes)
             self.clause_bank_excluded[j, :, 0] = literal_indexes  # Initialize clause literals randomly
             self.clause_bank_excluded[j, :,
             1] = self.number_of_states // 2 - 1  # Initialize excluded literals in least forgotten state

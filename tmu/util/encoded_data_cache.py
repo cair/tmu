@@ -4,14 +4,16 @@ from typing import Optional
 import numpy as np
 
 class DataEncoderCache:
-    def __init__(self):
+    def __init__(self, seed: int):
+        self.seed = seed
+        self.rng = np.random.RandomState(seed)
         self.array_hash: Optional[str] = None
         self.encoded_data: Optional[np.ndarray] = None
 
     def compute_hash(self, arr: np.ndarray) -> str:
         """Compute a hash for a numpy array."""
-        np.random.seed(0)
-        sampled_indices = np.random.choice(arr.size, min(15, arr.size), replace=False)
+
+        sampled_indices = self.rng.choice(arr.size, min(15, arr.size), replace=False)
         sampled_values = arr.flat[sampled_indices]
         return hashlib.sha256(sampled_values.tobytes()).hexdigest()
 

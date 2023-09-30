@@ -77,7 +77,7 @@ class TMRelational(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = X.shape[1]
         self.weight_banks.set_clause_init(WeightBank, dict(
-            weights=np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
+            weights=self.rng.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
         ))
         self.weight_banks.populate(list(range(self.number_of_classes)))
 
@@ -94,7 +94,7 @@ class TMRelational(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
             np.int32)
         class_sum = np.clip(class_sum, -self.T, self.T)
 
-        type_iii_feedback_selection = np.random.choice(2)
+        type_iii_feedback_selection = self.rng.choice(2)
 
         if target_value == 1:
             update_p = (self.T - class_sum) / (2 * self.T)
@@ -189,14 +189,14 @@ class TMRelational(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
 
     def activate_clauses(self):
         # Drops clauses randomly based on clause drop probability
-        clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
+        clause_active = (self.rng.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
         return clause_active
 
     def activate_literals(self):
         # Literals are dropped based on literal drop probability
         literal_active = np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32)
-        literal_active_integer = np.random.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
+        literal_active_integer = self.rng.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
         for k in range(self.clause_bank.number_of_literals):
             if literal_active_integer[k] == 1:
                 ta_chunk = k // 32
@@ -223,7 +223,7 @@ class TMRelational(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
         literal_active = self.activate_literals()
 
         output_index = np.arange(self.output_active.shape[0])
-        np.random.shuffle(output_index)
+        self.rng.shuffle(output_index)
         for e in range(number_of_examples):
             Xu, Yu = self.clause_bank.prepare_autoencoder_examples(X_csr, X_csc, self.output_active, 1)
             for i in output_index:

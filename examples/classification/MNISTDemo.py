@@ -13,7 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("--T", default=5000, type=int)
     parser.add_argument("--s", default=10.0, type=float)
     parser.add_argument("--max_included_literals", default=32, type=int)
-    parser.add_argument("--device", default="CPU", type=str)
+    parser.add_argument("--device", default="CPU", type=str, choices=["CPU", "CPU_sparse", "CUDA"])
     parser.add_argument("--weighted_clauses", default=True, type=bool)
     parser.add_argument("--epochs", default=60, type=int)
     args = parser.parse_args()
@@ -21,28 +21,29 @@ if __name__ == "__main__":
     data = MNIST().get()
 
     tm = TMClassifier(
+        type_iii_feedback=False,
         number_of_clauses=args.num_clauses,
         T=args.T,
         s=args.s,
         max_included_literals=args.max_included_literals,
         platform=args.device,
-        weighted_clauses=args.weighted_clauses
+        weighted_clauses=args.weighted_clauses,
+        seed=42,
     )
 
     _LOGGER.info(f"Running {TMClassifier} for {args.epochs}")
     for epoch in range(args.epochs):
-        benchmark_total = BenchmarkTimer(logger=_LOGGER, text="Epoch Time")
+        benchmark_total = BenchmarkTimer(logger=None, text="Epoch Time")
         with benchmark_total:
-            benchmark1 = BenchmarkTimer(logger=_LOGGER, text="Training Time")
+            benchmark1 = BenchmarkTimer(logger=None, text="Training Time")
             with benchmark1:
                 res = tm.fit(
                     data["x_train"],
                     data["y_train"],
                     metrics=["update_p"],
                 )
-                print(res)
-
-            benchmark2 = BenchmarkTimer(logger=_LOGGER, text="Testing Time")
+            print(res)
+            benchmark2 = BenchmarkTimer(logger=None, text="Testing Time")
             with benchmark2:
                 result = 100 * (tm.predict(data["x_test"]) == data["y_test"]).mean()
 

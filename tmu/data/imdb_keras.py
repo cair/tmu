@@ -2,22 +2,23 @@ from typing import Dict
 import numpy as np
 from tmu.data import TMUDataset
 from tmu.data.utils.downloader import get_file
-import json 
+import json
 import pathlib
 
+
 class IMDB(TMUDataset):
-    
+
     def __init__(
-        self,
-        path="imdb.npz",
-        num_words=None,
-        skip_top=0,
-        maxlen=None,
-        seed=113,
-        start_char=1,
-        oov_char=2,
-        index_from=3,
-        **kwargs,
+            self,
+            path="imdb.npz",
+            num_words=None,
+            skip_top=0,
+            maxlen=None,
+            seed=113,
+            start_char=1,
+            oov_char=2,
+            index_from=3,
+            **kwargs,
     ):
         super().__init__()
         self.path = path
@@ -29,9 +30,6 @@ class IMDB(TMUDataset):
         self.oov_char = oov_char
         self.index_from = index_from
         self.kwargs = kwargs
-        
-    
-    
 
     def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
         origin_folder = (
@@ -49,7 +47,6 @@ class IMDB(TMUDataset):
         with np.load(path, allow_pickle=True) as f:
             x_train, labels_train = f["x_train"], f["y_train"]
             x_test, labels_test = f["x_test"], f["y_test"]
-
 
         rng = np.random.RandomState(self.seed)
         indices = np.arange(len(x_train))
@@ -151,7 +148,6 @@ class IMDB(TMUDataset):
         )
         with open(path) as f:
             return json.load(f)
-
 
     def _transform(self, name, dataset):
         return dataset

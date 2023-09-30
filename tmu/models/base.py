@@ -35,15 +35,15 @@ def _validate_input_dtype(d: np.ndarray):
 class MultiWeightBankMixin:
     weight_banks: SparseClauseContainer
 
-    def __init__(self):
-        self.weight_banks = SparseClauseContainer()
+    def __init__(self, seed: int):
+        self.weight_banks = SparseClauseContainer(random_seed=seed)
 
 
 class MultiClauseBankMixin:
     clause_banks: SparseClauseContainer
 
-    def __init__(self):
-        self.clause_banks = SparseClauseContainer()
+    def __init__(self, seed: int):
+        self.clause_banks = SparseClauseContainer(random_seed=seed)
 
 
 class SingleWeightBankMixin:
@@ -97,8 +97,11 @@ class TMBaseModel:
             absorbing=-1,
             absorbing_include=None,
             absorbing_exclude=None,
-            squared_weight_update_p=False
+            squared_weight_update_p=False,
+            seed=None
     ):
+        self.seed = seed
+        self.rng = np.random.RandomState(seed)
         self.number_of_clauses = number_of_clauses
         self.number_of_state_bits_ta = number_of_state_bits_ta
         self.number_of_state_bits_ind = number_of_state_bits_ind
@@ -231,7 +234,8 @@ class TMBaseModel:
             patch_dim=self.patch_dim,
             batch_size=self.batch_size,
             incremental=self.incremental,
-            type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio
+            type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio,
+            seed=self.seed,
         )
         return clause_bank_type, clause_bank_args
 
@@ -253,6 +257,7 @@ class TMBaseModel:
             patch_dim=self.patch_dim,
             type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio,
             max_included_literals=self.max_included_literals,
+            seed=self.seed,
         )
         return clause_bank_type, clause_bank_args
 
@@ -275,13 +280,12 @@ class TMBaseModel:
             literal_sampling=self.literal_sampling,
             feedback_rate_excluded_literals=self.feedback_rate_excluded_literals,
             literal_insertion_state=self.literal_insertion_state,
-            type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio
+            type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio,
+            seed=self.seed,
         )
         return clause_bank_type, clause_bank_args
 
     def build_clause_bank(self, X: np.ndarray):
-        _LOGGER.debug("Initializing clause bank....")
-
         if self.platform == "CPU":
             clause_bank_type, clause_bank_args = self._build_cpu_bank(X=X)
 

@@ -85,10 +85,11 @@ class ImplClauseBankCUDA(BaseClauseBank):
 
     def __init__(
             self,
+            seed: int,
             number_of_state_bits_ta: int,
             **kwargs
     ):
-        super().__init__(**kwargs)
+        super().__init__(seed=seed, **kwargs)
         self.grid = (16 * 13, 1, 1)
         self.block = (128, 1, 1)
         self.number_of_state_bits_ta = number_of_state_bits_ta
@@ -403,7 +404,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
             X_gpu
         ) = encoded_X
 
-        target_value = np.random.choice(2)
+        target_value = self.rng.choice(2)
 
         self.produce_autoencoder_examples_gpu.prepared_call(
             self.grid,

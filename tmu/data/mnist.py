@@ -21,7 +21,6 @@ class MNIST(TMUDataset):
         with np.load(path, allow_pickle=True) as f:
             x_train, y_train = f["x_train"], f["y_train"]
             x_test, y_test = f["x_test"], f["y_test"]
-            print((x_train, y_train), (x_test, y_test))
 
         return dict(
             x_train=x_train,

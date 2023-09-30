@@ -41,20 +41,24 @@ version = {attr = "tmu.__version__"}
 [tool.cffi_builder]
 module_name = "tmu.tmulib"
 flags = [
-    "-O3"
+    "-O3", "-mrdrnd"
 ]
 sources = [
     "tmu/lib/src/ClauseBank.c",
     "tmu/lib/src/Tools.c",
     "tmu/lib/src/WeightBank.c",
-    "tmu/lib/src/ClauseBankSparse.c"
+    "tmu/lib/src/ClauseBankSparse.c",
+    "tmu/lib/src/random/pcg32_fast.c",
+    "tmu/lib/src/random/xorshift128.c",
+    "tmu/lib/src/random/rdrand.c",
 ]
 
 headers = [
     "tmu/lib/include/ClauseBank.h",
     "tmu/lib/include/Tools.h",
     "tmu/lib/include/WeightBank.h",
-    "tmu/lib/include/ClauseBankSparse.h"
+    "tmu/lib/include/ClauseBankSparse.h",
+    "tmu/lib/include/fast_rand_seed.h"
 ]
 
 include_dir = "tmu/lib/include"

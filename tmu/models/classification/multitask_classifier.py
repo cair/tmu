@@ -42,7 +42,8 @@ class TMMultiTaskClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankM
             number_of_state_bits_ind=8,
             weighted_clauses=False,
             clause_drop_p=0.0,
-            literal_drop_p=0.0
+            literal_drop_p=0.0,
+            seed=None
     ):
         super().__init__(
             number_of_clauses=number_of_clauses,
@@ -63,10 +64,11 @@ class TMMultiTaskClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankM
             number_of_state_bits_ind=number_of_state_bits_ind,
             weighted_clauses=weighted_clauses,
             clause_drop_p=clause_drop_p,
-            literal_drop_p=literal_drop_p
+            literal_drop_p=literal_drop_p,
+            seed=seed
         )
         SingleClauseBankMixin.__init__(self)
-        MultiWeightBankMixin.__init__(self)
+        MultiWeightBankMixin.__init__(self, seed=seed)
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
         clause_bank_type, clause_bank_args = self.build_clause_bank(X=X[0])
@@ -75,7 +77,7 @@ class TMMultiTaskClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankM
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = len(X)
         self.weight_banks.set_clause_init(WeightBank, dict(
-            weights=np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
+            weights=self.rng.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
         ))
         self.weight_banks.populate(list(range(self.number_of_classes)))
 
@@ -91,11 +93,11 @@ class TMMultiTaskClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankM
             X_csr[i] = csr_matrix(X[i].reshape(X[i].shape[0], -1))
 
         # Drops clauses randomly based on clause drop probability
-        self.clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
+        self.clause_active = (self.rng.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
         # Literals are dropped based on literal drop probability
         self.literal_active = np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32)
-        literal_active_integer = np.random.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
+        literal_active_integer = self.rng.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
         for k in range(self.clause_bank.number_of_literals):
             if literal_active_integer[k] == 1:
                 ta_chunk = k // 32
@@ -112,17 +114,17 @@ class TMMultiTaskClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankM
 
         shuffled_index = np.arange(X[0].shape[0])
         if shuffle:
-            np.random.shuffle(shuffled_index)
+            self.rng.shuffle(shuffled_index)
 
         class_index = np.arange(self.number_of_classes, dtype=np.uint32)
         for e in shuffled_index:
-            np.random.shuffle(class_index)
+            self.rng.shuffle(class_index)
 
             average_absolute_weights = np.zeros(self.number_of_clauses, dtype=np.float32)
             for i in class_index:
                 average_absolute_weights += np.absolute(self.weight_banks[i].get_weights())
             average_absolute_weights /= self.number_of_classes
-            update_clause = np.random.random(self.number_of_clauses) <= (
+            update_clause = self.rng.random(self.number_of_clauses) <= (
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
             for i in class_index:
@@ -140,7 +142,7 @@ class TMMultiTaskClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankM
 
                 class_sum = np.clip(class_sum, -self.T, self.T)
 
-                type_iii_feedback_selection = np.random.choice(2)
+                type_iii_feedback_selection = self.rng.choice(2)
 
                 if Y[i][e] == 1:
                     if self.confidence_driven_updating:

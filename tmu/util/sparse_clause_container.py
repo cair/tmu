@@ -1,14 +1,14 @@
-import random
 import numpy as np
+
 
 class SparseClauseContainer:
 
     def __init__(
             self,
-            random_seed=None
+            random_seed
     ):
         super().__init__()
-        self._rng = random.Random(x=random_seed)
+
         self._rng_np = np.random.RandomState(seed=random_seed)
         self._clause_type = None
         self._clause_args = None

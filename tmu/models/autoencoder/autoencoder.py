@@ -50,7 +50,8 @@ class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
             literal_sampling=1.0,
             feedback_rate_excluded_literals=1,
             literal_insertion_state=-1,
-            squared_weight_update_p=False
+            squared_weight_update_p=False,
+            seed=None
     ):
         self.output_active = output_active
         self.accumulation = accumulation
@@ -78,10 +79,11 @@ class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
             literal_sampling=literal_sampling,
             feedback_rate_excluded_literals=feedback_rate_excluded_literals,
             literal_insertion_state=literal_insertion_state,
-            squared_weight_update_p=squared_weight_update_p
+            squared_weight_update_p=squared_weight_update_p,
+            seed=seed
         )
         SingleClauseBankMixin.__init__(self)
-        MultiWeightBankMixin.__init__(self)
+        MultiWeightBankMixin.__init__(self, seed=seed)
         self.max_positive_clauses = number_of_clauses
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
@@ -91,7 +93,7 @@ class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = self.output_active.shape[0]
         self.weight_banks.set_clause_init(WeightBank, dict(
-            weights=np.random.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
+            weights=self.rng.choice([-1, 1], size=self.number_of_clauses).astype(np.int32)
         ))
         self.weight_banks.populate(list(range(self.number_of_classes)))
 
@@ -122,7 +124,7 @@ class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
             np.int32)
         class_sum = np.clip(class_sum, -self.T, self.T)
 
-        type_iii_feedback_selection = np.random.choice(2)
+        type_iii_feedback_selection = self.rng.choice(2)
 
         if Y == 1:
             update_p = (self.T - class_sum) / (2 * self.T)
@@ -219,14 +221,14 @@ class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
 
     def activate_clauses(self):
         # Drops clauses randomly based on clause drop probability
-        clause_active = (np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
+        clause_active = (self.rng.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
         return clause_active
 
     def activate_literals(self):
         # Literals are dropped based on literal drop probability
         literal_active = np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32)
-        literal_active_integer = np.random.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
+        literal_active_integer = self.rng.rand(self.clause_bank.number_of_literals) >= self.literal_drop_p
         for k in range(self.clause_bank.number_of_literals):
             if literal_active_integer[k] == 1:
                 ta_chunk = k // 32
@@ -257,13 +259,13 @@ class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
 
         class_index = np.arange(self.number_of_classes, dtype=np.uint32)
         for e in range(number_of_examples):
-            np.random.shuffle(class_index)
+            self.rng.shuffle(class_index)
 
             average_absolute_weights = np.zeros(self.number_of_clauses, dtype=np.float32)
             for i in class_index:
                 average_absolute_weights += np.absolute(self.weight_banks[i].get_weights())
             average_absolute_weights /= self.number_of_classes
-            update_clause = np.random.random(self.number_of_clauses) <= (
+            update_clause = self.rng.random(self.number_of_clauses) <= (
                     self.T - np.clip(average_absolute_weights, 0, self.T)) / self.T
 
             for i in class_index:

@@ -59,7 +59,8 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             absorbing_exclude=None,
             literal_sampling=1.0,
             feedback_rate_excluded_literals=1,
-            literal_insertion_state=-1
+            literal_insertion_state=-1,
+            seed=None
     ):
         super().__init__(
             number_of_clauses,
@@ -90,15 +91,16 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             absorbing_exclude=absorbing_exclude,
             literal_sampling=literal_sampling,
             feedback_rate_excluded_literals=feedback_rate_excluded_literals,
-            literal_insertion_state=literal_insertion_state
+            literal_insertion_state=literal_insertion_state,
+            seed=seed
         )
-        MultiClauseBankMixin.__init__(self)
-        MultiWeightBankMixin.__init__(self)
+        MultiClauseBankMixin.__init__(self, seed=seed)
+        MultiWeightBankMixin.__init__(self, seed=seed)
 
         # These data structures cache the encoded data for the training and test sets. It also makes a fast-check if
         # training data has changed, and only re-encodes if it has.
-        self.test_encoder_cache = DataEncoderCache()
-        self.train_encoder_cache = DataEncoderCache()
+        self.test_encoder_cache = DataEncoderCache(seed=self.seed)
+        self.train_encoder_cache = DataEncoderCache(seed=self.seed)
 
         self.metrics = MetricRecorder()
 
@@ -224,7 +226,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             self,
             is_target: bool,
             class_sum: np.ndarray
-    ) -> np.ndarray:
+    ) -> float:
         # Confidence-driven updating method
         if self.confidence_driven_updating:
             return (self.T - abs(class_sum)) / self.T
@@ -237,7 +239,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
     def mechanism_literal_active(self) -> np.ndarray:
         # Literals are dropped based on literal drop probability
         literal_active = np.zeros(self.clause_banks[0].number_of_ta_chunks, dtype=np.uint32)
-        literal_active_integer = np.random.rand(self.clause_banks[0].number_of_literals) >= self.literal_drop_p
+        literal_active_integer = self.rng.rand(self.clause_banks[0].number_of_literals) >= self.literal_drop_p
 
         for k in range(self.clause_banks[0].number_of_literals):
             if literal_active_integer[k] == 1:
@@ -256,7 +258,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
     def mechanism_clause_active(self) -> np.ndarray:
         # Drops clauses randomly based on clause drop probability
-        return (np.random.rand(len(self.weight_banks), self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
+        return (self.rng.rand(len(self.weight_banks), self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
 
     def _fit_sample_target(
             self,
@@ -266,7 +268,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             clause_active: np.ndarray,
             literal_active: np.ndarray,
             encoded_X_train: np.ndarray
-    ) -> np.ndarray:
+    ) -> float:
         """
         Handle operations for a given class type (target or not target).
 
@@ -287,7 +289,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             sample_idx=sample_idx
         )
 
-        update_p: np.ndarray = self.mechanism_compute_update_probabilities(
+        update_p: float = self.mechanism_compute_update_probabilities(
             is_target=is_target_class,
             class_sum=class_sum
         )
@@ -315,7 +317,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             encoded_X_train
     ) -> dict:
 
-        update_p_target: np.ndarray = self._fit_sample_target(
+        update_p_target: float = self._fit_sample_target(
             is_target_class=True,
             class_value=target,
             sample_idx=sample_idx,
@@ -331,7 +333,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
                 update_p_not_target=None
             )
 
-        update_p_not_target: np.ndarray = self._fit_sample_target(
+        update_p_not_target: float = self._fit_sample_target(
             is_target_class=False,
             class_value=not_target,
             sample_idx=sample_idx,
@@ -374,7 +376,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
         sample_indices: np.ndarray = np.arange(X.shape[0])
         if shuffle:
-            np.random.shuffle(sample_indices)
+            self.rng.shuffle(sample_indices)
 
         for sample_idx in sample_indices:
             target: int = Ym[sample_idx]
