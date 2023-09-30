@@ -122,6 +122,63 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
     def init_num_classes(self, X: np.ndarray, Y: np.ndarray):
         return int(np.max(Y) + 1)
 
+    def mechanism_feedback(self, is_target, target, clause_outputs, update_p, clause_active, literal_active,
+                           encoded_X_train, e):
+        clause_a = self.positive_clauses if is_target else self.negative_clauses
+        clause_b = self.negative_clauses if is_target else self.positive_clauses
+
+        if self.weighted_clauses:
+
+            if is_target:
+                self.weight_banks[target].increment(
+                    clause_output=clause_outputs,
+                    update_p=update_p,
+                    clause_active=clause_active[target],
+                    positive_weights=False
+                )
+            else:
+                self.weight_banks[target].decrement(
+                    clause_output=clause_outputs,
+                    update_p=update_p,
+                    clause_active=clause_active[target],
+                    negative_weights=False
+                )
+
+        self.clause_banks[target].type_i_feedback(
+            update_p=update_p * self.type_i_p,
+            clause_active=clause_active[target] * clause_a,
+            literal_active=literal_active,
+            encoded_X=encoded_X_train,
+            e=e
+        )
+
+        self.clause_banks[target].type_ii_feedback(
+            update_p=update_p * self.type_ii_p,
+            clause_active=clause_active[target] * clause_b,
+            literal_active=literal_active,
+            encoded_X=encoded_X_train,
+            e=e
+        )
+
+        if self.type_iii_feedback:
+            self.clause_banks[target].type_iii_feedback(
+                update_p=update_p,
+                clause_active=clause_active[target] * clause_a,
+                literal_active=literal_active,
+                encoded_X=encoded_X_train,
+                e=e,
+                target=1
+            )
+
+            self.clause_banks[target].type_iii_feedback(
+                update_p=update_p,
+                clause_active=clause_active[target] * clause_b,
+                literal_active=literal_active,
+                encoded_X=encoded_X_train,
+                e=e,
+                target=0
+            )
+
     def fit(self, X, Y, shuffle=True, return_update_p=False, *args, **kwargs):
         result = defaultdict(lambda: defaultdict(list))
         self.init(X, Y)
@@ -179,48 +236,16 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             if return_update_p:
                 result["update_p"][target].append(update_p)
 
-            if self.weighted_clauses:
-                self.weight_banks[target].increment(
-                    clause_output=clause_outputs,
-                    update_p=update_p,
-                    clause_active=clause_active[target],
-                    positive_weights=False
-                )
-
-            self.clause_banks[target].type_i_feedback(
-                update_p=update_p * self.type_i_p,
-                clause_active=clause_active[target] * self.positive_clauses,
+            self.mechanism_feedback(
+                is_target=True,
+                target=target,
+                clause_outputs=clause_outputs,
+                update_p=update_p,
+                clause_active=clause_active,
                 literal_active=literal_active,
-                encoded_X=encoded_X_train,
+                encoded_X_train=encoded_X_train,
                 e=e
             )
-
-            self.clause_banks[target].type_ii_feedback(
-                update_p=update_p * self.type_ii_p,
-                clause_active=clause_active[target] * self.negative_clauses,
-                literal_active=literal_active,
-                encoded_X=encoded_X_train,
-                e=e
-            )
-
-            if self.type_iii_feedback:
-                self.clause_banks[target].type_iii_feedback(
-                    update_p=update_p,
-                    clause_active=clause_active[target] * self.positive_clauses,
-                    literal_active=literal_active,
-                    encoded_X=encoded_X_train,
-                    e=e,
-                    target=1
-                )
-
-                self.clause_banks[target].type_iii_feedback(
-                    update_p=update_p,
-                    clause_active=clause_active[target] * self.negative_clauses,
-                    literal_active=literal_active,
-                    encoded_X=encoded_X_train,
-                    e=e,
-                    target=0
-                )
 
             # for incremental, and when we only have 1 sample, there is no other targets
             if self.weight_banks.n_classes == 1:
@@ -258,40 +283,16 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
                     negative_weights=False
                 )
 
-            self.clause_banks[not_target].type_i_feedback(
-                update_p=update_p * self.type_i_p,
-                clause_active=clause_active[not_target] * self.negative_clauses,
+            self.mechanism_feedback(
+                is_target=False,
+                target=not_target,
+                clause_outputs=clause_outputs,
+                update_p=update_p,
+                clause_active=clause_active,
                 literal_active=literal_active,
-                encoded_X=encoded_X_train,
+                encoded_X_train=encoded_X_train,
                 e=e
             )
-
-            self.clause_banks[not_target].type_ii_feedback(
-                update_p=update_p * self.type_ii_p,
-                clause_active=clause_active[not_target] * self.positive_clauses,
-                literal_active=literal_active,
-                encoded_X=encoded_X_train,
-                e=e
-            )
-
-            if self.type_iii_feedback:
-                self.clause_banks[not_target].type_iii_feedback(
-                    update_p=update_p,
-                    clause_active=clause_active[not_target] * self.negative_clauses,
-                    literal_active=literal_active,
-                    encoded_X=encoded_X_train,
-                    e=e,
-                    target=1
-                )
-
-                self.clause_banks[not_target].type_iii_feedback(
-                    update_p=update_p,
-                    clause_active=clause_active[not_target] * self.positive_clauses,
-                    literal_active=literal_active,
-                    encoded_X=encoded_X_train,
-                    e=e,
-                    target=0
-                )
 
         if return_update_p:
             all_values = [np.mean(values) for key, values in result["update_p"].items()]
