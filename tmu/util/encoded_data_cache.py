@@ -15,11 +15,11 @@ class DataEncoderCache:
         sampled_values = arr.flat[sampled_indices]
         return hashlib.sha256(sampled_values.tobytes()).hexdigest()
 
-    def get_encoded_data(self, arr: np.ndarray, encoder_func) -> np.ndarray:
+    def get_encoded_data(self, data: np.ndarray, encoder_func) -> np.ndarray:
         """Get encoded data for an array, using cache if available."""
-        current_hash = self.compute_hash(arr)
+        current_hash = self.compute_hash(data)
         if current_hash != self.array_hash:
-            self.encoded_data = encoder_func(arr)
+            self.encoded_data = encoder_func(data)
             self.array_hash = current_hash
 
         return self.encoded_data

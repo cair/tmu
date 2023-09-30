@@ -17,15 +17,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from tmu.models.base import SingleClauseBankMixin, MultiWeightBankMixin
-from tmu.models.classification.base_classification import TMBaseClassifier
+from tmu.models.base import SingleClauseBankMixin, MultiWeightBankMixin, TMBaseModel
 
 from tmu.weight_bank import WeightBank
 import numpy as np
 from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
 
 
-class TMRelational(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixin):
+class TMRelational(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
     def __init__(
             self,
             number_of_clauses,

@@ -18,28 +18,29 @@
 import typing
 from collections import defaultdict
 
-from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin
-from tmu.models.classification.base_classification import TMBaseClassifier
+from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin, TMBaseModel
 from tmu.util.encoded_data_cache import DataEncoderCache
+from tmu.util.statistics import MetricRecorder
 from tmu.weight_bank import WeightBank
 import numpy as np
-import tmu.tools
 import logging
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin):
+class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
     def __init__(
             self,
-            number_of_clauses,
-            T,
-            s,
-            confidence_driven_updating=False,
-            type_i_ii_ratio=1.0,
-            type_iii_feedback=False,
-            d=200.0,
-            platform='CPU',
+            number_of_clauses: int,
+            T: int,
+            s: float,
+            confidence_driven_updating: bool = False,
+            type_i_ii_ratio: float = 1.0,
+            type_i_feedback: bool = True,
+            type_ii_feedback: bool = True,
+            type_iii_feedback: bool = False,
+            d: float = 200.0,
+            platform: str = 'CPU',
             patch_dim=None,
             feature_negation=True,
             boost_true_positive_feedback=1,
@@ -66,6 +67,8 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
             s,
             confidence_driven_updating=confidence_driven_updating,
             type_i_ii_ratio=type_i_ii_ratio,
+            type_i_feedback=type_i_feedback,
+            type_ii_feedback=type_ii_feedback,
             type_iii_feedback=type_iii_feedback,
             d=d,
             platform=platform,
@@ -97,6 +100,8 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         self.test_encoder_cache = DataEncoderCache()
         self.train_encoder_cache = DataEncoderCache()
 
+        self.metrics = MetricRecorder()
+
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
         clause_bank_type, clause_bank_args = self.build_clause_bank(X=X)
         self.clause_banks.set_clause_init(clause_bank_type, clause_bank_args)
@@ -124,22 +129,112 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
     def init_num_classes(self, X: np.ndarray, Y: np.ndarray):
         return int(np.max(Y) + 1)
 
-    def fit(self, X, Y, shuffle=True, return_update_p=False, *args, **kwargs):
-        result = defaultdict(lambda: defaultdict(list))
-        self.init(X, Y)
+    def mechanism_feedback(
+            self,
+            is_target: bool,
+            target: int,
+            clause_outputs: np.ndarray,
+            update_p: np.ndarray,
+            clause_active: np.ndarray,
+            literal_active: np.ndarray,
+            encoded_X_train: np.ndarray,
+            sample_idx: int,
+    ):
+        clause_a = self.positive_clauses if is_target else self.negative_clauses
+        clause_b = self.negative_clauses if is_target else self.positive_clauses
 
-        encoded_X_train = self.train_encoder_cache.get_encoded_data(
-            X,
-            encoder_func=lambda x: self.clause_banks[0].prepare_X(x)
+        if self.weighted_clauses:
+            if is_target:
+                self.weight_banks[target].increment(
+                    clause_output=clause_outputs,
+                    update_p=update_p,
+                    clause_active=clause_active[target],
+                    positive_weights=False
+                )
+            else:
+                self.weight_banks[target].decrement(
+                    clause_output=clause_outputs,
+                    update_p=update_p,
+                    clause_active=clause_active[target],
+                    negative_weights=False
+                )
+
+        if self.type_i_feedback:
+            self.clause_banks[target].type_i_feedback(
+                update_p=update_p * self.type_i_p,
+                clause_active=clause_active[target] * clause_a,
+                literal_active=literal_active,
+                encoded_X=encoded_X_train,
+                e=sample_idx
+            )
+
+        if self.type_ii_feedback:
+            self.clause_banks[target].type_ii_feedback(
+                update_p=update_p * self.type_ii_p,
+                clause_active=clause_active[target] * clause_b,
+                literal_active=literal_active,
+                encoded_X=encoded_X_train,
+                e=sample_idx
+            )
+
+        if self.type_iii_feedback:
+            self.clause_banks[target].type_iii_feedback(
+                update_p=update_p,
+                clause_active=clause_active[target] * clause_a,
+                literal_active=literal_active,
+                encoded_X=encoded_X_train,
+                e=sample_idx,
+                target=1
+            )
+
+            self.clause_banks[target].type_iii_feedback(
+                update_p=update_p,
+                clause_active=clause_active[target] * clause_b,
+                literal_active=literal_active,
+                encoded_X=encoded_X_train,
+                e=sample_idx,
+                target=0
+            )
+
+    def mechanism_clause_sum(
+            self,
+            target: int,
+            clause_active: np.ndarray,
+            literal_active: np.ndarray,
+            encoded_X_train: np.ndarray,
+            sample_idx: int
+    ) -> typing.Tuple[np.ndarray, np.ndarray]:
+
+        clause_outputs: np.ndarray = self.clause_banks[target].calculate_clause_outputs_update(
+            literal_active=literal_active,
+            encoded_X=encoded_X_train,
+            e=sample_idx
         )
 
-        Ym = np.ascontiguousarray(Y).astype(np.uint32)
+        class_sum: np.ndarray = np.dot(
+            clause_active[target] * self.weight_banks[target].get_weights(),
+            clause_outputs
+        ).astype(np.int32)
 
-        # Drops clauses randomly based on clause drop probability
-        clause_active = []
-        for i in self.weight_banks.classes():
-            clause_active.append((np.random.rand(self.number_of_clauses) >= self.clause_drop_p).astype(np.int32))
+        class_sum: np.ndarray = np.clip(class_sum, -self.T, self.T)
 
+        return class_sum, clause_outputs
+
+    def mechanism_compute_update_probabilities(
+            self,
+            is_target: bool,
+            class_sum: np.ndarray
+    ) -> np.ndarray:
+        # Confidence-driven updating method
+        if self.confidence_driven_updating:
+            return (self.T - abs(class_sum)) / self.T
+
+        # Compute based on whether the class is the target or not
+        if is_target:
+            return (self.T - class_sum) / (2 * self.T)
+        return (self.T + class_sum) / (2 * self.T)
+
+    def mechanism_literal_active(self) -> np.ndarray:
         # Literals are dropped based on literal drop probability
         literal_active = np.zeros(self.clause_banks[0].number_of_ta_chunks, dtype=np.uint32)
         literal_active_integer = np.random.rand(self.clause_banks[0].number_of_literals) >= self.literal_drop_p
@@ -157,162 +252,167 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
                 literal_active[ta_chunk] &= (~(1 << chunk_pos))
         literal_active = literal_active.astype(np.uint32)
 
-        shuffled_index = np.arange(X.shape[0])
+        return literal_active
+
+    def mechanism_clause_active(self) -> np.ndarray:
+        # Drops clauses randomly based on clause drop probability
+        return (np.random.rand(len(self.weight_banks), self.number_of_clauses) >= self.clause_drop_p).astype(np.int32)
+
+    def _fit_sample_target(
+            self,
+            is_target_class: bool,
+            class_value: int,
+            sample_idx: int,
+            clause_active: np.ndarray,
+            literal_active: np.ndarray,
+            encoded_X_train: np.ndarray
+    ) -> np.ndarray:
+        """
+        Handle operations for a given class type (target or not target).
+
+        :param is_target_class: Boolean indicating if the class is a target.
+        :param class_value: Value of the class.
+        :param sample_idx: Index of the current sample.
+        :param clause_active: Clause active status.
+        :param literal_active: Literal active status.
+        :param encoded_X_train: Encoded training data.
+        :return: Computed update probability for the class.
+        """
+
+        class_sum, clause_outputs = self.mechanism_clause_sum(
+            target=class_value,
+            clause_active=clause_active,
+            literal_active=literal_active,
+            encoded_X_train=encoded_X_train,
+            sample_idx=sample_idx
+        )
+
+        update_p: np.ndarray = self.mechanism_compute_update_probabilities(
+            is_target=is_target_class,
+            class_sum=class_sum
+        )
+
+        self.mechanism_feedback(
+            is_target=is_target_class,
+            target=class_value,
+            clause_outputs=clause_outputs,
+            update_p=update_p,
+            clause_active=clause_active,
+            literal_active=literal_active,
+            encoded_X_train=encoded_X_train,
+            sample_idx=sample_idx
+        )
+
+        return update_p
+
+    def _fit_sample(
+            self,
+            target: int,
+            not_target: int,
+            sample_idx: int,
+            clause_active: np.ndarray,
+            literal_active: np.ndarray,
+            encoded_X_train
+    ) -> dict:
+
+        update_p_target: np.ndarray = self._fit_sample_target(
+            is_target_class=True,
+            class_value=target,
+            sample_idx=sample_idx,
+            clause_active=clause_active,
+            literal_active=literal_active,
+            encoded_X_train=encoded_X_train
+        )
+
+        # for incremental, and when we only have 1 sample, there is no other targets
+        if self.weight_banks.n_classes == 1:
+            return dict(
+                update_p_target=update_p_target,
+                update_p_not_target=None
+            )
+
+        update_p_not_target: np.ndarray = self._fit_sample_target(
+            is_target_class=False,
+            class_value=not_target,
+            sample_idx=sample_idx,
+            clause_active=clause_active,
+            literal_active=literal_active,
+            encoded_X_train=encoded_X_train
+        )
+
+        return dict(
+            update_p_not_target=update_p_not_target,
+            update_p_target=update_p_target
+        )
+
+    def fit(
+            self,
+            X: np.ndarray,
+            Y: np.ndarray,
+            shuffle: bool = True,
+            metrics: typing.Optional[list] = None,
+            *args,
+            **kwargs
+    ):
+        metrics = metrics or []
+        assert len(X) == len(Y), "X and Y must have the same length"
+        assert len(X.shape) == 2, "X must be a 2D array"
+        assert len(Y.shape) == 1, "Y must be a 1D array"
+
+        self.init(X, Y)
+        self.metrics.clear()
+
+        Ym = Y.astype(np.uint32)
+
+        encoded_X_train: np.ndarray = self.train_encoder_cache.get_encoded_data(
+            data=X,
+            encoder_func=lambda x: self.clause_banks[0].prepare_X(x)
+        )
+
+        clause_active: np.ndarray = self.mechanism_clause_active()
+        literal_active: np.ndarray = self.mechanism_literal_active()
+
+        sample_indices: np.ndarray = np.arange(X.shape[0])
         if shuffle:
-            np.random.shuffle(shuffled_index)
+            np.random.shuffle(sample_indices)
 
-        for e in shuffled_index:
-            target = Ym[e]
+        for sample_idx in sample_indices:
+            target: int = Ym[sample_idx]
+            not_target: int = self.weight_banks.sample(exclude=[target])
 
-            clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(literal_active,
-                                                                                       encoded_X_train, e)
-            class_sum = np.dot(
-                clause_active[target] * self.weight_banks[target].get_weights(),
-                clause_outputs).astype(
-                np.int32
-            )
-            class_sum = np.clip(class_sum, -self.T, self.T)
-
-            if self.confidence_driven_updating:
-                update_p = 1.0 * (self.T - np.absolute(class_sum)) / self.T
-            else:
-                update_p = (self.T - class_sum) / (2 * self.T)
-
-            if return_update_p:
-                result["update_p"][target].append(update_p)
-
-            if self.weighted_clauses:
-                self.weight_banks[target].increment(
-                    clause_output=clause_outputs,
-                    update_p=update_p,
-                    clause_active=clause_active[target],
-                    positive_weights=False
-                )
-
-            self.clause_banks[target].type_i_feedback(
-                update_p=update_p * self.type_i_p,
-                clause_active=clause_active[target] * self.positive_clauses,
+            history: dict = self._fit_sample(
+                target=target,
+                not_target=not_target,
+                sample_idx=sample_idx,
+                clause_active=clause_active,
                 literal_active=literal_active,
-                encoded_X=encoded_X_train,
-                e=e
+                encoded_X_train=encoded_X_train
             )
 
-            self.clause_banks[target].type_ii_feedback(
-                update_p=update_p * self.type_ii_p,
-                clause_active=clause_active[target] * self.negative_clauses,
-                literal_active=literal_active,
-                encoded_X=encoded_X_train,
-                e=e
-            )
+            if "update_p" in metrics:
+                self.metrics.add_scalar(group="update_p", key=target, value=history["update_p_target"])
+                self.metrics.add_scalar(group="update_p", key=target, value=history["update_p_not_target"])
 
-            if self.type_iii_feedback:
-                self.clause_banks[target].type_iii_feedback(
-                    update_p=update_p,
-                    clause_active=clause_active[target] * self.positive_clauses,
-                    literal_active=literal_active,
-                    encoded_X=encoded_X_train,
-                    e=e,
-                    target=1
-                )
+        return self.metrics.export(
+            mean=True,
+            std=True
+        )
 
-                self.clause_banks[target].type_iii_feedback(
-                    update_p=update_p,
-                    clause_active=clause_active[target] * self.negative_clauses,
-                    literal_active=literal_active,
-                    encoded_X=encoded_X_train,
-                    e=e,
-                    target=0
-                )
-
-            # for incremental, and when we only have 1 sample, there is no other targets
-            if self.weight_banks.n_classes == 1:
-                continue
-
-            not_target = self.weight_banks.sample()
-            while not_target == target:
-                not_target = self.weight_banks.sample()
-
-            clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(
-                literal_active=literal_active,
-                encoded_X=encoded_X_train,
-                e=e
-            )
-            class_sum = np.dot(
-                clause_active[not_target] * self.weight_banks[not_target].get_weights(),
-                clause_outputs
-            ).astype(np.int32)
-
-            class_sum = np.clip(class_sum, -self.T, self.T)
-
-            if self.confidence_driven_updating:
-                update_p = 1.0 * (self.T - np.absolute(class_sum)) / self.T
-            else:
-                update_p = (self.T + class_sum) / (2 * self.T)
-
-            if return_update_p:
-                result["update_p"][not_target].append(update_p)
-
-            if self.weighted_clauses:
-                self.weight_banks[not_target].decrement(
-                    clause_output=clause_outputs,
-                    update_p=update_p,
-                    clause_active=clause_active[not_target],
-                    negative_weights=False
-                )
-
-            self.clause_banks[not_target].type_i_feedback(
-                update_p=update_p * self.type_i_p,
-                clause_active=clause_active[not_target] * self.negative_clauses,
-                literal_active=literal_active,
-                encoded_X=encoded_X_train,
-                e=e
-            )
-
-            self.clause_banks[not_target].type_ii_feedback(
-                update_p=update_p * self.type_ii_p,
-                clause_active=clause_active[not_target] * self.positive_clauses,
-                literal_active=literal_active,
-                encoded_X=encoded_X_train,
-                e=e
-            )
-
-            if self.type_iii_feedback:
-                self.clause_banks[not_target].type_iii_feedback(
-                    update_p=update_p,
-                    clause_active=clause_active[not_target] * self.negative_clauses,
-                    literal_active=literal_active,
-                    encoded_X=encoded_X_train,
-                    e=e,
-                    target=1
-                )
-
-                self.clause_banks[not_target].type_iii_feedback(
-                    update_p=update_p,
-                    clause_active=clause_active[not_target] * self.positive_clauses,
-                    literal_active=literal_active,
-                    encoded_X=encoded_X_train,
-                    e=e,
-                    target=0
-                )
-
-        if return_update_p:
-            all_values = [np.mean(values) for key, values in result["update_p"].items()]
-            for key, avg_value in zip(result["update_p"].keys(), all_values):
-                result["update_p"][key] = avg_value
-
-            result["update_p"]["global"] = np.mean(all_values)
-
-        return result
-
-    def predict(self, X, clip_class_sum=False, return_class_sums: bool = False, **kwargs):
+    def predict(
+            self,
+            X: np.ndarray,
+            clip_class_sum: bool = False,
+            return_class_sums: bool = False,
+            **kwargs
+    ):
 
         encoded_X_test = self.test_encoder_cache.get_encoded_data(
-            X,
+            data=X,
             encoder_func=lambda x: self.clause_banks[0].prepare_X(x)
         )
 
         class_sums = np.array([
-            self.compute_class_sums(
+            self.predict_compute_class_sums(
                 encoded_X_test=encoded_X_test,
                 ith_sample=i,
                 clip_class_sum=clip_class_sum
@@ -326,7 +426,12 @@ class TMClassifier(TMBaseClassifier, MultiClauseBankMixin, MultiWeightBankMixin)
         else:
             return max_classes
 
-    def compute_class_sums(self, encoded_X_test: np.array, ith_sample: int, clip_class_sum: bool) -> typing.List[int]:
+    def predict_compute_class_sums(
+            self,
+            encoded_X_test: np.array,
+            ith_sample: int,
+            clip_class_sum: bool
+    ) -> typing.List[int]:
         """The following function evaluates the resulting class sum votes.
 
         Args:

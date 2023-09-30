@@ -1,9 +1,9 @@
 import unittest
-from tmu.models.base import TMBasis
+from tmu.models.base import TMBaseModel
 
 
 class ClassifierTests(object):
-    model: TMBasis
+    model: TMBaseModel
 
     def setUp(self) -> None:
         from tmu.data.tmu_datasource import TMUDatasetSource

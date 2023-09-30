@@ -18,15 +18,13 @@ import typing
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from tmu.models.base import MultiWeightBankMixin, SingleClauseBankMixin
+from tmu.models.base import MultiWeightBankMixin, SingleClauseBankMixin, TMBaseModel
 from tmu.util.encoded_data_cache import DataEncoderCache
 from tmu.weight_bank import WeightBank
-from tmu.models.classification.base_classification import TMBaseClassifier
-from tmu.models.classification.vanilla_classifier import TMClassifier
 import numpy as np
 
 
-class TMCoalescedClassifier(TMBaseClassifier, SingleClauseBankMixin, MultiWeightBankMixin):
+class TMCoalescedClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
     def __init__(
         self,
         number_of_clauses,
