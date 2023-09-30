@@ -179,6 +179,95 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
                 target=0
             )
 
+    def mechanism_clause_sum(self, target, clause_active, literal_active, encoded_X_train, e):
+        clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(
+            literal_active,
+            encoded_X_train,
+            e
+        )
+
+        class_sum = np.dot(
+            clause_active[target] * self.weight_banks[target].get_weights(),
+            clause_outputs
+        ).astype(np.int32)
+
+        class_sum = np.clip(class_sum, -self.T, self.T)
+
+        return class_sum, clause_outputs
+
+    def mechanism_compute_update_probabilities(self, is_target: bool, class_sum):
+        # Confidence-driven updating method
+        if self.confidence_driven_updating:
+            return (self.T - abs(class_sum)) / self.T
+
+        # Compute based on whether the class is the target or not
+        if is_target:
+            return (self.T - class_sum) / (2 * self.T)
+        return (self.T + class_sum) / (2 * self.T)
+
+    def _fit_sample_target(self, is_target_class, class_value, sample_idx, clause_active, literal_active,
+                           encoded_X_train):
+        """
+        Handle operations for a given class type (target or not target).
+
+        :param is_target_class: Boolean indicating if the class is a target.
+        :param class_value: Value of the class.
+        :param sample_idx: Index of the current sample.
+        :param clause_active: Clause active status.
+        :param literal_active: Literal active status.
+        :param encoded_X_train: Encoded training data.
+        :return: Computed update probability for the class.
+        """
+
+        class_sum, clause_outputs = self.mechanism_clause_sum(
+            class_value,
+            clause_active,
+            literal_active,
+            encoded_X_train,
+            sample_idx
+        )
+
+        update_p = self.mechanism_compute_update_probabilities(
+            is_target=is_target_class,
+            class_sum=class_sum
+        )
+
+        self.mechanism_feedback(
+            is_target=is_target_class,
+            target=class_value,
+            clause_outputs=clause_outputs,
+            update_p=update_p,
+            clause_active=clause_active,
+            literal_active=literal_active,
+            encoded_X_train=encoded_X_train,
+            e=sample_idx
+        )
+
+        return update_p
+
+    def _fit_sample(self,
+                    target,
+                    not_target,
+                    sample_idx,
+                    clause_active,
+                    literal_active,
+                    encoded_X_train):
+
+        update_p_target = self._fit_sample_target(True, target, sample_idx, clause_active, literal_active,
+                                                  encoded_X_train)
+
+        # for incremental, and when we only have 1 sample, there is no other targets
+        if self.weight_banks.n_classes == 1:
+            return dict(update_p_target=update_p_target)
+
+        update_p_not_target = self._fit_sample_target(False, not_target, sample_idx, clause_active, literal_active,
+                                                      encoded_X_train)
+
+        return dict(
+            update_p_not_target=update_p_not_target,
+            update_p_target=update_p_target
+        )
+
     def fit(self, X, Y, shuffle=True, return_update_p=False, *args, **kwargs):
         result = defaultdict(lambda: defaultdict(list))
         self.init(X, Y)
@@ -212,87 +301,28 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
                 literal_active[ta_chunk] &= (~(1 << chunk_pos))
         literal_active = literal_active.astype(np.uint32)
 
-        shuffled_index = np.arange(X.shape[0])
+        sample_indices = np.arange(X.shape[0])
         if shuffle:
-            np.random.shuffle(shuffled_index)
+            np.random.shuffle(sample_indices)
 
-        for e in shuffled_index:
-            target = Ym[e]
-
-            clause_outputs = self.clause_banks[target].calculate_clause_outputs_update(literal_active,
-                                                                                       encoded_X_train, e)
-            class_sum = np.dot(
-                clause_active[target] * self.weight_banks[target].get_weights(),
-                clause_outputs).astype(
-                np.int32
-            )
-            class_sum = np.clip(class_sum, -self.T, self.T)
-
-            if self.confidence_driven_updating:
-                update_p = 1.0 * (self.T - np.absolute(class_sum)) / self.T
-            else:
-                update_p = (self.T - class_sum) / (2 * self.T)
-
-            if return_update_p:
-                result["update_p"][target].append(update_p)
-
-            self.mechanism_feedback(
-                is_target=True,
-                target=target,
-                clause_outputs=clause_outputs,
-                update_p=update_p,
-                clause_active=clause_active,
-                literal_active=literal_active,
-                encoded_X_train=encoded_X_train,
-                e=e
-            )
-
-            # for incremental, and when we only have 1 sample, there is no other targets
-            if self.weight_banks.n_classes == 1:
-                continue
-
-            not_target = self.weight_banks.sample()
+        for sample_idx in sample_indices:
+            target = Ym[sample_idx]
+            not_target = self.weight_banks.sample()  # todo
             while not_target == target:
                 not_target = self.weight_banks.sample()
 
-            clause_outputs = self.clause_banks[not_target].calculate_clause_outputs_update(
-                literal_active=literal_active,
-                encoded_X=encoded_X_train,
-                e=e
-            )
-            class_sum = np.dot(
-                clause_active[not_target] * self.weight_banks[not_target].get_weights(),
-                clause_outputs
-            ).astype(np.int32)
-
-            class_sum = np.clip(class_sum, -self.T, self.T)
-
-            if self.confidence_driven_updating:
-                update_p = 1.0 * (self.T - np.absolute(class_sum)) / self.T
-            else:
-                update_p = (self.T + class_sum) / (2 * self.T)
-
-            if return_update_p:
-                result["update_p"][not_target].append(update_p)
-
-            if self.weighted_clauses:
-                self.weight_banks[not_target].decrement(
-                    clause_output=clause_outputs,
-                    update_p=update_p,
-                    clause_active=clause_active[not_target],
-                    negative_weights=False
-                )
-
-            self.mechanism_feedback(
-                is_target=False,
-                target=not_target,
-                clause_outputs=clause_outputs,
-                update_p=update_p,
+            history = self._fit_sample(
+                target=target,
+                not_target=not_target,
+                sample_idx=sample_idx,
                 clause_active=clause_active,
                 literal_active=literal_active,
-                encoded_X_train=encoded_X_train,
-                e=e
+                encoded_X_train=encoded_X_train
             )
+
+            if return_update_p:
+                result["update_p"][target].append(history["update_p_target"])
+                result["update_p"][target].append(history["update_p_not_target"])
 
         if return_update_p:
             all_values = [np.mean(values) for key, values in result["update_p"].items()]
