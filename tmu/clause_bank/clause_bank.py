@@ -96,8 +96,11 @@ class ClauseBank(BaseClauseBank):
         self._cffi_init()
 
         # Set pcg32 seed
-        lib.pcg32_seed(self.seed)
-        lib.xorshift128p_seed(self.seed)
+        if self.seed is not None:
+            assert isinstance(self.seed, int), "Seed must be a integer"
+
+            lib.pcg32_seed(self.seed)
+            lib.xorshift128p_seed(self.seed)
 
     def _cffi_init(self):
         self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)  # clause_output

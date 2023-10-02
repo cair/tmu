@@ -262,6 +262,8 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
     def _fit_sample_target(
             self,
+            class_sum: int,
+            clause_outputs: np.ndarray,
             is_target_class: bool,
             class_value: int,
             sample_idx: int,
@@ -280,14 +282,6 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
         :param encoded_X_train: Encoded training data.
         :return: Computed update probability for the class.
         """
-
-        class_sum, clause_outputs = self.mechanism_clause_sum(
-            target=class_value,
-            clause_active=clause_active,
-            literal_active=literal_active,
-            encoded_X_train=encoded_X_train,
-            sample_idx=sample_idx
-        )
 
         update_p: float = self.mechanism_compute_update_probabilities(
             is_target=is_target_class,
@@ -317,7 +311,17 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             encoded_X_train
     ) -> dict:
 
+        class_sum, clause_outputs = self.mechanism_clause_sum(
+            target=target,
+            clause_active=clause_active,
+            literal_active=literal_active,
+            encoded_X_train=encoded_X_train,
+            sample_idx=sample_idx
+        )
+
         update_p_target: float = self._fit_sample_target(
+            class_sum=class_sum,
+            clause_outputs=clause_outputs,
             is_target_class=True,
             class_value=target,
             sample_idx=sample_idx,
@@ -333,7 +337,17 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
                 update_p_not_target=None
             )
 
+        class_sum_not, clause_outputs_not = self.mechanism_clause_sum(
+            target=not_target,
+            clause_active=clause_active,
+            literal_active=literal_active,
+            encoded_X_train=encoded_X_train,
+            sample_idx=sample_idx
+        )
+
         update_p_not_target: float = self._fit_sample_target(
+            class_sum=class_sum_not,
+            clause_outputs=clause_outputs_not,
             is_target_class=False,
             class_value=not_target,
             sample_idx=sample_idx,
@@ -358,7 +372,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
     ):
         metrics = metrics or []
         assert len(X) == len(Y), "X and Y must have the same length"
-        assert len(X.shape) == 2, "X must be a 2D array"
+        assert len(X.shape) >= 2, "X must be a 2D array"
         assert len(Y.shape) == 1, "Y must be a 1D array"
 
         self.init(X, Y)

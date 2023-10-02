@@ -4,9 +4,15 @@ import numpy as np
 
 
 class MetricRecorder:
+
+    @staticmethod
+    def _default_dict():
+        """Method to produce the default value for defaultdict."""
+        return defaultdict(list)
+
     def __init__(self):
         # Initialize records with a defaultdict of defaultdict of lists
-        self.records = defaultdict(lambda: defaultdict(list))
+        self.records = defaultdict(self._default_dict)
 
     def add_scalar(self, key, value, group=None):
         """Add a scalar value to the recorder under the given key and group."""

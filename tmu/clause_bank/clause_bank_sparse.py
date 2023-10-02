@@ -60,13 +60,6 @@ class ClauseBankSparse(BaseClauseBank):
 
         LOGGER.warning("reuse_random_feedback is not implemented yet")
 
-        if len(self.X.shape) == 2:
-            self.dim = (self.X.shape[1], 1, 1)
-        elif len(self.X.shape) == 3:
-            self.dim = (self.X.shape[1], self.X.shape[2], 1)
-        elif len(self.X.shape) == 4:
-            self.dim = (self.X.shape[1], self.X.shape[2], self.X.shape[3])
-
         if self.patch_dim is None:
             self.patch_dim = (self.dim[0] * self.dim[1] * self.dim[2], 1)
 

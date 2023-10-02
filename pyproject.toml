@@ -22,7 +22,8 @@ dependencies = [
     "numpy",
     "pandas",
     "scikit-learn",
-    "tqdm"
+    "tqdm",
+    "requests"
 ]
 requires-python = ">=3.10"
 

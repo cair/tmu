@@ -222,7 +222,7 @@ class TMBaseModel:
         from tmu.clause_bank.clause_bank import ClauseBank
         clause_bank_type = ClauseBank
         clause_bank_args = dict(
-            X=X,
+            X_shape=X.shape,
             d=self.d,
             s=self.s,
             boost_true_positive_feedback=self.boost_true_positive_feedback,
@@ -248,7 +248,7 @@ class TMBaseModel:
 
         clause_bank_type = ClauseBankCUDA
         clause_bank_args = dict(
-            X=X,
+            X_shape=X.shape,
             s=self.s,
             boost_true_positive_feedback=self.boost_true_positive_feedback,
             reuse_random_feedback=self.reuse_random_feedback,
@@ -265,7 +265,7 @@ class TMBaseModel:
         from tmu.clause_bank.clause_bank_sparse import ClauseBankSparse
         clause_bank_type = ClauseBankSparse
         clause_bank_args = dict(
-            X=X,
+            X_shape=X.shape,
             d=self.d,
             s=self.s,
             boost_true_positive_feedback=self.boost_true_positive_feedback,
