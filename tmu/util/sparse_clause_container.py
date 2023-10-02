@@ -30,17 +30,20 @@ class SparseClauseContainer:
 
     def sample(self, n=1, exclude=None):
         if exclude is None:
-            exclude = []
+            exclude = set()
+        else:
+            exclude = set(exclude)
 
-        mask = np.isin(self._classes, exclude, invert=True)
-        available_classes = np.array(self._classes)[mask]
+        results = []
+        for _ in range(n):
+            while True:
+                idx = self._rng_np.randint(0, self.n_classes)
+                sampled_class = self._classes[idx]
+                if sampled_class not in exclude:
+                    results.append(sampled_class)
+                    break
 
-        if not len(available_classes):
-            raise ValueError("All classes are excluded from sampling.")
-
-        if n == 1:
-            return self._rng_np.choice(available_classes)
-        return self._rng_np.choice(available_classes, size=n, replace=True).tolist()
+        return results[0] if n == 1 else results
 
     def __iter__(self):
         return self._d.__iter__()
