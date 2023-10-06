@@ -1,7 +1,7 @@
 #include "fast_rand.h"
 
 // Seed/state for the RNG.
-static uint64_t xorshift_state[2] = {0xcafef00dbadc0ffeeULL, 0xdeadbeef12345678ULL};
+static uint64_t xorshift_state[2] = {0xcafef00dbadc0ffeULL, 0xdeadbeef12345678ULL};
 
 
 // Seeding function.
