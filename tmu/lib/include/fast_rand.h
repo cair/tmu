@@ -4,8 +4,8 @@
 
 #define FAST_RAND_MAX UINT32_MAX
 
-//#define fast_rand() pcg32_fast()
-#define fast_rand() xorshift128p_fast()
+#define fast_rand() pcg32_fast()
+//#define fast_rand() xorshift128p_fast()
 //#define fast_rand() rdrand_fast()
 
 uint32_t xorshift128p_fast();
