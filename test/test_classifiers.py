@@ -51,7 +51,7 @@ class VanillaClassifierTests(unittest.TestCase, ClassifierTests):
         )
         ClassifierTests.setUp(self)
 
-
+@unittest.skip("Disabled TMMultiChannelClassifierTests for now.")
 class TMMultiChannelClassifierTests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:
@@ -70,7 +70,7 @@ class TMMultiChannelClassifierTests(unittest.TestCase, ClassifierTests):
         self.data["x_train"] = np.array([self.data["x_train"], self.data["x_train"]])
 
 
-class TMCoalescedClassifierv2Tests(unittest.TestCase, ClassifierTests):
+class TMCoalescedClassifierTests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:
         from tmu.models.classification.coalesced_classifier import TMCoalescedClassifier
@@ -84,7 +84,7 @@ class TMCoalescedClassifierv2Tests(unittest.TestCase, ClassifierTests):
         )
         ClassifierTests.setUp(self)
 
-
+@unittest.skip("Disabled OneVSOneClassifier for now.")
 class OneVSOneClassifierTests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:

@@ -6,12 +6,9 @@
 
 #define fast_rand() pcg32_fast()
 //#define fast_rand() xorshift128p_fast()
-//#define fast_rand() rdrand_fast()
 
 uint32_t xorshift128p_fast();
 uint32_t pcg32_fast();
-uint32_t rdrand_fast();
-
 
 inline static int normal(double mean, double variance) {
     double u1 = (double) (fast_rand() + 1) / ((double) FAST_RAND_MAX + 1), u2 = (double) fast_rand() / FAST_RAND_MAX; // u1 in (0, 1] and u2 in [0, 1]

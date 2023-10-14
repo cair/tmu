@@ -51,7 +51,6 @@ sources = [
     "tmu/lib/src/ClauseBankSparse.c",
     "tmu/lib/src/random/pcg32_fast.c",
     "tmu/lib/src/random/xorshift128.c",
-    "tmu/lib/src/random/rdrand.c",
 ]
 
 headers = [
