@@ -22,7 +22,7 @@ TMU is a comprehensive repository that encompasses several Tsetlin Machine imple
     - [Focused Negative Sampling](https://ieeexplore.ieee.org/document/9923859)
     - [Type III Feedback](https://arxiv.org/abs/2309.06315)
     - Incremental Clause Evaluation *(Upcoming)*
-    - Sparse Computation with Absorbing Actions *(Upcoming)*
+    - [Sparse Computation with Absorbing Actions](https://arxiv.org/abs/2310.11481)
     - TMComposites: Plug-and-Play Collaboration Between Specialized Tsetlin Machines *([In Progress](https://arxiv.org/abs/2309.04801))*
 
 - Wrappers for C and CUDA-based clause evaluation and updates to enable high-performance computation.
