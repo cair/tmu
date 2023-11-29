@@ -73,10 +73,12 @@ jobs:
               tag: context.payload.release.tag_name,
             });
             return { upload_url: upload_url };
-
-      - uses: shogo82148/actions-upload-release-asset@v1
+      - name: Print upload URL
+        run: echo "Upload URL is ${{ steps.get_release_info.outputs.upload_url }}"
+      - name: Upload wheels to release assets
+        uses: shogo82148/actions-upload-release-asset@v1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
           asset_path: wheelhouse/*.whl
 
   publish_wheels_to_pypi:
