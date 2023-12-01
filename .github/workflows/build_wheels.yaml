@@ -52,7 +52,7 @@ jobs:
   publish_wheels_to_release_page:
     name: Publish wheels to Release Page
     needs: build_wheels
-    if: github.event_name == 'release' && github.event.action == 'created' && github.event_name == "disabled"
+    if: github.event_name == 'release' && github.event.action == 'created' && github.event_name == 'disabled'
     runs-on: ubuntu-latest
 
     steps:
