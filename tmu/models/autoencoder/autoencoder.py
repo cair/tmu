@@ -29,12 +29,12 @@ class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
             s,
             output_active,
             accumulation=1,
-            type_i_ii_ratio=1.0,
-            type_iii_feedback=False,
-            focused_negative_sampling=False,
-            output_balancing=0,
+            type_i_ii_ratio: bool = 1.0,
+            type_iii_feedback: bool = False,
+            focused_negative_sampling: bool = False,
+            output_balancing: float = 0,
             upsampling=1,
-            d=200.0,
+            d: float = 200.0,
             platform='CPU',
             patch_dim=None,
             feature_negation=True,
@@ -105,9 +105,10 @@ class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
             self.max_positive_clauses = self.number_of_clauses
 
         if self.output_balancing == 0:
-            self.feature_true_probability = np.asarray(X.sum(axis=0)/X.shape[0]).reshape(-1)**(1.0/self.upsampling)
+            self.feature_true_probability = np.asarray(X.sum(axis=0) / X.shape[0]).reshape(-1) ** (
+                    1.0 / self.upsampling)
         else:
-            self.feature_true_probability = np.ones(X.shape[1], dtype=np.float32)*self.output_balancing
+            self.feature_true_probability = np.ones(X.shape[1], dtype=np.float32) * self.output_balancing
 
     def update(
             self,

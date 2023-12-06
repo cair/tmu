@@ -146,7 +146,7 @@ class IMDB(TMUDataset):
             origin=origin_folder + "imdb_word_index.json",
             file_hash="bfafd718b763782e994055a2d397834f",
         )
-        with open(path) as f:
+        with open(path + ".json") as f:
             return json.load(f)
 
     def _transform(self, name, dataset):
