@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['implclausebankcuda_671',['ImplClauseBankCUDA',['../classtmu_1_1clause__bank_1_1clause__bank__cuda_1_1ImplClauseBankCUDA.html',1,'tmu::clause_bank::clause_bank_cuda']]]
+  ['dataencodercache_919',['DataEncoderCache',['../classtmu_1_1util_1_1encoded__data__cache_1_1DataEncoderCache.html',1,'tmu::util::encoded_data_cache']]]
 ];

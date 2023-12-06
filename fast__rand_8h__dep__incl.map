@@ -1,8 +1,9 @@
 <map id="tmu/lib/include/fast_rand.h" name="tmu/lib/include/fast_rand.h">
-<area shape="rect" id="node1" title=" " alt="" coords="443,5,591,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="548,5,696,47"/>
 <area shape="rect" id="node2" href="$Attention_8c.html" title=" " alt="" coords="5,102,172,129"/>
 <area shape="rect" id="node3" href="$ClauseBank_8c.html" title=" " alt="" coords="196,102,379,129"/>
 <area shape="rect" id="node4" href="$ClauseBankSparse_8c.html" title=" " alt="" coords="403,102,630,129"/>
-<area shape="rect" id="node5" href="$ClauseWeightBank_8c.html" title=" " alt="" coords="654,95,838,136"/>
-<area shape="rect" id="node6" href="$WeightBank_8c.html" title=" " alt="" coords="862,102,1046,129"/>
+<area shape="rect" id="node5" href="$pcg32__fast_8c.html" title=" " alt="" coords="655,95,800,136"/>
+<area shape="rect" id="node6" href="$xorshift128_8c.html" title=" " alt="" coords="824,95,969,136"/>
+<area shape="rect" id="node7" href="$WeightBank_8c.html" title=" " alt="" coords="994,102,1178,129"/>
 </map>

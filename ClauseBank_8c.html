@@ -109,16 +109,18 @@ Functions</h2></td></tr>
 <tr class="separator:ad6659851654ae90a3cfc9cb3d0777b9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a04ef5efece9a044be69c1fbf3fb398d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#a04ef5efece9a044be69c1fbf3fb398d3">cb_calculate_literal_frequency</a> (unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *clause_active, unsigned int *literal_count)</td></tr>
 <tr class="separator:a04ef5efece9a044be69c1fbf3fb398d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a956980e03bd8a82b5467c3951f214b5f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#a956980e03bd8a82b5467c3951f214b5f">cb_get_literals</a> (const unsigned int *ta_state, unsigned int number_of_clauses, unsigned int number_of_literals, unsigned int number_of_state_bits, unsigned int *result)</td></tr>
+<tr class="separator:a956980e03bd8a82b5467c3951f214b5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada68451b43d36c9bcf2807e7c0835da4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#ada68451b43d36c9bcf2807e7c0835da4">cb_included_literals</a> (unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *actions)</td></tr>
 <tr class="separator:ada68451b43d36c9bcf2807e7c0835da4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecdb68d55eebb0c5b77bce3c09bfa904"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#aecdb68d55eebb0c5b77bce3c09bfa904">cb_initialize_incremental_clause_calculation</a> (unsigned int *ta_state, unsigned int *literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *previous_Xi)</td></tr>
 <tr class="separator:aecdb68d55eebb0c5b77bce3c09bfa904"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4dff264cc90cc2f4cc3e2c2886b60ae"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#ab4dff264cc90cc2f4cc3e2c2886b60ae">cb_number_of_include_actions</a> (unsigned int *ta_state, int clause, int number_of_literals, int number_of_state_bits)</td></tr>
 <tr class="separator:ab4dff264cc90cc2f4cc3e2c2886b60ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a70b20bc6a63455ad3967a024c2c1d150"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#a70b20bc6a63455ad3967a024c2c1d150">cb_type_i_feedback</a> (unsigned int *ta_state, unsigned int *type_ia_ii_feedback_counter, int type_ia_ii_feedback_ratio, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)</td></tr>
-<tr class="separator:a70b20bc6a63455ad3967a024c2c1d150"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a284712b37d1771477e75d67873d119"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#a6a284712b37d1771477e75d67873d119">cb_type_ii_feedback</a> (unsigned int *ta_state, unsigned int *type_ia_ii_feedback_counter, int type_ia_ii_feedback_ratio, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)</td></tr>
-<tr class="separator:a6a284712b37d1771477e75d67873d119"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fe64ef6d2c2b242fea392814cfcf0fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#a8fe64ef6d2c2b242fea392814cfcf0fd">cb_type_i_feedback</a> (unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int reuse_random_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)</td></tr>
+<tr class="separator:a8fe64ef6d2c2b242fea392814cfcf0fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7be9da91ef09893599dccfaabd3825fe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#a7be9da91ef09893599dccfaabd3825fe">cb_type_ii_feedback</a> (unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)</td></tr>
+<tr class="separator:a7be9da91ef09893599dccfaabd3825fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65d164320a1bbfe0766163e59d0f84d8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#a65d164320a1bbfe0766163e59d0f84d8">cb_type_iii_feedback</a> (unsigned int *ta_state, unsigned int *ind_state, unsigned int *clause_and_target, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits_ta, int number_of_state_bits_ind, int number_of_patches, float update_p, float d, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi, unsigned int target)</td></tr>
 <tr class="separator:a65d164320a1bbfe0766163e59d0f84d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -489,6 +491,52 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a956980e03bd8a82b5467c3951f214b5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a956980e03bd8a82b5467c3951f214b5f">&#9670;&nbsp;</a></span>cb_get_literals()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cb_get_literals </td>
+          <td>(</td>
+          <td class="paramtype">const unsigned int *&#160;</td>
+          <td class="paramname"><em>ta_state</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>number_of_clauses</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>number_of_literals</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>number_of_state_bits</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ada68451b43d36c9bcf2807e7c0835da4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ada68451b43d36c9bcf2807e7c0835da4">&#9670;&nbsp;</a></span>cb_included_literals()</h2>
 
@@ -639,8 +687,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a70b20bc6a63455ad3967a024c2c1d150"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a70b20bc6a63455ad3967a024c2c1d150">&#9670;&nbsp;</a></span>cb_type_i_feedback()</h2>
+<a id="a8fe64ef6d2c2b242fea392814cfcf0fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8fe64ef6d2c2b242fea392814cfcf0fd">&#9670;&nbsp;</a></span>cb_type_i_feedback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -650,18 +698,6 @@ Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>ta_state</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned int *&#160;</td>
-          <td class="paramname"><em>type_ia_ii_feedback_counter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>type_ia_ii_feedback_ratio</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -721,6 +757,12 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>reuse_random_feedback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
           <td class="paramname"><em>max_included_literals</em>, </td>
         </tr>
         <tr>
@@ -751,8 +793,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a6a284712b37d1771477e75d67873d119"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6a284712b37d1771477e75d67873d119">&#9670;&nbsp;</a></span>cb_type_ii_feedback()</h2>
+<a id="a7be9da91ef09893599dccfaabd3825fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7be9da91ef09893599dccfaabd3825fe">&#9670;&nbsp;</a></span>cb_type_ii_feedback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -762,18 +804,6 @@ Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>ta_state</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned int *&#160;</td>
-          <td class="paramname"><em>type_ia_ii_feedback_counter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>type_ia_ii_feedback_ratio</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

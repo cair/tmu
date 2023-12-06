@@ -1,4 +1,6 @@
 <map id="TMAutoEncoder" name="TMAutoEncoder">
-<area shape="rect" id="node1" title=" " alt="" coords="5,80,129,107"/>
-<area shape="rect" id="node2" href="$classtmu_1_1models_1_1base_1_1TMBasis.html" title=" " alt="" coords="29,5,106,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="170,80,294,107"/>
+<area shape="rect" id="node2" href="$classtmu_1_1models_1_1base_1_1TMBaseModel.html" title=" " alt="" coords="5,5,120,32"/>
+<area shape="rect" id="node3" href="$classtmu_1_1models_1_1base_1_1SingleClauseBankMixin.html" title=" " alt="" coords="145,5,319,32"/>
+<area shape="rect" id="node4" href="$classtmu_1_1models_1_1base_1_1MultiWeightBankMixin.html" title=" " alt="" coords="343,5,513,32"/>
 </map>

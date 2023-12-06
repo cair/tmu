@@ -1,6 +1,30 @@
 var searchData=
 [
-  ['readme_2emd_859',['README.md',['../examples_2classification_2README_8md.html',1,'(Global Namespace)'],['../tmu_2preprocessing_2standard__binarizer_2README_8md.html',1,'(Global Namespace)']]],
-  ['regressiondemo_2epy_860',['RegressionDemo.py',['../RegressionDemo_8py.html',1,'']]],
-  ['relationaltmdemo_2epy_861',['RelationalTMDemo.py',['../RelationalTMDemo_8py.html',1,'']]]
+  ['main_2ec_1142',['main.c',['../main_8c.html',1,'']]],
+  ['mnist_2epy_1143',['mnist.py',['../mnist_8py.html',1,'']]],
+  ['mnistclausecooccurrencedemo_2epy_1144',['MNISTClauseCoOccurrenceDemo.py',['../MNISTClauseCoOccurrenceDemo_8py.html',1,'']]],
+  ['mnistconvolutiondemo_2epy_1145',['MNISTConvolutionDemo.py',['../MNISTConvolutionDemo_8py.html',1,'']]],
+  ['mnistconvolutionliteralbudgetdemo_2epy_1146',['MNISTConvolutionLiteralBudgetDemo.py',['../MNISTConvolutionLiteralBudgetDemo_8py.html',1,'']]],
+  ['mnistconvolutionvisualtokens_2epy_1147',['MNISTConvolutionVisualTokens.py',['../MNISTConvolutionVisualTokens_8py.html',1,'']]],
+  ['mnistdemo_2epy_1148',['MNISTDemo.py',['../MNISTDemo_8py.html',1,'']]],
+  ['mnistdemo2dconvolutiononevsone_2epy_1149',['MNISTDemo2DConvolutionOneVsOne.py',['../MNISTDemo2DConvolutionOneVsOne_8py.html',1,'']]],
+  ['mnistdemo2dconvolutionweightedclauses_2epy_1150',['MNISTDemo2DConvolutionWeightedClauses.py',['../MNISTDemo2DConvolutionWeightedClauses_8py.html',1,'']]],
+  ['mnistdemo2dconvolutionweightedclausesfocusednegativesampling_2epy_1151',['MNISTDemo2DConvolutionWeightedClausesFocusedNegativeSampling.py',['../MNISTDemo2DConvolutionWeightedClausesFocusedNegativeSampling_8py.html',1,'']]],
+  ['mnistdemo2dconvolutionweightedclausesincremental_2epy_1152',['MNISTDemo2DConvolutionWeightedClausesIncremental.py',['../MNISTDemo2DConvolutionWeightedClausesIncremental_8py.html',1,'']]],
+  ['mnistdemocoalesced_2epy_1153',['MNISTDemoCoalesced.py',['../classification_2MNISTDemoCoalesced_8py.html',1,'(Global Namespace)'],['../experimental_2classification_2MNISTDemoCoalesced_8py.html',1,'(Global Namespace)']]],
+  ['mnistdemocoalescedfocusednegativesampling_2epy_1154',['MNISTDemoCoalescedFocusedNegativeSampling.py',['../MNISTDemoCoalescedFocusedNegativeSampling_8py.html',1,'']]],
+  ['mnistdemocoalescedtypeiiifeedback_2epy_1155',['MNISTDemoCoalescedTypeIIIFeedback.py',['../MNISTDemoCoalescedTypeIIIFeedback_8py.html',1,'']]],
+  ['mnistdemoonevsone_2epy_1156',['MNISTDemoOneVsOne.py',['../MNISTDemoOneVsOne_8py.html',1,'']]],
+  ['mnistdemotrainlayerone_2epy_1157',['MNISTDemoTrainLayerOne.py',['../MNISTDemoTrainLayerOne_8py.html',1,'']]],
+  ['mnistdemotypeiiifeedback_2epy_1158',['MNISTDemoTypeIIIFeedback.py',['../MNISTDemoTypeIIIFeedback_8py.html',1,'']]],
+  ['mnistdemoweightedclauses_2epy_1159',['MNISTDemoWeightedClauses.py',['../MNISTDemoWeightedClauses_8py.html',1,'']]],
+  ['mnistdemoweightedclausesincremental_2epy_1160',['MNISTDemoWeightedClausesIncremental.py',['../MNISTDemoWeightedClausesIncremental_8py.html',1,'']]],
+  ['mnistdemowithserialization_2epy_1161',['MNISTDemoWithSerialization.py',['../MNISTDemoWithSerialization_8py.html',1,'']]],
+  ['mnistliteralbudgetdemo_2epy_1162',['MNISTLiteralBudgetDemo.py',['../MNISTLiteralBudgetDemo_8py.html',1,'']]],
+  ['mnistliteralbudgetdemocoalesced_2epy_1163',['MNISTLiteralBudgetDemoCoalesced.py',['../MNISTLiteralBudgetDemoCoalesced_8py.html',1,'']]],
+  ['mnistreconstructiondemo_2epy_1164',['MNISTReconstructionDemo.py',['../MNISTReconstructionDemo_8py.html',1,'']]],
+  ['mnistsparseabsorbingdemo_2epy_1165',['MNISTSparseAbsorbingDemo.py',['../MNISTSparseAbsorbingDemo_8py.html',1,'']]],
+  ['mnistvisualtokenshypervector_2epy_1166',['MNISTVisualTokensHyperVector.py',['../MNISTVisualTokensHyperVector_8py.html',1,'']]],
+  ['multichannel_5fclassifier_2epy_1167',['multichannel_classifier.py',['../multichannel__classifier_8py.html',1,'']]],
+  ['multitask_5fclassifier_2epy_1168',['multitask_classifier.py',['../multitask__classifier_8py.html',1,'']]]
 ];

@@ -66,7 +66,8 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#define-members">Macros</a>  </div>
+<a href="#define-members">Macros</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">fast_rand.h File Reference</div>  </div>
 </div><!--header-->
@@ -86,12 +87,13 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="fast__rand_8h__dep__incl.png" border="0" usemap="#atmu_2lib_2include_2fast__rand_8hdep" alt=""/></div>
 <map name="atmu_2lib_2include_2fast__rand_8hdep" id="atmu_2lib_2include_2fast__rand_8hdep">
-<area shape="rect" title=" " alt="" coords="443,5,591,47"/>
+<area shape="rect" title=" " alt="" coords="548,5,696,47"/>
 <area shape="rect" href="Attention_8c.html" title=" " alt="" coords="5,102,172,129"/>
 <area shape="rect" href="ClauseBank_8c.html" title=" " alt="" coords="196,102,379,129"/>
 <area shape="rect" href="ClauseBankSparse_8c.html" title=" " alt="" coords="403,102,630,129"/>
-<area shape="rect" href="ClauseWeightBank_8c.html" title=" " alt="" coords="654,95,838,136"/>
-<area shape="rect" href="WeightBank_8c.html" title=" " alt="" coords="862,102,1046,129"/>
+<area shape="rect" href="pcg32__fast_8c.html" title=" " alt="" coords="655,95,800,136"/>
+<area shape="rect" href="xorshift128_8c.html" title=" " alt="" coords="824,95,969,136"/>
+<area shape="rect" href="WeightBank_8c.html" title=" " alt="" coords="994,102,1178,129"/>
 </map>
 </div>
 </div>
@@ -99,10 +101,17 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a98bc0cdbde4d6f139a56f7d09dc064f0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fast__rand_8h.html#a98bc0cdbde4d6f139a56f7d09dc064f0">fast_rand</a>()&#160;&#160;&#160;pcg32_fast()</td></tr>
+<tr class="memitem:a98bc0cdbde4d6f139a56f7d09dc064f0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fast__rand_8h.html#a98bc0cdbde4d6f139a56f7d09dc064f0">fast_rand</a>()&#160;&#160;&#160;<a class="el" href="pcg32__fast_8c.html#a63b446e8059e4dbfeaf04ea31f5d6133">pcg32_fast</a>()</td></tr>
 <tr class="separator:a98bc0cdbde4d6f139a56f7d09dc064f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7040ce2b63347533c054b3f46ef7a790"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fast__rand_8h.html#a7040ce2b63347533c054b3f46ef7a790">FAST_RAND_MAX</a>&#160;&#160;&#160;UINT32_MAX</td></tr>
 <tr class="separator:a7040ce2b63347533c054b3f46ef7a790"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a63b446e8059e4dbfeaf04ea31f5d6133"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fast__rand_8h.html#a63b446e8059e4dbfeaf04ea31f5d6133">pcg32_fast</a> ()</td></tr>
+<tr class="separator:a63b446e8059e4dbfeaf04ea31f5d6133"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cc556b6a6aa1460b2b84a3f79025b48"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fast__rand_8h.html#a3cc556b6a6aa1460b2b84a3f79025b48">xorshift128p_fast</a> ()</td></tr>
+<tr class="separator:a3cc556b6a6aa1460b2b84a3f79025b48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="a98bc0cdbde4d6f139a56f7d09dc064f0"></a>
@@ -115,7 +124,7 @@ Macros</h2></td></tr>
           <td class="memname">#define fast_rand</td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td>&#160;&#160;&#160;pcg32_fast()</td>
+          <td>&#160;&#160;&#160;<a class="el" href="pcg32__fast_8c.html#a63b446e8059e4dbfeaf04ea31f5d6133">pcg32_fast</a>()</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -130,6 +139,41 @@ Macros</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">#define FAST_RAND_MAX&#160;&#160;&#160;UINT32_MAX</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="a63b446e8059e4dbfeaf04ea31f5d6133"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a63b446e8059e4dbfeaf04ea31f5d6133">&#9670;&nbsp;</a></span>pcg32_fast()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t pcg32_fast </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a3cc556b6a6aa1460b2b84a3f79025b48"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3cc556b6a6aa1460b2b84a3f79025b48">&#9670;&nbsp;</a></span>xorshift128p_fast()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t xorshift128p_fast </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['weight_5fbank_2epy_871',['weight_bank.py',['../weight__bank_8py.html',1,'']]],
-  ['weightbank_2ec_872',['WeightBank.c',['../WeightBank_8c.html',1,'']]],
-  ['weightbank_2eh_873',['WeightBank.h',['../WeightBank_8h.html',1,'']]]
+  ['sparse_5fclause_5fcontainer_2epy_1176',['sparse_clause_container.py',['../sparse__clause__container_8py.html',1,'']]],
+  ['statistics_2epy_1177',['statistics.py',['../statistics_8py.html',1,'']]],
+  ['stats_2epy_1178',['stats.py',['../stats_8py.html',1,'']]]
 ];

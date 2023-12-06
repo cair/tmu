@@ -92,8 +92,8 @@ Functions</h2></td></tr>
 <tr class="separator:a067accc2873662050548141f53a729de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05940da5d9bf29e03da813d6f0d6afd5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Tools_8c.html#a05940da5d9bf29e03da813d6f0d6afd5">tmu_encode</a> (unsigned int *X, unsigned int *encoded_X, int number_of_examples, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features)</td></tr>
 <tr class="separator:a05940da5d9bf29e03da813d6f0d6afd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80ff49f5e5c2ccb4d629f26769fd3389"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Tools_8c.html#a80ff49f5e5c2ccb4d629f26769fd3389">tmu_produce_autoencoder_examples</a> (unsigned int *active_output, int number_of_active_outputs, unsigned int *indptr_row, unsigned int *indices_row, int number_of_rows, unsigned int *indptr_col, unsigned int *indices_col, int number_of_cols, unsigned int *encoded_X, unsigned int *Y, int accumulation, int append_negated)</td></tr>
-<tr class="separator:a80ff49f5e5c2ccb4d629f26769fd3389"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7da0465433ef516f79dedbd037f12f0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Tools_8c.html#a7da0465433ef516f79dedbd037f12f0e">tmu_produce_autoencoder_example</a> (unsigned int *active_output, int number_of_active_outputs, unsigned int *indptr_row, unsigned int *indices_row, int number_of_rows, unsigned int *indptr_col, unsigned int *indices_col, int number_of_cols, unsigned int *X, int target, int target_value, int accumulation)</td></tr>
+<tr class="separator:a7da0465433ef516f79dedbd037f12f0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a067accc2873662050548141f53a729de"></a>
@@ -200,14 +200,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a80ff49f5e5c2ccb4d629f26769fd3389"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a80ff49f5e5c2ccb4d629f26769fd3389">&#9670;&nbsp;</a></span>tmu_produce_autoencoder_examples()</h2>
+<a id="a7da0465433ef516f79dedbd037f12f0e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7da0465433ef516f79dedbd037f12f0e">&#9670;&nbsp;</a></span>tmu_produce_autoencoder_example()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void tmu_produce_autoencoder_examples </td>
+          <td class="memname">void tmu_produce_autoencoder_example </td>
           <td>(</td>
           <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>active_output</em>, </td>
@@ -258,25 +258,25 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned int *&#160;</td>
-          <td class="paramname"><em>encoded_X</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned int *&#160;</td>
-          <td class="paramname"><em>Y</em>, </td>
+          <td class="paramname"><em>X</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>accumulation</em>, </td>
+          <td class="paramname"><em>target</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>append_negated</em>&#160;</td>
+          <td class="paramname"><em>target_value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>accumulation</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

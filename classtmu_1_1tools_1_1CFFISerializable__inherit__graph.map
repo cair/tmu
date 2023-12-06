@@ -1,8 +1,9 @@
 <map id="CFFISerializable" name="CFFISerializable">
-<area shape="rect" id="node1" title=" " alt="" coords="139,80,266,107"/>
-<area shape="rect" id="node3" href="$classtmu_1_1clause__bank_1_1base__clause__bank_1_1BaseClauseBank.html" title=" " alt="" coords="68,155,199,181"/>
-<area shape="rect" id="node6" href="$classtmu_1_1weight__bank_1_1weight__bank_1_1WeightBank.html" title=" " alt="" coords="223,155,323,181"/>
-<area shape="rect" id="node2" title=" " alt="" coords="178,5,227,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="218,80,345,107"/>
+<area shape="rect" id="node3" href="$classtmu_1_1clause__bank_1_1base__clause__bank_1_1BaseClauseBank.html" title=" " alt="" coords="147,155,277,181"/>
+<area shape="rect" id="node7" href="$classtmu_1_1weight__bank_1_1weight__bank_1_1WeightBank.html" title=" " alt="" coords="302,155,402,181"/>
+<area shape="rect" id="node2" title=" " alt="" coords="257,5,306,32"/>
 <area shape="rect" id="node4" href="$classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html" title=" " alt="" coords="5,229,104,256"/>
 <area shape="rect" id="node5" href="$classtmu_1_1clause__bank_1_1clause__bank__cuda_1_1ImplClauseBankCUDA.html" title=" " alt="" coords="129,229,295,256"/>
+<area shape="rect" id="node6" href="$classtmu_1_1clause__bank_1_1clause__bank__sparse_1_1ClauseBankSparse.html" title=" " alt="" coords="319,229,462,256"/>
 </map>

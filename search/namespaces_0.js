@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['autoencoder_694',['autoencoder',['../namespaceautoencoder.html',1,'']]],
-  ['imdbautoencoderdemo_695',['IMDbAutoEncoderDemo',['../namespaceautoencoder_1_1IMDbAutoEncoderDemo.html',1,'autoencoder']]],
-  ['imdbwordembeddingdemo_696',['IMDbWordEmbeddingDemo',['../namespaceautoencoder_1_1IMDbWordEmbeddingDemo.html',1,'autoencoder']]]
+  ['autoencoder_948',['autoencoder',['../namespaceautoencoder.html',1,'']]],
+  ['dimensionalityreductiondemo_949',['DimensionalityReductionDemo',['../namespaceautoencoder_1_1DimensionalityReductionDemo.html',1,'autoencoder']]],
+  ['imdbwordembeddingdemo_950',['IMDbWordEmbeddingDemo',['../namespaceautoencoder_1_1IMDbWordEmbeddingDemo.html',1,'autoencoder']]]
 ];
