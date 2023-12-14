@@ -3,6 +3,10 @@ name: Build Wheels
 on:
   workflow_dispatch:
   push:
+  release:
+    types:
+      - created
+      - published
 
 jobs:
   build_wheels:
