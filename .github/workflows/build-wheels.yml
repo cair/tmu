@@ -24,15 +24,15 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
 
-      - name: Prefix wheels with branch name
-        if: startsWith(github.ref, 'refs/heads/')
-        run: |
-          branchName=${GITHUB_REF/refs\/heads\//}
-          for file in wheelhouse/*.whl; do
-            newName="${branchName}-$(basename $file)"
-            mv "$file" "wheelhouse/$newName"
-          done
-        shell: bash
+      #- name: Prefix wheels with branch name
+      #  if: startsWith(github.ref, 'refs/heads/')
+      #  run: |
+      #    branchName=${GITHUB_REF/refs\/heads\//}
+      #    for file in wheelhouse/*.whl; do
+      #      newName="${branchName}-$(basename $file)"
+      #      mv "$file" "wheelhouse/$newName"
+      #    done
+      #  shell: bash
 
       - uses: actions/upload-artifact@v2
         with:
