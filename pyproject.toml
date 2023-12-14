@@ -80,7 +80,7 @@ skip = [
     "cp*-manylinux_pypy_*_x86_64",
     "cp*-manylinux_pypy_*_aarch64",    
     "cp*-win32",
-    "cp*-win_amd64",
+    #"cp*-win_amd64",
     "cp*-linux_x86_64",
     #"cp*-macosx_x86_64",
     #"cp*-macosx_arm64",
