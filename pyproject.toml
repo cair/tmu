@@ -82,7 +82,7 @@ skip = [
     "cp*-win32",
     "cp*-win_amd64",
     "cp*-linux_x86_64",
-    "cp*-macosx_x86_64",
+    #"cp*-macosx_x86_64",
     #"cp*-macosx_arm64",
     "cp*-musllinux_x86_64",
     "cp*-musllinux_aarch64",
