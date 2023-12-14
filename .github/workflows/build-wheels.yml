@@ -95,6 +95,7 @@ jobs:
     name: Publish wheels to PyPI
     needs: build_wheels
     runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'created'
 
     steps:
       - name: Download artifacts
@@ -114,6 +115,7 @@ jobs:
     name: Publish wheels to Release Page
     needs: build_wheels
     runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'created'
 
     steps:
       - name: Download artifacts
