@@ -3,10 +3,13 @@ name: Build Wheels
 on:
   workflow_dispatch:
   push:
+    branches:
+      - '**'
   release:
     types:
       - created
       - published
+
 
 jobs:
   build_wheels:
