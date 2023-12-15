@@ -28,6 +28,7 @@ jobs:
         uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ github.token }}
+          workflow_id: all
 
       - name: Rollback Release OnError
         if: failure()
