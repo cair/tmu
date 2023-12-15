@@ -45,41 +45,8 @@ def build_cffi():
     return ffibuilder
 
 
-
-class TMUInstall(install):
-    """
-    Custom install command that builds the CFFI modules
-    before proceeding with the standard installation process.
-    """
-
-    def run(self):
-        build_cffi()
-        super().run()
-
-
-class TMUDevelop(develop):
-    """
-    Custom develop command that builds the CFFI modules
-    before proceeding with the standard develop process.
-    """
-
-    def run(self):
-        build_cffi()
-        super().run()
-
-
-class BinaryDistribution(Distribution):
-    """Distribution which always forces a binary package with platform name"""
-    def has_ext_modules(foo):
-        return True
-
 setup(
     include_package_data=True,
     packages=find_packages(),
     ext_modules=[build_cffi().distutils_extension()]
-    #cmdclass={
-    #    "install": TMUInstall,
-    #    "develop": TMUDevelop,
-    #},
-    #distclass=BinaryDistribution
 )
