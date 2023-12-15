@@ -23,12 +23,20 @@ jobs:
         env:
           GITHUB_REF: ${{ github.event.release.tag_name }}
 
-      - name: Cancel Other Jobs
+      - name: Cancel all related workflow runs
         if: failure()
-        uses: styfle/cancel-workflow-action@0.12.0
-        with:
-          access_token: ${{ github.token }}
-          workflow_id: all
+        run: |
+          # Fetch all workflow runs for the repo
+          RUNS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  "https://api.github.com/repos/${{ github.repository }}/actions/runs" | jq '.workflow_runs[] | select(.head_branch == "${{ github.ref }}")')
+
+          # Iterate over each run and cancel it
+          for run in $(echo "${RUNS}" | jq -r .id); do
+            curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                 "https://api.github.com/repos/${{ github.repository }}/actions/runs/$run/cancel"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rollback Release OnError
         if: failure()
