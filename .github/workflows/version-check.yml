@@ -23,13 +23,17 @@ jobs:
         env:
           GITHUB_REF: ${{ github.event.release.tag_name }}
 
+      - name: Cancel Other Jobs
+        if: failure()
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
       - name: Rollback Release OnError
         if: failure()
         uses: author/action-rollback@stable
         with:
-          # Using a known release ID
           release_id: ${{ github.event.release.id }}
-          # If the release does not exist but the tag does, setting this to true will remove the tag.
           delete_orphan_tag: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
