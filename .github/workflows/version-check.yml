@@ -23,7 +23,15 @@ jobs:
         env:
           GITHUB_REF: ${{ github.event.release.tag_name }}
 
-          
+      - name: Rollback Release OnError
+        if: failure()
+        uses: author/action-rollback@stable
+        with:
+          release_id: ${{ github.event.release.id }}
+          delete_orphan_tag: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Cancel all workflow runs in the repository
         if: failure()
         run: |
@@ -39,11 +47,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Rollback Release OnError
-        if: failure()
-        uses: author/action-rollback@stable
-        with:
-          release_id: ${{ github.event.release.id }}
-          delete_orphan_tag: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
