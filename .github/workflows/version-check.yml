@@ -23,15 +23,16 @@ jobs:
         env:
           GITHUB_REF: ${{ github.event.release.tag_name }}
 
-      - name: Cancel all related workflow runs
+          
+      - name: Cancel all workflow runs in the repository
         if: failure()
         run: |
           # Fetch all workflow runs for the repo
           RUNS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                  "https://api.github.com/repos/${{ github.repository }}/actions/runs" | jq '.workflow_runs[] | select(.head_branch == "${{ github.ref }}")')
+                  "https://api.github.com/repos/${{ github.repository }}/actions/runs" | jq '.workflow_runs[] | .id')
 
           # Iterate over each run and cancel it
-          for run in $(echo "${RUNS}" | jq -r .id); do
+          for run in $RUNS; do
             curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                  "https://api.github.com/repos/${{ github.repository }}/actions/runs/$run/cancel"
           done
