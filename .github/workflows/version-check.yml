@@ -1,0 +1,35 @@
+name: Release Version Check
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check Tag against Version in __init__.py
+        id: check_version
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/v}
+          VERSION=$(grep '__version__' tmu/__init__.py | cut -d '"' -f 2)
+          if [ "$TAG_NAME" != "$VERSION" ]; then
+            echo "Release tag version '$TAG_NAME' does not match the __version__ '$VERSION' in __init__.py"
+            exit 1
+          fi
+        env:
+          GITHUB_REF: ${{ github.event.release.tag_name }}
+
+      - name: Rollback Release OnError
+        if: failure()
+        uses: author/action-rollback@stable
+        with:
+          # Using a known release ID
+          release_id: ${{ github.event.release.id }}
+          # If the release does not exist but the tag does, setting this to true will remove the tag.
+          delete_orphan_tag: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
