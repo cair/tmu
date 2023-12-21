@@ -3,9 +3,13 @@ name: Build Wheels
 on:
   workflow_dispatch:
   push:
+    branches:
+      - '**'
   release:
     types:
       - created
+      - published
+
 
 jobs:
   build_wheels:
@@ -28,83 +32,25 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
 
       #- name: Prefix wheels with branch name
+      #  if: startsWith(github.ref, 'refs/heads/')
       #  run: |
-      #    BRANCH_NAME=$(echo "${{ github.ref }}" | sed -r "s/^refs\/heads\///")
-      #    for wheel in wheelhouse/*.whl; do
-      #      mv "$wheel" "wheelhouse/${BRANCH_NAME}-$(basename $wheel)"
+      #    branchName=${GITHUB_REF/refs\/heads\//}
+      #    for file in wheelhouse/*.whl; do
+      #      newName="${branchName}-$(basename $file)"
+      #      mv "$file" "wheelhouse/$newName"
       #    done
-
-      - name: Prefix wheels with branch name
-        if: startsWith(github.ref, 'refs/heads/')
-        shell: pwsh
-        run: |
-          $branchName = "${{ github.ref }}".Replace("refs/heads/", "")
-          Get-ChildItem -Path wheelhouse -Filter *.whl | ForEach-Object {
-            $newName = "${branchName}-$($_.Name)"
-            Rename-Item -Path $_.FullName -NewName $newName
-          }
+      #  shell: bash
 
       - uses: actions/upload-artifact@v2
         with:
           name: wheels
           path: wheelhouse/*.whl
 
-  publish_wheels_to_release_page:
-    name: Publish wheels to Release Page
-    needs: build_wheels
-    if: github.event_name == 'release' && github.event.action == 'created' && github.event_name == 'disabled'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: wheels
-          path: wheelhouse
-
-      - name: Get release info
-        uses: actions/github-script@v5
-        id: get_release_info
-        with:
-          script: |
-            const { upload_url } = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: context.payload.release.tag_name,
-            });
-            return { upload_url: upload_url };
-      - name: Print upload URL
-        run: echo "Upload URL is ${{ steps.get_release_info.outputs.upload_url }}"
-      - name: Upload wheels to release assets
-        uses: shogo82148/actions-upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
-          asset_path: wheelhouse/*.whl
-
-  publish_wheels_to_pypi:
-    name: Publish wheels to PyPI
-    needs: build_wheels
-    if: github.event_name == 'release' && github.event.action == 'created'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: wheels
-          path: wheelhouse
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          packages_dir: wheelhouse
-
-
   publish_wheels_to_gh_pages:
     name: Publish wheels to GitHub Pages
     runs-on: ubuntu-latest
     needs: build_wheels
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -114,7 +60,6 @@ jobs:
         with:
           name: wheels
           path: wheelhouse
-
 
       - name: Checkout gh-pages branch
         uses: actions/checkout@v2
@@ -151,3 +96,58 @@ jobs:
           git add wheels/*.whl wheels/index.html
           git commit -m "Upload wheels to GitHub Pages and update index.html"
           git push
+
+
+  publish_wheels_to_pypi:
+    name: Publish wheels to PyPI
+    needs: build_wheels
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'created'
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: wheels
+          path: wheelhouse
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: wheelhouse
+
+
+  publish_wheels_to_release_page:
+    name: Publish wheels to Release Page
+    needs: build_wheels
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'created'
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: wheels
+          path: wheelhouse
+
+      - name: Get release info
+        uses: actions/github-script@v5
+        id: get_release_info
+        with:
+          script: |
+            const { upload_url } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: context.payload.release.tag_name,
+            });
+            return { upload_url: upload_url };
+
+      - name: Print upload URL
+        run: echo "Upload URL is ${{ steps.get_release_info.outputs.upload_url }}"
+
+      - name: Upload wheels to release assets
+        uses: shogo82148/actions-upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+          asset_path: wheelhouse/*.whl
