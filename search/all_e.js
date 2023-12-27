@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['n_5fclasses_492',['n_classes',['../classtmu_1_1util_1_1sparse__clause__container_1_1SparseClauseContainer.html#ab1aed612ed1b6eda8afdade822715127',1,'tmu::util::sparse_clause_container::SparseClauseContainer']]],
+  ['n_5fclasses_492',['n_classes',['../classtmu_1_1util_1_1sparse__clause__container_1_1SparseClauseContainer.html#a626a23796f33f4c53f3f6c640a1b9809',1,'tmu.util.sparse_clause_container.SparseClauseContainer.n_classes()'],['../classtmu_1_1util_1_1sparse__clause__container_1_1SparseClauseContainer.html#ab1aed612ed1b6eda8afdade822715127',1,'tmu.util.sparse_clause_container.SparseClauseContainer.n_classes(self)']]],
   ['nargs_493',['nargs',['../namespaceclassification_1_1MNISTConvolutionDemo.html#a87f35ac6fa80d957c59e394549aa7e15',1,'classification::MNISTConvolutionDemo']]],
   ['nb_494',['nb',['../namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a354239254bb0bbc70906efd41cd8adc9',1,'experimental::classification::CombinatorialCompositionDemo']]],
   ['negative_5fclauses_495',['negative_clauses',['../classtmu_1_1models_1_1classification_1_1vanilla__classifier_1_1TMClassifier.html#ad6f6be8091fd54214a7c0acb74fa8435',1,'tmu::models::classification::vanilla_classifier::TMClassifier']]],
