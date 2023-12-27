@@ -16,7 +16,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import typing
-from collections import defaultdict
+
 
 from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin, TMBaseModel
 from tmu.util.encoded_data_cache import DataEncoderCache
@@ -136,7 +136,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             is_target: bool,
             target: int,
             clause_outputs: np.ndarray,
-            update_p: np.ndarray,
+            update_p: float,
             clause_active: np.ndarray,
             literal_active: np.ndarray,
             encoded_X_train: np.ndarray,
@@ -262,7 +262,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
     def _fit_sample_target(
             self,
-            class_sum: int,
+            class_sum: np.ndarray,
             clause_outputs: np.ndarray,
             is_target_class: bool,
             class_value: int,
