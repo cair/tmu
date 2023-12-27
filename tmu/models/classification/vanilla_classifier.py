@@ -304,7 +304,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
     def _fit_sample(
             self,
             target: int,
-            not_target: int,
+            not_target: int | None,
             sample_idx: int,
             clause_active: np.ndarray,
             literal_active: np.ndarray,
@@ -331,7 +331,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
         )
 
         # for incremental, and when we only have 1 sample, there is no other targets
-        if self.weight_banks.n_classes == 1:
+        if not_target is None:
             return dict(
                 update_p_target=update_p_target,
                 update_p_not_target=None
@@ -394,7 +394,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
         for sample_idx in sample_indices:
             target: int = Ym[sample_idx]
-            not_target: int = self.weight_banks.sample(exclude=[target])
+            not_target: int | None = self.weight_banks.sample(exclude=[target])
 
             history: dict = self._fit_sample(
                 target=target,
