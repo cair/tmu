@@ -363,8 +363,8 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
     def fit(
             self,
-            X: np.ndarray,
-            Y: np.ndarray,
+            X: np.ndarray[np.uint32],
+            Y: np.ndarray[np.uint32],
             shuffle: bool = True,
             metrics: typing.Optional[list] = None,
             *args,
@@ -374,11 +374,11 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
         assert len(X) == len(Y), "X and Y must have the same length"
         assert len(X.shape) >= 2, "X must be a 2D array"
         assert len(Y.shape) == 1, "Y must be a 1D array"
+        assert X.dtype == np.uint32, "X must be of type uint32"
+        assert Y.dtype == np.uint32, "Y must be of type uint32"
 
         self.init(X, Y)
         self.metrics.clear()
-
-        Ym = Y.astype(np.uint32)
 
         encoded_X_train: np.ndarray = self.train_encoder_cache.get_encoded_data(
             data=X,
@@ -393,7 +393,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             self.rng.shuffle(sample_indices)
 
         for sample_idx in sample_indices:
-            target: int = Ym[sample_idx]
+            target: int = Y[sample_idx]
             not_target: int | None = self.weight_banks.sample(exclude=[target])
 
             history: dict = self._fit_sample(
