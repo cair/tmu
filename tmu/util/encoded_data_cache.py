@@ -1,6 +1,5 @@
-import hashlib
 from typing import Optional
-
+import xxhash
 import numpy as np
 
 class DataEncoderCache:
@@ -12,10 +11,7 @@ class DataEncoderCache:
 
     def compute_hash(self, arr: np.ndarray) -> str:
         """Compute a hash for a numpy array."""
-
-        sampled_indices = self.rng.choice(arr.size, min(15, arr.size), replace=False)
-        sampled_values = arr.flat[sampled_indices]
-        return hashlib.sha256(sampled_values.tobytes()).hexdigest()
+        return xxhash.xxh3_64_hexdigest(arr)
 
     def get_encoded_data(self, data: np.ndarray, encoder_func) -> np.ndarray:
         """Get encoded data for an array, using cache if available."""
