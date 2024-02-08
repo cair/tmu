@@ -82,8 +82,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a0960077de5c8fba992348cf4336cf34d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a37a31d38355b42e85a3da79a04e33930"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1util_1_1encoded__data__cache_1_1DataEncoderCache.html#a37a31d38355b42e85a3da79a04e33930">__setstate__</a> (self, state)</td></tr>
 <tr class="separator:a37a31d38355b42e85a3da79a04e33930"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9cdad669ec69dd12d4fe82df2fca23a"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1util_1_1encoded__data__cache_1_1DataEncoderCache.html#ac9cdad669ec69dd12d4fe82df2fca23a">compute_hash</a> (self, np.ndarray arr)</td></tr>
-<tr class="separator:ac9cdad669ec69dd12d4fe82df2fca23a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7ceb773c48c00644e07de6a555b7b45"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1util_1_1encoded__data__cache_1_1DataEncoderCache.html#aa7ceb773c48c00644e07de6a555b7b45">compute_hash</a> (self, arr)</td></tr>
+<tr class="separator:aa7ceb773c48c00644e07de6a555b7b45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4bc334fb88666e2b92cdd8aaa16eaf6"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1util_1_1encoded__data__cache_1_1DataEncoderCache.html#ad4bc334fb88666e2b92cdd8aaa16eaf6">compute_hash_csr_matrix</a> (self, csr_mat)</td></tr>
+<tr class="separator:ad4bc334fb88666e2b92cdd8aaa16eaf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea1c2f34167babec43e42643094eecc9"><td class="memItemLeft" align="right" valign="top">np.ndarray&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1util_1_1encoded__data__cache_1_1DataEncoderCache.html#aea1c2f34167babec43e42643094eecc9">get_encoded_data</a> (self, np.ndarray data, encoder_func)</td></tr>
 <tr class="separator:aea1c2f34167babec43e42643094eecc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -174,14 +176,14 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ac9cdad669ec69dd12d4fe82df2fca23a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac9cdad669ec69dd12d4fe82df2fca23a">&#9670;&nbsp;</a></span>compute_hash()</h2>
+<a id="aa7ceb773c48c00644e07de6a555b7b45"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7ceb773c48c00644e07de6a555b7b45">&#9670;&nbsp;</a></span>compute_hash()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"> str compute_hash </td>
+          <td class="memname">def compute_hash </td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>self</em>, </td>
@@ -189,7 +191,7 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">np.ndarray&#160;</td>
+          <td class="paramtype">&#160;</td>
           <td class="paramname"><em>arr</em>&#160;</td>
         </tr>
         <tr>
@@ -199,7 +201,35 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Compute a hash for a numpy array.</pre> 
+<pre class="fragment">Compute a hash for a numpy array or csr_matrix.</pre> 
+</div>
+</div>
+<a id="ad4bc334fb88666e2b92cdd8aaa16eaf6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4bc334fb88666e2b92cdd8aaa16eaf6">&#9670;&nbsp;</a></span>compute_hash_csr_matrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">def compute_hash_csr_matrix </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>csr_mat</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
 </div>
 </div>
 <a id="aea1c2f34167babec43e42643094eecc9"></a>
