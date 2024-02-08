@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     for e in range(60):
         start_training = time()
-        tm.fit(X_train, Y_train)
+        tm.fit(X_train.astype(np.uint32), Y_train)
         stop_training = time()
 
         start_testing = time()
