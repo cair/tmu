@@ -97,42 +97,42 @@ class ClauseBankSparse(BaseClauseBank):
 
     def _cffi_init(self):
         self.clause_bank_included = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2),
-                                                                  dtype=np.uint16))  # Contains index and state of included literals, none at start
-        self.ptr_clause_bank_included = ffi.cast("unsigned short *", self.clause_bank_included.ctypes.data)
-        self.clause_bank_included_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint16))
-        self.ptr_clause_bank_included_length = ffi.cast("unsigned short *",
+                                                                  dtype=np.uint32))  # Contains index and state of included literals, none at start
+        self.ptr_clause_bank_included = ffi.cast("unsigned int *", self.clause_bank_included.ctypes.data)
+        self.clause_bank_included_length = np.ascontiguousarray(np.zeros(self.number_of_clauses, dtype=np.uint32))
+        self.ptr_clause_bank_included_length = ffi.cast("unsigned int *",
                                                         self.clause_bank_included_length.ctypes.data)
 
         self.clause_bank_included_absorbed = np.ascontiguousarray(
             np.zeros((self.number_of_clauses, self.number_of_literals),
-                     dtype=np.uint16))  # Contains index and state of included literals, none at start
-        self.cbia_p = ffi.cast("unsigned short *", self.clause_bank_included_absorbed.ctypes.data)
+                     dtype=np.uint32))  # Contains index and state of included literals, none at start
+        self.cbia_p = ffi.cast("unsigned int *", self.clause_bank_included_absorbed.ctypes.data)
         self.clause_bank_included_absorbed_length = np.ascontiguousarray(
-            np.zeros(self.number_of_clauses, dtype=np.uint16))
-        self.cbial_p = ffi.cast("unsigned short *", self.clause_bank_included_absorbed_length.ctypes.data)
+            np.zeros(self.number_of_clauses, dtype=np.uint32))
+        self.cbial_p = ffi.cast("unsigned int *", self.clause_bank_included_absorbed_length.ctypes.data)
 
         self.clause_bank_excluded = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals, 2),
-                                                                  dtype=np.uint16))  # Contains index and state of excluded literals
-        self.ptr_clause_bank_excluded = ffi.cast("unsigned short *", self.clause_bank_excluded.ctypes.data)
+                                                                  dtype=np.uint32))  # Contains index and state of excluded literals
+        self.ptr_clause_bank_excluded = ffi.cast("unsigned int *", self.clause_bank_excluded.ctypes.data)
         self.clause_bank_excluded_length = np.ascontiguousarray(
-            np.zeros(self.number_of_clauses, dtype=np.uint16))  # All literals excluded at start
-        self.ptr_clause_bank_excluded_length = ffi.cast("unsigned short *",
+            np.zeros(self.number_of_clauses, dtype=np.uint32))  # All literals excluded at start
+        self.ptr_clause_bank_excluded_length = ffi.cast("unsigned int *",
                                                         self.clause_bank_excluded_length.ctypes.data)
         self.clause_bank_excluded_length[:] = int(self.number_of_literals * self.literal_sampling)
 
         for j in range(self.number_of_clauses):
-            literal_indexes = np.arange(self.number_of_literals, dtype=np.uint16)
+            literal_indexes = np.arange(self.number_of_literals, dtype=np.uint32)
             self.rng.shuffle(literal_indexes)
             self.clause_bank_excluded[j, :, 0] = literal_indexes  # Initialize clause literals randomly
             self.clause_bank_excluded[j, :,
             1] = self.number_of_states // 2 - 1  # Initialize excluded literals in least forgotten state
 
         self.clause_bank_unallocated = np.ascontiguousarray(np.zeros((self.number_of_clauses, self.number_of_literals),
-                                                                     dtype=np.uint16))  # Contains index and unallocated literals
-        self.ptr_clause_bank_unallocated = ffi.cast("unsigned short *", self.clause_bank_unallocated.ctypes.data)
+                                                                     dtype=np.uint32))  # Contains index and unallocated literals
+        self.ptr_clause_bank_unallocated = ffi.cast("unsigned int *", self.clause_bank_unallocated.ctypes.data)
         self.clause_bank_unallocated_length = np.ascontiguousarray(
-            np.zeros(self.number_of_clauses, dtype=np.uint16))  # All literals excluded at start
-        self.ptr_clause_bank_unallocated_length = ffi.cast("unsigned short *",
+            np.zeros(self.number_of_clauses, dtype=np.uint32))  # All literals excluded at start
+        self.ptr_clause_bank_unallocated_length = ffi.cast("unsigned int *",
                                                            self.clause_bank_unallocated_length.ctypes.data)
         self.clause_bank_unallocated_length[:] = self.number_of_literals - int(
             self.number_of_literals * self.literal_sampling)
