@@ -119,8 +119,8 @@ void cbs_calculate_clause_outputs_update(
         int number_of_clauses,
         int number_of_literals,
         unsigned int *clause_output,
-        unsigned short *clause_bank_included,
-        unsigned short *clause_bank_included_length
+        unsigned int *clause_bank_included,
+        unsigned int *clause_bank_included_length
 )
 {
     for (int j = 0; j < number_of_clauses; ++j) {
@@ -142,8 +142,8 @@ void cbs_calculate_clause_outputs_predict_packed_X(
         int number_of_clauses,
         int number_of_literals,
         unsigned int *clause_output_batch,
-        unsigned short *clause_bank_included,
-        unsigned short *clause_bank_included_length
+        unsigned int *clause_bank_included,
+        unsigned int *clause_bank_included_length
 )
 {
      for (int j = 0; j < number_of_clauses; ++j) {
@@ -165,8 +165,8 @@ void cbs_calculate_clause_outputs_predict(
         int number_of_clauses,
         int number_of_literals,
         unsigned int *clause_output,
-        unsigned short *clause_bank_included,
-        unsigned short *clause_bank_included_length
+        unsigned int *clause_bank_included,
+        unsigned int *clause_bank_included_length
 )
 {
     for (int j = 0; j < number_of_clauses; ++j) {
@@ -202,12 +202,12 @@ void cbs_type_i_feedback(
         int number_of_clauses,
         int number_of_literals,
         int number_of_states,
-        unsigned short *clause_bank_included,
-        unsigned short *clause_bank_included_length,
-        unsigned short *clause_bank_excluded,
-        unsigned short *clause_bank_excluded_length,
-        unsigned short *clause_bank_unallocated,
-        unsigned short *clause_bank_unallocated_length
+        unsigned int *clause_bank_included,
+        unsigned int *clause_bank_included_length,
+        unsigned int *clause_bank_excluded,
+        unsigned int *clause_bank_excluded_length,
+        unsigned int *clause_bank_unallocated,
+        unsigned int *clause_bank_unallocated_length
 )
 {
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
@@ -377,10 +377,10 @@ void cbs_type_ii_feedback(
         int number_of_clauses,
         int number_of_literals,
         int number_of_states,
-        unsigned short *clause_bank_included,
-        unsigned short *clause_bank_included_length,
-        unsigned short *clause_bank_excluded,
-        unsigned short *clause_bank_excluded_length
+        unsigned int *clause_bank_included,
+        unsigned int *clause_bank_included_length,
+        unsigned int *clause_bank_excluded,
+        unsigned int *clause_bank_excluded_length
 )
 {
     for (int j = 0; j < number_of_clauses; ++j) {
