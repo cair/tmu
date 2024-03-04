@@ -1,5 +1,8 @@
 import logging
 import argparse
+
+import numpy as np
+
 from tmu.data import MNIST
 from tmu.models.classification.vanilla_classifier import TMClassifier
 from tmu.tools import BenchmarkTimer
@@ -38,11 +41,11 @@ if __name__ == "__main__":
             benchmark1 = BenchmarkTimer(logger=None, text="Training Time")
             with benchmark1:
                 res = tm.fit(
-                    data["x_train"],
-                    data["y_train"],
+                    data["x_train"].astype(np.uint32),
+                    data["y_train"].astype(np.uint32),
                     metrics=["update_p"],
                 )
-            print(res)
+            #print(res)
             benchmark2 = BenchmarkTimer(logger=None, text="Testing Time")
             with benchmark2:
                 result = 100 * (tm.predict(data["x_test"]) == data["y_test"]).mean()
