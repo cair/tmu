@@ -4,8 +4,8 @@
 #include <vector>
 #include <functional>
 #include <cstdint>
-#include <span>
 #include <stdexcept>
+#include <tcb/span.hpp>
 
 template<typename T>
 class TMMemory {
@@ -17,6 +17,7 @@ private:
     ReallocateCallback reallocateCallback;
     std::size_t capacity;
     std::size_t cursor = 0; // Cursor to track the current position
+    std::size_t _preallocate_size = 0; // used to determine how much memory to allocate before the first use
 
 public:
     TMMemory() : capacity(0) {}
@@ -31,10 +32,14 @@ public:
         reallocateCallback = std::move(callback);
     }
 
+    void addMemory(std::size_t size) {
+        _preallocate_size += size;
+    }
+
     void reserve(std::size_t newCapacity) {
         if (newCapacity > memory.capacity()) {
             std::size_t oldCapacity = memory.capacity();
-            memory.reserve(newCapacity);
+            memory.reserve(_preallocate_size + newCapacity);
 
             // Fill newly allocated memory with zeros
             memory.resize(newCapacity);
@@ -60,12 +65,12 @@ public:
         }
     }
 
-    std::span<T> getSegment(std::size_t segmentSize){
+    tcb::span<T> getSegment(std::size_t segmentSize){
         if (cursor + segmentSize > memory.size()) {
             throw std::out_of_range("Segment exceeds memory bounds. Requested '" + std::to_string(cursor + segmentSize) + " bytes' is more than '" + std::to_string(memory.size() - cursor) + "' bytes.");
         }
 
-        std::span<T> segmentView(&memory[cursor], segmentSize);
+        tcb::span<T> segmentView(&memory[cursor], segmentSize);
         cursor += segmentSize; // Advance the cursor
         return segmentView;
     }

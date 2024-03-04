@@ -1,29 +1,39 @@
 #include "tm_clause_dense.h"
-#include "models/classifiers/tm_vanilla.h"
 #include "utils/tm_dataset.h"
 #include <chrono>
 #include <vector>
-#include <span>
+#include <tcb/span.hpp>
+#include "models/classifiers/tm_vanilla.h"
 
-
-void perform_epoch(TMVanillaClassifier<uint32_t>& classifier, int epoch,
-                   std::span<uint32_t>& y_train_span, std::span<uint32_t>& encoded_X_span,
-                   std::vector<int32_t>& encoded_X_train_shape, std::span<uint32_t>& encoded_X_test_span,
-                   std::vector<int32_t>& encoded_X_test_shape, std::span<uint32_t>& y_test_span) {
+void perform_epoch(
+        TMVanillaClassifier<uint32_t>& classifier,
+        int epoch,
+        tcb::span<uint32_t>& y_train_span,
+        tcb::span<uint32_t>& x_train_span,
+        std::vector<int32_t>& x_train_shape,
+        tcb::span<uint32_t>& x_test_span,
+        std::vector<int32_t>& x_test_shape,
+        tcb::span<uint32_t>& y_test_span
+) {
     auto timer_train_start = std::chrono::high_resolution_clock::now();
-    classifier.fit(y_train_span, encoded_X_span, encoded_X_train_shape, true);
+    classifier.fit(
+            y_train_span,
+            x_train_span,
+            x_train_shape,
+            true
+    );
     auto timer_train_end = std::chrono::high_resolution_clock::now();
 
     auto timer_pred_start = std::chrono::high_resolution_clock::now();
-    auto [y_pred, class_sum] = classifier.predict(encoded_X_test_span, encoded_X_test_shape);
+    auto predict_result= classifier.predict(x_test_span, x_test_shape);
+    auto y_pred = std::get<0>(predict_result);
+    auto y_pred_shape = std::get<1>(predict_result);
 
-    int correct = std::transform_reduce(
-            y_pred.begin(), y_pred.end(), // Range of the first container
-            y_test_span.begin(),          // Start of the second container
-            0,                            // Initial value for the reduction
-            std::plus<>(),                // Reducer (sums up the counts)
-            [](int pred, int actual) { return pred == actual ? 1 : 0; } // Transformer
-    );
+    std::vector<int> results(y_pred.size());
+    std::transform(y_pred.begin(), y_pred.end(), y_test_span.begin(), results.begin(),
+                   [](int pred, int actual) -> int { return pred == actual ? 1 : 0; });
+
+    int correct = std::accumulate(results.begin(), results.end(), 0);
 
     double accuracy = static_cast<double>(correct) / static_cast<double>(y_test_span.size()) * 100.0;
     auto timer_pred_end = std::chrono::high_resolution_clock::now();
@@ -52,10 +62,10 @@ void train_and_test_classifier() {
             true, // type_2
             false, // type_3
             1.0,  // _type_i_ii_ratio
-            std::nullopt, // max_included_literals
+            tl::nullopt, // max_included_literals
             true,  // boost_true_positive_feedback
             true, // reuse_random_feedback // TODO - set to true
-            std::nullopt, // patch_dim
+            tl::nullopt, // patch_dim
             8, // number of state bits
             8, // number of state bits ind
             100, // batch_size
@@ -64,38 +74,41 @@ void train_and_test_classifier() {
     );
 
     // Load datasets
-    auto [x_train, x_shape] = TMDataset::read_dataset_from_txt("/mnt/disk/git/code/tmu/tmu/lib/cpp/tests/x_train.txt");
-    auto [y_train, y_shape] = TMDataset::read_dataset_from_txt("/mnt/disk/git/code/tmu/tmu/lib/cpp/tests/y_train.txt");
-    auto [x_test, x_test_shape] = TMDataset::read_dataset_from_txt("/mnt/disk/git/code/tmu/tmu/lib/cpp/tests/x_test.txt");
-    auto [y_test, y_test_shape] = TMDataset::read_dataset_from_txt("/mnt/disk/git/code/tmu/tmu/lib/cpp/tests/y_test.txt");
+    auto x_train_result = TMDataset::read_dataset_from_txt("/mnt/disk/git/code/tmu/tmu/lib/cpp/tests/x_train.txt");
+    auto y_train_result = TMDataset::read_dataset_from_txt("/mnt/disk/git/code/tmu/tmu/lib/cpp/tests/y_train.txt");
+    auto x_test_result = TMDataset::read_dataset_from_txt("/mnt/disk/git/code/tmu/tmu/lib/cpp/tests/x_test.txt");
+    auto y_test_result = TMDataset::read_dataset_from_txt("/mnt/disk/git/code/tmu/tmu/lib/cpp/tests/y_test.txt");
+
+    // Assuming read_dataset_from_txt returns a pair or tuple that can be accessed by std::get
+    auto x_train = std::get<0>(x_train_result);
+    auto y_train = std::get<0>(y_train_result);
+    auto x_test = std::get<0>(x_test_result);
+    auto y_test = std::get<0>(y_test_result);
+
+    auto x_train_shape = std::get<1>(x_train_result);
+    auto y_train_shape = std::get<1>(y_train_result);
+    auto x_test_shape = std::get<1>(x_test_result);
+    auto y_test_shape = std::get<1>(y_test_result);
 
     // Prepare data spans
-    auto x_train_span = std::span<uint32_t>(x_train.data(), x_train.size());
-    auto y_train_span = std::span<uint32_t>(y_train.data(), y_train.size());
-    auto x_test_span = std::span<uint32_t>(x_test.data(), x_test.size());
-    auto y_test_span = std::span<uint32_t>(y_test.data(), y_test.size());
+    auto x_train_span = tcb::span<uint32_t>(x_train.data(), x_train.size());
+    auto y_train_span = tcb::span<uint32_t>(y_train.data(), y_train.size());
+    auto x_test_span = tcb::span<uint32_t>(x_test.data(), x_test.size());
+    auto y_test_span = tcb::span<uint32_t>(y_test.data(), y_test.size());
 
-    // Determine the shapes
-    auto X_shape = std::vector<int32_t>({std::get<0>(x_shape), std::get<1>(x_shape)});
-    auto X_test_shape = std::vector<int32_t>({std::get<0>(x_test_shape), std::get<1>(x_test_shape)});
-
-    // Initialization
-    classifier.init(y_train_span, X_shape);
-
-    // Prepare encoded data for training and testing
-    auto clause_bank = *classifier.clause_banks.begin();
-    auto encoded_X = clause_bank->prepare_X(x_train_span, X_shape);
-    auto encoded_X_span = std::span<uint32_t>(encoded_X.data(), encoded_X.size());
-    auto encoded_X_test = clause_bank->prepare_X(x_test_span, X_test_shape);
-    auto encoded_X_test_span = std::span<uint32_t>(encoded_X_test.data(), encoded_X_test.size());
-
-    // Determine encoded shapes
-    auto encoded_X_train_shape = std::vector<int32_t>({std::get<0>(x_shape), static_cast<int>(clause_bank->number_of_ta_chunks)});
-    auto encoded_X_test_shape = std::vector<int32_t>({std::get<0>(x_test_shape), static_cast<int>(clause_bank->number_of_ta_chunks)});
 
     // Training and Testing loop
     for (int epoch = 0; epoch < NUM_EPOCHS; ++epoch) {
-        perform_epoch(classifier, epoch, y_train_span, encoded_X_span, encoded_X_train_shape, encoded_X_test_span, encoded_X_test_shape, y_test_span);
+        perform_epoch(
+                classifier,
+                epoch,
+                y_train_span,
+                x_train_span,
+                x_train_shape,
+                x_test_span,
+                x_test_shape,
+                y_test_span
+        );
     }
 }
 

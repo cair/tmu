@@ -2,17 +2,6 @@
 // Created by per on 3/1/24.
 //
 
-#include "tm_memory.h"
-#include "tm_clause_dense.h"
-#include "tm_weight_bank.h"
-#include "models/classifiers/tm_vanilla.h"
-#include "utils/sparse_clause_container.h"
-
-extern "C" {
-    #include "ClauseBank.h"
-    #include"Tools.h"
-}
-
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/vector.h>
@@ -20,55 +9,92 @@ extern "C" {
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/set.h>
-#include <nanobind/stl/shared_ptr.h>
-#include <nanobind/stl/optional.h>
-#include <nanobind/stl/pair.h>
+#include <nanobind/stl/map.h>
 
 #include <iostream>
 
+#include "tm_memory.h"
+#include "tm_clause_dense.h"
+#include "tm_weight_bank.h"
+#include "models/classifiers/tm_vanilla.h"
+#include "utils/sparse_clause_container.h"
+#include <tl/optional.hpp>
 
 
-
+extern "C" {
+    #include "ClauseBank.h"
+    #include"Tools.h"
+}
 
 using namespace nanobind;
 using namespace nanobind::literals;
 namespace nb = nanobind;
 
-/*
+
 NAMESPACE_BEGIN(NB_NAMESPACE)
-NAMESPACE_BEGIN(detail)
+    NAMESPACE_BEGIN(detail)
 
-template <typename T>
-struct type_caster<std::span<T>> {
-    using NDArray = ndarray<T, numpy>;
-    using NDArrayCaster = type_caster<NDArray>;
+        template <typename T> struct remove_opt_mono<tl::optional<T>>
+                : remove_opt_mono<T> { };
 
-    NB_TYPE_CASTER(T, NDArrayCaster::Name);
+        template <typename T>
+        struct type_caster<tl::optional<T>> {
+            using Caster = make_caster<T>;
 
-    // Conversion from C++ to Python
-    static handle from_cpp(const std::span<T>& span, rv_policy policy, cleanup_list *cleanup) noexcept
-    {
+            NB_TYPE_CASTER(tl::optional<T>, const_name("Optional[") +
+                                            concat(Caster::Name) +
+                                            const_name("]"))
 
-        auto nd = new nb::ndarray<nb::numpy, T>(
-                span.data(),
-                {span.size()}
-        );
+            type_caster() : value(tl::nullopt) { }
 
-        capsule owner(nd.handle(), [](void* p) noexcept {});
+            bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept {
+                if (src.is_none()) {
+                    value = tl::nullopt;
+                    return true;
+                }
 
-        return owner;
-    }
+                Caster caster;
+                if (!caster.from_python(src, flags, cleanup))
+                    return false;
 
-    // Conversion from Python to C++ (if needed)
-    // bool load(handle src, bool convert) {
-    //     // Implement loading if you need to convert from Python to C++
-    //     return false;
-    // }
-};
+                static_assert(
+                        !std::is_pointer_v<T> || is_base_caster_v<Caster>,
+                        "Binding ``optional<T*>`` requires that ``T`` is handled "
+                        "by nanobind's regular class binding mechanism. However, a "
+                        "type caster was registered to intercept this particular "
+                        "type, which is not allowed.");
 
-NAMESPACE_END(detail)
+                value.emplace(caster.operator cast_t<T>());
+
+                return true;
+            }
+
+            template <typename T_>
+            static handle from_cpp(T_ &&value, rv_policy policy, cleanup_list *cleanup) noexcept {
+                if (!value)
+                    return none().release();
+
+                return Caster::from_cpp(forward_like<T_>(*value), policy, cleanup);
+            }
+        };
+
+        template <> struct type_caster<tl::nullopt_t> {
+            bool from_python(handle src, uint8_t, cleanup_list *) noexcept {
+                if (src.is_none())
+                    return true;
+                return false;
+            }
+
+            static handle from_cpp(tl::nullopt_t, rv_policy, cleanup_list *) noexcept {
+                return none().release();
+            }
+
+            NB_TYPE_CASTER(tl::nullopt_t, const_name("None"))
+        };
+
+    NAMESPACE_END(detail)
 NAMESPACE_END(NB_NAMESPACE)
-*/
+
 
 template <typename T>
 nb::class_<SparseClauseContainer<T>>& bind_sparse_container(const char *name, nb::module_& m){
@@ -123,7 +149,7 @@ NB_MODULE(tmulibpy, m) {
             uint32_t,
             bool,
             bool,
-            std::optional<std::vector<int>>,
+            tl::optional<std::vector<int>>,
             int32_t ,
             int32_t,
             int32_t,
@@ -150,12 +176,21 @@ NB_MODULE(tmulibpy, m) {
             "incremental"_a,
             "seed"_a
         )
+        .def_ro("memory", &TMVanillaClassifier<uint32_t>::memory)
         .def("get_required_memory_size", &TMVanillaClassifier<uint32_t>::get_required_memory_size)
         .def("init_after", [](TMVanillaClassifier<uint32_t>& self, const nb::ndarray<>& X, const nb::ndarray<>& Y){
             std::cout << "init_after (TODO handling numpy arrays)" << std::endl;
             self.init_after();
         })
         .def("initialize", &TMVanillaClassifier<uint32_t>::initialize)
+        .def("init", [](TMVanillaClassifier<uint32_t>& self, nb::ndarray<uint32_t>& X, nb::ndarray<uint32_t>& Y){
+
+            std::vector<int> X_shape = {static_cast<int>(X.shape(0)), static_cast<int>(X.shape(1))};
+            auto x = tcb::span(X.data(), X.size());
+            auto y = tcb::span(Y.data(), Y.size());
+
+            self.init(y, x, X_shape);
+        })
         .def(
             "mechanism_compute_update_probabilities",
             &TMVanillaClassifier<uint32_t>::mechanism_compute_update_probabilities,
@@ -178,10 +213,10 @@ NB_MODULE(tmulibpy, m) {
 
             uint32_t* encoded_xi = &encoded_X_train(sample_idx, 0);
             auto encoded_xi_len = encoded_X_train.shape(1);
-            auto span_encoded_xi = std::span(encoded_xi, encoded_xi_len);
-            auto span_clause_outputs = std::span(clause_outputs.data(), clause_outputs.size());
-            auto span_clause_active = std::span(clause_active.data(), clause_active.size());
-            auto span_literal_active = std::span(literal_active.data(), literal_active.size());
+            auto span_encoded_xi = tcb::span(encoded_xi, encoded_xi_len);
+            auto span_clause_outputs = tcb::span(clause_outputs.data(), clause_outputs.size());
+            auto span_clause_active = tcb::span(clause_active.data(), clause_active.size());
+            auto span_literal_active = tcb::span(literal_active.data(), literal_active.size());
 
             self.mechanism_feedback(
                     is_target,
@@ -209,11 +244,12 @@ NB_MODULE(tmulibpy, m) {
                 bool clip_class_sum = false,
                 bool return_class_sum = false) {
 
-            auto encoded_X_test_span = std::span(encoded_X_test.data(), encoded_X_test.size());
+            auto encoded_X_test_span = tcb::span(encoded_X_test.data(), encoded_X_test.size());
+            std::vector<int> X_shape = {static_cast<int>(encoded_X_test.shape(0)), static_cast<int>(encoded_X_test.shape(1))};
 
             auto [argmax, class_sums] = self.predict(
                     encoded_X_test_span,
-                    {encoded_X_test.shape(0), encoded_X_test.shape(1)},
+                    X_shape,
                     clip_class_sum,
                     return_class_sum
             );
@@ -233,8 +269,8 @@ NB_MODULE(tmulibpy, m) {
                 nanobind::ndarray<uint32_t, nb::ndim<2>, c_contig>& encoded_X_train
         ) {
 
-            auto y_span = std::span(y.data(), y.size());
-            auto encoded_X_train_span = std::span(encoded_X_train.data(), encoded_X_train.size());
+            auto y_span = tcb::span(y.data(), y.size());
+            auto encoded_X_train_span = tcb::span(encoded_X_train.data(), encoded_X_train.size());
 
             std::vector<int> X_shape = {static_cast<int>(encoded_X_train.shape(0)), static_cast<int>(encoded_X_train.shape(1))};
             self.fit(
@@ -258,7 +294,7 @@ NB_MODULE(tmulibpy, m) {
                 bool clip_class_sum
         ) {
 
-            auto encoded_X_test_span = std::span(encoded_X_test.data(), encoded_X_test.size());
+            auto encoded_X_test_span = tcb::span(encoded_X_test.data(), encoded_X_test.size());
             auto num_items = encoded_X_test.shape(0);
 
             return self.predict_compute_class_sums(
@@ -310,8 +346,8 @@ NB_MODULE(tmulibpy, m) {
                     nb::ndarray<nb::numpy, uint32_t, nb::ndim<1>, c_contig>& clause_active,
                     bool positive_weights
             ) {
-                std::span<uint32_t> clause_output_span(clause_output.data(), clause_output.size());
-                std::span<uint32_t> clause_active_span(clause_active.data(), clause_active.size());
+                tcb::span<uint32_t> clause_output_span(clause_output.data(), clause_output.size());
+                tcb::span<uint32_t> clause_active_span(clause_active.data(), clause_active.size());
                 self.increment(clause_output_span, update_p, clause_active_span, positive_weights);
             },
              "clause_output"_a,
@@ -326,8 +362,8 @@ NB_MODULE(tmulibpy, m) {
                     nb::ndarray<nb::numpy, uint32_t, nb::ndim<1>, c_contig>& clause_active,
                     bool negative_weights
             ) {
-                std::span<uint32_t> clause_output_span(clause_output.data(), clause_output.size());
-                std::span<uint32_t> clause_active_span(clause_active.data(), clause_active.size());
+                tcb::span<uint32_t> clause_output_span(clause_output.data(), clause_output.size());
+                tcb::span<uint32_t> clause_active_span(clause_active.data(), clause_active.size());
                 self.decrement(clause_output_span, update_p, clause_active_span, negative_weights);
             },
              "clause_output"_a,
@@ -345,8 +381,8 @@ NB_MODULE(tmulibpy, m) {
                      bool,
                      bool,
                      std::vector<int>,
-                     std::optional<std::vector<int>>,
-                     std::optional<std::size_t>,
+                     tl::optional<std::vector<int>>,
+                     tl::optional<std::size_t>,
                      std::size_t,
                      std::size_t,
                      std::size_t,
@@ -486,9 +522,9 @@ NB_MODULE(tmulibpy, m) {
 
             auto encoded_xi = &encoded_X(e, 0);
             auto encoded_xi_len = encoded_X.shape(1);
-            auto span_encoded_xi = std::span(encoded_xi, encoded_xi_len);
+            auto span_encoded_xi = tcb::span(encoded_xi, encoded_xi_len);
 
-            auto literal_active_span = std::span(literal_active.data(), literal_active.size());
+            auto literal_active_span = tcb::span(literal_active.data(), literal_active.size());
 
             self.calculate_clause_outputs_update(
                     literal_active_span,
@@ -516,11 +552,11 @@ NB_MODULE(tmulibpy, m) {
                  int e
                  ) {
 
-            auto clause_active_span = std::span(clause_active.data(), clause_active.size());
-            auto literal_active_span = std::span(literal_active.data(), literal_active.size());
+            auto clause_active_span = tcb::span(clause_active.data(), clause_active.size());
+            auto literal_active_span = tcb::span(literal_active.data(), literal_active.size());
             auto encoded_xi = &encoded_X(e, 0);
             auto encoded_xi_len = encoded_X.shape(1);
-            auto span_encoded_xi = std::span(encoded_xi, encoded_xi_len);
+            auto span_encoded_xi = tcb::span(encoded_xi, encoded_xi_len);
 
             self.type_i_feedback(
                     update_p,
@@ -545,11 +581,11 @@ NB_MODULE(tmulibpy, m) {
                  nanobind::ndarray<uint32_t, nb::ndim<2>, nb::c_contig>& encoded_X,
                  uint32_t target) {
 
-                auto clause_active_span = std::span(clause_active.data(), clause_active.size());
-                auto literal_active_span = std::span(literal_active.data(), literal_active.size());
+                auto clause_active_span = tcb::span(clause_active.data(), clause_active.size());
+                auto literal_active_span = tcb::span(literal_active.data(), literal_active.size());
                 auto encoded_xi = &encoded_X(target, 0);
                 auto encoded_xi_len = encoded_X.shape(1);
-                auto span_encoded_xi = std::span(encoded_xi, encoded_xi_len);
+                auto span_encoded_xi = tcb::span(encoded_xi, encoded_xi_len);
 
                  self.type_ii_feedback(
                     update_p,
@@ -575,8 +611,8 @@ NB_MODULE(tmulibpy, m) {
 
         auto encoded_xi = &encoded_X(e, 0);
         auto encoded_xi_len = encoded_X.shape(1);
-        auto span_encoded_xi = std::span(encoded_xi, encoded_xi_len);
-        auto literal_active_span = std::span(literal_active.data(), literal_active.size());
+        auto span_encoded_xi = tcb::span(encoded_xi, encoded_xi_len);
+        auto literal_active_span = tcb::span(literal_active.data(), literal_active.size());
 
         self.calculate_clause_outputs_update(
                 literal_active_span,
@@ -602,7 +638,7 @@ NB_MODULE(tmulibpy, m) {
         auto encoded_xi = &encoded_X(sample_index, 0);
         auto encoded_xi_len = encoded_X.shape(1);
         auto n_items = encoded_X.shape(0);
-        auto span_encoded_xi = std::span(encoded_xi, encoded_xi_len);
+        auto span_encoded_xi = tcb::span(encoded_xi, encoded_xi_len);
 
         auto clause_outputs = self.calculate_clause_outputs_predict(
                 span_encoded_xi,

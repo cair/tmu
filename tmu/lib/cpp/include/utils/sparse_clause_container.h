@@ -12,6 +12,7 @@
 #include <memory>
 #include <functional>
 #include <iostream>
+#include <tl/optional.hpp>
 
 
 #include "tm_clause_dense.h"
@@ -28,7 +29,7 @@ private:
     MapIterator it;
 
 public:
-    ValueIterator(MapIterator it) : it(it) {}
+    explicit ValueIterator(MapIterator it) : it(it) {}
 
     ValueIterator& operator++() { ++it; return *this; } // Prefix increment
     ValueIterator operator++(int) { ValueIterator tmp = *this; ++(*this); return tmp; } // Postfix increment
@@ -92,7 +93,6 @@ public:
             this->d.emplace(c, std::make_shared<ClauseType>(*template_instance));
             this->classes.push_back(c);
         }
-        std::cout << "Populated SparseClauseContainer with " << classes_to_populate.size() << " classes" << std::endl;
     }
 
     std::shared_ptr<ClauseType> operator[](int key) {
@@ -103,8 +103,8 @@ public:
             std::cerr << e.what() << std::endl;
             std::cerr << "Key: " << key << std::endl;
             std::cerr << "Available keys: ";
-            for (auto& [k, v] : d) {
-                std::cerr << k << " ";
+            for (auto& item: d) {
+                std::cerr << item.first << " ";
             }
             throw e;
         }
@@ -114,10 +114,10 @@ public:
     ValueIterator<ClauseType> end() { return ValueIterator<ClauseType>(d.end()); }
 
 
-    std::optional<int> sample(const std::set<uint32_t>& exclude = {}) {
+    tl::optional<int> sample(const std::set<uint32_t>& exclude = {}) {
         // Handle cases where sampling is not possible
         if (n_classes() <= static_cast<int>(exclude.size()) || n_classes() == 1) {
-            return std::nullopt; // Indicates no valid sample found
+            return tl::nullopt; // Indicates no valid sample found
         }
 
         while (true) {

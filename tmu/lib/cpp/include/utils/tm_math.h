@@ -6,9 +6,16 @@
 #define TUMLIBPP_TM_MATH_H
 #include <vector>
 #include <span>
+#include <algorithm>
 
 class TMMath {
     public:
+
+
+    template<typename T>
+    static T clamp(T value, T low, T high) {
+        return std::max(low, std::min(value, high));
+    }
 
 
     static void aRange(size_t num_samples, bool shuffle, std::vector<int>& sample_indices) {
@@ -30,7 +37,7 @@ class TMMath {
 
 
     template<typename T, typename U>
-    static std::vector<T> elementwise_multiply(std::span<const T> span1, std::span<const U> span2) {
+    static const std::vector<T> elementwise_multiply(const tcb::span<const T> span1, const tcb::span<const U> span2) {
         assert(span1.size() == span2.size());
 
         std::vector<T> result(span1.size());

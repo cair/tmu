@@ -9,7 +9,7 @@
 #include <vector>
 #include <stdexcept>
 #include <tuple>
-#include <optional>
+#include <tl/optional.hpp>
 #include <memory>
 #include <iostream>
 #include "tm_memory.h"
@@ -47,21 +47,21 @@ public:
 
 
     // Memory Segments
-    std::span<T> clause_output;
-    std::span<T> clause_output_batch;
-    std::span<T> clause_and_target;
-    std::span<T> clause_output_patchwise;
-    std::span<T> feedback_to_ta;
-    std::span<T> output_one_patches;
-    std::span<T> literal_clause_count;
-    std::span<T> type_ia_feedback_counter;
-    std::span<T> literal_clause_map;
-    std::span<T> literal_clause_map_pos;
-    std::span<T> false_literals_per_clause;
-    std::span<T> previous_xi;
-    std::span<T> clause_bank;
-    std::span<T> actions;
-    std::span<T> clause_bank_ind;
+    tcb::span<T> clause_output;
+    tcb::span<T> clause_output_batch;
+    tcb::span<T> clause_and_target;
+    tcb::span<T> clause_output_patchwise;
+    tcb::span<T> feedback_to_ta;
+    tcb::span<T> output_one_patches;
+    tcb::span<T> literal_clause_count;
+    tcb::span<T> type_ia_feedback_counter;
+    tcb::span<T> literal_clause_map;
+    tcb::span<T> literal_clause_map_pos;
+    tcb::span<T> false_literals_per_clause;
+    tcb::span<T> previous_xi;
+    tcb::span<T> clause_bank;
+    tcb::span<T> actions;
+    tcb::span<T> clause_bank_ind;
 
 private:
 
@@ -76,8 +76,8 @@ public:
         bool _boost_true_positive_feedback,
         bool _reuse_random_feedback,
         std::vector<int> X_shape,
-        std::optional<std::vector<int>> _patch_dim,
-        std::optional<std::size_t> _max_included_literals,
+        tl::optional<std::vector<int>> _patch_dim,
+        tl::optional<std::size_t> _max_included_literals,
         std::size_t _number_of_clauses,
         std::size_t _number_of_state_bits,
         std::size_t _number_of_state_bits_ind,
@@ -99,22 +99,10 @@ public:
 
 
         // Validate and set the dimensions based on X_shape.
-        if (X_shape.size() == 2) {
-            dim = {X_shape[1], 1, 1};
-        } else if (X_shape.size() == 3) {
-            dim = {X_shape[1], X_shape[2], 1};
-        } else if (X_shape.size() == 4) {
-            dim = {X_shape[1], X_shape[2], X_shape[3]};
-        } else {
-            throw std::invalid_argument("X_shape must be a 2D, 3D, or 4D tensor");
-        }
+        dim = TMClauseBankDense::getDim(X_shape);
+        patch_dim = TMClauseBankDense::getPatchDim(_patch_dim, dim);
 
-        // Set patch dimensions.
-        if(!_patch_dim){
-            patch_dim = std::make_tuple(std::get<0>(dim) * std::get<1>(dim) * std::get<2>(dim), 1);
-        }else{
-            patch_dim = std::make_tuple(_patch_dim.value()[0], _patch_dim.value()[1]);
-        }
+
 
         // Calculate the number of features.
         number_of_features = std::get<0>(patch_dim) * std::get<1>(patch_dim) * std::get<2>(dim) +
@@ -133,8 +121,27 @@ public:
 
         // Calculate the number of ternary association chunks.
         number_of_ta_chunks = (number_of_literals - 1) / (sizeof(T) * 8) + 1; // Assuming
-        std::cout << " TMClausesBankDense constructor called" << std::endl;
+    }
 
+    static std::tuple<int, int> getPatchDim(const tl::optional<std::vector<int>> _patch_dim, const std::tuple<int, int, int> dim){
+        // Set patch dimensions.
+        if(!_patch_dim){
+            return std::make_tuple(std::get<0>(dim) * std::get<1>(dim) * std::get<2>(dim), 1);
+        }else{
+            return std::make_tuple(_patch_dim.value()[0], _patch_dim.value()[1]);
+        }
+    }
+
+    static std::tuple<int, int, int> getDim(const std::vector<int> X_shape){
+        if (X_shape.size() == 2) {
+            return {X_shape[1], 1, 1};
+        } else if (X_shape.size() == 3) {
+            return {X_shape[1], X_shape[2], 1};
+        } else if (X_shape.size() == 4) {
+            return {X_shape[1], X_shape[2], X_shape[3]};
+        } else {
+            throw std::invalid_argument("X_shape must be a 2D, 3D, or 4D tensor");
+        }
     }
 
 
@@ -184,9 +191,13 @@ public:
         std::fill(clause_bank_ind.begin(), clause_bank_ind.end(), ~0);
     }
 
-    std::vector<uint32_t> prepare_X(
-            std::span<uint32_t>& x,
-            std::vector<int> X_shape
+    std::size_t getEncodedXiSize(const std::vector<int>& X_shape) const {
+        return X_shape.at(0) * number_of_patches * number_of_ta_chunks;
+    }
+
+    const std::vector<uint32_t> prepare_X(
+            const tcb::span<uint32_t>& x,
+            const std::vector<int>& X_shape
 
     ){
         std::vector<uint32_t> encoded_X(X_shape.at(0) * number_of_patches * number_of_ta_chunks) ;
@@ -204,9 +215,7 @@ public:
                 0 // TODO
         );
 
-        return encoded_X;
-
-
+        return std::move(encoded_X);
     }
 
 
@@ -248,7 +257,7 @@ public:
         return (clause_bank[pos] & (1 << chunk_pos)) > 0;
     }
 
-    std::span<T> calculateClauseOutputsPredict() {
+    tcb::span<T> calculateClauseOutputsPredict() {
         return clause_output;
     }
 
@@ -265,9 +274,9 @@ public:
 
     void type_i_feedback(
             float update_p,
-            std::span<T>& clause_active,
-            std::span<T>& literal_active,
-            std::span<T>& encoded_xi
+            const tcb::span<T>& clause_active,
+            const tcb::span<T>& literal_active,
+            const tcb::span<T>& encoded_xi
     ){
 
         cb_type_i_feedback(
@@ -294,9 +303,9 @@ public:
 
     void type_ii_feedback(
             float update_p,
-            std::span<T>& clause_active,
-            std::span<T>& literal_active,
-            std::span<T>& encoded_xi
+            const tcb::span<T>& clause_active,
+            const tcb::span<T>& literal_active,
+            const tcb::span<T>& encoded_xi
     ){
         cb_type_ii_feedback(
             clause_bank.data(),
@@ -316,9 +325,9 @@ public:
 
     void type_iii_feedback(
             float update_p,
-            std::span<T>& clause_active,
-            std::span<T>& literal_active,
-            std::span<T>& encoded_X_train,
+            const tcb::span<T>& clause_active,
+            const tcb::span<T>& literal_active,
+            const tcb::span<T>& encoded_X_train,
             bool target
     ){
         cb_type_iii_feedback(
@@ -343,8 +352,8 @@ public:
     }
 
     void calculate_clause_outputs_update(
-            std::span<T>& literal_active,
-            std::span<T>& encoded_xi
+            const tcb::span<T>& literal_active,
+            const tcb::span<T>& encoded_xi
     ){
         cb_calculate_clause_outputs_update(
                 clause_bank.data(),
@@ -360,8 +369,8 @@ public:
     }
     
     
-    std::span<T> calculate_clause_outputs_predict(
-            std::span<T>& encoded_xi,
+    const tcb::span<T> calculate_clause_outputs_predict(
+            const tcb::span<T>& encoded_xi,
             std::size_t sample_index,
             std::size_t n_items
     ){
@@ -415,7 +424,7 @@ public:
         size_t start_index = (sample_index % batch_size) * number_of_clauses;
 
         // Create a span that represents the slice of the clause outputs for the entry 'e'
-        std::span<T> cl(
+        tcb::span<T> cl(
                 clause_output_batch.data() + start_index,
                 number_of_clauses
         );

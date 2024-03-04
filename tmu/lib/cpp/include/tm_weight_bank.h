@@ -19,7 +19,7 @@ class TMWeightBankPresets {
 
 
 public:
-    static std::span<int32_t> positive_one_negative_minus_one(std::span<int32_t>& weights, std::size_t number_of_clauses) {
+    static tcb::span<int32_t> positive_one_negative_minus_one(tcb::span<int32_t>& weights, std::size_t number_of_clauses) {
         assert (weights.size() == number_of_clauses);
 
         // Fill weights with 1 and -1
@@ -40,14 +40,14 @@ class TMWeightBank: public std::enable_shared_from_this<TMWeightBank<T>> {
 
 
 public:
-    std::span<int32_t> weights;
+    tcb::span<int32_t> weights;
 
     TMWeightBank(){};
 
     void initialize(TMMemory<T>& memory, std::size_t number_of_clauses) {
 
-        std::span<uint32_t> originalSpan = memory.getSegment(number_of_clauses);
-        std::span<int32_t> reinterpretedSpan(reinterpret_cast<int32_t*>(originalSpan.data()), originalSpan.size());
+        tcb::span<uint32_t> originalSpan = memory.getSegment(number_of_clauses);
+        tcb::span<int32_t> reinterpretedSpan(reinterpret_cast<int32_t*>(originalSpan.data()), originalSpan.size());
         weights = reinterpretedSpan;
 
         TMWeightBankPresets::positive_one_negative_minus_one(weights, number_of_clauses);
@@ -57,7 +57,12 @@ public:
         return number_of_clauses;
     }
 
-    void increment(std::span<uint32_t> clause_output, float update_p, std::span<uint32_t>& clause_active, bool positive_weights){
+    void increment(
+            const tcb::span<uint32_t> clause_output,
+            float update_p,
+            const tcb::span<uint32_t>& clause_active,
+            bool positive_weights
+    ){
 
         wb_increment(
                 weights.data(),
@@ -69,7 +74,12 @@ public:
         );
     }
 
-    void decrement(std::span<uint32_t> clause_output, float update_p, std::span<uint32_t>& clause_active, bool negative_weights){
+    void decrement(
+            const tcb::span<uint32_t> clause_output,
+            float update_p,
+            const tcb::span<uint32_t>& clause_active,
+            bool negative_weights
+    ){
 
         wb_decrement(
             weights.data(),
@@ -81,7 +91,7 @@ public:
         );
     }
 
-    std::span<int32_t> getWeights() {
+    const tcb::span<int32_t> getWeights() {
         return weights;
     }
 

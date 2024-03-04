@@ -6,6 +6,25 @@ find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF) # Ensure -std=c++20 rather than -std=gnu++20
 
+include(FetchContent)
+FetchContent_Declare(
+        span
+        GIT_REPOSITORY https://github.com/tcbrindle/span.git
+        GIT_TAG        master
+        EXCLUDE_FROM_ALL
+)
+FetchContent_Populate(span)
+
+FetchContent_Declare(
+        optional
+        GIT_REPOSITORY https://github.com/TartanLlama/optional.git
+        GIT_TAG        master
+        EXCLUDE_FROM_ALL
+)
+FetchContent_Populate(optional)
+
+
+
 # Optimize for Release build
 set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE) # Focus on Release build
 
@@ -52,6 +71,8 @@ target_include_directories(
         tmulibpp
         PUBLIC
         cpp/include
+        ${span_SOURCE_DIR}/include
+        ${optional_SOURCE_DIR}/include
 )
 target_link_libraries(
         tmulibpp
@@ -81,8 +102,13 @@ nanobind_add_module(
 )
 target_link_libraries(tmulibpy PRIVATE tmulibpp)
 target_compile_options(tmulibpy PRIVATE
-        $<$<CONFIG:Release>:-Os -ffast-math -march=native -DNDEBUG -flto>)
-
+        $<$<CONFIG:Release>:-Os -ffast-math -march=native -DNDEBUG -flto>
+)
+set_target_properties(tmulibpy PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+)
 
 # Ensure CMake build type is set to Release for optimizations
 if(NOT CMAKE_BUILD_TYPE)
