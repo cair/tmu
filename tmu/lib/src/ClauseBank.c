@@ -66,8 +66,6 @@ static inline void cb_inc(unsigned int *ta_state, unsigned int active, int numbe
 
 	carry = active;
 	for (int b = 0; b < number_of_state_bits; ++b) {
-		if (carry == 0)
-			break;
 
 		carry_next = ta_state[b] & carry; // Sets carry bits (overflow) passing on to next bit
 		ta_state[b] = ta_state[b] ^ carry; // Performs increments with XOR
@@ -82,25 +80,29 @@ static inline void cb_inc(unsigned int *ta_state, unsigned int active, int numbe
 }
 
 // Decrement the states of each of those 32 Tsetlin Automata flagged in the active bit vector.
-static inline void cb_dec(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
-{
+static inline void cb_dec(
+        unsigned int *ta_state,
+        unsigned int active,
+        int number_of_state_bits
+){
 	unsigned int carry, carry_next;
+    unsigned int ta_val;
 
 	carry = active;
 	for (int b = 0; b < number_of_state_bits; ++b) {
-		if (carry == 0)
-			break;
 
-		carry_next = (~ta_state[b]) & carry; // Sets carry bits (overflow) passing on to next bit
-		ta_state[b] = ta_state[b] ^ carry; // Performs increments with XOR
-		carry = carry_next;
+        ta_val = ta_state[b];
+        carry_next = (~ta_val) & carry; // Sets carry bits (overflow) passing on to next bit
+        ta_state[b] = ta_val ^ carry; // Performs increments with XOR
+        carry = carry_next;
+
 	}
 
 	if (carry > 0) {
 		for (int b = 0; b < number_of_state_bits; ++b) {
 			ta_state[b] &= ~carry;
 		}
-	} 
+	}
 }
 
 /* Calculate the output of each clause using the actions of each Tsetline Automaton. */
