@@ -109,7 +109,7 @@ class TMBaseModel:
         self.s = s
 
         self.confidence_driven_updating = confidence_driven_updating
-
+        self.type_i_ii_ratio = type_i_ii_ratio
         if type_i_ii_ratio >= 1.0:
             self.type_i_p = 1.0
             self.type_ii_p = 1.0 / type_i_ii_ratio
@@ -211,8 +211,8 @@ class TMBaseModel:
         if self.initialized:
             return
 
-        self.init_before(X, Y)
         self.number_of_classes = self.init_num_classes(X, Y)
+        self.init_before(X, Y)
         self.init_clause_bank(X, Y)
         self.init_weight_bank(X, Y)
         self.init_after(X, Y)
@@ -288,7 +288,6 @@ class TMBaseModel:
     def build_clause_bank(self, X: np.ndarray):
         if self.platform == "CPU":
             clause_bank_type, clause_bank_args = self._build_cpu_bank(X=X)
-
         elif self.platform in ["GPU", "CUDA"]:
             clause_bank_type, clause_bank_args = self._build_gpu_bank(X=X)
         elif self.platform == "CPU_sparse":
