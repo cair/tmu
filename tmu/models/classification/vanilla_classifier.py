@@ -147,6 +147,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
         if self.weighted_clauses:
             if is_target:
+
                 self.weight_banks[target].increment(
                     clause_output=clause_outputs,
                     update_p=update_p,
@@ -205,7 +206,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             literal_active: np.ndarray,
             encoded_X_train: np.ndarray,
             sample_idx: int
-    ) -> typing.Tuple[np.ndarray, np.ndarray]:
+    ) -> typing.Tuple[int, np.ndarray]:
 
         clause_outputs: np.ndarray = self.clause_banks[target].calculate_clause_outputs_update(
             literal_active=literal_active,
@@ -218,14 +219,14 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             clause_outputs
         ).astype(np.int32)
 
-        class_sum: np.ndarray = np.clip(class_sum, -self.T, self.T)
+        class_sum: int = np.clip(class_sum, -self.T, self.T).item()
 
         return class_sum, clause_outputs
 
     def mechanism_compute_update_probabilities(
             self,
             is_target: bool,
-            class_sum: np.ndarray
+            class_sum: int
     ) -> float:
         # Confidence-driven updating method
         if self.confidence_driven_updating:
@@ -262,7 +263,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
     def _fit_sample_target(
             self,
-            class_sum: np.ndarray,
+            class_sum: int,
             clause_outputs: np.ndarray,
             is_target_class: bool,
             class_value: int,
@@ -283,10 +284,12 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
         :return: Computed update probability for the class.
         """
 
+
         update_p: float = self.mechanism_compute_update_probabilities(
             is_target=is_target_class,
             class_sum=class_sum
         )
+
 
         self.mechanism_feedback(
             is_target=is_target_class,
@@ -384,6 +387,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             data=X,
             encoder_func=lambda x: self.clause_banks[0].prepare_X(x)
         )
+
 
         clause_active: np.ndarray = self.mechanism_clause_active()
         literal_active: np.ndarray = self.mechanism_literal_active()
