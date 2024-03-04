@@ -244,8 +244,8 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;=  tm.fit(</div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;                    data[<span class="stringliteral">&quot;x_train&quot;</span>],</div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;                    data[<span class="stringliteral">&quot;y_train&quot;</span>],</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;                    data[<span class="stringliteral">&quot;x_train&quot;</span>].astype(np.uint32),</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;                    data[<span class="stringliteral">&quot;y_train&quot;</span>].astype(np.uint32),</div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;                    metrics=[<span class="stringliteral">&quot;update_p&quot;</span>],</div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;                )</div>
 </div><!-- fragment -->

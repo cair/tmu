@@ -6,6 +6,7 @@
 <area shape="rect" id="node5" href="$classtmu_1_1models_1_1classification_1_1multitask__classifier_1_1TMMultiTaskClassifier.html" title=" " alt="" coords="180,157,344,184"/>
 <area shape="rect" id="node6" href="$classtmu_1_1models_1_1classification_1_1one__vs__one__classifier_1_1TMOneVsOneClassifier.html" title=" " alt="" coords="177,208,347,235"/>
 <area shape="rect" id="node7" href="$classtmu_1_1models_1_1classification_1_1vanilla__classifier_1_1TMClassifier.html" title=" " alt="" coords="211,259,313,285"/>
-<area shape="rect" id="node8" href="$classtmu_1_1models_1_1regression_1_1vanilla__regressor_1_1TMRegressor.html" title=" " alt="" coords="209,309,315,336"/>
-<area shape="rect" id="node9" href="$classvanilla__relational_1_1TMRelational.html" title=" " alt="" coords="208,360,316,387"/>
+<area shape="rect" id="node9" href="$classtmu_1_1models_1_1regression_1_1vanilla__regressor_1_1TMRegressor.html" title=" " alt="" coords="209,309,315,336"/>
+<area shape="rect" id="node10" href="$classvanilla__relational_1_1TMRelational.html" title=" " alt="" coords="208,360,316,387"/>
+<area shape="rect" id="node8" href="$classtest__lib_1_1TMClassifierCPP.html" title=" " alt="" coords="404,259,531,285"/>
 </map>
