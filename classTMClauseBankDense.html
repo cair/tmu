@@ -107,8 +107,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a251e1ff52bf09fd7a799c81c293b2552"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff523d26ab3af4b04f1c5ce47102e4f8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#aff523d26ab3af4b04f1c5ce47102e4f8">get_ta_action</a> (size_t clause, size_t ta)</td></tr>
 <tr class="separator:aff523d26ab3af4b04f1c5ce47102e4f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aacae27478b47fae8480422e8132ed063"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#aacae27478b47fae8480422e8132ed063">getEncodedXiSize</a> (const std::vector&lt; int &gt; &amp;X_shape) const</td></tr>
-<tr class="separator:aacae27478b47fae8480422e8132ed063"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a169fe68f4f585864ef51e8935cd241d0"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#a169fe68f4f585864ef51e8935cd241d0">getEncodedXiSize</a> (const std::vector&lt; int32_t &gt; &amp;X_shape) const</td></tr>
+<tr class="separator:a169fe68f4f585864ef51e8935cd241d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d99ec27a38908ab18c5a3c04c9298fd"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#a2d99ec27a38908ab18c5a3c04c9298fd">getRequiredMemorySize</a> () const</td></tr>
 <tr class="separator:a2d99ec27a38908ab18c5a3c04c9298fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0b684a66ad6582f0c63edf0c9be2e87a"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#a0b684a66ad6582f0c63edf0c9be2e87a">getTAState</a> (size_t clause, size_t ta)</td></tr>
@@ -117,12 +117,12 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a28e1418eb9bd725b499c435afc71a840"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade6ff849133fccd736eef5e527262adb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#ade6ff849133fccd736eef5e527262adb">initializeClauses</a> ()</td></tr>
 <tr class="separator:ade6ff849133fccd736eef5e527262adb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aebeb7d5422d1ecfa6f7b9c7d9b67e2c0"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; uint32_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#aebeb7d5422d1ecfa6f7b9c7d9b67e2c0">prepare_X</a> (const tcb::span&lt; uint32_t &gt; &amp;x, const std::vector&lt; int &gt; &amp;X_shape)</td></tr>
-<tr class="separator:aebeb7d5422d1ecfa6f7b9c7d9b67e2c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0e760ac34e6704a5ea944f71f7f44f8"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; uint32_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#ab0e760ac34e6704a5ea944f71f7f44f8">prepare_X</a> (const tcb::span&lt; uint32_t &gt; &amp;x, const std::vector&lt; int32_t &gt; &amp;X_shape)</td></tr>
+<tr class="separator:ab0e760ac34e6704a5ea944f71f7f44f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad18c7959c815f854930ef95a5cda9f31"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#ad18c7959c815f854930ef95a5cda9f31">setTAState</a> (size_t clause, size_t ta, unsigned int state)</td></tr>
 <tr class="separator:ad18c7959c815f854930ef95a5cda9f31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a3c81dca2022ec9a65c54da460fcc9c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#a2a3c81dca2022ec9a65c54da460fcc9c">TMClauseBankDense</a> (float _s, float _d, bool _boost_true_positive_feedback, bool _reuse_random_feedback, std::vector&lt; int &gt; X_shape, tl::optional&lt; std::vector&lt; int &gt;&gt; _patch_dim, tl::optional&lt; std::size_t &gt; _max_included_literals, std::size_t _number_of_clauses, std::size_t _number_of_state_bits, std::size_t _number_of_state_bits_ind, std::size_t _batch_size, bool _incremental, int _seed=0)</td></tr>
-<tr class="separator:a2a3c81dca2022ec9a65c54da460fcc9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2048ead185a90faa08d8d3ddc7d9e7d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#aa2048ead185a90faa08d8d3ddc7d9e7d">TMClauseBankDense</a> (float _s, float _d, bool _boost_true_positive_feedback, bool _reuse_random_feedback, std::vector&lt; int32_t &gt; X_shape, tl::optional&lt; std::vector&lt; int &gt;&gt; _patch_dim, tl::optional&lt; std::size_t &gt; _max_included_literals, std::size_t _number_of_clauses, std::size_t _number_of_state_bits, std::size_t _number_of_state_bits_ind, std::size_t _batch_size, bool _incremental, int _seed=0)</td></tr>
+<tr class="separator:aa2048ead185a90faa08d8d3ddc7d9e7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85d1282af29620d67f91c9c64b664d7f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#a85d1282af29620d67f91c9c64b664d7f">type_i_feedback</a> (float update_p, const tcb::span&lt; T &gt; &amp;clause_active, const tcb::span&lt; T &gt; &amp;literal_active, const tcb::span&lt; T &gt; &amp;encoded_xi)</td></tr>
 <tr class="separator:a85d1282af29620d67f91c9c64b664d7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a6e352082ff3d97006e0391c01f5889"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#a3a6e352082ff3d97006e0391c01f5889">type_ii_feedback</a> (float update_p, const tcb::span&lt; T &gt; &amp;clause_active, const tcb::span&lt; T &gt; &amp;literal_active, const tcb::span&lt; T &gt; &amp;encoded_xi)</td></tr>
@@ -132,8 +132,8 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aff5154e6b4e93b1a07b6cf546faafb10"><td class="memItemLeft" align="right" valign="top">static std::tuple&lt; int, int, int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#aff5154e6b4e93b1a07b6cf546faafb10">getDim</a> (const std::vector&lt; int &gt; X_shape)</td></tr>
-<tr class="separator:aff5154e6b4e93b1a07b6cf546faafb10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4517796f1a440b5f4076ccb17dd6ba78"><td class="memItemLeft" align="right" valign="top">static std::tuple&lt; int, int, int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#a4517796f1a440b5f4076ccb17dd6ba78">getDim</a> (const std::vector&lt; int32_t &gt; X_shape)</td></tr>
+<tr class="separator:a4517796f1a440b5f4076ccb17dd6ba78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae335ae1b1ff6ff5cfb351988ae8b1dba"><td class="memItemLeft" align="right" valign="top">static std::tuple&lt; int, int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMClauseBankDense.html#ae335ae1b1ff6ff5cfb351988ae8b1dba">getPatchDim</a> (const tl::optional&lt; std::vector&lt; int &gt;&gt; _patch_dim, const std::tuple&lt; int, int, int &gt; <a class="el" href="classTMClauseBankDense.html#ad662a51c90f6bec5f8d2a8553b441152">dim</a>)</td></tr>
 <tr class="separator:ae335ae1b1ff6ff5cfb351988ae8b1dba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -205,8 +205,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a83501e71384b3ceb3fe60e34b74bf106"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a2a3c81dca2022ec9a65c54da460fcc9c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2a3c81dca2022ec9a65c54da460fcc9c">&#9670;&nbsp;</a></span>TMClauseBankDense()</h2>
+<a id="aa2048ead185a90faa08d8d3ddc7d9e7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2048ead185a90faa08d8d3ddc7d9e7d">&#9670;&nbsp;</a></span>TMClauseBankDense()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -238,7 +238,7 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; int &gt;&#160;</td>
+          <td class="paramtype">std::vector&lt; int32_t &gt;&#160;</td>
           <td class="paramname"><em>X_shape</em>, </td>
         </tr>
         <tr>
@@ -469,8 +469,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aff5154e6b4e93b1a07b6cf546faafb10"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aff5154e6b4e93b1a07b6cf546faafb10">&#9670;&nbsp;</a></span>getDim()</h2>
+<a id="a4517796f1a440b5f4076ccb17dd6ba78"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4517796f1a440b5f4076ccb17dd6ba78">&#9670;&nbsp;</a></span>getDim()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -481,7 +481,7 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">static std::tuple&lt;int, int, int&gt; getDim </td>
           <td>(</td>
-          <td class="paramtype">const std::vector&lt; int &gt;&#160;</td>
+          <td class="paramtype">const std::vector&lt; int32_t &gt;&#160;</td>
           <td class="paramname"><em>X_shape</em></td><td>)</td>
           <td></td>
         </tr>
@@ -495,8 +495,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aacae27478b47fae8480422e8132ed063"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aacae27478b47fae8480422e8132ed063">&#9670;&nbsp;</a></span>getEncodedXiSize()</h2>
+<a id="a169fe68f4f585864ef51e8935cd241d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a169fe68f4f585864ef51e8935cd241d0">&#9670;&nbsp;</a></span>getEncodedXiSize()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -504,7 +504,7 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">std::size_t getEncodedXiSize </td>
           <td>(</td>
-          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; int32_t &gt; &amp;&#160;</td>
           <td class="paramname"><em>X_shape</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -629,8 +629,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aebeb7d5422d1ecfa6f7b9c7d9b67e2c0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aebeb7d5422d1ecfa6f7b9c7d9b67e2c0">&#9670;&nbsp;</a></span>prepare_X()</h2>
+<a id="ab0e760ac34e6704a5ea944f71f7f44f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab0e760ac34e6704a5ea944f71f7f44f8">&#9670;&nbsp;</a></span>prepare_X()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -644,7 +644,7 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; int32_t &gt; &amp;&#160;</td>
           <td class="paramname"><em>X_shape</em>&#160;</td>
         </tr>
         <tr>

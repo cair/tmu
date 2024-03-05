@@ -1,39 +1,40 @@
 <map id="tmu/lib/cpp/main.cpp" name="tmu/lib/cpp/main.cpp">
-<area shape="rect" id="node1" title=" " alt="" coords="1307,5,1466,32"/>
-<area shape="rect" id="node2" href="$tm__clause__dense_8h.html" title=" " alt="" coords="1395,259,1541,285"/>
-<area shape="rect" id="node4" title=" " alt="" coords="989,408,1051,435"/>
-<area shape="rect" id="node13" title=" " alt="" coords="2099,408,2205,435"/>
-<area shape="rect" id="node16" href="$tm__dataset_8h.html" title=" " alt="" coords="378,177,518,203"/>
-<area shape="rect" id="node23" title=" " alt="" coords="1521,87,1588,114"/>
-<area shape="rect" id="node24" href="$tm__vanilla_8h.html" title=" " alt="" coords="1359,80,1497,121"/>
-<area shape="rect" id="node3" title=" " alt="" coords="1375,333,1446,360"/>
-<area shape="rect" id="node5" title=" " alt="" coords="1785,408,1871,435"/>
-<area shape="rect" id="node6" title=" " alt="" coords="1470,333,1525,360"/>
-<area shape="rect" id="node7" title=" " alt="" coords="1183,333,1299,360"/>
-<area shape="rect" id="node8" title=" " alt="" coords="1081,333,1159,360"/>
-<area shape="rect" id="node9" title=" " alt="" coords="977,333,1057,360"/>
-<area shape="rect" id="node10" href="$tm__memory_8h.html" title=" " alt="" coords="1876,333,1988,360"/>
-<area shape="rect" id="node14" href="$ClauseBank_8h.html" title=" " alt="" coords="1549,333,1659,360"/>
-<area shape="rect" id="node15" href="$Tools_8h.html" title=" " alt="" coords="1684,333,1751,360"/>
-<area shape="rect" id="node11" title=" " alt="" coords="1935,408,2022,435"/>
-<area shape="rect" id="node12" title=" " alt="" coords="1405,408,1472,435"/>
+<area shape="rect" id="node1" title=" " alt="" coords="1529,5,1687,32"/>
+<area shape="rect" id="node2" href="$tm__clause__dense_8h.html" title=" " alt="" coords="1480,259,1627,285"/>
+<area shape="rect" id="node4" title=" " alt="" coords="813,408,875,435"/>
+<area shape="rect" id="node12" title=" " alt="" coords="23,408,89,435"/>
+<area shape="rect" id="node13" title=" " alt="" coords="2167,408,2273,435"/>
+<area shape="rect" id="node16" href="$tm__dataset_8h.html" title=" " alt="" coords="375,177,515,203"/>
+<area shape="rect" id="node23" title=" " alt="" coords="2308,87,2375,114"/>
+<area shape="rect" id="node24" href="$tm__vanilla_8h.html" title=" " alt="" coords="1620,80,1759,121"/>
+<area shape="rect" id="node38" title=" " alt="" coords="2399,87,2491,114"/>
+<area shape="rect" id="node3" title=" " alt="" coords="1275,333,1346,360"/>
+<area shape="rect" id="node5" title=" " alt="" coords="1321,408,1407,435"/>
+<area shape="rect" id="node6" title=" " alt="" coords="1370,333,1425,360"/>
+<area shape="rect" id="node7" title=" " alt="" coords="1827,333,1943,360"/>
+<area shape="rect" id="node8" title=" " alt="" coords="1725,333,1803,360"/>
+<area shape="rect" id="node9" title=" " alt="" coords="935,333,1015,360"/>
+<area shape="rect" id="node10" href="$tm__memory_8h.html" title=" " alt="" coords="1140,333,1252,360"/>
+<area shape="rect" id="node14" href="$ClauseBank_8h.html" title=" " alt="" coords="1449,333,1559,360"/>
+<area shape="rect" id="node15" href="$Tools_8h.html" title=" " alt="" coords="1584,333,1651,360"/>
+<area shape="rect" id="node11" title=" " alt="" coords="1601,408,1687,435"/>
 <area shape="rect" id="node17" title=" " alt="" coords="94,259,167,285"/>
 <area shape="rect" id="node18" title=" " alt="" coords="192,259,267,285"/>
 <area shape="rect" id="node19" title=" " alt="" coords="291,259,349,285"/>
-<area shape="rect" id="node20" title=" " alt="" coords="574,259,634,285"/>
+<area shape="rect" id="node20" title=" " alt="" coords="675,259,735,285"/>
 <area shape="rect" id="node21" title=" " alt="" coords="373,259,448,285"/>
-<area shape="rect" id="node22" title=" " alt="" coords="659,259,731,285"/>
-<area shape="rect" id="node25" title=" " alt="" coords="2015,177,2078,203"/>
-<area shape="rect" id="node26" href="$sparse__clause__container_8h.html" title=" " alt="" coords="1028,169,1175,211"/>
-<area shape="rect" id="node29" href="$fast__rand_8h.html" title=" " alt="" coords="806,259,901,285"/>
-<area shape="rect" id="node32" href="$tm__weight__bank_8h.html" title=" " alt="" coords="1601,177,1743,203"/>
-<area shape="rect" id="node36" href="$tm__math_8h.html" title=" " alt="" coords="1865,177,1991,203"/>
-<area shape="rect" id="node27" title=" " alt="" coords="977,259,1101,285"/>
-<area shape="rect" id="node28" title=" " alt="" coords="1125,259,1168,285"/>
-<area shape="rect" id="node30" title=" " alt="" coords="790,333,861,360"/>
-<area shape="rect" id="node31" title=" " alt="" coords="885,333,953,360"/>
-<area shape="rect" id="node33" title=" " alt="" coords="1901,259,1955,285"/>
-<area shape="rect" id="node34" title=" " alt="" coords="1752,259,1827,285"/>
-<area shape="rect" id="node35" href="$WeightBank_8h.html" title=" " alt="" coords="1616,259,1728,285"/>
-<area shape="rect" id="node37" title=" " alt="" coords="2029,259,2115,285"/>
+<area shape="rect" id="node22" title=" " alt="" coords="760,259,832,285"/>
+<area shape="rect" id="node25" title=" " alt="" coords="1787,177,1850,203"/>
+<area shape="rect" id="node26" href="$sparse__clause__container_8h.html" title=" " alt="" coords="1616,169,1763,211"/>
+<area shape="rect" id="node29" href="$fast__rand_8h.html" title=" " alt="" coords="2070,259,2165,285"/>
+<area shape="rect" id="node32" href="$tm__weight__bank_8h.html" title=" " alt="" coords="1195,177,1338,203"/>
+<area shape="rect" id="node36" href="$tm__math_8h.html" title=" " alt="" coords="883,177,1008,203"/>
+<area shape="rect" id="node27" title=" " alt="" coords="1702,259,1826,285"/>
+<area shape="rect" id="node28" title=" " alt="" coords="1851,259,1893,285"/>
+<area shape="rect" id="node30" title=" " alt="" coords="2111,333,2182,360"/>
+<area shape="rect" id="node31" title=" " alt="" coords="2019,333,2087,360"/>
+<area shape="rect" id="node33" title=" " alt="" coords="965,259,1019,285"/>
+<area shape="rect" id="node34" title=" " alt="" coords="1229,259,1304,285"/>
+<area shape="rect" id="node35" href="$WeightBank_8h.html" title=" " alt="" coords="1043,259,1155,285"/>
+<area shape="rect" id="node37" title=" " alt="" coords="856,259,941,285"/>
 </map>

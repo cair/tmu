@@ -68,7 +68,7 @@ var searchData=
   ['tmautoencoder_825',['TMAutoEncoder',['../classtmu_1_1models_1_1autoencoder_1_1autoencoder_1_1TMAutoEncoder.html',1,'tmu::models::autoencoder::autoencoder']]],
   ['tmbasemodel_826',['TMBaseModel',['../classtmu_1_1models_1_1base_1_1TMBaseModel.html',1,'tmu::models::base']]],
   ['tmclassifier_827',['TMClassifier',['../classtmu_1_1models_1_1classification_1_1vanilla__classifier_1_1TMClassifier.html',1,'tmu::models::classification::vanilla_classifier']]],
-  ['tmclausebankdense_828',['TMClauseBankDense',['../classTMClauseBankDense.html#a2a3c81dca2022ec9a65c54da460fcc9c',1,'TMClauseBankDense::TMClauseBankDense()'],['../classTMClauseBankDense.html',1,'TMClauseBankDense&lt; T &gt;']]],
+  ['tmclausebankdense_828',['TMClauseBankDense',['../classTMClauseBankDense.html#aa2048ead185a90faa08d8d3ddc7d9e7d',1,'TMClauseBankDense::TMClauseBankDense()'],['../classTMClauseBankDense.html',1,'TMClauseBankDense&lt; T &gt;']]],
   ['tmcoalescedclassifier_829',['TMCoalescedClassifier',['../classtmu_1_1models_1_1classification_1_1coalesced__classifier_1_1TMCoalescedClassifier.html',1,'tmu::models::classification::coalesced_classifier']]],
   ['tmdataset_830',['TMDataset',['../classTMDataset.html',1,'']]],
   ['tmmath_831',['TMMath',['../classTMMath.html',1,'']]],
