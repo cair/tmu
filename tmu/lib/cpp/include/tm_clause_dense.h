@@ -118,6 +118,9 @@ public:
 
         // Set maximum included literals or use the total number of literals.
         max_included_literals = _max_included_literals.value_or(number_of_literals);
+        if(max_included_literals == 0 ){
+            max_included_literals = number_of_literals;
+        }
 
         // Calculate the number of ternary association chunks.
         number_of_ta_chunks = (number_of_literals - 1) / (sizeof(T) * 8) + 1; // Assuming

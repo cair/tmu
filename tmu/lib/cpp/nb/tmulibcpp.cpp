@@ -10,6 +10,8 @@
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/set.h>
 #include <nanobind/stl/map.h>
+#include <nanobind/stl/vector.h>
+#include <nanobind/stl/string.h>
 
 #include <iostream>
 
@@ -146,7 +148,7 @@ NB_MODULE(tmulibpy, m) {
             bool,
             bool,
             float,
-            uint32_t,
+            tl::optional<std::size_t>,
             bool,
             bool,
             tl::optional<std::vector<int>>,
@@ -240,50 +242,62 @@ NB_MODULE(tmulibpy, m) {
         )
         .def("predict", [](
                 TMVanillaClassifier<uint32_t>& self,
-                nanobind::ndarray<uint32_t, nb::ndim<2>, c_contig>& encoded_X_test,
+                nanobind::ndarray<uint32_t, nb::ndim<2>, c_contig>& x_test,
                 bool clip_class_sum = false,
                 bool return_class_sum = false) {
 
-            auto encoded_X_test_span = tcb::span(encoded_X_test.data(), encoded_X_test.size());
-            std::vector<int> X_shape = {static_cast<int>(encoded_X_test.shape(0)), static_cast<int>(encoded_X_test.shape(1))};
+            const auto x_test_span = tcb::span(x_test.data(), x_test.size());
+            const std::vector<int> X_shape = {
+                    static_cast<int>(x_test.shape(0)),
+                    static_cast<int>(x_test.shape(1))
+            };
 
             auto [argmax, class_sums] = self.predict(
-                    encoded_X_test_span,
+                    x_test_span,
                     X_shape,
                     clip_class_sum,
                     return_class_sum
             );
 
-
-            return std::make_tuple(argmax, class_sums);
-
-
-        }, nb::rv_policy::take_ownership)
+            // TODO return class sums
+            return std::make_tuple(argmax, argmax);
+        },
+        "x"_a,
+        "clip_class_sum"_a = true,
+        "return_class_sum"_a = false,
+         nb::rv_policy::take_ownership)
 
 
 
             .def("fit",
         [](
                 TMVanillaClassifier<uint32_t>& self,
+                nanobind::ndarray<uint32_t, nb::ndim<2>, c_contig>& x,
                 nanobind::ndarray<uint32_t, nb::ndim<1>, c_contig>& y,
-                nanobind::ndarray<uint32_t, nb::ndim<2>, c_contig>& encoded_X_train
+                bool shuffle,
+                std::vector<std::string>& metrics
         ) {
 
-            auto y_span = tcb::span(y.data(), y.size());
-            auto encoded_X_train_span = tcb::span(encoded_X_train.data(), encoded_X_train.size());
+            const auto y_span = tcb::span(y.data(), y.size());
+            const auto x_train_span = tcb::span(x.data(), x.size());
 
-            std::vector<int> X_shape = {static_cast<int>(encoded_X_train.shape(0)), static_cast<int>(encoded_X_train.shape(1))};
+            const std::vector<int> X_shape = {
+                    static_cast<int>(x.shape(0)),
+                    static_cast<int>(x.shape(1))
+            };
             self.fit(
                     y_span,
-                    encoded_X_train_span,
+                    x_train_span,
                     X_shape,
-                    true
+                    shuffle
             );
 
 
         },
+        "x"_a,
         "y"_a,
-        "encoded_X_train"_a,
+        "shuffle"_a = true,
+        "metrics"_a,
          nb::call_guard<nb::gil_scoped_release>()
         )
 

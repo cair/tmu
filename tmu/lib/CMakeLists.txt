@@ -6,6 +6,10 @@ find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF) # Ensure -std=c++20 rather than -std=gnu++20
 
+option(BUILD_PYTHON "Build only the Python module" ON)
+option(BUILD_EXECUTABLE "Build the executable" ON)
+
+
 include(FetchContent)
 FetchContent_Declare(
         span
@@ -85,32 +89,36 @@ target_compile_options(tmulibpp
         $<$<CONFIG:Debug>:-O0 -g3 -DDEBUG -fsanitize=address>
 )
 
-add_executable(
-        tmulib_exe
-        cpp/main.cpp
-)
-target_link_libraries(tmulib_exe PRIVATE tmulibpp)
-target_compile_options(tmulib_exe PRIVATE
-        $<$<CONFIG:Release>:-Ofast -ffast-math -march=native -DNDEBUG -flto>
-        $<$<CONFIG:Debug>:-O0 -g3 -DDEBUG -fsanitize=address>
-)
+IF(BUILD_EXECUTABLE)
+    add_executable(
+            tmulib_exe
+            cpp/main.cpp
+    )
+    target_link_libraries(tmulib_exe PRIVATE tmulibpp)
+    target_compile_options(tmulib_exe PRIVATE
+            $<$<CONFIG:Release>:-Ofast -ffast-math -march=native -DNDEBUG -flto>
+            $<$<CONFIG:Debug>:-O0 -g3 -DDEBUG -fsanitize=address>
+    )
+ENDIF()
 
-nanobind_add_module(
-        tmulibpy
-        NOMINSIZE
-        cpp/nb/tmulibcpp.cpp
-)
-target_link_libraries(tmulibpy PRIVATE tmulibpp)
-target_compile_options(tmulibpy PRIVATE
-        $<$<CONFIG:Release>:-Os -ffast-math -march=native -DNDEBUG -flto>
-)
-set_target_properties(tmulibpy PROPERTIES
-        CXX_STANDARD 20
-        CXX_STANDARD_REQUIRED ON
-        CXX_EXTENSIONS OFF
-)
 
-# Ensure CMake build type is set to Release for optimizations
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
+IF(BUILD_PYTHON)
+    nanobind_add_module(
+            tmulibpy
+            NOMINSIZE
+            cpp/nb/tmulibcpp.cpp
+    )
+    install(TARGETS tmulibpy LIBRARY DESTINATION .)
+
+    target_link_libraries(tmulibpy PRIVATE tmulibpp)
+    target_compile_options(tmulibpy PRIVATE
+            $<$<CONFIG:Release>:-Os -ffast-math -march=native -DNDEBUG -flto>
+    )
+    set_target_properties(tmulibpy PROPERTIES
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED ON
+            CXX_EXTENSIONS OFF
+    )
+
+ENDIF()
+
