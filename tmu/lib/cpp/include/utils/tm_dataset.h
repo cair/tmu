@@ -19,7 +19,7 @@ class TMDataset {
 
 public:
 
-    static std::pair<std::vector<uint32_t>, std::vector<int>> read_dataset_from_txt(const std::string& file_path) {
+    static std::pair<std::vector<uint32_t>, std::vector<int32_t>> read_dataset_from_txt(const std::string& file_path) {
         std::ifstream file(file_path);
         if (!file.is_open()) {
             throw std::runtime_error("Could not open file " + file_path);

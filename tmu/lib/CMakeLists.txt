@@ -1,46 +1,67 @@
 cmake_minimum_required(VERSION 3.15...3.27)
 project(tumlibpp)
 
-find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
+
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF) # Ensure -std=c++20 rather than -std=gnu++20
 
 option(BUILD_PYTHON "Build only the Python module" ON)
 option(BUILD_EXECUTABLE "Build the executable" ON)
+option(BUILD_STM32 "Build for STM32" OFF)
 
 
-include(FetchContent)
-FetchContent_Declare(
-        span
-        GIT_REPOSITORY https://github.com/tcbrindle/span.git
-        GIT_TAG        master
-        EXCLUDE_FROM_ALL
+
+include(ExternalProject)
+
+# Declare the span external project
+ExternalProject_Add(span
+        URL https://github.com/tcbrindle/span/archive/master.zip
+        #URL_HASH SHA256=<hash-value>
+        PREFIX ${CMAKE_BINARY_DIR}/_deps
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        LOG_DOWNLOAD ON
 )
-FetchContent_Populate(span)
 
-FetchContent_Declare(
-        optional
-        GIT_REPOSITORY https://github.com/TartanLlama/optional.git
-        GIT_TAG        master
-        EXCLUDE_FROM_ALL
+# Declare the optional external project
+ExternalProject_Add(optional
+        URL https://github.com/TartanLlama/optional/archive/master.zip
+        #URL_HASH SHA256=<hash-value>
+        PREFIX ${CMAKE_BINARY_DIR}/_deps
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        LOG_DOWNLOAD ON
 )
-FetchContent_Populate(optional)
+set(span_SOURCE_DIR "${CMAKE_BINARY_DIR}/_deps/span-src")
+set(optional_SOURCE_DIR "${CMAKE_BINARY_DIR}/_deps/optional-src")
+
+
 
 
 
 # Optimize for Release build
 set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE) # Focus on Release build
 
-# Detect the installed nanobind package and import it into CMake
-execute_process(
-        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
-        OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR)
-list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
-find_package(nanobind CONFIG REQUIRED)
+message(STATUS "PYTHON: ${BUILD_PYTHON}")
+if(BUILD_PYTHON)
+
+    find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
+
+    # Detect the installed nanobind package and import it into CMake
+    execute_process(
+            COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+            OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR)
+    list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
+    find_package(nanobind CONFIG REQUIRED)
+endif()
+
+
 
 # High performance and optimization flags
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -ffast-math -march=native -DNDEBUG -flto -funroll-loops")
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -ffast-math -march=native -DNDEBUG -flto -funroll-loops")
 
 add_library(
         tmulib
@@ -55,10 +76,7 @@ add_library(
         cpp/include/utils/sparse_clause_container.h
 )
 target_include_directories(tmulib PUBLIC include)
-target_compile_options(tmulib PRIVATE
-        $<$<CONFIG:Release>:-Ofast -ffast-math -march=native -DNDEBUG -flto -funroll-loops>
-        $<$<CONFIG:Debug>:-O0 -g3 -DDEBUG -fsanitize=address>
-)
+
 target_link_libraries(
         tmulib
         PUBLIC
@@ -83,11 +101,24 @@ target_link_libraries(
         PUBLIC
         tmulib
 )
-target_compile_options(tmulibpp
-        PRIVATE
-        $<$<CONFIG:Release>:-Ofast -ffast-math -march=native -DNDEBUG -flto -funroll-loops >
-        $<$<CONFIG:Debug>:-O0 -g3 -DDEBUG -fsanitize=address>
-)
+
+
+
+
+IF(NOT BUILD_STM32)
+    target_compile_options(tmulibpp
+            PRIVATE
+            $<$<CONFIG:Release>:-Ofast -ffast-math -march=native -DNDEBUG -flto -funroll-loops >
+            $<$<CONFIG:Debug>:-O0 -g3 -DDEBUG -fsanitize=address>
+    )
+    target_compile_options(tmulib PRIVATE
+            $<$<CONFIG:Release>:-Ofast -ffast-math -march=native -DNDEBUG -flto -funroll-loops>
+            $<$<CONFIG:Debug>:-O0 -g3 -DDEBUG -fsanitize=address>
+    )
+ENDIF()
+
+
+
 
 IF(BUILD_EXECUTABLE)
     add_executable(
@@ -95,11 +126,15 @@ IF(BUILD_EXECUTABLE)
             cpp/main.cpp
     )
     target_link_libraries(tmulib_exe PRIVATE tmulibpp)
-    target_compile_options(tmulib_exe PRIVATE
-            $<$<CONFIG:Release>:-Ofast -ffast-math -march=native -DNDEBUG -flto>
-            $<$<CONFIG:Debug>:-O0 -g3 -DDEBUG -fsanitize=address>
-    )
+
+    IF(NOT BUILD_STM32)
+        target_compile_options(tmulib_exe PRIVATE
+                $<$<CONFIG:Release>:-Ofast -ffast-math -march=native -DNDEBUG -flto>
+                $<$<CONFIG:Debug>:-O0 -g3 -DDEBUG -fsanitize=address>
+        )
+    ENDIF()
 ENDIF()
+
 
 
 IF(BUILD_PYTHON)

@@ -336,7 +336,7 @@ public:
                 clause_weights
         );
 
-        auto class_sum = std::inner_product(
+        int32_t class_sum = std::inner_product(
                 ca_mul_clause_weights.begin(), ca_mul_clause_weights.end(),
                 clause_bank->clause_output.begin(),
                 0 // Initial sum value
@@ -433,7 +433,7 @@ public:
     void init(
         const tcb::span<Type>& y,
         const tcb::span<Type>& x,
-        const std::vector<int>& X_shape
+        const std::vector<int32_t>& X_shape
     ){
         if(_is_initialized){
             return;
@@ -521,7 +521,7 @@ public:
     void fit(
             const tcb::span<Type>& y,
             const tcb::span<Type>& x,
-            const std::vector<int>& X_shape,
+            const std::vector<int32_t>& X_shape,
             bool shuffle
     ){
 
@@ -607,7 +607,7 @@ public:
 
     const tcb::span<Type> getEncodedTestData(
             const tcb::span<Type>& x,
-            const std::vector<int>& X_shape
+            const std::vector<int32_t>& X_shape
     ){
 
         if(encoded_X_test_vector.size() != 0){
@@ -634,7 +634,7 @@ public:
 
     const std::pair<std::vector<int>, tl::optional<std::vector<std::vector<int>>>> predict(
             const tcb::span<Type>& X_test,
-            const std::vector<int>& X_shape,
+            const std::vector<int32_t >& X_shape,
             bool clip_class_sum = false,
             bool return_class_sum = false) {
 

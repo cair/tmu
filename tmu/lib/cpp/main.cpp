@@ -4,16 +4,21 @@
 #include <vector>
 #include <tcb/span.hpp>
 #include "models/classifiers/tm_vanilla.h"
+#include <cstdint>
+#include <type_traits>
+static_assert(sizeof(uint32_t) == sizeof(unsigned int), "uint32_t is not the same size as unsigned int");
+static_assert(std::is_unsigned<uint32_t>::value, "uint32_t is not unsigned");
+
 
 void perform_epoch(
         TMVanillaClassifier<uint32_t>& classifier,
         int epoch,
-        tcb::span<uint32_t>& y_train_span,
-        tcb::span<uint32_t>& x_train_span,
-        std::vector<int32_t>& x_train_shape,
-        tcb::span<uint32_t>& x_test_span,
-        std::vector<int32_t>& x_test_shape,
-        tcb::span<uint32_t>& y_test_span
+        const tcb::span<uint32_t>& y_train_span,
+        const tcb::span<uint32_t>& x_train_span,
+        const std::vector<int32_t>& x_train_shape,
+        const tcb::span<uint32_t>& x_test_span,
+        const std::vector<int32_t>& x_test_shape,
+        const tcb::span<uint32_t>& y_test_span
 ) {
     auto timer_train_start = std::chrono::high_resolution_clock::now();
     classifier.fit(

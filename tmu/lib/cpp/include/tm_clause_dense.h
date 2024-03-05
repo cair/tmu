@@ -75,7 +75,7 @@ public:
         float _d,
         bool _boost_true_positive_feedback,
         bool _reuse_random_feedback,
-        std::vector<int> X_shape,
+        std::vector<int32_t> X_shape,
         tl::optional<std::vector<int>> _patch_dim,
         tl::optional<std::size_t> _max_included_literals,
         std::size_t _number_of_clauses,
@@ -135,7 +135,7 @@ public:
         }
     }
 
-    static std::tuple<int, int, int> getDim(const std::vector<int> X_shape){
+    static std::tuple<int, int, int> getDim(const std::vector<int32_t> X_shape){
         if (X_shape.size() == 2) {
             return {X_shape[1], 1, 1};
         } else if (X_shape.size() == 3) {
@@ -194,13 +194,13 @@ public:
         std::fill(clause_bank_ind.begin(), clause_bank_ind.end(), ~0);
     }
 
-    std::size_t getEncodedXiSize(const std::vector<int>& X_shape) const {
+    std::size_t getEncodedXiSize(const std::vector<int32_t>& X_shape) const {
         return X_shape.at(0) * number_of_patches * number_of_ta_chunks;
     }
 
     const std::vector<uint32_t> prepare_X(
             const tcb::span<uint32_t>& x,
-            const std::vector<int>& X_shape
+            const std::vector<int32_t >& X_shape
 
     ){
         std::vector<uint32_t> encoded_X(X_shape.at(0) * number_of_patches * number_of_ta_chunks) ;
