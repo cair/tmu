@@ -1,36 +1,39 @@
 <map id="tmu/lib/cpp/main.cpp" name="tmu/lib/cpp/main.cpp">
-<area shape="rect" id="node1" title=" " alt="" coords="708,5,866,32"/>
-<area shape="rect" id="node2" href="$tm__clause__dense_8h.html" title=" " alt="" coords="691,259,838,285"/>
-<area shape="rect" id="node4" title=" " alt="" coords="569,408,632,435"/>
-<area shape="rect" id="node13" title=" " alt="" coords="143,408,196,435"/>
-<area shape="rect" id="node16" href="$tm__vanilla_8h.html" title=" " alt="" coords="771,80,910,121"/>
-<area shape="rect" id="node29" href="$tm__dataset_8h.html" title=" " alt="" coords="1669,177,1809,203"/>
-<area shape="rect" id="node34" title=" " alt="" coords="984,87,1051,114"/>
-<area shape="rect" id="node3" title=" " alt="" coords="708,333,778,360"/>
-<area shape="rect" id="node5" title=" " alt="" coords="249,408,336,435"/>
-<area shape="rect" id="node6" title=" " alt="" coords="802,333,857,360"/>
-<area shape="rect" id="node7" title=" " alt="" coords="882,333,956,360"/>
-<area shape="rect" id="node8" title=" " alt="" coords="1031,333,1108,360"/>
-<area shape="rect" id="node9" title=" " alt="" coords="1132,333,1212,360"/>
-<area shape="rect" id="node10" href="$tm__memory_8h.html" title=" " alt="" coords="344,333,456,360"/>
-<area shape="rect" id="node14" href="$ClauseBank_8h.html" title=" " alt="" coords="481,333,592,360"/>
-<area shape="rect" id="node15" href="$Tools_8h.html" title=" " alt="" coords="616,333,683,360"/>
-<area shape="rect" id="node11" title=" " alt="" coords="1056,408,1142,435"/>
-<area shape="rect" id="node12" title=" " alt="" coords="1683,408,1750,435"/>
-<area shape="rect" id="node17" title=" " alt="" coords="822,177,885,203"/>
-<area shape="rect" id="node18" href="$sparse__clause__container_8h.html" title=" " alt="" coords="1126,169,1272,211"/>
-<area shape="rect" id="node23" href="$fast__rand_8h.html" title=" " alt="" coords="1338,259,1433,285"/>
-<area shape="rect" id="node25" href="$tm__weight__bank_8h.html" title=" " alt="" coords="553,177,696,203"/>
-<area shape="rect" id="node28" href="$tm__math_8h.html" title=" " alt="" coords="43,333,168,360"/>
-<area shape="rect" id="node19" title=" " alt="" coords="1457,259,1517,285"/>
-<area shape="rect" id="node20" title=" " alt="" coords="970,259,1094,285"/>
-<area shape="rect" id="node21" title=" " alt="" coords="1542,259,1614,285"/>
-<area shape="rect" id="node22" title=" " alt="" coords="1119,259,1162,285"/>
-<area shape="rect" id="node24" title=" " alt="" coords="1350,333,1421,360"/>
-<area shape="rect" id="node26" title=" " alt="" coords="398,259,472,285"/>
-<area shape="rect" id="node27" href="$WeightBank_8h.html" title=" " alt="" coords="496,259,608,285"/>
-<area shape="rect" id="node30" title=" " alt="" coords="2070,259,2144,285"/>
-<area shape="rect" id="node31" title=" " alt="" coords="1739,259,1814,285"/>
-<area shape="rect" id="node32" title=" " alt="" coords="1838,259,1896,285"/>
-<area shape="rect" id="node33" title=" " alt="" coords="1920,259,1995,285"/>
+<area shape="rect" id="node1" title=" " alt="" coords="1307,5,1466,32"/>
+<area shape="rect" id="node2" href="$tm__clause__dense_8h.html" title=" " alt="" coords="1395,259,1541,285"/>
+<area shape="rect" id="node4" title=" " alt="" coords="989,408,1051,435"/>
+<area shape="rect" id="node13" title=" " alt="" coords="2099,408,2205,435"/>
+<area shape="rect" id="node16" href="$tm__dataset_8h.html" title=" " alt="" coords="378,177,518,203"/>
+<area shape="rect" id="node23" title=" " alt="" coords="1521,87,1588,114"/>
+<area shape="rect" id="node24" href="$tm__vanilla_8h.html" title=" " alt="" coords="1359,80,1497,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="1375,333,1446,360"/>
+<area shape="rect" id="node5" title=" " alt="" coords="1785,408,1871,435"/>
+<area shape="rect" id="node6" title=" " alt="" coords="1470,333,1525,360"/>
+<area shape="rect" id="node7" title=" " alt="" coords="1183,333,1299,360"/>
+<area shape="rect" id="node8" title=" " alt="" coords="1081,333,1159,360"/>
+<area shape="rect" id="node9" title=" " alt="" coords="977,333,1057,360"/>
+<area shape="rect" id="node10" href="$tm__memory_8h.html" title=" " alt="" coords="1876,333,1988,360"/>
+<area shape="rect" id="node14" href="$ClauseBank_8h.html" title=" " alt="" coords="1549,333,1659,360"/>
+<area shape="rect" id="node15" href="$Tools_8h.html" title=" " alt="" coords="1684,333,1751,360"/>
+<area shape="rect" id="node11" title=" " alt="" coords="1935,408,2022,435"/>
+<area shape="rect" id="node12" title=" " alt="" coords="1405,408,1472,435"/>
+<area shape="rect" id="node17" title=" " alt="" coords="94,259,167,285"/>
+<area shape="rect" id="node18" title=" " alt="" coords="192,259,267,285"/>
+<area shape="rect" id="node19" title=" " alt="" coords="291,259,349,285"/>
+<area shape="rect" id="node20" title=" " alt="" coords="574,259,634,285"/>
+<area shape="rect" id="node21" title=" " alt="" coords="373,259,448,285"/>
+<area shape="rect" id="node22" title=" " alt="" coords="659,259,731,285"/>
+<area shape="rect" id="node25" title=" " alt="" coords="2015,177,2078,203"/>
+<area shape="rect" id="node26" href="$sparse__clause__container_8h.html" title=" " alt="" coords="1028,169,1175,211"/>
+<area shape="rect" id="node29" href="$fast__rand_8h.html" title=" " alt="" coords="806,259,901,285"/>
+<area shape="rect" id="node32" href="$tm__weight__bank_8h.html" title=" " alt="" coords="1601,177,1743,203"/>
+<area shape="rect" id="node36" href="$tm__math_8h.html" title=" " alt="" coords="1865,177,1991,203"/>
+<area shape="rect" id="node27" title=" " alt="" coords="977,259,1101,285"/>
+<area shape="rect" id="node28" title=" " alt="" coords="1125,259,1168,285"/>
+<area shape="rect" id="node30" title=" " alt="" coords="790,333,861,360"/>
+<area shape="rect" id="node31" title=" " alt="" coords="885,333,953,360"/>
+<area shape="rect" id="node33" title=" " alt="" coords="1901,259,1955,285"/>
+<area shape="rect" id="node34" title=" " alt="" coords="1752,259,1827,285"/>
+<area shape="rect" id="node35" href="$WeightBank_8h.html" title=" " alt="" coords="1616,259,1728,285"/>
+<area shape="rect" id="node37" title=" " alt="" coords="2029,259,2115,285"/>
 </map>

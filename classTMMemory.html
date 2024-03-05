@@ -79,8 +79,10 @@ Public Types</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a864670575c1299658dca4eda3d599a69"><td class="memItemLeft" align="right" valign="top">std::span&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMMemory.html#a864670575c1299658dca4eda3d599a69">getSegment</a> (std::size_t segmentSize)</td></tr>
-<tr class="separator:a864670575c1299658dca4eda3d599a69"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af49bf6543a2484c1afcf9161677cadc5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMMemory.html#af49bf6543a2484c1afcf9161677cadc5">addMemory</a> (std::size_t size)</td></tr>
+<tr class="separator:af49bf6543a2484c1afcf9161677cadc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92f3e686b5555074f3305aafbcbd318d"><td class="memItemLeft" align="right" valign="top">tcb::span&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMMemory.html#a92f3e686b5555074f3305aafbcbd318d">getSegment</a> (std::size_t segmentSize)</td></tr>
+<tr class="separator:a92f3e686b5555074f3305aafbcbd318d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a784ee55cd1c93f47e9246dd144441576"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMMemory.html#a784ee55cd1c93f47e9246dd144441576">push_back</a> (T value)</td></tr>
 <tr class="separator:a784ee55cd1c93f47e9246dd144441576"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6477eb40ef9cfe92946349a5dd2e4776"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMMemory.html#a6477eb40ef9cfe92946349a5dd2e4776">reserve</a> (std::size_t newCapacity)</td></tr>
@@ -156,14 +158,32 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a864670575c1299658dca4eda3d599a69"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a864670575c1299658dca4eda3d599a69">&#9670;&nbsp;</a></span>getSegment()</h2>
+<a id="af49bf6543a2484c1afcf9161677cadc5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af49bf6543a2484c1afcf9161677cadc5">&#9670;&nbsp;</a></span>addMemory()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::span&lt;T&gt; getSegment </td>
+          <td class="memname">void addMemory </td>
+          <td>(</td>
+          <td class="paramtype">std::size_t&#160;</td>
+          <td class="paramname"><em>size</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a92f3e686b5555074f3305aafbcbd318d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a92f3e686b5555074f3305aafbcbd318d">&#9670;&nbsp;</a></span>getSegment()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">tcb::span&lt;T&gt; getSegment </td>
           <td>(</td>
           <td class="paramtype">std::size_t&#160;</td>
           <td class="paramname"><em>segmentSize</em></td><td>)</td>

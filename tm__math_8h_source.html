@@ -77,49 +77,58 @@ $(function() {
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#define TUMLIBPP_TM_MATH_H</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;span&gt;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="classTMMath.html">   10</a></span>&#160;<span class="keyword">class </span><a class="code" href="classTMMath.html">TMMath</a> {</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
+<div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="classTMMath.html">   11</a></span>&#160;<span class="keyword">class </span><a class="code" href="classTMMath.html">TMMath</a> {</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    <span class="keyword">public</span>:</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="classTMMath.html#a66d9bfbb683857b76103f8f8d13bbc59">   14</a></span>&#160;    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="classTMMath.html#a66d9bfbb683857b76103f8f8d13bbc59">aRange</a>(<span class="keywordtype">size_t</span> num_samples, <span class="keywordtype">bool</span> shuffle, std::vector&lt;int&gt;&amp; sample_indices) {</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;        <span class="comment">// Resize the vector to hold all indices</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;        sample_indices.resize(num_samples);</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;        <span class="comment">// Fill the vector with consecutive integers starting from 0</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;        std::iota(sample_indices.begin(), sample_indices.end(), 0);</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="classTMMath.html#aec7014a7fc3b15c736159140a5bb4132">   16</a></span>&#160;    <span class="keyword">static</span> <a class="code" href="namespaceautoencoder_1_1DimensionalityReductionDemo.html#a94960b2af438191aca84d0ea3a690af3">T</a> <a class="code" href="classTMMath.html#aec7014a7fc3b15c736159140a5bb4132">clamp</a>(<a class="code" href="namespaceautoencoder_1_1DimensionalityReductionDemo.html#a94960b2af438191aca84d0ea3a690af3">T</a> value, <a class="code" href="namespaceautoencoder_1_1DimensionalityReductionDemo.html#a94960b2af438191aca84d0ea3a690af3">T</a> low, <a class="code" href="namespaceautoencoder_1_1DimensionalityReductionDemo.html#a94960b2af438191aca84d0ea3a690af3">T</a> high) {</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;        <span class="keywordflow">return</span> std::max(low, std::min(value, high));</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    }</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        <span class="comment">// Shuffle the indices if required</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        <span class="keywordflow">if</span> (shuffle) {</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;            <span class="comment">// Use a random device to seed a random number generator</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;            std::random_device rd;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;            std::mt19937 g(rd());</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;            std::shuffle(sample_indices.begin(), sample_indices.end(), g);</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        }</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    }</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> U&gt;</div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classTMMath.html#aaef928b9483334de5f91bae7b695a60e">   33</a></span>&#160;    <span class="keyword">static</span> std::vector&lt;T&gt; <a class="code" href="classTMMath.html#aaef928b9483334de5f91bae7b695a60e">elementwise_multiply</a>(std::span&lt;const T&gt; span1, std::span&lt;const U&gt; span2) {</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;        assert(span1.size() == span2.size());</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        std::vector&lt;T&gt; <a class="code" href="namespaceclassification_1_1IMDbSparseAbsorbingTextCategorizationDemo.html#a8b2e13c78efca330f06b6ddcd7464b41">result</a>(span1.size());</div>
+<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="classTMMath.html#a66d9bfbb683857b76103f8f8d13bbc59">   21</a></span>&#160;    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="classTMMath.html#a66d9bfbb683857b76103f8f8d13bbc59">aRange</a>(<span class="keywordtype">size_t</span> num_samples, <span class="keywordtype">bool</span> shuffle, std::vector&lt;int&gt;&amp; sample_indices) {</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        <span class="comment">// Resize the vector to hold all indices</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        sample_indices.resize(num_samples);</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        <span class="comment">// Fill the vector with consecutive integers starting from 0</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;        std::iota(sample_indices.begin(), sample_indices.end(), 0);</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        <span class="comment">// Shuffle the indices if required</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;        <span class="keywordflow">if</span> (shuffle) {</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;            <span class="comment">// Use a random device to seed a random number generator</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;            std::random_device rd;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;            std::mt19937 g(rd());</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;            std::shuffle(sample_indices.begin(), sample_indices.end(), g);</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        }</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    }</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        <span class="keywordflow">for</span> (std::size_t <a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a> = 0; <a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a> &lt; span1.size(); ++<a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a>) {</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;            <a class="code" href="namespaceclassification_1_1IMDbSparseAbsorbingTextCategorizationDemo.html#a8b2e13c78efca330f06b6ddcd7464b41">result</a>[<a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a>] = span1[<a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a>] * span2[<a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a>];</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        }</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="namespaceclassification_1_1IMDbSparseAbsorbingTextCategorizationDemo.html#a8b2e13c78efca330f06b6ddcd7464b41">result</a>;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    }</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> U&gt;</div>
+<div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="classTMMath.html#aa417aa6d29f9e11e50903bbbe659338d">   40</a></span>&#160;    <span class="keyword">static</span> <span class="keyword">const</span> std::vector&lt;T&gt; <a class="code" href="classTMMath.html#aa417aa6d29f9e11e50903bbbe659338d">elementwise_multiply</a>(<span class="keyword">const</span> tcb::span&lt;const T&gt; span1, <span class="keyword">const</span> tcb::span&lt;const U&gt; span2) {</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        assert(span1.size() == span2.size());</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        std::vector&lt;T&gt; <a class="code" href="namespaceclassification_1_1IMDbSparseAbsorbingTextCategorizationDemo.html#a8b2e13c78efca330f06b6ddcd7464b41">result</a>(span1.size());</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;};</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">#endif </span><span class="comment">//TUMLIBPP_TM_MATH_H</span></div>
-<div class="ttc" id="aclassTMMath_html"><div class="ttname"><a href="classTMMath.html">TMMath</a></div><div class="ttdef"><b>Definition:</b> tm_math.h:10</div></div>
-<div class="ttc" id="aclassTMMath_html_a66d9bfbb683857b76103f8f8d13bbc59"><div class="ttname"><a href="classTMMath.html#a66d9bfbb683857b76103f8f8d13bbc59">TMMath::aRange</a></div><div class="ttdeci">static void aRange(size_t num_samples, bool shuffle, std::vector&lt; int &gt; &amp;sample_indices)</div><div class="ttdef"><b>Definition:</b> tm_math.h:14</div></div>
-<div class="ttc" id="aclassTMMath_html_aaef928b9483334de5f91bae7b695a60e"><div class="ttname"><a href="classTMMath.html#aaef928b9483334de5f91bae7b695a60e">TMMath::elementwise_multiply</a></div><div class="ttdeci">static std::vector&lt; T &gt; elementwise_multiply(std::span&lt; const T &gt; span1, std::span&lt; const U &gt; span2)</div><div class="ttdef"><b>Definition:</b> tm_math.h:33</div></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <span class="keywordflow">for</span> (std::size_t <a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a> = 0; <a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a> &lt; span1.size(); ++<a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a>) {</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;            <a class="code" href="namespaceclassification_1_1IMDbSparseAbsorbingTextCategorizationDemo.html#a8b2e13c78efca330f06b6ddcd7464b41">result</a>[<a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a>] = span1[<a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a>] * span2[<a class="code" href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">i</a>];</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        }</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="namespaceclassification_1_1IMDbSparseAbsorbingTextCategorizationDemo.html#a8b2e13c78efca330f06b6ddcd7464b41">result</a>;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    }</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;};</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#endif </span><span class="comment">//TUMLIBPP_TM_MATH_H</span></div>
+<div class="ttc" id="aclassTMMath_html"><div class="ttname"><a href="classTMMath.html">TMMath</a></div><div class="ttdef"><b>Definition:</b> tm_math.h:11</div></div>
+<div class="ttc" id="aclassTMMath_html_a66d9bfbb683857b76103f8f8d13bbc59"><div class="ttname"><a href="classTMMath.html#a66d9bfbb683857b76103f8f8d13bbc59">TMMath::aRange</a></div><div class="ttdeci">static void aRange(size_t num_samples, bool shuffle, std::vector&lt; int &gt; &amp;sample_indices)</div><div class="ttdef"><b>Definition:</b> tm_math.h:21</div></div>
+<div class="ttc" id="aclassTMMath_html_aa417aa6d29f9e11e50903bbbe659338d"><div class="ttname"><a href="classTMMath.html#aa417aa6d29f9e11e50903bbbe659338d">TMMath::elementwise_multiply</a></div><div class="ttdeci">static const std::vector&lt; T &gt; elementwise_multiply(const tcb::span&lt; const T &gt; span1, const tcb::span&lt; const U &gt; span2)</div><div class="ttdef"><b>Definition:</b> tm_math.h:40</div></div>
+<div class="ttc" id="aclassTMMath_html_aec7014a7fc3b15c736159140a5bb4132"><div class="ttname"><a href="classTMMath.html#aec7014a7fc3b15c736159140a5bb4132">TMMath::clamp</a></div><div class="ttdeci">static T clamp(T value, T low, T high)</div><div class="ttdef"><b>Definition:</b> tm_math.h:16</div></div>
+<div class="ttc" id="anamespaceautoencoder_1_1DimensionalityReductionDemo_html_a94960b2af438191aca84d0ea3a690af3"><div class="ttname"><a href="namespaceautoencoder_1_1DimensionalityReductionDemo.html#a94960b2af438191aca84d0ea3a690af3">autoencoder.DimensionalityReductionDemo.T</a></div><div class="ttdeci">int T</div><div class="ttdef"><b>Definition:</b> DimensionalityReductionDemo.py:20</div></div>
 <div class="ttc" id="anamespaceclassification_1_1IMDbSparseAbsorbingTextCategorizationDemo_html_a8b2e13c78efca330f06b6ddcd7464b41"><div class="ttname"><a href="namespaceclassification_1_1IMDbSparseAbsorbingTextCategorizationDemo.html#a8b2e13c78efca330f06b6ddcd7464b41">classification.IMDbSparseAbsorbingTextCategorizationDemo.result</a></div><div class="ttdeci">int result</div><div class="ttdef"><b>Definition:</b> IMDbSparseAbsorbingTextCategorizationDemo.py:96</div></div>
 <div class="ttc" id="anamespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo_html_a7e98b8a17c0aad30ba64d47b74e2a6c1"><div class="ttname"><a href="namespaceexperimental_1_1classification_1_1CombinatorialCompositionDemo.html#a7e98b8a17c0aad30ba64d47b74e2a6c1">experimental.classification.CombinatorialCompositionDemo.i</a></div><div class="ttdeci">i</div><div class="ttdef"><b>Definition:</b> CombinatorialCompositionDemo.py:87</div></div>
 </div><!-- fragment --></div><!-- contents -->

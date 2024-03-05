@@ -72,50 +72,53 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="tm__clause__dense_8h_source.html">tm_clause_dense.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="tm__vanilla_8h_source.html">models/classifiers/tm_vanilla.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="tm__dataset_8h_source.html">utils/tm_dataset.h</a>&quot;</code><br />
 <code>#include &lt;chrono&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
-<code>#include &lt;span&gt;</code><br />
+<code>#include &lt;tcb/span.hpp&gt;</code><br />
+<code>#include &quot;<a class="el" href="tm__vanilla_8h_source.html">models/classifiers/tm_vanilla.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for main.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="main_8cpp__incl.png" border="0" usemap="#atmu_2lib_2cpp_2main_8cpp" alt=""/></div>
 <map name="atmu_2lib_2cpp_2main_8cpp" id="atmu_2lib_2cpp_2main_8cpp">
-<area shape="rect" title=" " alt="" coords="708,5,866,32"/>
-<area shape="rect" href="tm__clause__dense_8h.html" title=" " alt="" coords="691,259,838,285"/>
-<area shape="rect" title=" " alt="" coords="569,408,632,435"/>
-<area shape="rect" title=" " alt="" coords="143,408,196,435"/>
-<area shape="rect" href="tm__vanilla_8h.html" title=" " alt="" coords="771,80,910,121"/>
-<area shape="rect" href="tm__dataset_8h.html" title=" " alt="" coords="1669,177,1809,203"/>
-<area shape="rect" title=" " alt="" coords="984,87,1051,114"/>
-<area shape="rect" title=" " alt="" coords="708,333,778,360"/>
-<area shape="rect" title=" " alt="" coords="249,408,336,435"/>
-<area shape="rect" title=" " alt="" coords="802,333,857,360"/>
-<area shape="rect" title=" " alt="" coords="882,333,956,360"/>
-<area shape="rect" title=" " alt="" coords="1031,333,1108,360"/>
-<area shape="rect" title=" " alt="" coords="1132,333,1212,360"/>
-<area shape="rect" href="tm__memory_8h.html" title=" " alt="" coords="344,333,456,360"/>
-<area shape="rect" href="ClauseBank_8h.html" title=" " alt="" coords="481,333,592,360"/>
-<area shape="rect" href="Tools_8h.html" title=" " alt="" coords="616,333,683,360"/>
-<area shape="rect" title=" " alt="" coords="1056,408,1142,435"/>
-<area shape="rect" title=" " alt="" coords="1683,408,1750,435"/>
-<area shape="rect" title=" " alt="" coords="822,177,885,203"/>
-<area shape="rect" href="sparse__clause__container_8h.html" title=" " alt="" coords="1126,169,1272,211"/>
-<area shape="rect" href="fast__rand_8h.html" title=" " alt="" coords="1338,259,1433,285"/>
-<area shape="rect" href="tm__weight__bank_8h.html" title=" " alt="" coords="553,177,696,203"/>
-<area shape="rect" href="tm__math_8h.html" title=" " alt="" coords="43,333,168,360"/>
-<area shape="rect" title=" " alt="" coords="1457,259,1517,285"/>
-<area shape="rect" title=" " alt="" coords="970,259,1094,285"/>
-<area shape="rect" title=" " alt="" coords="1542,259,1614,285"/>
-<area shape="rect" title=" " alt="" coords="1119,259,1162,285"/>
-<area shape="rect" title=" " alt="" coords="1350,333,1421,360"/>
-<area shape="rect" title=" " alt="" coords="398,259,472,285"/>
-<area shape="rect" href="WeightBank_8h.html" title=" " alt="" coords="496,259,608,285"/>
-<area shape="rect" title=" " alt="" coords="2070,259,2144,285"/>
-<area shape="rect" title=" " alt="" coords="1739,259,1814,285"/>
-<area shape="rect" title=" " alt="" coords="1838,259,1896,285"/>
-<area shape="rect" title=" " alt="" coords="1920,259,1995,285"/>
+<area shape="rect" title=" " alt="" coords="1307,5,1466,32"/>
+<area shape="rect" href="tm__clause__dense_8h.html" title=" " alt="" coords="1395,259,1541,285"/>
+<area shape="rect" title=" " alt="" coords="989,408,1051,435"/>
+<area shape="rect" title=" " alt="" coords="2099,408,2205,435"/>
+<area shape="rect" href="tm__dataset_8h.html" title=" " alt="" coords="378,177,518,203"/>
+<area shape="rect" title=" " alt="" coords="1521,87,1588,114"/>
+<area shape="rect" href="tm__vanilla_8h.html" title=" " alt="" coords="1359,80,1497,121"/>
+<area shape="rect" title=" " alt="" coords="1375,333,1446,360"/>
+<area shape="rect" title=" " alt="" coords="1785,408,1871,435"/>
+<area shape="rect" title=" " alt="" coords="1470,333,1525,360"/>
+<area shape="rect" title=" " alt="" coords="1183,333,1299,360"/>
+<area shape="rect" title=" " alt="" coords="1081,333,1159,360"/>
+<area shape="rect" title=" " alt="" coords="977,333,1057,360"/>
+<area shape="rect" href="tm__memory_8h.html" title=" " alt="" coords="1876,333,1988,360"/>
+<area shape="rect" href="ClauseBank_8h.html" title=" " alt="" coords="1549,333,1659,360"/>
+<area shape="rect" href="Tools_8h.html" title=" " alt="" coords="1684,333,1751,360"/>
+<area shape="rect" title=" " alt="" coords="1935,408,2022,435"/>
+<area shape="rect" title=" " alt="" coords="1405,408,1472,435"/>
+<area shape="rect" title=" " alt="" coords="94,259,167,285"/>
+<area shape="rect" title=" " alt="" coords="192,259,267,285"/>
+<area shape="rect" title=" " alt="" coords="291,259,349,285"/>
+<area shape="rect" title=" " alt="" coords="574,259,634,285"/>
+<area shape="rect" title=" " alt="" coords="373,259,448,285"/>
+<area shape="rect" title=" " alt="" coords="659,259,731,285"/>
+<area shape="rect" title=" " alt="" coords="2015,177,2078,203"/>
+<area shape="rect" href="sparse__clause__container_8h.html" title=" " alt="" coords="1028,169,1175,211"/>
+<area shape="rect" href="fast__rand_8h.html" title=" " alt="" coords="806,259,901,285"/>
+<area shape="rect" href="tm__weight__bank_8h.html" title=" " alt="" coords="1601,177,1743,203"/>
+<area shape="rect" href="tm__math_8h.html" title=" " alt="" coords="1865,177,1991,203"/>
+<area shape="rect" title=" " alt="" coords="977,259,1101,285"/>
+<area shape="rect" title=" " alt="" coords="1125,259,1168,285"/>
+<area shape="rect" title=" " alt="" coords="790,333,861,360"/>
+<area shape="rect" title=" " alt="" coords="885,333,953,360"/>
+<area shape="rect" title=" " alt="" coords="1901,259,1955,285"/>
+<area shape="rect" title=" " alt="" coords="1752,259,1827,285"/>
+<area shape="rect" href="WeightBank_8h.html" title=" " alt="" coords="1616,259,1728,285"/>
+<area shape="rect" title=" " alt="" coords="2029,259,2115,285"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -123,8 +126,8 @@ Include dependency graph for main.cpp:</div>
 Functions</h2></td></tr>
 <tr class="memitem:ae66f6b31b5ad750f1fe042a706a4e3d4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main</a> ()</td></tr>
 <tr class="separator:ae66f6b31b5ad750f1fe042a706a4e3d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a209ba1ded5b8999a8960f3c594caa6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a3a209ba1ded5b8999a8960f3c594caa6">perform_epoch</a> (<a class="el" href="classTMVanillaClassifier.html">TMVanillaClassifier</a>&lt; uint32_t &gt; &amp;classifier, int epoch, std::span&lt; uint32_t &gt; &amp;y_train_span, std::span&lt; uint32_t &gt; &amp;encoded_X_span, std::vector&lt; int32_t &gt; &amp;encoded_X_train_shape, std::span&lt; uint32_t &gt; &amp;encoded_X_test_span, std::vector&lt; int32_t &gt; &amp;encoded_X_test_shape, std::span&lt; uint32_t &gt; &amp;y_test_span)</td></tr>
-<tr class="separator:a3a209ba1ded5b8999a8960f3c594caa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ddc2c654fdf1ec688cba88482748206"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a6ddc2c654fdf1ec688cba88482748206">perform_epoch</a> (<a class="el" href="classTMVanillaClassifier.html">TMVanillaClassifier</a>&lt; uint32_t &gt; &amp;classifier, int epoch, tcb::span&lt; uint32_t &gt; &amp;y_train_span, tcb::span&lt; uint32_t &gt; &amp;x_train_span, std::vector&lt; int32_t &gt; &amp;x_train_shape, tcb::span&lt; uint32_t &gt; &amp;x_test_span, std::vector&lt; int32_t &gt; &amp;x_test_shape, tcb::span&lt; uint32_t &gt; &amp;y_test_span)</td></tr>
+<tr class="separator:a6ddc2c654fdf1ec688cba88482748206"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8ba715fc41831378a79d3fbf3732919"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#aa8ba715fc41831378a79d3fbf3732919">train_and_test_classifier</a> ()</td></tr>
 <tr class="separator:aa8ba715fc41831378a79d3fbf3732919"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -146,8 +149,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3a209ba1ded5b8999a8960f3c594caa6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3a209ba1ded5b8999a8960f3c594caa6">&#9670;&nbsp;</a></span>perform_epoch()</h2>
+<a id="a6ddc2c654fdf1ec688cba88482748206"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ddc2c654fdf1ec688cba88482748206">&#9670;&nbsp;</a></span>perform_epoch()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -167,37 +170,37 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::span&lt; uint32_t &gt; &amp;&#160;</td>
+          <td class="paramtype">tcb::span&lt; uint32_t &gt; &amp;&#160;</td>
           <td class="paramname"><em>y_train_span</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::span&lt; uint32_t &gt; &amp;&#160;</td>
-          <td class="paramname"><em>encoded_X_span</em>, </td>
+          <td class="paramtype">tcb::span&lt; uint32_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>x_train_span</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::vector&lt; int32_t &gt; &amp;&#160;</td>
-          <td class="paramname"><em>encoded_X_train_shape</em>, </td>
+          <td class="paramname"><em>x_train_shape</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::span&lt; uint32_t &gt; &amp;&#160;</td>
-          <td class="paramname"><em>encoded_X_test_span</em>, </td>
+          <td class="paramtype">tcb::span&lt; uint32_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>x_test_span</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::vector&lt; int32_t &gt; &amp;&#160;</td>
-          <td class="paramname"><em>encoded_X_test_shape</em>, </td>
+          <td class="paramname"><em>x_test_shape</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::span&lt; uint32_t &gt; &amp;&#160;</td>
+          <td class="paramtype">tcb::span&lt; uint32_t &gt; &amp;&#160;</td>
           <td class="paramname"><em>y_test_span</em>&#160;</td>
         </tr>
         <tr>

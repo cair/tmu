@@ -75,9 +75,12 @@ $(function() {
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a66d9bfbb683857b76103f8f8d13bbc59"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMMath.html#a66d9bfbb683857b76103f8f8d13bbc59">aRange</a> (size_t num_samples, bool shuffle, std::vector&lt; int &gt; &amp;sample_indices)</td></tr>
 <tr class="separator:a66d9bfbb683857b76103f8f8d13bbc59"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaef928b9483334de5f91bae7b695a60e"><td class="memTemplParams" colspan="2">template&lt;typename T , typename U &gt; </td></tr>
-<tr class="memitem:aaef928b9483334de5f91bae7b695a60e"><td class="memTemplItemLeft" align="right" valign="top">static std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classTMMath.html#aaef928b9483334de5f91bae7b695a60e">elementwise_multiply</a> (std::span&lt; const T &gt; span1, std::span&lt; const U &gt; span2)</td></tr>
-<tr class="separator:aaef928b9483334de5f91bae7b695a60e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec7014a7fc3b15c736159140a5bb4132"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aec7014a7fc3b15c736159140a5bb4132"><td class="memTemplItemLeft" align="right" valign="top">static T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classTMMath.html#aec7014a7fc3b15c736159140a5bb4132">clamp</a> (T value, T low, T high)</td></tr>
+<tr class="separator:aec7014a7fc3b15c736159140a5bb4132"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa417aa6d29f9e11e50903bbbe659338d"><td class="memTemplParams" colspan="2">template&lt;typename T , typename U &gt; </td></tr>
+<tr class="memitem:aa417aa6d29f9e11e50903bbbe659338d"><td class="memTemplItemLeft" align="right" valign="top">static const std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classTMMath.html#aa417aa6d29f9e11e50903bbbe659338d">elementwise_multiply</a> (const tcb::span&lt; const T &gt; span1, const tcb::span&lt; const U &gt; span2)</td></tr>
+<tr class="separator:aa417aa6d29f9e11e50903bbbe659338d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="a66d9bfbb683857b76103f8f8d13bbc59"></a>
@@ -122,8 +125,8 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aaef928b9483334de5f91bae7b695a60e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaef928b9483334de5f91bae7b695a60e">&#9670;&nbsp;</a></span>elementwise_multiply()</h2>
+<a id="aec7014a7fc3b15c736159140a5bb4132"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec7014a7fc3b15c736159140a5bb4132">&#9670;&nbsp;</a></span>clamp()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -132,15 +135,57 @@ Static Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static std::vector&lt;T&gt; elementwise_multiply </td>
+          <td class="memname">static T clamp </td>
           <td>(</td>
-          <td class="paramtype">std::span&lt; const T &gt;&#160;</td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>low</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>high</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aa417aa6d29f9e11e50903bbbe659338d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa417aa6d29f9e11e50903bbbe659338d">&#9670;&nbsp;</a></span>elementwise_multiply()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static const std::vector&lt;T&gt; elementwise_multiply </td>
+          <td>(</td>
+          <td class="paramtype">const tcb::span&lt; const T &gt;&#160;</td>
           <td class="paramname"><em>span1</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::span&lt; const U &gt;&#160;</td>
+          <td class="paramtype">const tcb::span&lt; const U &gt;&#160;</td>
           <td class="paramname"><em>span2</em>&#160;</td>
         </tr>
         <tr>
