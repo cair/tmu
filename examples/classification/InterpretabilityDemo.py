@@ -25,8 +25,6 @@ print("Accuracy:", 100*(tm.predict(X_test) == Y_test).mean())
 
 np.set_printoptions(threshold=np.inf, linewidth=200, precision=2, suppress=True)
 
-print("\nClass 0 Positive Clauses:\n")
-
 precision = tm.clause_precision(0, 0, X_test, Y_test)
 recall = tm.clause_recall(0, 0, X_test, Y_test)
 
@@ -41,7 +39,7 @@ for j in range(number_of_clauses//2):
 	for k in range(number_of_features*2):
 		if tm.get_ta_action(j, k, the_class = 0, polarity = 0):
 			if k < number_of_features:
-				l.append(" x%d(%d)" % (k, tm.get_ta_state(j, k, the_class = 1, polarity = 0)))
+				l.append(" x%d(%d)" % (k, tm.get_ta_state(j, k, the_class = 0, polarity = 0)))
 			else:
 				l.append("¬x%d(%d)" % (k-number_of_features, tm.get_ta_state(j, k, the_class = 0, polarity = 0)))
 	print(" ∧ ".join(l))
