@@ -28,6 +28,19 @@ dependencies = [
 ]
 requires-python = ">=3.10"
 
+[project.optional-dependencies]
+composite = [
+    "opencv-python-headless",
+    "pydantic",
+    "optuna",
+    "joblib"
+]
+
+tests = [
+
+]
+
+
 # Include additional files
 [project.urls]
 homepage = "https://github.com/cair/tmu/"
