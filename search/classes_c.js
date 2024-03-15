@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['unsw_5fnb15_1062',['UNSW_NB15',['../classtmu_1_1data_1_1unsw__nb15_1_1UNSW__NB15.html',1,'tmu::data::unsw_nb15']]]
+  ['neuralgate_1202',['NeuralGate',['../classtmu_1_1composite_1_1gating_1_1neural__gate_1_1NeuralGate.html',1,'tmu::composite::gating::neural_gate']]],
+  ['noiseinjectioncomponent_1203',['NoiseInjectionComponent',['../classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1NoiseInjectionComponent.html',1,'tmu::composite::components::image::experimental']]],
+  ['nslkdd_1204',['NSLKDD',['../classtmu_1_1data_1_1nsl__kdd_1_1NSLKDD.html',1,'tmu::data::nsl_kdd']]]
 ];

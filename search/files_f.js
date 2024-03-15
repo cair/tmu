@@ -1,16 +1,6 @@
 var searchData=
 [
-  ['tm_5fclause_5fdense_2eh_1304',['tm_clause_dense.h',['../tm__clause__dense_8h.html',1,'']]],
-  ['tm_5fdataset_2eh_1305',['tm_dataset.h',['../tm__dataset_8h.html',1,'']]],
-  ['tm_5fmath_2eh_1306',['tm_math.h',['../tm__math_8h.html',1,'']]],
-  ['tm_5fmemory_2eh_1307',['tm_memory.h',['../tm__memory_8h.html',1,'']]],
-  ['tm_5fvanilla_2eh_1308',['tm_vanilla.h',['../tm__vanilla_8h.html',1,'']]],
-  ['tm_5fweight_5fbank_2eh_1309',['tm_weight_bank.h',['../tm__weight__bank_8h.html',1,'']]],
-  ['tmu_5fdataset_2epy_1310',['tmu_dataset.py',['../tmu__dataset_8py.html',1,'']]],
-  ['tmu_5fdatasource_2epy_1311',['tmu_datasource.py',['../tmu__datasource_8py.html',1,'']]],
-  ['tmulib_5fextension_5fbuild_2epy_1312',['tmulib_extension_build.py',['../tmulib__extension__build_8py.html',1,'']]],
-  ['tmulibcpp_2ecpp_1313',['tmulibcpp.cpp',['../tmulibcpp_8cpp.html',1,'']]],
-  ['tools_2ec_1314',['Tools.c',['../Tools_8c.html',1,'']]],
-  ['tools_2eh_1315',['Tools.h',['../Tools_8h.html',1,'']]],
-  ['tools_2epy_1316',['tools.py',['../tools_8py.html',1,'']]]
+  ['readme_2emd_1511',['README.md',['../examples_2classification_2README_8md.html',1,'(Global Namespace)'],['../tmu_2preprocessing_2standard__binarizer_2README_8md.html',1,'(Global Namespace)']]],
+  ['regressiondemo_2epy_1512',['RegressionDemo.py',['../RegressionDemo_8py.html',1,'']]],
+  ['relationaltmdemo_2epy_1513',['RelationalTMDemo.py',['../experimental_2relational_2RelationalTMDemo_8py.html',1,'(Global Namespace)'],['../relational_2RelationalTMDemo_8py.html',1,'(Global Namespace)']]]
 ];

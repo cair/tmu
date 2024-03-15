@@ -79,7 +79,8 @@ $(function() {
 : <a class="el" href="classtmu_1_1data_1_1imdb__keras_1_1IMDB.html#aa28dc103258589d9cb421197fe2de90b">IMDB</a>
 </li>
 <li>platform
-: <a class="el" href="classtmu_1_1models_1_1base_1_1TMBaseModel.html#adc3a21ccb616231a81529950cab007f4">TMBaseModel</a>
+: <a class="el" href="classtmu_1_1composite_1_1tuner_1_1TMCompositeTuner.html#adc3a21ccb616231a81529950cab007f4">TMCompositeTuner</a>
+, <a class="el" href="classtmu_1_1models_1_1base_1_1TMBaseModel.html#adc3a21ccb616231a81529950cab007f4">TMBaseModel</a>
 </li>
 <li>populate()
 : <a class="el" href="classSparseClauseContainer.html#a82b4340755ef919591195e3f77c5450d">SparseClauseContainer&lt; ClauseType &gt;</a>
@@ -93,7 +94,12 @@ $(function() {
 : <a class="el" href="classTMWeightBankPresets.html#a03f1d078eec9a6b7cdbad2403af054ba">TMWeightBankPresets</a>
 </li>
 <li>predict()
-: <a class="el" href="classtmu_1_1models_1_1autoencoder_1_1autoencoder_1_1TMAutoEncoder.html#ab3e13343931e6fe2e799dcedf50cba12">TMAutoEncoder</a>
+: <a class="el" href="classtmu_1_1composite_1_1components_1_1base_1_1TMComponent.html#a14f0071007ccab5409dd75701fc33ab4">TMComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1composite_1_1TMComposite.html#a74ffe9b2d66496f55b537d022df4dc0b">TMComposite</a>
+, <a class="el" href="classtmu_1_1composite_1_1gating_1_1base_1_1BaseGate.html#ab1ad6f77aaeee12cb51ba6e7ce352eed">BaseGate</a>
+, <a class="el" href="classtmu_1_1composite_1_1gating_1_1linear__gate_1_1LinearGate.html#a59b43004b7a51fd2a1efb811fb7ab4cb">LinearGate</a>
+, <a class="el" href="classtmu_1_1composite_1_1gating_1_1neural__gate_1_1NeuralGate.html#a59b43004b7a51fd2a1efb811fb7ab4cb">NeuralGate</a>
+, <a class="el" href="classtmu_1_1models_1_1autoencoder_1_1autoencoder_1_1TMAutoEncoder.html#ab3e13343931e6fe2e799dcedf50cba12">TMAutoEncoder</a>
 , <a class="el" href="classtmu_1_1models_1_1base_1_1TMBaseModel.html#ae4a824c7ecef90a9448cd3c381af3129">TMBaseModel</a>
 , <a class="el" href="classtmu_1_1models_1_1classification_1_1coalesced__classifier_1_1TMCoalescedClassifier.html#a03c76ed0e42bd0c39f7171b5e22606a8">TMCoalescedClassifier</a>
 , <a class="el" href="classtmu_1_1models_1_1classification_1_1multichannel__classifier_1_1TMMultiChannelClassifier.html#ab3e13343931e6fe2e799dcedf50cba12">TMMultiChannelClassifier</a>
@@ -124,6 +130,47 @@ $(function() {
 <li>prepare_X_autoencoder()
 : <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank_1_1ClauseBank.html#a115592122711f5a1c257612a0f037b08">ClauseBank</a>
 , <a class="el" href="classtmu_1_1clause__bank_1_1clause__bank__cuda_1_1ImplClauseBankCUDA.html#a115592122711f5a1c257612a0f037b08">ImplClauseBankCUDA</a>
+</li>
+<li>preprocess()
+: <a class="el" href="classtmu_1_1composite_1_1components_1_1adaptive__thresholding_1_1AdaptiveThresholdingComponent.html#a0d229deff217990e00c0aff09ea35bcd">AdaptiveThresholdingComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1base_1_1TMComponent.html#a9d03b672f3de72e0eff4da5baa1a9719">TMComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1color__thermometer__scoring_1_1ColorThermometerComponent.html#a0d229deff217990e00c0aff09ea35bcd">ColorThermometerComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1histogram__of__gradients_1_1HistogramOfGradientsComponent.html#a0d229deff217990e00c0aff09ea35bcd">HistogramOfGradientsComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1AffineTransformationComponent.html#a0d229deff217990e00c0aff09ea35bcd">AffineTransformationComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1BilateralFilterComponent.html#a0d229deff217990e00c0aff09ea35bcd">BilateralFilterComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1BrightnessAdjustmentComponent.html#a0d229deff217990e00c0aff09ea35bcd">BrightnessAdjustmentComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1ChannelNormalizationComponent.html#a0d229deff217990e00c0aff09ea35bcd">ChannelNormalizationComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1ChannelShuffleComponent.html#a0d229deff217990e00c0aff09ea35bcd">ChannelShuffleComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1CLAHEComponent.html#a0d229deff217990e00c0aff09ea35bcd">CLAHEComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1ColorBalanceComponent.html#a0d229deff217990e00c0aff09ea35bcd">ColorBalanceComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1ColorJitterComponent.html#a0d229deff217990e00c0aff09ea35bcd">ColorJitterComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1ContrastAdjustmentComponent.html#a0d229deff217990e00c0aff09ea35bcd">ContrastAdjustmentComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1DCTComponent.html#a0d229deff217990e00c0aff09ea35bcd">DCTComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1EdgeDetectionComponent.html#a0d229deff217990e00c0aff09ea35bcd">EdgeDetectionComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1FFTComponent.html#a0d229deff217990e00c0aff09ea35bcd">FFTComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1GaborFilterComponent.html#a0d229deff217990e00c0aff09ea35bcd">GaborFilterComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1GammaCorrectionComponent.html#a0d229deff217990e00c0aff09ea35bcd">GammaCorrectionComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1GaussianBlurComponent.html#a0d229deff217990e00c0aff09ea35bcd">GaussianBlurComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1GradientMagnitudeComponent.html#a0d229deff217990e00c0aff09ea35bcd">GradientMagnitudeComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1HistogramEqualizationComponent.html#a0d229deff217990e00c0aff09ea35bcd">HistogramEqualizationComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1HorizontalFlipComponent.html#a0d229deff217990e00c0aff09ea35bcd">HorizontalFlipComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1HueSaturationValueAdjustmentComponent.html#a0d229deff217990e00c0aff09ea35bcd">HueSaturationValueAdjustmentComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1ImageNormalizationComponent.html#a0d229deff217990e00c0aff09ea35bcd">ImageNormalizationComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1ImageRotationComponent.html#a0d229deff217990e00c0aff09ea35bcd">ImageRotationComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1ImageShiftComponent.html#a0d229deff217990e00c0aff09ea35bcd">ImageShiftComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1InvertColorsComponent.html#a0d229deff217990e00c0aff09ea35bcd">InvertColorsComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1MorphologicalOperationsComponent.html#a0d229deff217990e00c0aff09ea35bcd">MorphologicalOperationsComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1NoiseInjectionComponent.html#a0d229deff217990e00c0aff09ea35bcd">NoiseInjectionComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1OpticalFlowComponent.html#a0d229deff217990e00c0aff09ea35bcd">OpticalFlowComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1PerspectiveTransformComponent.html#a0d229deff217990e00c0aff09ea35bcd">PerspectiveTransformComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1RandomPatchExtractionComponent.html#a0d229deff217990e00c0aff09ea35bcd">RandomPatchExtractionComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1RandomRescaleComponent.html#a0d229deff217990e00c0aff09ea35bcd">RandomRescaleComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1RandomRotation90Component.html#a0d229deff217990e00c0aff09ea35bcd">RandomRotation90Component</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1RandomTranslationComponent.html#a0d229deff217990e00c0aff09ea35bcd">RandomTranslationComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1SaltAndPepperNoiseComponent.html#a0d229deff217990e00c0aff09ea35bcd">SaltAndPepperNoiseComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1SharpeningComponent.html#a0d229deff217990e00c0aff09ea35bcd">SharpeningComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1VerticalFlipComponent.html#a0d229deff217990e00c0aff09ea35bcd">VerticalFlipComponent</a>
+, <a class="el" href="classtmu_1_1composite_1_1gating_1_1base_1_1BaseGate.html#a0d229deff217990e00c0aff09ea35bcd">BaseGate</a>
 </li>
 <li>previous_xi
 : <a class="el" href="classTMClauseBankDense.html#af4d52bd69b2b9e8e1b3ea3083413e05e">TMClauseBankDense&lt; T &gt;</a>

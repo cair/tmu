@@ -1,0 +1,5 @@
+<map id="BaseGate" name="BaseGate">
+<area shape="rect" id="node1" title=" " alt="" coords="68,5,153,32"/>
+<area shape="rect" id="node2" href="$classtmu_1_1composite_1_1gating_1_1linear__gate_1_1LinearGate.html" title=" " alt="" coords="5,80,99,107"/>
+<area shape="rect" id="node3" href="$classtmu_1_1composite_1_1gating_1_1neural__gate_1_1NeuralGate.html" title=" " alt="" coords="123,80,219,107"/>
+</map>

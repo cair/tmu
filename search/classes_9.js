@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['remove_5fopt_5fmono_3c_20tl_3a_3aoptional_3c_20t_20_3e_20_3e_1034',['remove_opt_mono&lt; tl::optional&lt; T &gt; &gt;',['../structremove__opt__mono_3_01tl_1_1optional_3_01T_01_4_01_4.html',1,'']]]
+  ['kdd99_1193',['KDD99',['../classtmu_1_1data_1_1kdd__99_1_1KDD99.html',1,'tmu::data::kdd_99']]],
+  ['kuzushijimnist_1194',['KuzushijiMNIST',['../classtmu_1_1data_1_1fashion__mnist_1_1KuzushijiMNIST.html',1,'tmu::data::fashion_mnist']]]
 ];

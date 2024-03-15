@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['kdd99_1026',['KDD99',['../classtmu_1_1data_1_1kdd__99_1_1KDD99.html',1,'tmu::data::kdd_99']]],
-  ['kuzushijimnist_1027',['KuzushijiMNIST',['../classtmu_1_1data_1_1fashion__mnist_1_1KuzushijiMNIST.html',1,'tmu::data::fashion_mnist']]]
+  ['gaborfiltercomponent_1178',['GaborFilterComponent',['../classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1GaborFilterComponent.html',1,'tmu::composite::components::image::experimental']]],
+  ['gammacorrectioncomponent_1179',['GammaCorrectionComponent',['../classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1GammaCorrectionComponent.html',1,'tmu::composite::components::image::experimental']]],
+  ['gaussianblurcomponent_1180',['GaussianBlurComponent',['../classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1GaussianBlurComponent.html',1,'tmu::composite::components::image::experimental']]],
+  ['gradientmagnitudecomponent_1181',['GradientMagnitudeComponent',['../classtmu_1_1composite_1_1components_1_1image_1_1experimental_1_1GradientMagnitudeComponent.html',1,'tmu::composite::components::image::experimental']]]
 ];
