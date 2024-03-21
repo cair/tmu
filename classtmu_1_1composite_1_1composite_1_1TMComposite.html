@@ -84,8 +84,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aac968115c6f74dda24549b60b36d2f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c4127b0f0ffb54e4b16b37003193ea5"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1composite_1_1composite_1_1TMComposite.html#a8c4127b0f0ffb54e4b16b37003193ea5">load_model_from_components</a> (self, Union[Path, str] path, format=&quot;pkl&quot;)</td></tr>
 <tr class="separator:a8c4127b0f0ffb54e4b16b37003193ea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a74ffe9b2d66496f55b537d022df4dc0b"><td class="memItemLeft" align="right" valign="top">np.array&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1composite_1_1composite_1_1TMComposite.html#a74ffe9b2d66496f55b537d022df4dc0b">predict</a> (self, dict data, bool <a class="el" href="classtmu_1_1composite_1_1composite_1_1TMComposite.html#a643a6869bd0bea88c96949797618c9c0">use_multiprocessing</a>=True)</td></tr>
-<tr class="separator:a74ffe9b2d66496f55b537d022df4dc0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2e55d8fe35a71a5b15345d0329eaa65"><td class="memItemLeft" align="right" valign="top">np.array&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1composite_1_1composite_1_1TMComposite.html#ad2e55d8fe35a71a5b15345d0329eaa65">predict</a> (self, dict data)</td></tr>
+<tr class="separator:ad2e55d8fe35a71a5b15345d0329eaa65"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9adddbcd50577ec339ce7a89521b407d"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1composite_1_1composite_1_1TMComposite.html#a9adddbcd50577ec339ce7a89521b407d">save_model</a> (self, Union[Path, str] path, format=&quot;pkl&quot;)</td></tr>
 <tr class="separator:a9adddbcd50577ec339ce7a89521b407d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -95,6 +95,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a34a2c423b3ea385bdb64e0dbba3f901b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abbcb2e20dd1b31f62e735681200bc6bd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1composite_1_1composite_1_1TMComposite.html#abbcb2e20dd1b31f62e735681200bc6bd">gate_function_instance</a></td></tr>
 <tr class="separator:abbcb2e20dd1b31f62e735681200bc6bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cbf966fd9fc1fd2a90734a1ad6c794d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1composite_1_1composite_1_1TMComposite.html#a2cbf966fd9fc1fd2a90734a1ad6c794d">logic</a></td></tr>
+<tr class="separator:a2cbf966fd9fc1fd2a90734a1ad6c794d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a643a6869bd0bea88c96949797618c9c0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtmu_1_1composite_1_1composite_1_1TMComposite.html#a643a6869bd0bea88c96949797618c9c0">use_multiprocessing</a></td></tr>
 <tr class="separator:a643a6869bd0bea88c96949797618c9c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -248,8 +250,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a74ffe9b2d66496f55b537d022df4dc0b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a74ffe9b2d66496f55b537d022df4dc0b">&#9670;&nbsp;</a></span>predict()</h2>
+<a id="ad2e55d8fe35a71a5b15345d0329eaa65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad2e55d8fe35a71a5b15345d0329eaa65">&#9670;&nbsp;</a></span>predict()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -264,13 +266,7 @@ Public Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">dict&#160;</td>
-          <td class="paramname"><em>data</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool &#160;</td>
-          <td class="paramname"><em>use_multiprocessing</em> = <code>True</code>&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -339,6 +335,20 @@ Public Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">gate_function_instance</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a2cbf966fd9fc1fd2a90734a1ad6c794d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2cbf966fd9fc1fd2a90734a1ad6c794d">&#9670;&nbsp;</a></span>logic</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">logic</td>
         </tr>
       </table>
 </div><div class="memdoc">

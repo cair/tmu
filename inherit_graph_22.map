@@ -1,5 +1,5 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classtmu_1_1composite_1_1callbacks_1_1base_1_1TMCompositeCallback.html" title=" " alt="" coords="5,31,173,57"/>
-<area shape="rect" id="node2" href="$classcomposite_1_1example__1_1_1TMCompositeCheckpointCallback.html" title=" " alt="" coords="221,5,463,32"/>
-<area shape="rect" id="node3" href="$classcomposite_1_1example__1_1_1TMCompositeEvaluationCallback.html" title=" " alt="" coords="223,56,461,83"/>
+<area shape="rect" id="node1" href="$classtmu_1_1composite_1_1composite_1_1TMCompositeBase.html" title=" " alt="" coords="5,31,149,57"/>
+<area shape="rect" id="node2" href="$classtmu_1_1composite_1_1composite_1_1TMCompositeMP.html" title=" " alt="" coords="221,5,353,32"/>
+<area shape="rect" id="node3" href="$classtmu_1_1composite_1_1composite_1_1TMCompositeSingleCPU.html" title=" " alt="" coords="197,56,376,83"/>
 </map>
