@@ -1,110 +1,116 @@
-import pytest
+import unittest
 
+class TestMNISTDataset(unittest.TestCase):
 
-class TestMNISTDatasetobject:
-
-    def setup_class(self):
+    @classmethod
+    def setUpClass(cls):
         from tmu.data import MNIST
-        self.dataset_instance = MNIST()
+        cls.dataset_instance = MNIST()
 
-    def teardown_class(self):
-        self.dataset_instance = None
+    @classmethod
+    def tearDownClass(cls):
+        cls.dataset_instance = None
 
     def test_mnist_dict(self):
         dataset = self.dataset_instance.get()
-        assert len(dataset) == 4
-        assert "x_train" in dataset
-        assert "y_train" in dataset
-        assert "x_test" in dataset
-        assert "y_test" in dataset
-        assert len(dataset["x_train"]) == 60000
-        assert len(dataset["y_train"]) == 60000
-        assert len(dataset["x_test"]) == 10000
-        assert len(dataset["y_test"]) == 10000
+        self.assertEqual(len(dataset), 4)
+        self.assertIn("x_train", dataset)
+        self.assertIn("y_train", dataset)
+        self.assertIn("x_test", dataset)
+        self.assertIn("y_test", dataset)
+        self.assertEqual(len(dataset["x_train"]), 60000)
+        self.assertEqual(len(dataset["y_train"]), 60000)
+        self.assertEqual(len(dataset["x_test"]), 10000)
+        self.assertEqual(len(dataset["y_test"]), 10000)
 
     def test_mnist_list(self):
         dataset = self.dataset_instance.get_list()
-        assert len(dataset) == 4
-        assert isinstance(dataset, list)
+        self.assertEqual(len(dataset), 4)
+        self.assertIsInstance(dataset, list)
 
 
-class TestFashionMNISTDataset:
+class TestFashionMNISTDataset(unittest.TestCase):
 
-    def setup_class(self):
+    @classmethod
+    def setUpClass(cls):
         from tmu.data.fashion_mnist import FashionMNIST
-        self.dataset_instance = FashionMNIST()
+        cls.dataset_instance = FashionMNIST()
 
-    def teardown_class(self):
-        self.dataset_instance = None
+    @classmethod
+    def tearDownClass(cls):
+        cls.dataset_instance = None
 
     def test_fashion_mnist_dict(self):
         dataset = self.dataset_instance.get()
-        assert len(dataset) == 4
-        assert "x_train" in dataset
-        assert "y_train" in dataset
-        assert "x_test" in dataset
-        assert "y_test" in dataset
-        assert len(dataset["x_train"]) == 60000
-        assert len(dataset["y_train"]) == 60000
-        assert len(dataset["x_test"]) == 10000
-        assert len(dataset["y_test"]) == 10000
+        self.assertEqual(len(dataset), 4)
+        self.assertIn("x_train", dataset)
+        self.assertIn("y_train", dataset)
+        self.assertIn("x_test", dataset)
+        self.assertIn("y_test", dataset)
+        self.assertEqual(len(dataset["x_train"]), 60000)
+        self.assertEqual(len(dataset["y_train"]), 60000)
+        self.assertEqual(len(dataset["x_test"]), 10000)
+        self.assertEqual(len(dataset["y_test"]), 10000)
 
     def test_fashion_mnist_list(self):
         dataset = self.dataset_instance.get_list()
-        assert len(dataset) == 4
-        assert isinstance(dataset, list)
+        self.assertEqual(len(dataset), 4)
+        self.assertIsInstance(dataset, list)
 
 
-class TestKuzushijiMNISTDataset:
+class TestKuzushijiMNISTDataset(unittest.TestCase):
 
-    def setup_class(self):
+    @classmethod
+    def setUpClass(cls):
         from tmu.data.fashion_mnist import KuzushijiMNIST
-        self.dataset_instance = KuzushijiMNIST()
+        cls.dataset_instance = KuzushijiMNIST()
 
-    def teardown_class(self):
-        self.dataset_instance = None
+    @classmethod
+    def tearDownClass(cls):
+        cls.dataset_instance = None
 
     def test_kuzushiji_mnist_dict(self):
         dataset = self.dataset_instance.get()
-        assert len(dataset) == 4
-        assert "x_train" in dataset
-        assert "y_train" in dataset
-        assert "x_test" in dataset
-        assert "y_test" in dataset
-        assert len(dataset["x_train"]) == 60000
-        assert len(dataset["y_train"]) == 60000
-        assert len(dataset["x_test"]) == 10000
-        assert len(dataset["y_test"]) == 10000
+        self.assertEqual(len(dataset), 4)
+        self.assertIn("x_train", dataset)
+        self.assertIn("y_train", dataset)
+        self.assertIn("x_test", dataset)
+        self.assertIn("y_test", dataset)
+        self.assertEqual(len(dataset["x_train"]), 60000)
+        self.assertEqual(len(dataset["y_train"]), 60000)
+        self.assertEqual(len(dataset["x_test"]), 10000)
+        self.assertEqual(len(dataset["y_test"]), 10000)
 
     def test_kuzushiji_mnist_list(self):
         dataset = self.dataset_instance.get_list()
-        assert len(dataset) == 4
-        assert isinstance(dataset, list)
+        self.assertEqual(len(dataset), 4)
+        self.assertIsInstance(dataset, list)
 
 
-class TestCIFAR100Dataset:
+class TestCIFAR100Dataset(unittest.TestCase):
 
-    def setup_class(self):
+    @classmethod
+    def setUpClass(cls):
         from tmu.data.fashion_mnist import CIFAR100
-        self.dataset_instance = CIFAR100()
+        cls.dataset_instance = CIFAR100()
 
-    def teardown_class(self):
-        self.dataset_instance = None
+    @classmethod
+    def tearDownClass(cls):
+        cls.dataset_instance = None
 
     def test_cifar100_dict(self):
         dataset = self.dataset_instance.get()
-        assert len(dataset) == 4
-        assert "x_train" in dataset
-        assert "y_train" in dataset
-        assert "x_test" in dataset
-        assert "y_test" in dataset
-        # adjust the following counts according to your train-test split
-        assert len(dataset["x_train"]) == 50000
-        assert len(dataset["y_train"]) == 50000
-        assert len(dataset["x_test"]) == 10000
-        assert len(dataset["y_test"]) == 10000
+        self.assertEqual(len(dataset), 4)
+        self.assertIn("x_train", dataset)
+        self.assertIn("y_train", dataset)
+        self.assertIn("x_test", dataset)
+        self.assertIn("y_test", dataset)
+        self.assertEqual(len(dataset["x_train"]), 50000)
+        self.assertEqual(len(dataset["y_train"]), 50000)
+        self.assertEqual(len(dataset["x_test"]), 10000)
+        self.assertEqual(len(dataset["y_test"]), 10000)
 
     def test_cifar100_list(self):
         dataset = self.dataset_instance.get_list()
-        assert len(dataset) == 4
-        assert isinstance(dataset, list)
+        self.assertEqual(len(dataset), 4)
+        self.assertIsInstance(dataset, list)

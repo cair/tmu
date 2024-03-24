@@ -1,6 +1,5 @@
-from tmu.models.classification.one_vs_one_classifier import TMOneVsOneClassifier
+from tmu.experimental.models.one_vs_one_classifier import TMOneVsOneClassifier
 import numpy as np
-from time import time
 
 clauses = 4
 number_of_features = 20

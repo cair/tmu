@@ -1,3 +1,6 @@
+import argparse
+import logging
+
 from tmu.composite.callbacks.base import TMCompositeCallback
 from tmu.composite.composite import TMComposite
 from tmu.composite.components.adaptive_thresholding import AdaptiveThresholdingComponent
@@ -8,10 +11,16 @@ from tmu.data.cifar10 import CIFAR10
 from tmu.models.classification.vanilla_classifier import TMClassifier
 import pathlib
 
+_LOGGER = logging.getLogger(__name__)
 
-if __name__ == "__main__":
-    platform = "GPU"
-    epochs = 100
+
+def main(args):
+    experiment_results = dict(
+        accuracy=[]
+    )
+
+    platform = args.platform
+    epochs = args.epochs
     checkpoint_path = pathlib.Path("checkpoints")
     checkpoint_path.mkdir(exist_ok=True)
 
@@ -37,7 +46,6 @@ if __name__ == "__main__":
         Y=Y_test
     )
 
-
     class TMCompositeCheckpointCallback(TMCompositeCallback):
 
         def on_epoch_component_begin(self, component, epoch, logs=None):
@@ -53,9 +61,9 @@ if __name__ == "__main__":
             self.best_acc = 0.0
             self.data = data
 
-       # def on_epoch_end(self, composite, epoch, logs=None):
-       #     preds = composite.predict(data=self.data)
-       #     print("Team Accuracy: %.1f" % (100 * (preds == self.data["Y"]).mean()))
+    # def on_epoch_end(self, composite, epoch, logs=None):
+    #     preds = composite.predict(data=self.data)
+    #     print("Team Accuracy: %.1f" % (100 * (preds == self.data["Y"]).mean()))
 
     # Define the composite model
     composite_model = TMComposite(
@@ -115,4 +123,27 @@ if __name__ == "__main__":
 
     y_true = data_test["Y"].flatten()
     for k, v in preds.items():
-        print(f"{k} Accuracy: %.1f" % (100 * (v == y_true).mean()))
+        comp_acc = 100 * (v == y_true).mean()
+        print(f"{k} Accuracy: %.1f" % (comp_acc,))
+
+        if k not in experiment_results["accuracy"]:
+            experiment_results["accuracy"][k] = []
+        experiment_results["accuracy"][k].append(comp_acc)
+
+    return experiment_results
+
+
+def default_args(**kwargs):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--platform", default="CPU", type=str)
+    parser.add_argument("--epochs", default=30, type=int)
+    args = parser.parse_args()
+    for key, value in kwargs.items():
+        if key in args.__dict__:
+            setattr(args, key, value)
+    return args
+
+
+if __name__ == "__main__":
+    results = main(default_args())
+    _LOGGER.info(results)

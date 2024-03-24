@@ -3,7 +3,7 @@ from time import time
 
 from keras.datasets import mnist
 
-from tmu.models.classification.one_vs_one_classifier import TMOneVsOneClassifier
+from tmu.experimental.models.one_vs_one_classifier import TMOneVsOneClassifier
 
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 

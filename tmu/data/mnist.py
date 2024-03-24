@@ -31,6 +31,6 @@ class MNIST(TMUDataset):
 
     def _transform(self, name, dataset):
         if name.startswith("y"):
-            return dataset
+            return dataset.astype(np.uint32)
 
-        return np.where(dataset.reshape((dataset.shape[0], 28 * 28)) > 75, 1, 0)
+        return np.where(dataset.reshape((dataset.shape[0], 28 * 28)) > 75, 1, 0).astype(np.uint32)

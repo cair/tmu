@@ -359,13 +359,18 @@ class TMUDatasetSource:
             Y_test = Y_test.values.flatten()
 
         if return_type == tuple:
-            return X_train, Y_train, X_test, Y_test
+            return (
+                X_train.astype(np.uint32),
+                Y_train.astype(np.uint32),
+                X_test.astype(np.uint32),
+                Y_test.astype(np.uint32)
+            )
         elif return_type == dict:
             return dict(
-                x_train=X_train,
-                y_train=Y_train,
-                x_test=X_test,
-                y_test=Y_test
+                x_train=X_train.astype(np.uint32),
+                y_train=Y_train.astype(np.uint32),
+                x_test=X_test.astype(np.uint32),
+                y_test=Y_test.astype(np.uint32)
             )
         else:
             raise RuntimeError("Invalid return_type. Should be set as 'dict' or 'tuple'")

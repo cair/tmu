@@ -1,82 +1,122 @@
+import argparse
+import logging
 import numpy as np
-from time import time
-from sklearn.metrics import f1_score
 from sklearn.metrics.pairwise import cosine_similarity
-
-from scipy.sparse import csr_matrix
-
 from tmu.models.autoencoder.autoencoder import TMAutoEncoder
+from tmu.tools import BenchmarkTimer
 
-number_of_features = 12
+_LOGGER = logging.getLogger(__name__)
 
-noise = 0.1
 
-clause_weight_threshold = 0
+def main(args):
+    experiment_results = dict(
+        cosine_similarity=[],
+        train_time=[],
+        recall=[],
+        precision=[],
+        args=vars(args)
+    )
 
-number_of_examples = 2500
-accumulation = 1
+    print("Number of clauses:", args.num_clauses)
 
-clauses = 10
-T = 8*10
-s = 1.5
+    output_active = np.array([0, 1], dtype=np.uint32)
 
-print("Number of clauses:", clauses)
+    X_train = np.random.randint(0, 2, size=(5000, args.number_of_features), dtype=np.uint32)
+    X_train[:, 0] = np.where(np.random.rand(5000) <= args.noise, 1 - X_train[:, 1], X_train[:, 1])
 
-output_active = np.array([0, 1], dtype=np.uint32)
+    tm = TMAutoEncoder(
+        args.num_clauses,
+        args.T,
+        args.s,
+        output_active,
+        max_included_literals=args.max_included_literals,
+        accumulation=args.accumulation,
+        feature_negation=args.feature_negation,
+        platform=args.platform,
+        output_balancing=args.output_balancing
+    )
 
-X_train = np.random.randint(0, 2, size=(5000, number_of_features), dtype=np.uint32)
-X_train[:,0] = np.where(np.random.rand(5000) <= noise, 1- X_train[:,1],  X_train[:,1])
+    print(f"\nAccuracy Over {args.epochs} Epochs:")
+    for e in range(args.epochs):
 
-tm = TMAutoEncoder(clauses, T, s, output_active, max_included_literals=3, accumulation=accumulation, feature_negation=True, platform='CPU', output_balancing=0.5)
+        benchmark1 = BenchmarkTimer(logger=_LOGGER, text="Training Time")
+        with benchmark1:
+            tm.fit(X_train, number_of_examples=args.number_of_examples)
+        experiment_results["train_time"].append(benchmark1.elapsed())
 
-print("\nAccuracy Over 40 Epochs:")
-for e in range(40):
-	start_training = time()
-	tm.fit(X_train, number_of_examples=number_of_examples)
-	stop_training = time()
+        print("\nEpoch #%d\n" % (e + 1))
 
-	print("\nEpoch #%d\n" % (e+1))
+        print("Calculating precision\n")
+        precision = []
+        for i in range(output_active.shape[0]):
+            precision.append(tm.clause_precision(i, True, X_train, number_of_examples=500))
+        experiment_results["precision"].append(precision)
 
-	print("Calculating precision\n")
-	precision = []
-	for i in range(output_active.shape[0]):
-		precision.append(tm.clause_precision(i, True, X_train, number_of_examples=500))
+        print("Calculating recall\n")
+        recall = []
+        for i in range(output_active.shape[0]):
+            recall.append(tm.clause_recall(i, True, X_train, number_of_examples=500))
+        experiment_results["recall"].append(precision)
+        print("Clauses\n")
 
-	print("Calculating recall\n")
-	recall = []
-	for i in range(output_active.shape[0]):
-		recall.append(tm.clause_recall(i, True, X_train, number_of_examples=500))
+        for j in range(args.num_clauses):
+            print("Clause #%d " % (j), end=' ')
+            for i in range(output_active.shape[0]):
+                print("x%d:W%d:P%.2f:R%.2f " % (i, tm.get_weight(i, j), precision[i][j], recall[i][j]), end=' ')
 
-	print("Clauses\n")
+            l = []
+            for k in range(tm.clause_bank.number_of_literals):
+                if tm.get_ta_action(j, k) == 1:
+                    if k < tm.clause_bank.number_of_features:
+                        l.append("x%d(%d)" % (k, tm.clause_bank.get_ta_state(j, k)))
+                    else:
+                        l.append(
+                            "¬x%d(%d)" % (k - tm.clause_bank.number_of_features, tm.clause_bank.get_ta_state(j, k)))
+            print(" ∧ ".join(l))
 
-	for j in range(clauses):
-		print("Clause #%d " % (j), end=' ')
-		for i in range(output_active.shape[0]):
-			print("x%d:W%d:P%.2f:R%.2f " % (i, tm.get_weight(i, j), precision[i][j], recall[i][j]), end=' ')
+        profile = np.empty((output_active.shape[0], args.num_clauses))
+        for i in range(output_active.shape[0]):
+            weights = tm.get_weights(i)
+            profile[i, :] = np.where(weights >= args.clause_weight_threshold, weights, 0)
 
-		l = []
-		for k in range(tm.clause_bank.number_of_literals):
-			if tm.get_ta_action(j, k) == 1:
-				if k < tm.clause_bank.number_of_features:
-					l.append("x%d(%d)" % (k, tm.clause_bank.get_ta_state(j, k)))
-				else:
-					l.append("¬x%d(%d)" % (k-tm.clause_bank.number_of_features, tm.clause_bank.get_ta_state(j, k)))
-		print(" ∧ ".join(l))
+        similarity = cosine_similarity(profile)
+        experiment_results["cosine_similarity"].append(list(similarity.flatten()))
 
-	profile = np.empty((output_active.shape[0], clauses))
-	for i in range(output_active.shape[0]):
-		weights = tm.get_weights(i)
-		profile[i,:] = np.where(weights >= clause_weight_threshold, weights, 0)
+        print("\nWord Similarity\n")
 
-	similarity = cosine_similarity(profile)
+        for i in range(output_active.shape[0]):
+            print("x%d" % (output_active[i]), end=': ')
+            sorted_index = np.argsort(-1 * similarity[i, :])
+            for j in range(1, output_active.shape[0]):
+                print("x%d(%.2f) " % (output_active[sorted_index[j]], similarity[i, sorted_index[j]]), end=' ')
+            print()
 
-	print("\nWord Similarity\n")
+        print("\nTraining Time: %.2f" % (benchmark1.elapsed()))
+        return experiment_results
 
-	for i in range(output_active.shape[0]):
-		print("x%d" % (output_active[i]), end=': ')
-		sorted_index = np.argsort(-1*similarity[i,:])
-		for j in range(1, output_active.shape[0]):
-			print("x%d(%.2f) " % (output_active[sorted_index[j]], similarity[i,sorted_index[j]]), end=' ')
-		print()
 
-	print("\nTraining Time: %.2f" % (stop_training - start_training))
+def default_args(**kwargs):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--number-of-features", default=12, type=int)
+    parser.add_argument("--noise", default=0.1, type=float)
+    parser.add_argument("--clause-weight-threshold", default=0, type=int)
+    parser.add_argument("--number-of-examples", default=2500, type=int)
+    parser.add_argument("--accumulation", default=1, type=int)
+    parser.add_argument("--num-clauses", default=10, type=bool)
+    parser.add_argument("--T", default=8 * 10, type=int)
+    parser.add_argument("--s", default=1.5, type=float)
+    parser.add_argument("--epochs", default=10, type=int)
+    parser.add_argument("--platform", default="CPU", type=str)
+    parser.add_argument("--output-balancing", default=0.5, type=float)
+    parser.add_argument("--max-included-literals", default=3, type=int)
+    parser.add_argument("--feature-negation", default=True, type=bool)
+    args = parser.parse_args()
+    for key, value in kwargs.items():
+        if key in args.__dict__:
+            setattr(args, key, value)
+    return args
+
+
+if __name__ == "__main__":
+    result = main(default_args())
+    _LOGGER.info(result)
