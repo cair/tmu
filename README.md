@@ -27,6 +27,9 @@ TMU is a comprehensive repository that encompasses several Tsetlin Machine imple
 
 - Wrappers for C and CUDA-based clause evaluation and updates to enable high-performance computation.
 
+## Guides and Tutorials
+- [Setting up efficient Development Environment](docs/tutorials/devcontainers/devcontainers.md)
+
 ## 📦 Installation
 
 #### **Prerequisites for Windows**
