@@ -1,6 +1,8 @@
 import json
 import os
 from multiprocessing import Pool
+
+
 import examples.classification
 import examples.autoencoder
 import examples.regression
@@ -15,8 +17,8 @@ def run_module_main_with_args(module_info):
         args = fns["args_fn"](epochs=1)
 
         platform_val = getattr(args, "platform")
-        if platform_val in ["CUDA", "GPU"]:
-            setattr(args, "platform", "CPU")
+        #if platform_val in ["CUDA", "GPU"]:
+        #    setattr(args, "platform", "CPU")
 
         result = fns["main_fn"](args)
         return module_name, result
@@ -46,7 +48,8 @@ def gather_module_info(packages):
 
 
 if __name__ == "__main__":
-
+    import multiprocessing
+    multiprocessing.set_start_method("spawn")
     packages = [
         examples.classification,
         examples.autoencoder,
