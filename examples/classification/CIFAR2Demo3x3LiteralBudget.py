@@ -90,12 +90,14 @@ def run_ensemble(ensemble_params):
 
     for epoch in range(args.epochs):
         # Benchmark training time
-        with BenchmarkTimer() as benchmark1:
+        benchmark1 = BenchmarkTimer()
+        with benchmark1:
             tm.fit(X_train, Y_train)
         ensemble_results["train_time"].append(benchmark1.elapsed())
 
         # Benchmark testing time and calculate accuracy
-        with BenchmarkTimer() as benchmark2:
+        benchmark2 = BenchmarkTimer()
+        with benchmark2:
             accuracy_test = 100 * (tm.predict(X_test) == Y_test).mean()
         ensemble_results["test_time"].append(benchmark2.elapsed())
         ensemble_results["accuracy"].append(accuracy_test)

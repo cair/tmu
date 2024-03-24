@@ -106,7 +106,7 @@ def main(args):
         with benchmark2:
             result = 100 * (tm.predict(X_test) == Y_test).mean()
         experiment_results["test_time"].append(benchmark2.elapsed())
-        experiment_results["accuracy"].append(result)
+        experiment_results["accuracy"].append(int(result))
 
         absorbed = 0.0
         unallocated = 0
@@ -117,8 +117,8 @@ def main(args):
                 unallocated += tm.number_of_unallocated_literals(i, j)
         absorbed = 100 * absorbed / (2 * args.num_clauses)
 
-        experiment_results["absorbed"].append(absorbed)
-        experiment_results["unallocated"].append(unallocated)
+        experiment_results["absorbed"].append(int(absorbed))
+        experiment_results["unallocated"].append(int(unallocated))
 
         _LOGGER.info("#%d Accuracy: %.2f%% Absorbed: %.2f%% Unallocated: %d Training: %.2fs Testing: %.2fs" % (
             e + 1,
