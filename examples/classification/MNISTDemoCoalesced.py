@@ -6,9 +6,8 @@ from tmu.tools import BenchmarkTimer
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def main(args):
-    experiment_results = dict(
+def metrics(args):
+    return dict(
         number_of_positive_clauses=[],
         accuracy=[],
         number_of_includes=[],
@@ -16,6 +15,9 @@ def main(args):
         test_time=[],
         args=vars(args)
     )
+
+def main(args):
+    experiment_results = metrics(args)
 
     data = MNIST().get()
 

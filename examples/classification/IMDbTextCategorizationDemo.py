@@ -10,14 +10,16 @@ from tmu.tools import BenchmarkTimer
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def main(args):
-    experiment_results = dict(
+def metrics(args):
+    return dict(
         accuracy=[],
         train_time=[],
         test_time=[],
         args=vars(args)
     )
+
+def main(args):
+    experiment_results = metrics(args)
 
     _LOGGER.info("Preparing dataset")
     train, test = keras.datasets.imdb.load_data(num_words=args.imdb_num_words, index_from=args.imdb_index_from)

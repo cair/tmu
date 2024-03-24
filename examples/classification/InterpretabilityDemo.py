@@ -6,9 +6,8 @@ import numpy as np
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def main(args):
-    experiment_results = dict(
+def metrics(args):
+    return dict(
         accuracy=[],
         class_0_precision_positive=[],
         class_0_recall_positive=[],
@@ -21,6 +20,9 @@ def main(args):
         literal_frequency=None,
         args=vars(args)
     )
+
+def main(args):
+    experiment_results = metrics(args)
 
     X_train = np.random.randint(0, 2, size=(5000, args.number_of_features), dtype=np.uint32)
     Y_train = np.logical_xor(X_train[:, 0], X_train[:, 1]).astype(dtype=np.uint32)
@@ -42,8 +44,8 @@ def main(args):
     print("\nClass 0 Positive Clauses:\n")
     precision = tm.clause_precision(0, 0, X_test, Y_test)
     recall = tm.clause_recall(0, 0, X_test, Y_test)
-    experiment_results["class_0_precision_positive"].append(precision)
-    experiment_results["class_0_recall_positive"].append(recall)
+    experiment_results["class_0_precision_positive"].append(list(np.asarray(precision)))
+    experiment_results["class_0_recall_positive"].append(list(np.asarray(recall)))
 
     for j in range(args.number_of_clauses // 2):
         print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 0, j), precision[j], recall[j]), end=' ')
@@ -60,8 +62,8 @@ def main(args):
 
     precision = tm.clause_precision(0, 1, X_test, Y_test)
     recall = tm.clause_recall(0, 1, X_test, Y_test)
-    experiment_results["class_0_precision_negative"].append(precision)
-    experiment_results["class_0_recall_negative"].append(recall)
+    experiment_results["class_0_precision_negative"].append(list(np.asarray(precision)))
+    experiment_results["class_0_recall_negative"].append(list(np.asarray(recall)))
 
     for j in range(args.number_of_clauses // 2):
         print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 1, j), precision[j], recall[j]), end=' ')
@@ -78,8 +80,8 @@ def main(args):
 
     precision = tm.clause_precision(1, 0, X_test, Y_test)
     recall = tm.clause_recall(1, 0, X_test, Y_test)
-    experiment_results["class_1_precision_positive"].append(precision)
-    experiment_results["class_1_recall_positive"].append(recall)
+    experiment_results["class_1_precision_positive"].append(list(np.asarray(precision)))
+    experiment_results["class_1_recall_positive"].append(list(np.asarray(recall)))
 
     for j in range(args.number_of_clauses // 2):
         print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 0, j), precision[j], recall[j]), end=' ')
@@ -96,8 +98,8 @@ def main(args):
 
     precision = tm.clause_precision(1, 1, X_test, Y_test)
     recall = tm.clause_recall(1, 1, X_test, Y_test)
-    experiment_results["class_1_precision_negative"].append(precision)
-    experiment_results["class_1_recall_negative"].append(recall)
+    experiment_results["class_1_precision_negative"].append(list(np.asarray(precision)))
+    experiment_results["class_1_recall_negative"].append(list(np.asarray(recall)))
 
     for j in range(args.number_of_clauses // 2):
         print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 1, j), precision[j], recall[j]), end=' ')
@@ -115,7 +117,7 @@ def main(args):
 
     print("\nLiteral Frequency:\n")
     print(tm.literal_clause_frequency())
-    experiment_results["literal_frequency"] = tm.literal_clause_frequency()
+    experiment_results["literal_frequency"] = tm.literal_clause_frequency().tolist()
 
     return experiment_results
 

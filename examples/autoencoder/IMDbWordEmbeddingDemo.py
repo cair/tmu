@@ -41,9 +41,8 @@ target_words = [
     'witty'
 ]
 
-
-def main(args):
-    experiment_results = dict(
+def metrics(args):
+    return dict(
         accuracy=[],
         train_time=[],
         test_time=[],
@@ -51,6 +50,9 @@ def main(args):
         recall=[],
         args=vars(args)
     )
+
+def main(args):
+    experiment_results = metrics(args)
 
     # load IMDB dataset
     dataloader = IMDB(num_words=args.NUM_WORDS, index_from=args.INDEX_FROM)

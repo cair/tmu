@@ -9,13 +9,15 @@ from tmu.tools import BenchmarkTimer
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def main(args):
-    experiment_results = dict(
+def metrics(args):
+    return dict(
         rmsd=[],
         train_time=[],
         test_time=[]
     )
+
+def main(args):
+    experiment_results = metrics(args)
 
     california_housing = datasets.fetch_california_housing()
     X = california_housing.data

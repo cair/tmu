@@ -13,11 +13,13 @@ import pathlib
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def main(args):
-    experiment_results = dict(
+def metrics(args):
+    return dict(
         accuracy=[]
     )
+
+def main(args):
+    experiment_results = metrics(args)
 
     platform = args.platform
     epochs = args.epochs

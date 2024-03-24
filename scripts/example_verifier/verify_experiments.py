@@ -15,11 +15,6 @@ def run_module_main_with_args(module_info):
     if "args_fn" in fns and "main_fn" in fns and fns["args_fn"] and fns["main_fn"]:
         print(f"Running {module_name}...")
         args = fns["args_fn"](epochs=1)
-
-        platform_val = getattr(args, "platform")
-        #if platform_val in ["CUDA", "GPU"]:
-        #    setattr(args, "platform", "CPU")
-
         result = fns["main_fn"](args)
         return module_name, result
     else:
@@ -65,12 +60,18 @@ if __name__ == "__main__":
 
     modules_info = list(modules_dict.items())
 
+    results_json = {}
+
     # Setup multiprocessing pool
     with Pool(processes=os.cpu_count()) as pool:
-        results = pool.map(run_module_main_with_args, modules_info)
+        for module_name, result in pool.imap_unordered(run_module_main_with_args, modules_info):
+            if result is not None:
+                results_json[module_name] = result
+                # Save/update results incrementally
+                with open('module_results.json', 'w') as f:
+                    json.dump(results_json, f, indent=4)
+                print(f"Results saved for {module_name}.")
 
-    # Construct a JSON structure from the results
-    results_json = {module_name: data for module_name, data in results if data is not None}
 
     # Optionally, save the results to a JSON file
     with open('module_results.json', 'w') as f:

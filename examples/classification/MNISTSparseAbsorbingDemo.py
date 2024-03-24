@@ -7,9 +7,8 @@ from tmu.tools import BenchmarkTimer
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def main(args):
-    experiment_results = dict(
+def metrics(args):
+    return dict(
         accuracy=[],
         accuracy_train=[],
         absorbed=[],
@@ -17,6 +16,9 @@ def main(args):
         test_time=[],
         args=vars(args)
     )
+
+def main(args):
+    experiment_results = metrics(args)
 
     data = MNIST().get()
     X_train = data["x_train"]
