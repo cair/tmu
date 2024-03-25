@@ -76,7 +76,15 @@ class BinaryDistribution(Distribution):
 setup(
     include_package_data=True,
     packages=find_packages(),
-    ext_modules=[build_cffi().distutils_extension()]
+    ext_modules=[build_cffi().distutils_extension()],
+    classifiers=[
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ]
     #cmdclass={
     #    "install": TMUInstall,
     #    "develop": TMUDevelop,
