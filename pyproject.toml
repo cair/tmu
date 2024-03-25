@@ -36,8 +36,13 @@ composite = [
     "joblib"
 ]
 
-tests = [
+examples = [
+    "scikit-learn",
+    "tensorflow"
+]
 
+tests = [
+    "pytest"
 ]
 
 
