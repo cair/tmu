@@ -1,5 +1,5 @@
 # Tsetlin Machine Unified (TMU) - One Codebase to Rule Them All
-![License](https://img.shields.io/github/license/microsoft/interpret.svg?style=flat-square) ![Python Version](https://img.shields.io/pypi/pyversions/interpret.svg?style=flat-square)![Maintenance](https://img.shields.io/maintenance/yes/2023?style=flat-square)
+![License](https://img.shields.io/github/license/cair/tmu.svg?style=flat-square) ![Python Version](https://img.shields.io/pypi/pyversions/tmu.svg?style=flat-square) ![Maintenance](https://img.shields.io/maintenance/yes/2024?style=flat-square)
 
 TMU is a comprehensive repository that encompasses several Tsetlin Machine implementations. Offering a rich set of features and extensions, it serves as a central resource for enthusiasts and researchers alike.
 
