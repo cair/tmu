@@ -75,7 +75,7 @@ class TMCoalescedClassifierTests(unittest.TestCase, ClassifierTests):
     def setUp(self) -> None:
         from tmu.models.classification.coalesced_classifier import TMCoalescedClassifier
         self.model = TMCoalescedClassifier(
-            number_of_clauses=4,
+            number_of_clauses=10,
             T=10,
             s=10.0,
             max_included_literals=32,
