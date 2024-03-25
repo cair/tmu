@@ -55,7 +55,7 @@ class VanillaClassifierTests(unittest.TestCase, ClassifierTests):
 class TMMultiChannelClassifierTests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:
-        from tmu.models.classification.multichannel_classifier import TMMultiChannelClassifier
+        from tmu.experimental.models.multichannel_classifier import TMMultiChannelClassifier
         import numpy as np
         self.model = TMMultiChannelClassifier(
             number_of_clauses=4,
@@ -75,7 +75,7 @@ class TMCoalescedClassifierTests(unittest.TestCase, ClassifierTests):
     def setUp(self) -> None:
         from tmu.models.classification.coalesced_classifier import TMCoalescedClassifier
         self.model = TMCoalescedClassifier(
-            number_of_clauses=4,
+            number_of_clauses=10,
             T=10,
             s=10.0,
             max_included_literals=32,
@@ -88,8 +88,7 @@ class TMCoalescedClassifierTests(unittest.TestCase, ClassifierTests):
 class OneVSOneClassifierTests(unittest.TestCase, ClassifierTests):
 
     def setUp(self) -> None:
-        from tmu.models.classification.one_vs_one_classifier import TMOneVsOneClassifier
-        import numpy as np
+        from tmu.experimental.models.one_vs_one_classifier import TMOneVsOneClassifier
 
         self.model = TMOneVsOneClassifier(
             number_of_clauses=4,

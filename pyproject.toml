@@ -2,7 +2,7 @@
 requires = [
     "setuptools",
     "wheel",
-    "cffi>=1.0.0",
+    "cffi>=1.15.0",
     "tomli"
 ]
 build-backend = "setuptools.build_meta"
@@ -18,14 +18,33 @@ authors = [
     { email = "per.andersen@uia.no", name = "Per-Arne Andersen" }
 ]
 dependencies = [
-    "cffi>=1.0.0",
+    "cffi>=1.15.0",
     "numpy",
     "pandas",
     "scikit-learn",
     "tqdm",
-    "requests"
+    "requests",
+    "xxhash"
 ]
 requires-python = ">=3.10"
+
+[project.optional-dependencies]
+composite = [
+    "opencv-python-headless",
+    "pydantic",
+    "optuna",
+    "joblib"
+]
+
+examples = [
+    "scikit-learn",
+    "tensorflow"
+]
+
+tests = [
+    "pytest"
+]
+
 
 # Include additional files
 [project.urls]

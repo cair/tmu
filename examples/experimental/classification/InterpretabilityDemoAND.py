@@ -1,4 +1,4 @@
-from tmu.models.classification.multichannel_classifier import TMMultiChannelClassifier
+from tmu.experimental.models.multichannel_classifier import TMMultiChannelClassifier
 import numpy as np
 
 number_of_and_components = 2

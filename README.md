@@ -27,6 +27,9 @@ TMU is a comprehensive repository that encompasses several Tsetlin Machine imple
 
 - Wrappers for C and CUDA-based clause evaluation and updates to enable high-performance computation.
 
+## Guides and Tutorials
+- [Setting up efficient Development Environment](docs/tutorials/devcontainers/devcontainers.md)
+
 ## 📦 Installation
 
 #### **Prerequisites for Windows**
@@ -40,7 +43,11 @@ Ubuntu: `sudo apt install libffi-dev`
 #### **Installing TMU**
 To get started with TMU, run the following command:
 ```bash
+# Installing Stable Branch
 pip install git+https://github.com/cair/tmu.git
+
+# Installing Development Branch
+pip install git+https://github.com/cair/tmu.git@dev
 ```
 
 ## 🛠 Development
@@ -49,22 +56,26 @@ If you're looking to contribute or experiment with the codebase, follow these st
 
 1. **Clone the Repository**:
    ```bash
-   git clone git@github.com:cair/tmu.git
+   git clone -b dev git@github.com:cair/tmu.git && cd tmu
    ```
 
 2. **Set Up Development Environment**:
    Navigate to the project directory and compile the C library:
    ```bash
-   cd tmu && pip install develop .
+   # Install TMU
+    pip install .
+   
+   # (Alternative): Install TMU in Development Mode
+    pip install -e .
+   
+   # Install TMU-Composite
+    pip install .[composite]
+   
+   # Install TMU-Composite in Development Mode
+    pip install -e .[composite]
    ```
 
 3. **Starting a New Project**:
-   For your projects, simply create a new folder within 'examples' and initiate your development.
-
-#### Modifying the C Codebase
-If you make changes to the C codebase, ensure you recompile the code using:
-```bash
-pip install develop .
-```
+   For your projects, simply create a new **branch** and then within the 'examples' folder, create a new project and initiate your development.
 
 ---

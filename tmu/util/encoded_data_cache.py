@@ -1,7 +1,8 @@
-import hashlib
 from typing import Optional
-
+import xxhash
 import numpy as np
+from scipy.sparse import issparse
+
 
 class DataEncoderCache:
     def __init__(self, seed: int):
@@ -10,12 +11,28 @@ class DataEncoderCache:
         self.array_hash: Optional[str] = None
         self.encoded_data: Optional[np.ndarray] = None
 
-    def compute_hash(self, arr: np.ndarray) -> str:
-        """Compute a hash for a numpy array."""
+    def compute_hash_csr_matrix(self, csr_mat):
+        # Convert the components of the csr_matrix to bytes
+        data_bytes = csr_mat.data.tobytes()
+        indices_bytes = csr_mat.indices.tobytes()
+        indptr_bytes = csr_mat.indptr.tobytes()
 
-        sampled_indices = self.rng.choice(arr.size, min(15, arr.size), replace=False)
-        sampled_values = arr.flat[sampled_indices]
-        return hashlib.sha256(sampled_values.tobytes()).hexdigest()
+        # Concatenate the bytes representations
+        total_bytes = data_bytes + indices_bytes + indptr_bytes
+
+        # Compute the hash on the concatenated bytes
+        hash_value = xxhash.xxh3_64_hexdigest(total_bytes)
+
+        return hash_value
+
+    def compute_hash(self, arr):
+        """Compute a hash for a numpy array or csr_matrix."""
+        if issparse(arr):
+            # It's a sparse matrix, handle specially
+            return self.compute_hash_csr_matrix(arr)
+        else:
+            # It's a dense array, proceed as before
+            return xxhash.xxh3_64_hexdigest(arr.tobytes())
 
     def get_encoded_data(self, data: np.ndarray, encoder_func) -> np.ndarray:
         """Get encoded data for an array, using cache if available."""

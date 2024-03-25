@@ -1,6 +1,7 @@
 #ifndef C_BITWISE_TSETLIN_MACHINE_FAST_RAND_H
 #define C_BITWISE_TSETLIN_MACHINE_FAST_RAND_H
 #include <stdint.h>
+#include <math.h>
 
 #define FAST_RAND_MAX UINT32_MAX
 

@@ -388,7 +388,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
         for key, value in kwargs.items():
             if key not in self._logged_unknown_args:
                 self._logged_unknown_args.add(key)
-                _LOGGER.error(
+                _LOGGER.warning(
                     f"Unknown positional argument for {self}: argument_name={key}, argument_value={value}, class={type(self)}")
 
         (

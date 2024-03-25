@@ -28,7 +28,11 @@ class SparseClauseContainer:
     def __len__(self):
         return len(self._classes)
 
-    def sample(self, n=1, exclude=None):
+
+    def sample(self, n=1, exclude=None) -> int | None:
+        if self.n_classes == 1:
+            return None
+
         if exclude is None:
             exclude = set()
         else:

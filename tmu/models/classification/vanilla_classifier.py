@@ -16,7 +16,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import typing
-from collections import defaultdict
+
 
 from tmu.models.base import MultiClauseBankMixin, MultiWeightBankMixin, TMBaseModel
 from tmu.util.encoded_data_cache import DataEncoderCache
@@ -136,7 +136,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             is_target: bool,
             target: int,
             clause_outputs: np.ndarray,
-            update_p: np.ndarray,
+            update_p: float,
             clause_active: np.ndarray,
             literal_active: np.ndarray,
             encoded_X_train: np.ndarray,
@@ -147,6 +147,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
         if self.weighted_clauses:
             if is_target:
+
                 self.weight_banks[target].increment(
                     clause_output=clause_outputs,
                     update_p=update_p,
@@ -205,7 +206,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             literal_active: np.ndarray,
             encoded_X_train: np.ndarray,
             sample_idx: int
-    ) -> typing.Tuple[np.ndarray, np.ndarray]:
+    ) -> typing.Tuple[int, np.ndarray]:
 
         clause_outputs: np.ndarray = self.clause_banks[target].calculate_clause_outputs_update(
             literal_active=literal_active,
@@ -218,14 +219,14 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             clause_outputs
         ).astype(np.int32)
 
-        class_sum: np.ndarray = np.clip(class_sum, -self.T, self.T)
+        class_sum: int = np.clip(class_sum, -self.T, self.T).item()
 
         return class_sum, clause_outputs
 
     def mechanism_compute_update_probabilities(
             self,
             is_target: bool,
-            class_sum: np.ndarray
+            class_sum: int
     ) -> float:
         # Confidence-driven updating method
         if self.confidence_driven_updating:
@@ -283,10 +284,12 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
         :return: Computed update probability for the class.
         """
 
+
         update_p: float = self.mechanism_compute_update_probabilities(
             is_target=is_target_class,
             class_sum=class_sum
         )
+
 
         self.mechanism_feedback(
             is_target=is_target_class,
@@ -304,7 +307,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
     def _fit_sample(
             self,
             target: int,
-            not_target: int,
+            not_target: int | None,
             sample_idx: int,
             clause_active: np.ndarray,
             literal_active: np.ndarray,
@@ -331,7 +334,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
         )
 
         # for incremental, and when we only have 1 sample, there is no other targets
-        if self.weight_banks.n_classes == 1:
+        if not_target is None:
             return dict(
                 update_p_target=update_p_target,
                 update_p_not_target=None
@@ -363,27 +366,28 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
     def fit(
             self,
-            X: np.ndarray,
-            Y: np.ndarray,
+            X: np.ndarray[np.uint32],
+            Y: np.ndarray[np.uint32],
             shuffle: bool = True,
             metrics: typing.Optional[list] = None,
             *args,
             **kwargs
     ):
         metrics = metrics or []
-        assert len(X) == len(Y), "X and Y must have the same length"
+        assert X.shape[0] == len(Y), "X and Y must have the same number of samples"
         assert len(X.shape) >= 2, "X must be a 2D array"
         assert len(Y.shape) == 1, "Y must be a 1D array"
+        assert X.dtype == np.uint32, "X must be of type uint32"
+        assert Y.dtype == np.uint32, "Y must be of type uint32"
 
         self.init(X, Y)
         self.metrics.clear()
-
-        Ym = Y.astype(np.uint32)
 
         encoded_X_train: np.ndarray = self.train_encoder_cache.get_encoded_data(
             data=X,
             encoder_func=lambda x: self.clause_banks[0].prepare_X(x)
         )
+
 
         clause_active: np.ndarray = self.mechanism_clause_active()
         literal_active: np.ndarray = self.mechanism_literal_active()
@@ -393,8 +397,8 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             self.rng.shuffle(sample_indices)
 
         for sample_idx in sample_indices:
-            target: int = Ym[sample_idx]
-            not_target: int = self.weight_banks.sample(exclude=[target])
+            target: int = Y[sample_idx]
+            not_target: int | None = self.weight_banks.sample(exclude=[target])
 
             history: dict = self._fit_sample(
                 target=target,

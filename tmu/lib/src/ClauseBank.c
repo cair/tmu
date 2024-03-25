@@ -66,8 +66,6 @@ static inline void cb_inc(unsigned int *ta_state, unsigned int active, int numbe
 
 	carry = active;
 	for (int b = 0; b < number_of_state_bits; ++b) {
-		if (carry == 0)
-			break;
 
 		carry_next = ta_state[b] & carry; // Sets carry bits (overflow) passing on to next bit
 		ta_state[b] = ta_state[b] ^ carry; // Performs increments with XOR
@@ -82,25 +80,29 @@ static inline void cb_inc(unsigned int *ta_state, unsigned int active, int numbe
 }
 
 // Decrement the states of each of those 32 Tsetlin Automata flagged in the active bit vector.
-static inline void cb_dec(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
-{
+static inline void cb_dec(
+        unsigned int *ta_state,
+        unsigned int active,
+        int number_of_state_bits
+){
 	unsigned int carry, carry_next;
+    unsigned int ta_val;
 
 	carry = active;
 	for (int b = 0; b < number_of_state_bits; ++b) {
-		if (carry == 0)
-			break;
 
-		carry_next = (~ta_state[b]) & carry; // Sets carry bits (overflow) passing on to next bit
-		ta_state[b] = ta_state[b] ^ carry; // Performs increments with XOR
-		carry = carry_next;
+        ta_val = ta_state[b];
+        carry_next = (~ta_val) & carry; // Sets carry bits (overflow) passing on to next bit
+        ta_state[b] = ta_val ^ carry; // Performs increments with XOR
+        carry = carry_next;
+
 	}
 
 	if (carry > 0) {
 		for (int b = 0; b < number_of_state_bits; ++b) {
 			ta_state[b] &= ~carry;
 		}
-	} 
+	}
 }
 
 /* Calculate the output of each clause using the actions of each Tsetline Automaton. */
@@ -300,7 +302,7 @@ void cb_type_i_feedback(
 	}
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
-	if (reuse_random_feedback) {
+	if (reuse_random_feedback && s > 1.0) {
 		cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
 	}
 
@@ -316,7 +318,7 @@ void cb_type_i_feedback(
 
 		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
 
-		if (!reuse_random_feedback) {
+		if (!reuse_random_feedback && s > 1.0) {
 			cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
 		}
 
@@ -331,7 +333,11 @@ void cb_type_i_feedback(
 					cb_inc(&ta_state[clause_pos + ta_pos], literal_active[k] & Xi[clause_patch*number_of_ta_chunks + k] & (~feedback_to_ta[k]), number_of_state_bits);
 				}
 
-	 			cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta[k], number_of_state_bits);
+				if (s > 1.0) {
+		 			cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta[k], number_of_state_bits);
+		 		} else {
+		 			cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]), number_of_state_bits);
+		 		}
 			}
 		} else {
 			// Type Ib Feedback
@@ -339,7 +345,11 @@ void cb_type_i_feedback(
 			for (int k = 0; k < number_of_ta_chunks; ++k) {
 				unsigned int ta_pos = k*number_of_state_bits;
 
-				cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & feedback_to_ta[k], number_of_state_bits);
+				if (s > 1.0) {
+					cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & feedback_to_ta[k], number_of_state_bits);
+				} else {
+					cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k], number_of_state_bits);
+				}
 			}
 		}
 	}
