@@ -2,7 +2,7 @@ import numpy as np
 from typing import Dict
 from tmu.data import TMUDataset
 from tmu.data.utils.downloader import get_file
-
+from packaging.version import parse as parse_version
 
 class CIFAR100(TMUDataset):
     def _retrieve_dataset(self) -> Dict[str, np.ndarray]:

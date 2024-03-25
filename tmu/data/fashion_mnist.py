@@ -5,6 +5,7 @@ import logging
 import sklearn
 from typing import Dict
 import numpy as np
+from packaging.version import parse as parse_version
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,9 +18,12 @@ class FashionMNIST(TMUDataset):
 
     def _retrieve_dataset(self) -> Dict[str, np.ndarray]:
         kwargs = dict()
-        pyver = tuple([int(x) for x in sklearn.__version__.split(".")])
 
-        if pyver[0] >= 1 and pyver[1] >= 2:
+        # Parse the sklearn version string
+        sklearn_version = parse_version(sklearn.__version__)
+
+        # Check if the major version is >= 1 and the minor version is >= 2
+        if sklearn_version >= parse_version("1.2"):
             kwargs["parser"] = "pandas"
 
         X, y = fetch_openml(
