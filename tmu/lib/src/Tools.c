@@ -131,11 +131,11 @@ void tmu_encode(
         int patch_dim_x,
         int patch_dim_y,
         int append_negated,
-        int class_features
+        int clause_features
 )
 {
 	int global_number_of_features = dim_x * dim_y * dim_z;
-	int number_of_features = class_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
+	int number_of_features = clause_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
 	int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
 
 	int number_of_literal_chunks;
@@ -166,17 +166,17 @@ void tmu_encode(
 				Xi = &X[input_pos];
 				encoded_Xi = &encoded_X[encoded_pos];
 
-				// Encode class into feature vector 
-				for (int class_feature = 0; class_feature < class_features; ++class_feature) {
+				// Encode class into feature vector (all false)
+				for (int clause_feature = 0; clause_feature < clause_features; ++clause_feature) {
 
-					int chunk_nr = (class_feature + number_of_features) / 32;
-					int chunk_pos = (class_feature + number_of_features) % 32;
+					int chunk_nr = (clause_feature + number_of_features) / 32;
+					int chunk_pos = (clause_feature + number_of_features) % 32;
 					encoded_Xi[chunk_nr] |= (1 << chunk_pos);
 				}
 
 				// Encode y coordinate of patch into feature vector 
 				for (int y_threshold = 0; y_threshold < dim_y - patch_dim_y; ++y_threshold) {
-					int patch_pos = class_features + y_threshold;
+					int patch_pos = clause_features + y_threshold;
 
 					if (y > y_threshold) {
 						int chunk_nr = patch_pos / 32;
@@ -191,7 +191,7 @@ void tmu_encode(
 
 				// Encode x coordinate of patch into feature vector
 				for (int x_threshold = 0; x_threshold < dim_x - patch_dim_x; ++x_threshold) {
-					int patch_pos = class_features + (dim_y - patch_dim_y) + x_threshold;
+					int patch_pos = clause_features + (dim_y - patch_dim_y) + x_threshold;
 
 					if (x > x_threshold) {
 						int chunk_nr = patch_pos / 32;
@@ -210,7 +210,7 @@ void tmu_encode(
 					for (int p_x = 0; p_x < patch_dim_x; ++p_x) {
 						for (int z = 0; z < dim_z; ++z) {
 							int image_pos = (y + p_y)*dim_x*dim_z + (x + p_x)*dim_z + z;
-							int patch_pos = class_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
+							int patch_pos = clause_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
 
 							if (Xi[image_pos] == 1) {
 								int chunk_nr = patch_pos / 32;
