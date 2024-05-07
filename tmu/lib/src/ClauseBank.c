@@ -222,6 +222,28 @@ static inline unsigned int cb_calculate_clause_output_update(unsigned int *ta_st
 	return(0);
 }
 
+static inline void cb_calculate_clause_output_recurrent(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *output, unsigned int *Xi)
+{
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		output[patch] = 1;
+		for (int k = 0; k < number_of_ta_chunks-1; k++) {
+			unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+			output[patch] = output[patch] && (ta_state[pos] & Xi[patch*number_of_ta_chunks + k]) == ta_state[pos];
+
+			if (!output[patch]) {
+				break;
+			}
+		}
+
+		unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+		output[patch] = output[patch] &&
+			(ta_state[pos] & Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] & filter) ==
+			(ta_state[pos] & filter);
+	}
+
+	return;
+}
+
 static inline void cb_calculate_clause_output_patchwise(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *output, unsigned int *Xi)
 {
 	for (int patch = 0; patch < number_of_patches; ++patch) {
@@ -273,7 +295,6 @@ static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_s
 
 	return(0);
 }
-
 
 void cb_type_i_feedback(
         unsigned int *ta_state,
@@ -599,8 +620,6 @@ void cb_initialize_incremental_clause_calculation(
 		}
 	}
 }
-
-
 
 // This function retrieves the count of literals from the given Tsetlin Automaton state.
 // ta_state: an array representing the state of the Tsetlin Automaton.
