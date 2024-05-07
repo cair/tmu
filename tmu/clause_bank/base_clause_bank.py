@@ -21,6 +21,7 @@ class BaseClauseBank(CFFISerializable):
             number_of_clauses: int,
             max_included_literals: int,
             patch_dim: typing.Union[tuple, None],
+            recurrent: bool,
             **kwargs
     ):
         self._warn_unknown_arguments(**kwargs)
@@ -29,6 +30,7 @@ class BaseClauseBank(CFFISerializable):
 
         self.rng = np.random.RandomState(seed)
         self.seed = seed
+        self.recurrent = recurrent
         self.number_of_clauses = int(number_of_clauses)
 
         self.patch_dim = patch_dim
@@ -52,6 +54,10 @@ class BaseClauseBank(CFFISerializable):
         self.number_of_features = int(
             self.patch_dim[0] * self.patch_dim[1] * self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (
                     self.dim[1] - self.patch_dim[1]))
+        
+        if self.recurrent:
+            self.number_of_features += self.number_of_clauses
+
         self.number_of_literals = self.number_of_features * 2
 
         self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))

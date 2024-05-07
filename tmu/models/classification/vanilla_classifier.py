@@ -60,7 +60,8 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             literal_sampling=1.0,
             feedback_rate_excluded_literals=1,
             literal_insertion_state=-1,
-            seed=None
+            seed=None,
+            recurrent=False
     ):
         super().__init__(
             number_of_clauses,
@@ -92,7 +93,8 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             literal_sampling=literal_sampling,
             feedback_rate_excluded_literals=feedback_rate_excluded_literals,
             literal_insertion_state=literal_insertion_state,
-            seed=seed
+            seed=seed,
+            recurrent=recurrent
         )
         MultiClauseBankMixin.__init__(self, seed=seed)
         MultiWeightBankMixin.__init__(self, seed=seed)

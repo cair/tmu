@@ -98,7 +98,8 @@ class TMBaseModel:
             absorbing_include=None,
             absorbing_exclude=None,
             squared_weight_update_p=False,
-            seed=None
+            seed=None,
+            recurrent=False
     ):
         self.seed = seed
         self.rng = np.random.RandomState(seed)
@@ -144,6 +145,7 @@ class TMBaseModel:
         self.feedback_rate_excluded_literals = feedback_rate_excluded_literals
         self.literal_insertion_state = literal_insertion_state
         self.squared_weight_update_p = squared_weight_update_p
+        self.recurrent = recurrent
 
         # TODO - Change to checksum
         self.X_train = np.zeros(0, dtype=np.uint32)
@@ -236,6 +238,7 @@ class TMBaseModel:
             incremental=self.incremental,
             type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio,
             seed=self.seed,
+            recurrent=self.recurrent
         )
         return clause_bank_type, clause_bank_args
 

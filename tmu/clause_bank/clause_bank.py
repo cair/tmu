@@ -25,7 +25,6 @@ from tmu.clause_bank.base_clause_bank import BaseClauseBank
 
 import numpy as np
 
-
 class ClauseBank(BaseClauseBank):
     clause_bank: np.ndarray
     incremental_clause_evaluation_initialized: bool
@@ -64,8 +63,6 @@ class ClauseBank(BaseClauseBank):
         self.feedback_to_ta = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
         self.output_one_patches = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
         self.literal_clause_count = np.empty(self.number_of_literals, dtype=np.uint32, order="c")
-
-
         self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
 
         # Incremental Clause Evaluation
@@ -116,7 +113,6 @@ class ClauseBank(BaseClauseBank):
         self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
         self.ptr_ta_state_ind = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
 
-
         # Action Initialization
         self.ptr_actions = ffi.cast("unsigned int *", self.actions.ctypes.data)
 
@@ -146,8 +142,6 @@ class ClauseBank(BaseClauseBank):
 
         self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape(
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))
-
-
 
         self.incremental_clause_evaluation_initialized = False
 
@@ -289,7 +283,6 @@ class ClauseBank(BaseClauseBank):
 
         self.incremental_clause_evaluation_initialized = False
 
-
     def type_iii_feedback(
             self,
             update_p,
@@ -395,7 +388,7 @@ class ClauseBank(BaseClauseBank):
             self.number_of_ta_chunks,
             self.dim,
             self.patch_dim,
-            0
+            self.number_of_clauses if self.recurrent else 0
         )
 
     def prepare_X_autoencoder(
