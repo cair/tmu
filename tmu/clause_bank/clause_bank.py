@@ -39,7 +39,6 @@ class ClauseBank(BaseClauseBank):
 
     def __init__(
             self,
-            seed: int,
             d: float,
             number_of_state_bits_ind: int,
             number_of_state_bits_ta: int,
@@ -47,7 +46,7 @@ class ClauseBank(BaseClauseBank):
             incremental: bool,
             **kwargs
     ):
-        super().__init__(seed=seed, **kwargs)
+        super().__init__(**kwargs)
 
         self.d = d
         assert isinstance(number_of_state_bits_ta, int)
