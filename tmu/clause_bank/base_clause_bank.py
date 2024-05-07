@@ -68,32 +68,3 @@ class BaseClauseBank(CFFISerializable):
     def _warn_unknown_arguments(self, **kwargs):
         for k, v in kwargs.items():
             _LOGGER.warning(f"Unknown positional argument for {self}: argument_name={k}, argument_value={v}")
-
-    def set_ta_state(self, clause, ta, state):
-        ta_chunk = ta // 32
-        chunk_pos = ta % 32
-        pos = int(
-            clause * self.number_of_ta_chunks * self.number_of_state_bits_ta + ta_chunk * self.number_of_state_bits_ta)
-        for b in range(self.number_of_state_bits_ta):
-            if state & (1 << b) > 0:
-                self.clause_bank[pos + b] |= (1 << chunk_pos)
-            else:
-                self.clause_bank[pos + b] &= ~(1 << chunk_pos)
-
-    def get_ta_state(self, clause, ta):
-        ta_chunk = ta // 32
-        chunk_pos = ta % 32
-        pos = int(
-            clause * self.number_of_ta_chunks * self.number_of_state_bits_ta + ta_chunk * self.number_of_state_bits_ta)
-        state = 0
-        for b in range(self.number_of_state_bits_ta):
-            if self.clause_bank[pos + b] & (1 << chunk_pos) > 0:
-                state |= (1 << b)
-        return state
-
-    def get_ta_action(self, clause, ta):
-        ta_chunk = ta // 32
-        chunk_pos = ta % 32
-        pos = int(
-            clause * self.number_of_ta_chunks * self.number_of_state_bits_ta + ta_chunk * self.number_of_state_bits_ta + self.number_of_state_bits_ta - 1)
-        return (self.clause_bank[pos] & (1 << chunk_pos)) > 0
