@@ -105,6 +105,16 @@ void cb_calculate_clause_outputs_patchwise(
     unsigned int *Xi
 );
 
+void cb_calculate_clause_features(
+        unsigned int *ta_state,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        unsigned int *literal_active,
+        unsigned int *Xi
+);
+
 void cb_included_literals(
     unsigned int *ta_state,
     int number_of_clauses,
