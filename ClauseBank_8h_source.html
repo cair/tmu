@@ -176,72 +176,83 @@ $(function() {
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *Xi</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;);</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160; </div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#ada68451b43d36c9bcf2807e7c0835da4">cb_included_literals</a>(</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a>,</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *actions</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;);</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#a04ef5efece9a044be69c1fbf3fb398d3">cb_calculate_literal_frequency</a>(</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a>,</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *clause_active,</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_count</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;);</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="keywordtype">int</span> <a class="code" href="ClauseBank_8h.html#ab4dff264cc90cc2f4cc3e2c2886b60ae">cb_number_of_include_actions</a>(</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordtype">int</span> clause,</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a></div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;);</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160; </div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#aecdb68d55eebb0c5b77bce3c09bfa904">cb_initialize_incremental_clause_calculation</a>(</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_clause_map,</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_clause_map_pos,</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *false_literals_per_clause,</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#a26e85111112c7a43b5d4fe6be3bc1c8e">cb_calculate_clause_features</a>(</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;        <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;        <span class="keywordtype">int</span> number_of_literals,</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a>,</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        <span class="keywordtype">int</span> number_of_patches,</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_active,</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *Xi</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;);</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160; </div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#ada68451b43d36c9bcf2807e7c0835da4">cb_included_literals</a>(</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a>,</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *actions</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;);</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160; </div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#a04ef5efece9a044be69c1fbf3fb398d3">cb_calculate_literal_frequency</a>(</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a>,</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *clause_active,</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_count</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;);</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160; </div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="keywordtype">int</span> <a class="code" href="ClauseBank_8h.html#ab4dff264cc90cc2f4cc3e2c2886b60ae">cb_number_of_include_actions</a>(</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <span class="keywordtype">int</span> clause,</div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a>,</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *previous_Xi</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;);</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160; </div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#abcbbc26637e6f6aca3635dcd524b50c0">cb_calculate_clause_outputs_incremental_batch</a>(</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> * literal_clause_map,</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a></div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;);</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#aecdb68d55eebb0c5b77bce3c09bfa904">cb_initialize_incremental_clause_calculation</a>(</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_clause_map,</div>
 <div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_clause_map_pos,</div>
 <div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *false_literals_per_clause,</div>
 <div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    <span class="keywordtype">int</span> number_of_patches,</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *clause_output,</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *previous_Xi,</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *Xi,</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    <span class="keywordtype">int</span> batch_size</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;);</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160; </div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#aad05f88751a3a609de604ed9d519f1cb">cb_calculate_clause_outputs_incremental</a>(</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> * literal_clause_map,</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_clause_map_pos,</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *false_literals_per_clause,</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *previous_Xi,</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *Xi</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a>,</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *previous_Xi</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;);</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#abcbbc26637e6f6aca3635dcd524b50c0">cb_calculate_clause_outputs_incremental_batch</a>(</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> * literal_clause_map,</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_clause_map_pos,</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *false_literals_per_clause,</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="keywordtype">int</span> number_of_patches,</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *clause_output,</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *previous_Xi,</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *Xi,</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    <span class="keywordtype">int</span> batch_size</div>
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;);</div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#a956980e03bd8a82b5467c3951f214b5f">cb_get_literals</a>(</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> number_of_literals,</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a>,</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *<a class="code" href="namespaceexamples_1_1autoencoder_1_1DimensionalityReductionDemo.html#a429f913e75baa96c3e95a57edf39226e">result</a></div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;);</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#aad05f88751a3a609de604ed9d519f1cb">cb_calculate_clause_outputs_incremental</a>(</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> * literal_clause_map,</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *literal_clause_map_pos,</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *false_literals_per_clause,</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <span class="keywordtype">int</span> number_of_literals,</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *previous_Xi,</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *Xi</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;);</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160; </div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;<span class="keywordtype">void</span> <a class="code" href="ClauseBank_8h.html#a956980e03bd8a82b5467c3951f214b5f">cb_get_literals</a>(</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *ta_state,</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1autoencoder_1_1MNISTReconstructionDemo.html#ac2bcf9b31b12bd24b151f6d695b662f3">number_of_clauses</a>,</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> number_of_literals,</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespaceexamples_1_1experimental_1_1classification_1_1CIFARDemo3x3.html#ac509ee3420a3527d6d1ababe1b16edd0">number_of_state_bits</a>,</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *<a class="code" href="namespaceexamples_1_1autoencoder_1_1DimensionalityReductionDemo.html#a429f913e75baa96c3e95a57edf39226e">result</a></div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;);</div>
 <div class="ttc" id="aClauseBank_8h_html_a04ef5efece9a044be69c1fbf3fb398d3"><div class="ttname"><a href="ClauseBank_8h.html#a04ef5efece9a044be69c1fbf3fb398d3">cb_calculate_literal_frequency</a></div><div class="ttdeci">void cb_calculate_literal_frequency(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *clause_active, unsigned int *literal_count)</div><div class="ttdef"><b>Definition:</b> ClauseBank.c:833</div></div>
+<div class="ttc" id="aClauseBank_8h_html_a26e85111112c7a43b5d4fe6be3bc1c8e"><div class="ttname"><a href="ClauseBank_8h.html#a26e85111112c7a43b5d4fe6be3bc1c8e">cb_calculate_clause_features</a></div><div class="ttdeci">void cb_calculate_clause_features(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *literal_active, unsigned int *Xi)</div><div class="ttdef"><b>Definition:</b> ClauseBank.c:761</div></div>
 <div class="ttc" id="aClauseBank_8h_html_a5dd9735cbf092ef0b5e314ac5d9b5ea2"><div class="ttname"><a href="ClauseBank_8h.html#a5dd9735cbf092ef0b5e314ac5d9b5ea2">cb_calculate_clause_outputs_patchwise</a></div><div class="ttdeci">void cb_calculate_clause_outputs_patchwise(unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)</div><div class="ttdef"><b>Definition:</b> ClauseBank.c:808</div></div>
 <div class="ttc" id="aClauseBank_8h_html_a65d164320a1bbfe0766163e59d0f84d8"><div class="ttname"><a href="ClauseBank_8h.html#a65d164320a1bbfe0766163e59d0f84d8">cb_type_iii_feedback</a></div><div class="ttdeci">void cb_type_iii_feedback(unsigned int *ta_state, unsigned int *ind_state, unsigned int *clause_and_target, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits_ta, int number_of_state_bits_ind, int number_of_patches, float update_p, float d, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi, unsigned int target)</div><div class="ttdef"><b>Definition:</b> ClauseBank.c:408</div></div>
 <div class="ttc" id="aClauseBank_8h_html_a7be9da91ef09893599dccfaabd3825fe"><div class="ttname"><a href="ClauseBank_8h.html#a7be9da91ef09893599dccfaabd3825fe">cb_type_ii_feedback</a></div><div class="ttdeci">void cb_type_ii_feedback(unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)</div><div class="ttdef"><b>Definition:</b> ClauseBank.c:367</div></div>
