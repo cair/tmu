@@ -171,7 +171,7 @@ void tmu_encode(
 
 					int chunk_nr = (clause_feature + number_of_features) / 32;
 					int chunk_pos = (clause_feature + number_of_features) % 32;
-					encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+					encoded_Xi[chunk_nr] |= (1U << chunk_pos);
 				}
 
 				// Encode y coordinate of patch into feature vector 
@@ -181,11 +181,11 @@ void tmu_encode(
 					if (y > y_threshold) {
 						int chunk_nr = patch_pos / 32;
 						int chunk_pos = patch_pos % 32;
-						encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+						encoded_Xi[chunk_nr] |= (1U << chunk_pos);
 					} else if (append_negated) {
 						int chunk_nr = (patch_pos + number_of_features) / 32;
 						int chunk_pos = (patch_pos + number_of_features) % 32;
-						encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+						encoded_Xi[chunk_nr] |= (1U << chunk_pos);
 					}
 				}
 
@@ -197,11 +197,11 @@ void tmu_encode(
 						int chunk_nr = patch_pos / 32;
 						int chunk_pos = patch_pos % 32;
 
-						encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+						encoded_Xi[chunk_nr] |= (1U << chunk_pos);
 					} else if (append_negated) {
 						int chunk_nr = (patch_pos + number_of_features) / 32;
 						int chunk_pos = (patch_pos + number_of_features) % 32;
-						encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+						encoded_Xi[chunk_nr] |= (1U << chunk_pos);
 					}
 				} 
 
@@ -215,11 +215,11 @@ void tmu_encode(
 							if (Xi[image_pos] == 1) {
 								int chunk_nr = patch_pos / 32;
 								int chunk_pos = patch_pos % 32;
-								encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+								encoded_Xi[chunk_nr] |= (1U << chunk_pos);
 							} else if (append_negated) {
 								int chunk_nr = (patch_pos + number_of_features) / 32;
 								int chunk_pos = (patch_pos + number_of_features) % 32;
-								encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+								encoded_Xi[chunk_nr] |= (1U << chunk_pos);
 							}
 						}
 					}
