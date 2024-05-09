@@ -185,8 +185,10 @@ static inline void cb_calculate_clause_output_feedback_patch_count(unsigned int 
 	int output_one_patches_count = 0;
 	for (int patch = 0; patch < number_of_patches; ++patch) {
 		if (cb_calculate_clause_output(ta_state, number_of_ta_chunks, number_of_state_bits, filter, literal_active, &Xi[patch*number_of_ta_chunks])) {
-			output_one_patches[output_one_patches_count] = patch;
-			output_one_patches_count++;
+			if (output_one_patch_count[patch] <= 2) {
+				output_one_patches[output_one_patches_count] = patch;
+				output_one_patches_count++;
+			}
 		}
 	}
 
@@ -195,6 +197,7 @@ static inline void cb_calculate_clause_output_feedback_patch_count(unsigned int 
 		int patch_id = fast_rand() % output_one_patches_count;
 		*clause_patch = output_one_patches[patch_id];
  		output_one_patch_count[*clause_patch] += 1;
+ 		//printf("%d %d\n", *clause_patch, output_one_patch_count[*clause_patch]);
 	} else {
 		*clause_output = 0;
 	}
