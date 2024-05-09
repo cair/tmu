@@ -34,8 +34,6 @@ def main(args):
     Y_test = np.logical_xor(X_test[:, 0], X_test[:, 1]).astype(dtype=np.uint32)
     X_test = X_test.reshape(-1, 1, args.number_of_features)
 
-
-
     tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=6, patch_dim=(1, 1), weighted_clauses=False, platform=args.platform, boost_true_positive_feedback=True, recurrent=True, incremental=False)
 
     for i in range(args.epochs):
@@ -143,9 +141,9 @@ def main(args):
 def default_args(**kwargs):
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", default=50, type=int)
-    parser.add_argument("--number-of-clauses", default=4, type=int)
+    parser.add_argument("--number-of-clauses", default=10, type=int)
     parser.add_argument("--platform", default='CPU', type=str)
-    parser.add_argument("--T", default=2, type=int)
+    parser.add_argument("--T", default=5, type=int)
     parser.add_argument("--s", default=2.5, type=float)
     parser.add_argument("--number-of-features", default=6, type=int)
     parser.add_argument("--noise", default=0.1, type=float, help="Noisy XOR")
