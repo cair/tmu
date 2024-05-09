@@ -123,8 +123,8 @@ Functions</h2></td></tr>
 <tr class="separator:aecdb68d55eebb0c5b77bce3c09bfa904"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4dff264cc90cc2f4cc3e2c2886b60ae"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#ab4dff264cc90cc2f4cc3e2c2886b60ae">cb_number_of_include_actions</a> (unsigned int *ta_state, int clause, int number_of_literals, int number_of_state_bits)</td></tr>
 <tr class="separator:ab4dff264cc90cc2f4cc3e2c2886b60ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fe64ef6d2c2b242fea392814cfcf0fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#a8fe64ef6d2c2b242fea392814cfcf0fd">cb_type_i_feedback</a> (unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int reuse_random_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)</td></tr>
-<tr class="separator:a8fe64ef6d2c2b242fea392814cfcf0fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc94153e97abf3bc9a8f612f398f9a11"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#abc94153e97abf3bc9a8f612f398f9a11">cb_type_i_feedback</a> (unsigned int *ta_state, unsigned int *feedback_to_ta, unsigned int *output_one_patches, unsigned int *output_one_patch_count, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, float s, unsigned int boost_true_positive_feedback, unsigned int reuse_random_feedback, unsigned int max_included_literals, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)</td></tr>
+<tr class="separator:abc94153e97abf3bc9a8f612f398f9a11"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7be9da91ef09893599dccfaabd3825fe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#a7be9da91ef09893599dccfaabd3825fe">cb_type_ii_feedback</a> (unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)</td></tr>
 <tr class="separator:a7be9da91ef09893599dccfaabd3825fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2ee47d9bf82f859b7681a027fb3a7ca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8c.html#ad2ee47d9bf82f859b7681a027fb3a7ca">cb_type_ii_feedback_recurrent</a> (unsigned int *ta_state, unsigned int *output_one_patches, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, float update_p, unsigned int *clause_active, unsigned int *literal_active, unsigned int *Xi)</td></tr>
@@ -871,8 +871,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a8fe64ef6d2c2b242fea392814cfcf0fd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8fe64ef6d2c2b242fea392814cfcf0fd">&#9670;&nbsp;</a></span>cb_type_i_feedback()</h2>
+<a id="abc94153e97abf3bc9a8f612f398f9a11"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc94153e97abf3bc9a8f612f398f9a11">&#9670;&nbsp;</a></span>cb_type_i_feedback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -894,6 +894,12 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>output_one_patches</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>output_one_patch_count</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
