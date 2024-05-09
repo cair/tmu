@@ -84,6 +84,16 @@ void cb_calculate_clause_outputs_predict(
     unsigned int *Xi
 );
 
+void cb_calculate_clause_outputs_predict_recurrent(
+        unsigned int *ta_state,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        unsigned int *clause_output,
+        unsigned int *Xi
+);
+
 void cb_calculate_clause_outputs_update(
     unsigned int *ta_state,
     int number_of_clauses,
@@ -93,6 +103,17 @@ void cb_calculate_clause_outputs_update(
     unsigned int *clause_output,
     unsigned int *literal_active,
     unsigned int *Xi
+);
+
+void cb_calculate_clause_outputs_update_recurrent(
+        unsigned int *ta_state,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        unsigned int *clause_output,
+        unsigned int *literal_active,
+        unsigned int *Xi
 );
 
 void cb_calculate_clause_outputs_patchwise(
@@ -111,7 +132,6 @@ void cb_calculate_clause_features(
         int number_of_literals,
         int number_of_state_bits,
         int number_of_patches,
-        unsigned int *literal_active,
         unsigned int *Xi
 );
 
