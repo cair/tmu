@@ -91,8 +91,8 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a26e85111112c7a43b5d4fe6be3bc1c8e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#a26e85111112c7a43b5d4fe6be3bc1c8e">cb_calculate_clause_features</a> (unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *literal_active, unsigned int *Xi)</td></tr>
-<tr class="separator:a26e85111112c7a43b5d4fe6be3bc1c8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a012054b578477ce23a0f6b91a7424aa8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#a012054b578477ce23a0f6b91a7424aa8">cb_calculate_clause_features</a> (unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *Xi)</td></tr>
+<tr class="separator:a012054b578477ce23a0f6b91a7424aa8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad05f88751a3a609de604ed9d519f1cb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#aad05f88751a3a609de604ed9d519f1cb">cb_calculate_clause_outputs_incremental</a> (unsigned int *literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, unsigned int *previous_Xi, unsigned int *Xi)</td></tr>
 <tr class="separator:aad05f88751a3a609de604ed9d519f1cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcbbc26637e6f6aca3635dcd524b50c0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#abcbbc26637e6f6aca3635dcd524b50c0">cb_calculate_clause_outputs_incremental_batch</a> (unsigned int *literal_clause_map, unsigned int *literal_clause_map_pos, unsigned int *false_literals_per_clause, int number_of_clauses, int number_of_literals, int number_of_patches, unsigned int *clause_output, unsigned int *previous_Xi, unsigned int *Xi, int batch_size)</td></tr>
@@ -101,8 +101,12 @@ Functions</h2></td></tr>
 <tr class="separator:a5dd9735cbf092ef0b5e314ac5d9b5ea2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc8eb4eb0f2318eb23e2ea214e51aa66"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#afc8eb4eb0f2318eb23e2ea214e51aa66">cb_calculate_clause_outputs_predict</a> (unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)</td></tr>
 <tr class="separator:afc8eb4eb0f2318eb23e2ea214e51aa66"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec1f8ac3178d3267b79ddb82bbe6e2ae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#aec1f8ac3178d3267b79ddb82bbe6e2ae">cb_calculate_clause_outputs_predict_recurrent</a> (unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *Xi)</td></tr>
+<tr class="separator:aec1f8ac3178d3267b79ddb82bbe6e2ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6659851654ae90a3cfc9cb3d0777b9f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#ad6659851654ae90a3cfc9cb3d0777b9f">cb_calculate_clause_outputs_update</a> (unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *literal_active, unsigned int *Xi)</td></tr>
 <tr class="separator:ad6659851654ae90a3cfc9cb3d0777b9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ec23624f16510430bebb546c5fed24d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#a7ec23624f16510430bebb546c5fed24d">cb_calculate_clause_outputs_update_recurrent</a> (unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, int number_of_patches, unsigned int *clause_output, unsigned int *literal_active, unsigned int *Xi)</td></tr>
+<tr class="separator:a7ec23624f16510430bebb546c5fed24d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a04ef5efece9a044be69c1fbf3fb398d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#a04ef5efece9a044be69c1fbf3fb398d3">cb_calculate_literal_frequency</a> (unsigned int *ta_state, int number_of_clauses, int number_of_literals, int number_of_state_bits, unsigned int *clause_active, unsigned int *literal_count)</td></tr>
 <tr class="separator:a04ef5efece9a044be69c1fbf3fb398d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a956980e03bd8a82b5467c3951f214b5f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ClauseBank_8h.html#a956980e03bd8a82b5467c3951f214b5f">cb_get_literals</a> (const unsigned int *ta_state, unsigned int number_of_clauses, unsigned int number_of_literals, unsigned int number_of_state_bits, unsigned int *result)</td></tr>
@@ -121,8 +125,8 @@ Functions</h2></td></tr>
 <tr class="separator:a65d164320a1bbfe0766163e59d0f84d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a26e85111112c7a43b5d4fe6be3bc1c8e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a26e85111112c7a43b5d4fe6be3bc1c8e">&#9670;&nbsp;</a></span>cb_calculate_clause_features()</h2>
+<a id="a012054b578477ce23a0f6b91a7424aa8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a012054b578477ce23a0f6b91a7424aa8">&#9670;&nbsp;</a></span>cb_calculate_clause_features()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -156,12 +160,6 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>number_of_patches</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned int *&#160;</td>
-          <td class="paramname"><em>literal_active</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -429,6 +427,64 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="aec1f8ac3178d3267b79ddb82bbe6e2ae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec1f8ac3178d3267b79ddb82bbe6e2ae">&#9670;&nbsp;</a></span>cb_calculate_clause_outputs_predict_recurrent()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cb_calculate_clause_outputs_predict_recurrent </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>ta_state</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_clauses</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_literals</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_state_bits</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_patches</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>clause_output</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>Xi</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ad6659851654ae90a3cfc9cb3d0777b9f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad6659851654ae90a3cfc9cb3d0777b9f">&#9670;&nbsp;</a></span>cb_calculate_clause_outputs_update()</h2>
 
@@ -437,6 +493,70 @@ Functions</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">void cb_calculate_clause_outputs_update </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>ta_state</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_clauses</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_literals</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_state_bits</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_patches</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>clause_output</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>literal_active</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>Xi</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a7ec23624f16510430bebb546c5fed24d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ec23624f16510430bebb546c5fed24d">&#9670;&nbsp;</a></span>cb_calculate_clause_outputs_update_recurrent()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cb_calculate_clause_outputs_update_recurrent </td>
           <td>(</td>
           <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>ta_state</em>, </td>
