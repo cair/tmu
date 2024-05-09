@@ -29,6 +29,7 @@ void cb_type_i_feedback(
     unsigned int *ta_state,
     unsigned int *feedback_to_ta,
     unsigned int *output_one_patches,
+    unsigned int *output_one_patch_count,
     int number_of_clauses,
     int number_of_literals,
     int number_of_state_bits,
