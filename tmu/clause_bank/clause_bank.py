@@ -157,6 +157,18 @@ class ClauseBank(BaseClauseBank):
                 xi_p
             )
 
+            lib.cb_calculate_clause_outputs_predict_recurrent(
+                self.ptr_ta_state,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.co_p,
+                xi_p
+            )
+
+            return self.clause_output
+
         if not self.incremental:
             lib.cb_calculate_clause_outputs_predict(
                 self.ptr_ta_state,
@@ -167,6 +179,7 @@ class ClauseBank(BaseClauseBank):
                 self.co_p,
                 xi_p
             )
+            
             return self.clause_output
 
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
@@ -216,16 +229,27 @@ class ClauseBank(BaseClauseBank):
                 xi_p
             )
 
-        lib.cb_calculate_clause_outputs_update(
-            self.ptr_ta_state,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
-            self.number_of_patches,
-            self.co_p,
-            la_p,
-            xi_p
-        )
+            lib.cb_calculate_clause_outputs_update_recurrent(
+                self.ptr_ta_state,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.co_p,
+                la_p,
+                xi_p
+            )
+        else:
+            lib.cb_calculate_clause_outputs_update(
+                self.ptr_ta_state,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.co_p,
+                la_p,
+                xi_p
+            )
 
         return self.clause_output
 
