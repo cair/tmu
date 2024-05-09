@@ -166,14 +166,6 @@ void tmu_encode(
 				Xi = &X[input_pos];
 				encoded_Xi = &encoded_X[encoded_pos];
 
-				// Encode class into feature vector (all false)
-				for (int clause_feature = 0; clause_feature < clause_features; ++clause_feature) {
-
-					int chunk_nr = (clause_feature + number_of_features) / 32;
-					int chunk_pos = (clause_feature + number_of_features) % 32;
-					encoded_Xi[chunk_nr] |= (1U << chunk_pos);
-				}
-
 				// Encode y coordinate of patch into feature vector 
 				for (int y_threshold = 0; y_threshold < dim_y - patch_dim_y; ++y_threshold) {
 					int patch_pos = clause_features + y_threshold;
