@@ -179,7 +179,7 @@ class ClauseBank(BaseClauseBank):
                 self.co_p,
                 xi_p
             )
-            
+
             return self.clause_output
 
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
@@ -321,18 +321,32 @@ class ClauseBank(BaseClauseBank):
         ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
         ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
 
-        lib.cb_type_ii_feedback(
-            self.ptr_ta_state,
-            self.ptr_output_one_patches,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
-            self.number_of_patches,
-            update_p,
-            ptr_clause_active,
-            ptr_literal_active,
-            ptr_xi
-        )
+        if self.recurrent:
+            lib.cb_type_ii_feedback_recurrent(
+                self.ptr_ta_state,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                ptr_clause_active,
+                ptr_literal_active,
+                ptr_xi
+            )
+        else:
+            lib.cb_type_ii_feedback(
+                self.ptr_ta_state,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                ptr_clause_active,
+                ptr_literal_active,
+                ptr_xi
+            )
 
         self.incremental_clause_evaluation_initialized = False
 
