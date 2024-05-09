@@ -179,6 +179,27 @@ static inline void cb_calculate_clause_output_feedback(unsigned int *ta_state, u
 	}
 }
 
+/* Calculate the output of each clause using the actions of each Tsetline Automaton. */
+static inline void cb_calculate_clause_output_feedback_patch_count(unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *output_one_patch_count, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *literal_active, unsigned int *Xi)
+{
+	int output_one_patches_count = 0;
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		if (cb_calculate_clause_output(ta_state, number_of_ta_chunks, number_of_state_bits, filter, literal_active, &Xi[patch*number_of_ta_chunks])) {
+			output_one_patches[output_one_patches_count] = patch;
+			output_one_patches_count++;
+		}
+	}
+
+	if (output_one_patches_count > 0) {
+		*clause_output = 1;
+		int patch_id = fast_rand() % output_one_patches_count;
+		*clause_patch = output_one_patches[patch_id];
+ 		output_one_patch_count[*clause_patch] += 1;
+	} else {
+		*clause_output = 0;
+	}
+}
+
 
 /* Calculate the output of each clause using the actions of each Tsetline Automaton. */
 static inline int cb_calculate_clause_output_single_false_literal(unsigned int *ta_state, unsigned int *candidate_offending_literals, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *literal_active, unsigned int *Xi)
@@ -263,6 +284,7 @@ void cb_type_i_feedback(
         unsigned int *ta_state,
         unsigned int *feedback_to_ta,
         unsigned int *output_one_patches,
+        unsigned int *output_one_patch_count,
         int number_of_clauses,
         int number_of_literals,
         int number_of_state_bits,
@@ -290,6 +312,11 @@ void cb_type_i_feedback(
 		cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
 	}
 
+	//printf("RESET\n");
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		output_one_patch_count[patch] = 0;
+	}
+
 	for (int j = 0; j < number_of_clauses; ++j) {
 		if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
 			continue;
@@ -300,7 +327,7 @@ void cb_type_i_feedback(
 		unsigned int clause_output;
 		unsigned int clause_patch;
 
-		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
+		cb_calculate_clause_output_feedback_patch_count(&ta_state[clause_pos], output_one_patches, output_one_patch_count, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
 
 		if (!reuse_random_feedback && s > 1.0) {
 			cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
