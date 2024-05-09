@@ -179,6 +179,7 @@ static inline void cb_calculate_clause_output_feedback(unsigned int *ta_state, u
 	}
 }
 
+
 /* Calculate the output of each clause using the actions of each Tsetline Automaton. */
 static inline int cb_calculate_clause_output_single_false_literal(unsigned int *ta_state, unsigned int *candidate_offending_literals, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *literal_active, unsigned int *Xi)
 {
@@ -335,6 +336,97 @@ void cb_type_i_feedback(
 				}
 			}
 		}
+	}
+}
+
+void cb_type_ii_feeedback_clause_recurrent(
+        int number_of_clauses,
+	int clause,
+	int patch,
+	unsigned int *ta_state,
+        int number_of_ta_chunks,
+        int number_of_state_bits,
+        unsigned int *clause_active,
+        unsigned int *literal_active,
+        unsigned int filter,
+        unsigned int *Xi
+)
+{
+	unsigned int clause_pos = clause*number_of_ta_chunks*number_of_state_bits;
+
+	if (
+		cb_calculate_clause_output(
+			&ta_state[clause_pos],
+			number_of_ta_chunks,
+			number_of_state_bits,
+			filter,
+			literal_active,
+			&Xi[patch*number_of_ta_chunks]
+		)
+	)
+	{
+		if (clause_active[clause]) {
+			// Update clause with Type II Feedback
+			for (int k = 0; k < number_of_ta_chunks; ++k) {
+				unsigned int ta_pos = k*number_of_state_bits;
+				cb_inc(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[patch*number_of_ta_chunks + k]), number_of_state_bits);
+			}
+		}
+
+		if (patch > 1) {
+			// Proceed with included clauses from previous patch
+			for (int j = 0; j < number_of_clauses; ++j) {
+				unsigned int chunk_nr = j / 32;
+				unsigned int chunk_pos = j % 32;
+				
+				if (ta_state[clause_pos + chunk_nr*number_of_state_bits + number_of_state_bits-1] & (1U << chunk_pos)) {
+					cb_type_ii_feeedback_clause_recurrent(number_of_clauses, j, patch-1, ta_state, number_of_ta_chunks, number_of_state_bits, clause_active, literal_active, filter, Xi);
+				}
+			}
+		}
+	}	
+}
+
+void cb_type_ii_feedback_recurrent(
+        unsigned int *ta_state,
+        unsigned int *output_one_patches,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        float update_p,
+        unsigned int *clause_active,
+        unsigned int *literal_active,
+        unsigned int *Xi
+)
+{
+	unsigned int filter;
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	for (int j = 0; j < number_of_clauses; j++) {
+		if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
+			continue;
+		}
+
+		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;		
+
+		cb_type_ii_feeedback_clause_recurrent(
+			number_of_clauses,
+			j,
+			number_of_patches-1,
+			ta_state,
+			number_of_ta_chunks,
+			number_of_state_bits,
+			clause_active,
+			literal_active,
+			filter,
+			Xi
+		);
 	}
 }
 
@@ -741,14 +833,13 @@ void cb_calculate_clause_outputs_predict_recurrent(
 					&ta_state[clause_pos],
 					number_of_ta_chunks,
 					number_of_state_bits,
-					filter
-				)) && cb_calculate_clause_output_without_literal_active(
+					filter)
+				) && cb_calculate_clause_output_without_literal_active(
 					&ta_state[clause_pos],
 					number_of_ta_chunks,
 					number_of_state_bits,
 					filter,
-					&Xi[(number_of_patches-1)*number_of_ta_chunks]
-				);
+					&Xi[(number_of_patches-1)*number_of_ta_chunks]);
 	}
 }
 
@@ -859,7 +950,8 @@ void cb_calculate_clause_features(
 				chunk_nr = (j + number_of_literals / 2) / 32;
 				chunk_pos = (j + number_of_literals / 2) % 32;
 				
-				Xi[(patch + 1)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+				//Xi[(patch + 1)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+				Xi[(patch + 1)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
 			}
 		}
 	}
