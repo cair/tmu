@@ -34,6 +34,7 @@ class ClauseBank(BaseClauseBank):
     cop_p = None  # _cffi_backend._CDataBase
     ptr_feedback_to_ta = None  # _cffi_backend._CDataBase
     ptr_output_one_patches = None  # _cffi_backend._CDataBase
+    ptr_output_one_patch_count = None  # _cffi_backend._CDataBase
     ptr_literal_clause_count = None  # _cffi_backend._CDataBase
     ptr_actions = None  # _cffi_backend._CDataBase
 
@@ -61,6 +62,7 @@ class ClauseBank(BaseClauseBank):
         self.clause_output_patchwise = np.empty(self.number_of_clauses * self.number_of_patches, dtype=np.uint32, order="c")
         self.feedback_to_ta = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
         self.output_one_patches = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
+        self.output_one_patch_count = np.zeros(self.number_of_patches, dtype=np.uint32, order="c")
         self.literal_clause_count = np.empty(self.number_of_literals, dtype=np.uint32, order="c")
         self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
 
@@ -105,6 +107,8 @@ class ClauseBank(BaseClauseBank):
         self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)  # clause_output_patchwise
         self.ptr_feedback_to_ta = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)  # feedback_to_ta
         self.ptr_output_one_patches = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)  # output_one_patches
+        self.ptr_output_one_patch_count = ffi.cast("unsigned int *", self.output_one_patch_count.ctypes.data)  # output_one_patch_count
+
         self.ptr_literal_clause_count = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)  # literal_clause_count
         self.tiafc_p = ffi.cast("unsigned int *", self.type_ia_feedback_counter.ctypes.data)  # literal_clause_count
 
@@ -157,7 +161,7 @@ class ClauseBank(BaseClauseBank):
                 xi_p
             )
 
-            lib.cb_calculate_clause_outputs_predict_recurrent(
+            lib.cb_calculate_clause_outputs_predict(#_recurrent(
                 self.ptr_ta_state,
                 self.number_of_clauses,
                 self.number_of_literals,
@@ -229,7 +233,7 @@ class ClauseBank(BaseClauseBank):
                 xi_p
             )
 
-            lib.cb_calculate_clause_outputs_update_recurrent(
+            lib.cb_calculate_clause_outputs_update(#_recurrent(
                 self.ptr_ta_state,
                 self.number_of_clauses,
                 self.number_of_literals,
@@ -293,6 +297,7 @@ class ClauseBank(BaseClauseBank):
             self.ptr_ta_state,
             self.ptr_feedback_to_ta,
             self.ptr_output_one_patches,
+            self.ptr_output_one_patch_count,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
