@@ -25,15 +25,15 @@ def main(args):
     experiment_results = metrics(args)
 
     X_train = np.random.randint(0, 2, size=(5000, args.number_of_features), dtype=np.uint32)
-    Y_train = np.logical_and(X_train[:, 0], X_train[:, 1]).astype(dtype=np.uint32)
+    Y_train = np.logical_xor(X_train[:, 0], X_train[:, 1]).astype(dtype=np.uint32)
     Y_train = np.where(np.random.rand(5000) <= args.noise, 1 - Y_train, Y_train)  # Adds noise
     X_train = X_train.reshape(-1, 1, args.number_of_features)
 
     X_test = np.random.randint(0, 2, size=(5000, args.number_of_features), dtype=np.uint32)
-    Y_test = np.logical_and(X_test[:, 0], X_test[:, 1]).astype(dtype=np.uint32)
+    Y_test = np.logical_xor(X_test[:, 0], X_test[:, 1]).astype(dtype=np.uint32)
     X_test = X_test.reshape(-1, 1, args.number_of_features)
 
-    tm = TMClassifier(args.number_of_clauses, args.T, args.s, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=0, recurrent=True, incremental=False)
+    tm = TMClassifier(args.number_of_clauses, args.T, args.s, patch_dim=(1, 1), weighted_clauses=False, platform=args.platform, boost_true_positive_feedback=True, recurrent=True, incremental=False)
 
     for i in range(20):
         tm.fit(X_train, Y_train)
@@ -128,13 +128,13 @@ def main(args):
 
 def default_args(**kwargs):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", default=2, type=int)
-    parser.add_argument("--number-of-clauses", default=10, type=int)
+    parser.add_argument("--epochs", default=10, type=int)
+    parser.add_argument("--number-of-clauses", default=20, type=int)
     parser.add_argument("--platform", default='CPU', type=str)
-    parser.add_argument("--T", default=100, type=int)
-    parser.add_argument("--s", default=1.0, type=float)
+    parser.add_argument("--T", default=50, type=int)
+    parser.add_argument("--s", default=3.5, type=float)
     parser.add_argument("--number-of-features", default=2, type=int)
-    parser.add_argument("--noise", default=0.0, type=float, help="Noisy XOR")
+    parser.add_argument("--noise", default=0.1, type=float, help="Noisy XOR")
     args = parser.parse_args()
     for key, value in kwargs.items():
         if key in args.__dict__:
