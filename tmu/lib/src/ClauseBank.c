@@ -330,7 +330,7 @@ void cb_type_i_feedback(
 		unsigned int clause_output;
 		unsigned int clause_patch;
 
-		cb_calculate_clause_output_feedback_patch_count(&ta_state[clause_pos], output_one_patches, output_one_patch_count, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
+		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
 
 		if (!reuse_random_feedback && s > 1.0) {
 			cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
