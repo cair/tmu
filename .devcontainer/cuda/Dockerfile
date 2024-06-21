@@ -4,7 +4,7 @@ FROM nvcr.io/nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
 RUN apt-get update && apt-get install -y git python3 python3-pip
 
 # Install tmu Dependencies
-RUN pip3 install cffi numpy pandas scikit-learn tqdm requests xxhash
+RUN pip3 install cffi numpy==1.26.4 pandas scikit-learn tqdm requests xxhash pycuda
 
 # Upgrade pip
 RUN pip3 install --upgrade pip
