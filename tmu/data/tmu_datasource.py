@@ -44,7 +44,8 @@ class TMUDatasetSource:
             conf_dir = Path.home() / 'Library' / 'Preferences' / self._tmu_dataset_name
         else:  # Linux, etc.
             conf_dir = Path.home() / '.config' / self._tmu_dataset_name
-        conf_dir.mkdir(exist_ok=True)
+
+        conf_dir.mkdir(exist_ok=True, parents=True)
         return conf_dir
 
     def _get_releases(self, cache, cache_max_age, cache_dir) -> list:
