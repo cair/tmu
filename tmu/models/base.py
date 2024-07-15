@@ -98,6 +98,7 @@ class TMBaseModel:
             absorbing_include=None,
             absorbing_exclude=None,
             squared_weight_update_p=False,
+            spatio_temporal=False,
             seed=None
     ):
         self.seed = seed
@@ -144,6 +145,7 @@ class TMBaseModel:
         self.feedback_rate_excluded_literals = feedback_rate_excluded_literals
         self.literal_insertion_state = literal_insertion_state
         self.squared_weight_update_p = squared_weight_update_p
+        self.spatio_temporal = spatio_temporal
 
         # TODO - Change to checksum
         self.X_train = np.zeros(0, dtype=np.uint32)
@@ -235,6 +237,7 @@ class TMBaseModel:
             batch_size=self.batch_size,
             incremental=self.incremental,
             type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio,
+            spatio_temporal=self.spatio_temporal,
             seed=self.seed,
         )
         return clause_bank_type, clause_bank_args
