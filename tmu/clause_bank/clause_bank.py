@@ -64,9 +64,11 @@ class ClauseBank(BaseClauseBank):
         self.feedback_to_ta = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
         self.output_one_patches = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
         self.literal_clause_count = np.empty(self.number_of_literals, dtype=np.uint32, order="c")
-
-
         self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
+        
+        if self.spatio_temporal:
+            self.clause_visited_in_patch = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_output_in_patch = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
 
         # Incremental Clause Evaluation
         self.literal_clause_map = np.empty(
@@ -111,11 +113,14 @@ class ClauseBank(BaseClauseBank):
         self.ptr_output_one_patches = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)  # output_one_patches
         self.ptr_literal_clause_count = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)  # literal_clause_count
         self.tiafc_p = ffi.cast("unsigned int *", self.type_ia_feedback_counter.ctypes.data)  # literal_clause_count
+        
+        if self.spatio_temporal:
+            self.cvip_p = ffi.cast("unsigned int *", self.clause_visited_in_patch.ctypes.data)  # clause_visited_in_patch
+            self.coip_p = ffi.cast("unsigned int *", self.clause_output_in_patch.ctypes.data)  # clause_visited_in_patch
 
         # Clause Initialization
         self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
         self.ptr_ta_state_ind = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
-
 
         # Action Initialization
         self.ptr_actions = ffi.cast("unsigned int *", self.actions.ctypes.data)

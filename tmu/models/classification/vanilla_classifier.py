@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Ole-Christoffer Granmo
+# Copyright (c) 2024 Ole-Christoffer Granmo
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -60,6 +60,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             literal_sampling=1.0,
             feedback_rate_excluded_literals=1,
             literal_insertion_state=-1,
+            spatio_temporal=False,
             seed=None
     ):
         super().__init__(
@@ -92,6 +93,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             literal_sampling=literal_sampling,
             feedback_rate_excluded_literals=feedback_rate_excluded_literals,
             literal_insertion_state=literal_insertion_state,
+            spatio_temporal=spatio_temporal,
             seed=seed
         )
         MultiClauseBankMixin.__init__(self, seed=seed)

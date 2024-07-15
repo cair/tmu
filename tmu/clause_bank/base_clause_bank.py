@@ -21,6 +21,7 @@ class BaseClauseBank(CFFISerializable):
             number_of_clauses: int,
             max_included_literals: int,
             patch_dim: typing.Union[tuple, None],
+            spatio_temporal : bool,
             **kwargs
     ):
         self._warn_unknown_arguments(**kwargs)
@@ -58,6 +59,8 @@ class BaseClauseBank(CFFISerializable):
         self.number_of_ta_chunks = int((self.number_of_literals - 1) / 32 + 1)
 
         self.max_included_literals = max_included_literals if max_included_literals else self.number_of_literals
+
+        self.spatio_temporal = spatio_temporal
 
     def _warn_unknown_arguments(self, **kwargs):
         for k, v in kwargs.items():
