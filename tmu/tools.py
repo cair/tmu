@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Ole-Christoffer Granmo
+# Copyright (c) 2024 Ole-Christoffer Granmo
 import abc
 import time
 
@@ -98,7 +98,7 @@ def encode(
         number_of_ta_chunks,
         dim,
         patch_dim,
-        class_features,
+        spatio_temporal_features,
         append_negated=True
 ):
 
@@ -116,6 +116,6 @@ def encode(
         patch_dim[0],
         patch_dim[1],
         int(append_negated),
-        class_features
+        spatio_temporal_features
     )
     return np.ascontiguousarray(encoded_X.reshape((int(number_of_examples), number_of_patches * number_of_ta_chunks)))
