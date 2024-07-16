@@ -517,6 +517,125 @@ void cb_type_iii_feedback(
 	}
 }
 
+static inline unsigned int cb_calculate_clause_output_without_literal_active(
+	unsigned int *ta_state,
+	int number_of_ta_chunks,
+	int number_of_state_bits,
+	unsigned int filter,
+	unsigned int *Xi
+)
+{
+	unsigned int output = 1;
+	for (int k = 0; k < number_of_ta_chunks-1; k++) {
+		unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+		output = output && (ta_state[pos] & Xi[k]) == ta_state[pos];
+
+		if (!output) {
+			break;
+		}
+	}
+
+	unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+	output = output &&
+		(ta_state[pos] & (Xi[number_of_ta_chunks - 1]) & filter) ==
+		(ta_state[pos] & filter);
+
+	return output;
+}
+
+void cb_calculate_spatio_temporal_features(
+        unsigned int *ta_state,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        unsigned int *clause_new_value_in_patch,
+        unsigned int *clause_value_in_patch,
+        unsigned int *Xi
+)
+{
+	unsigned int chunk_nr;
+	unsigned int chunk_pos;
+
+	unsigned int filter;
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	// Set all clause literals to True:
+	// Calculate spatio-temporal literals, patch by patch
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		for (int j = 0; j < number_of_clauses; j++) {
+			clause_value_in_patch[patch*number_of_clauses + j] = 1;
+		}
+	}
+
+	for (int round = 0; round < 3; ++round) {
+		// Calculate spatio-temporal literals, patch by patch
+		for (int patch = 0; patch < number_of_patches; ++patch) {
+			if (patch > 0) {
+				for (int j = 0; j < number_of_clauses; ++j) {
+					if (clause_value_in_patch[(patch-1)*number_of_clauses + j]) {
+						chunk_nr = j / 32;
+						chunk_pos = j % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets left clause feature to True
+
+						chunk_nr = (j + number_of_literals / 2) / 32;
+						chunk_pos = (j + number_of_literals / 2) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets left negated clause feature to False
+					} else {
+						chunk_nr = j / 32;
+						chunk_pos = j % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets left clause feature to False
+
+						chunk_nr = (j + number_of_literals / 2) / 32;
+						chunk_pos = (j + number_of_literals / 2) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets left negated clause feature to True
+					}
+				}
+			}
+
+			// Adjacent on the right side (clause 'j' True in patch to the right)
+			if ((patch < number_of_patches-1)) {
+				for (int j = 0; j < number_of_clauses; ++j) {
+					if (clause_value_in_patch[(patch+1)*number_of_clauses + j]) {
+						chunk_nr = (j + number_of_clauses) / 32;
+						chunk_pos = (j + number_of_clauses) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
+
+						chunk_nr = (j + number_of_clauses + number_of_literals / 2) / 32;
+						chunk_pos = (j + number_of_clauses + number_of_literals / 2) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right negated clause feature to False
+					} else {
+						chunk_nr = (j + number_of_clauses) / 32;
+						chunk_pos = (j + number_of_clauses) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right clause feature to False
+
+						chunk_nr = (j + number_of_clauses + number_of_literals / 2) / 32;
+						chunk_pos = (j + number_of_clauses + number_of_literals / 2) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
+					}
+				}
+			}
+
+			for (int j = 0; j < number_of_clauses; j++) {
+				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
+				clause_new_value_in_patch[patch*number_of_clauses + j] = cb_calculate_clause_output_without_literal_active(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
+			}
+		}
+
+		for (int patch = 0; patch < number_of_patches; ++patch) {
+			for (int j = 0; j < number_of_clauses; j++) {
+				clause_value_in_patch[patch*number_of_clauses + j] = clause_new_value_in_patch[patch*number_of_clauses + j];
+			}
+		}
+	}
+}
+
 void cb_calculate_clause_outputs_predict(
         unsigned int *ta_state,
         int number_of_clauses,
