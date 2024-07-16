@@ -103,7 +103,7 @@ def main(args):
             X_test[i,0,position_3,0] = 1
             X_test[i,0,position_3,1] = 0
 
-    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=12, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=16)
+    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=32)
 
     for i in range(args.epochs):
         tm.fit(X_train, Y_train)

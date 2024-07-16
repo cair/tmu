@@ -37,6 +37,7 @@ class BaseClauseBank(CFFISerializable):
         self.boost_true_positive_feedback = int(boost_true_positive_feedback)
         self.reuse_random_feedback = int(reuse_random_feedback)
         self.type_ia_ii_feedback_ratio = type_ia_ii_feedback_ratio
+        self.spatio_temporal = spatio_temporal
 
         if len(X_shape) == 2:
             self.dim = (X_shape[1], 1, 1)
@@ -53,14 +54,16 @@ class BaseClauseBank(CFFISerializable):
         self.number_of_features = int(
             self.patch_dim[0] * self.patch_dim[1] * self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (
                     self.dim[1] - self.patch_dim[1]))
+
+        if self.spatio_temporal:
+            self.number_of_features += self.number_of_clauses*6
+
         self.number_of_literals = self.number_of_features * 2
 
         self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))
         self.number_of_ta_chunks = int((self.number_of_literals - 1) / 32 + 1)
 
         self.max_included_literals = max_included_literals if max_included_literals else self.number_of_literals
-
-        self.spatio_temporal = spatio_temporal
 
     def _warn_unknown_arguments(self, **kwargs):
         for k, v in kwargs.items():
