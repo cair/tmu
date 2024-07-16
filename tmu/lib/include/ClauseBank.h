@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2021 Ole-Christoffer Granmo
+Copyright (c) 2024 Ole-Christoffer Granmo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -72,6 +72,17 @@ void cb_type_iii_feedback(
     unsigned int *literal_active,
     unsigned int *Xi,
     unsigned int target
+);
+
+void cb_calculate_spatio_temporal_features(
+        unsigned int *ta_state,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        unsigned int *clause_new_value_in_patch,
+        unsigned int *clause_value_in_patch,
+        unsigned int *Xi
 );
 
 void cb_calculate_clause_outputs_predict(
