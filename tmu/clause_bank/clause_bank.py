@@ -67,8 +67,8 @@ class ClauseBank(BaseClauseBank):
         self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
         
         if self.spatio_temporal:
-            self.clause_visited_in_patch = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_output_in_patch = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_value_in_patch = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_value_in_patch_tmp = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
 
         # Incremental Clause Evaluation
         self.literal_clause_map = np.empty(
@@ -115,8 +115,8 @@ class ClauseBank(BaseClauseBank):
         self.tiafc_p = ffi.cast("unsigned int *", self.type_ia_feedback_counter.ctypes.data)  # literal_clause_count
         
         if self.spatio_temporal:
-            self.cvip_p = ffi.cast("unsigned int *", self.clause_visited_in_patch.ctypes.data)  # clause_visited_in_patch
-            self.coip_p = ffi.cast("unsigned int *", self.clause_output_in_patch.ctypes.data)  # clause_visited_in_patch
+            self.cvip_p = ffi.cast("unsigned int *", self.clause_value_in_patch.ctypes.data)  # clause_value_in_patch
+            self.cvipt_p = ffi.cast("unsigned int *", self.clause_value_in_patch_tmp.ctypes.data)  # clause_value_in_patch_tmp
 
         # Clause Initialization
         self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
@@ -393,6 +393,11 @@ class ClauseBank(BaseClauseBank):
             self,
             X
     ):
+        if self.spatio_temporal:
+            spatio_temporal_features = self.number_of_clauses*6
+        else:
+            spatio_temporal_features = 0
+
         return tmu.tools.encode(
             X,
             X.shape[0],
@@ -400,7 +405,7 @@ class ClauseBank(BaseClauseBank):
             self.number_of_ta_chunks,
             self.dim,
             self.patch_dim,
-            0
+            spatio_temporal_features
         )
 
     def prepare_X_autoencoder(
