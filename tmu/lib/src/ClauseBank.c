@@ -622,6 +622,62 @@ void cb_calculate_spatio_temporal_features(
 				}
 			}
 
+			for (int j = 0; j < number_of_clauses; ++j) {
+				int clause_value = 0;
+				for (int patch_before = 0; patch_before < patch; ++patch_before) {
+					if (clause_value_in_patch[(patch_before)*number_of_clauses + j]) {
+						clause_value = 1;
+						break;
+					}
+				}
+
+				if (clause_value) {
+					chunk_nr = (j + number_of_clauses*2) / 32;
+					chunk_pos = (j + number_of_clauses*2) % 32;
+					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
+
+					chunk_nr = (j + number_of_clauses*2 + number_of_literals / 2) / 32;
+					chunk_pos = (j + number_of_clauses*2 + number_of_literals / 2) % 32;
+					Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right negated clause feature to False
+				} else {
+					chunk_nr = (j + number_of_clauses*2) / 32;
+					chunk_pos = (j + number_of_clauses*2) % 32;
+					Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right clause feature to False
+
+					chunk_nr = (j + number_of_clauses*2 + number_of_literals / 2) / 32;
+					chunk_pos = (j + number_of_clauses*2 + number_of_literals / 2) % 32;
+					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
+				}
+			}
+
+			for (int j = 0; j < number_of_clauses; ++j) {
+				int clause_value = 0;
+				for (int patch_after = patch+1; patch_after < number_of_patches; ++patch_after) {
+					if (clause_value_in_patch[(patch_after)*number_of_clauses + j]) {
+						clause_value = 1;
+						break;
+					}
+				}
+
+				if (clause_value) {
+					chunk_nr = (j + number_of_clauses*3) / 32;
+					chunk_pos = (j + number_of_clauses*3) % 32;
+					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
+
+					chunk_nr = (j + number_of_clauses*3 + number_of_literals / 2) / 32;
+					chunk_pos = (j + number_of_clauses*3 + number_of_literals / 2) % 32;
+					Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right negated clause feature to False
+				} else {
+					chunk_nr = (j + number_of_clauses*3) / 32;
+					chunk_pos = (j + number_of_clauses*3) % 32;
+					Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right clause feature to False
+
+					chunk_nr = (j + number_of_clauses*3 + number_of_literals / 2) / 32;
+					chunk_pos = (j + number_of_clauses*3 + number_of_literals / 2) % 32;
+					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
+				}
+			}
+
 			for (int j = 0; j < number_of_clauses; j++) {
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
 				clause_new_value_in_patch[patch*number_of_clauses + j] = cb_calculate_clause_output_without_literal_active(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
