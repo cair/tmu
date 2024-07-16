@@ -152,14 +152,24 @@ class ClauseBank(BaseClauseBank):
         self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape(
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))
 
-
-
         self.incremental_clause_evaluation_initialized = False
 
     def calculate_clause_outputs_predict(self, encoded_X, e):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
 
-        if not self.incremental:
+        if not self.incremental or self.spatio_temporal:
+            if self.spatio_temporal:
+                lib.cb_calculate_spatio_temporal_features(
+                    self.ptr_ta_state,
+                    self.number_of_clauses,
+                    self.number_of_literals,
+                    self.number_of_state_bits_ta,
+                    self.number_of_patches,
+                    self.cvip_p,
+                    self.cvipt_p,
+                    xi_p
+                )
+
             lib.cb_calculate_clause_outputs_predict(
                 self.ptr_ta_state,
                 self.number_of_clauses,
@@ -208,6 +218,18 @@ class ClauseBank(BaseClauseBank):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
         la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
 
+        if self.spatio_temporal:
+            lib.cb_calculate_spatio_temporal_features(
+                self.ptr_ta_state,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.cvip_p,
+                self.cvipt_p,
+                xi_p
+            )
+
         lib.cb_calculate_clause_outputs_update(
             self.ptr_ta_state,
             self.number_of_clauses,
@@ -223,6 +245,18 @@ class ClauseBank(BaseClauseBank):
 
     def calculate_clause_outputs_patchwise(self, encoded_X, e):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+
+        if self.spatio_temporal:
+            lib.cb_calculate_spatio_temporal_features(
+                self.ptr_ta_state,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.cvip_p,
+                self.cvipt_p,
+                xi_p
+            )
 
         lib.cb_calculate_clause_outputs_patchwise(
             self.ptr_ta_state,
