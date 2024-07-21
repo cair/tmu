@@ -244,6 +244,32 @@ static inline void cb_calculate_clause_output_patchwise(unsigned int *ta_state, 
 	return;
 }
 
+static inline unsigned int cb_calculate_clause_output_without_literal_active(
+	unsigned int *ta_state,
+	int number_of_ta_chunks,
+	int number_of_state_bits,
+	unsigned int filter,
+	unsigned int *Xi
+)
+{
+	unsigned int output = 1;
+	for (int k = 0; k < number_of_ta_chunks-1; k++) {
+		unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+		output = output && (ta_state[pos] & Xi[k]) == ta_state[pos];
+
+		if (!output) {
+			break;
+		}
+	}
+
+	unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+	output = output &&
+		(ta_state[pos] & (Xi[number_of_ta_chunks - 1]) & filter) ==
+		(ta_state[pos] & filter);
+
+	return output;
+}
+
 static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
 {
 	for (int patch = 0; patch < number_of_patches; ++patch) {
@@ -517,32 +543,6 @@ void cb_type_iii_feedback(
 	}
 }
 
-static inline unsigned int cb_calculate_clause_output_without_literal_active(
-	unsigned int *ta_state,
-	int number_of_ta_chunks,
-	int number_of_state_bits,
-	unsigned int filter,
-	unsigned int *Xi
-)
-{
-	unsigned int output = 1;
-	for (int k = 0; k < number_of_ta_chunks-1; k++) {
-		unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
-		output = output && (ta_state[pos] & Xi[k]) == ta_state[pos];
-
-		if (!output) {
-			break;
-		}
-	}
-
-	unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
-	output = output &&
-		(ta_state[pos] & (Xi[number_of_ta_chunks - 1]) & filter) ==
-		(ta_state[pos] & filter);
-
-	return output;
-}
-
 void cb_calculate_spatio_temporal_features(
         unsigned int *ta_state,
         int number_of_clauses,
@@ -577,6 +577,7 @@ void cb_calculate_spatio_temporal_features(
 	for (int round = 0; round < 3; ++round) {
 		// Calculate spatio-temporal literals, patch by patch
 		for (int patch = 0; patch < number_of_patches; ++patch) {
+			// Just before
 			if (patch > 0) {
 				for (int j = 0; j < number_of_clauses; ++j) {
 					if (clause_value_in_patch[(patch-1)*number_of_clauses + j]) {
@@ -599,7 +600,7 @@ void cb_calculate_spatio_temporal_features(
 				}
 			}
 
-			// Adjacent on the right side (clause 'j' True in patch to the right)
+			// Just after
 			if ((patch < number_of_patches-1)) {
 				for (int j = 0; j < number_of_clauses; ++j) {
 					if (clause_value_in_patch[(patch+1)*number_of_clauses + j]) {
@@ -622,6 +623,7 @@ void cb_calculate_spatio_temporal_features(
 				}
 			}
 
+			// Before
 			for (int j = 0; j < number_of_clauses; ++j) {
 				int clause_value = 0;
 				for (int patch_before = 0; patch_before < patch; ++patch_before) {
@@ -650,6 +652,7 @@ void cb_calculate_spatio_temporal_features(
 				}
 			}
 
+			// After
 			for (int j = 0; j < number_of_clauses; ++j) {
 				int clause_value = 0;
 				for (int patch_after = patch+1; patch_after < number_of_patches; ++patch_after) {
@@ -713,6 +716,10 @@ void cb_calculate_clause_outputs_predict(
 	for (int j = 0; j < number_of_clauses; j++) {
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
 		clause_output[j] = cb_calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+
+		// If clause is true with spatio-temporal reasoning, identify where it turns False and set 'turned off by' to True for each clause turning True in that patch (starting False).
+		// Also, identify which clauses it "turns off" by identifying those going from True to False in this patch.
+		// Set the spatio-temporal features accordingly, and re-evaluate the clause.
 	}
 }
 
