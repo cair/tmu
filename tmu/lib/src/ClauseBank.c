@@ -556,6 +556,7 @@ void cb_calculate_clause_specific_features(
         int number_of_literals,
 	int number_of_state_bits,
 	int number_of_patches,
+	unsigned int *clause_value_in_patch,
 	unsigned int *Xi
 )
 {
@@ -570,6 +571,11 @@ void cb_calculate_clause_specific_features(
 	}
 
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		clause_value_in_patch[patch] = cb_calculate_clause_output_without_literal_active(ta_state, number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
+	}
+
 	// Count how many times true after (#patches features)
 	// Count how many times true before (#patches features)
 	// Count how many times true after in sequence (#patches features)
@@ -617,7 +623,7 @@ void cb_calculate_clause_specific_features(
 			}
 		}
 
-		if (cb_calculate_clause_output_without_literal_active(ta_state, number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks])) {
+		if (clause_value_in_patch[patch]) {
 			true_before++;
 			true_consecutive_before++;
 		} else {
@@ -629,7 +635,46 @@ void cb_calculate_clause_specific_features(
 	unsigned int true_consecutive_after = 0;
 	for (int patch = number_of_patches-1; patch >= 0; --patch) {
 		// Set bits based on true_after and true_consecutive_after
-		if (cb_calculate_clause_output_without_literal_active(ta_state, number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks])) {
+
+		for (int l = 0; l < number_of_patches; ++l) {
+			if (l < true_after) { 
+				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			} else {
+				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l) % 32;
+				Xi[patch*number_of_ta_chunks + number_of_patches*2 + chunk_nr] &= ~(1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+			}
+
+			if (l < true_consecutive_after) { 
+				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			} else {
+				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+			}
+		}
+
+		if (clause_value_in_patch[patch]) {
 			true_after++;
 			true_consecutive_after++;
 		} else {
@@ -813,7 +858,7 @@ void cb_calculate_clause_outputs_predict(
 
 		// Calculate clause specific features
  
- 		cb_calculate_clause_specific_features(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+ 		//cb_calculate_clause_specific_features(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 
 
 		clause_output[j] = cb_calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
