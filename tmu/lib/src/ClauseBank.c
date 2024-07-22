@@ -270,7 +270,14 @@ static inline unsigned int cb_calculate_clause_output_without_literal_active(
 	return output;
 }
 
-static inline unsigned int cb_calculate_clause_output_predict(unsigned int *ta_state, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *Xi)
+static inline unsigned int cb_calculate_clause_output_predict(
+	unsigned int *ta_state,
+	int number_of_ta_chunks,
+	int number_of_state_bits,
+	unsigned int filter,
+	int number_of_patches,
+	unsigned int *Xi
+)
 {
 	for (int patch = 0; patch < number_of_patches; ++patch) {
 		unsigned int output = 1;
@@ -543,6 +550,37 @@ void cb_type_iii_feedback(
 	}
 }
 
+void cb_calculate_clause_specific_features(
+	unsigned int *ta_state,
+	int number_of_ta_chunks,
+	int number_of_state_bits,
+	unsigned int filter,
+	int number_of_patches,
+	unsigned int *Xi
+)
+{
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		unsigned int output = 1;
+		unsigned int all_exclude = 1;
+		for (int k = 0; k < number_of_ta_chunks-1; k++) {
+			unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+			output = output && (ta_state[pos] & Xi[patch*number_of_ta_chunks + k]) == ta_state[pos];
+
+			if (!output) {
+				break;
+			}
+			all_exclude = all_exclude && (ta_state[pos] == 0);
+		}
+
+		unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+		output = output &&
+			(ta_state[pos] & Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] & filter) ==
+			(ta_state[pos] & filter);
+
+		all_exclude = all_exclude && ((ta_state[pos] & filter) == 0);
+	}
+}
+
 void cb_calculate_spatio_temporal_features(
         unsigned int *ta_state,
         int number_of_clauses,
@@ -715,11 +753,13 @@ void cb_calculate_clause_outputs_predict(
 
 	for (int j = 0; j < number_of_clauses; j++) {
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
-		clause_output[j] = cb_calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 
-		// If clause is true with spatio-temporal reasoning, identify where it turns False and set 'turned off by' to True for each clause turning True in that patch (starting False).
-		// Also, identify which clauses it "turns off" by identifying those going from True to False in this patch.
-		// Set the spatio-temporal features accordingly, and re-evaluate the clause.
+		// Calculate clause specific features
+ 
+ 		cb_calculate_clause_specific_features(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
+
+
+		clause_output[j] = cb_calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 	}
 }
 
