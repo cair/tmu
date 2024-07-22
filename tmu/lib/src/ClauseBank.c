@@ -559,9 +559,17 @@ void cb_calculate_clause_specific_features(
 	unsigned int *Xi
 )
 {
+	// Count how many times true after #patches features
+	// Count how many times true before #patches features
+	// Count how many times true after in sequence #patches features
+	// Count how many times true before in sequence #patches features
+	unsigned int true_before = 0; //
+	unsigned int true_after = 0;
+	unsigned int true_consecutive_before = 0;
+	unsigned int true_consecutive_after = 0;
+		
 	for (int patch = 0; patch < number_of_patches; ++patch) {
-		unsigned int output = 1;
-		unsigned int all_exclude = 1;
+
 		for (int k = 0; k < number_of_ta_chunks-1; k++) {
 			unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
 			output = output && (ta_state[pos] & Xi[patch*number_of_ta_chunks + k]) == ta_state[pos];
