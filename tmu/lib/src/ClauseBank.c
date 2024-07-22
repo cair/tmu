@@ -552,40 +552,89 @@ void cb_type_iii_feedback(
 
 void cb_calculate_clause_specific_features(
 	unsigned int *ta_state,
-	int number_of_ta_chunks,
+	int number_of_clauses,
+        int number_of_literals,
 	int number_of_state_bits,
-	unsigned int filter,
 	int number_of_patches,
 	unsigned int *Xi
 )
 {
-	// Count how many times true after #patches features
-	// Count how many times true before #patches features
-	// Count how many times true after in sequence #patches features
-	// Count how many times true before in sequence #patches features
-	unsigned int true_before = 0; //
-	unsigned int true_after = 0;
+	unsigned int chunk_nr;
+	unsigned int chunk_pos;
+
+	unsigned int filter;
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+	// Count how many times true after (#patches features)
+	// Count how many times true before (#patches features)
+	// Count how many times true after in sequence (#patches features)
+	// Count how many times true before in sequence (#patches features)
+	unsigned int true_before = 0;
 	unsigned int true_consecutive_before = 0;
-	unsigned int true_consecutive_after = 0;
-		
 	for (int patch = 0; patch < number_of_patches; ++patch) {
+		// Set bits based on true_before and true_consecutive_before
 
-		for (int k = 0; k < number_of_ta_chunks-1; k++) {
-			unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
-			output = output && (ta_state[pos] & Xi[patch*number_of_ta_chunks + k]) == ta_state[pos];
+		for (int l = 0; l < number_of_patches; ++l) {
+			if (l < true_before) { 
+				chunk_nr = (number_of_clauses*6 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
 
-			if (!output) {
-				break;
+				chunk_nr = (number_of_clauses*6 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			} else {
+				chunk_nr = (number_of_clauses*6 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
 			}
-			all_exclude = all_exclude && (ta_state[pos] == 0);
+
+			if (l < true_consecutive_before) { 
+				chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			} else {
+				chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+			}
 		}
 
-		unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
-		output = output &&
-			(ta_state[pos] & Xi[patch*number_of_ta_chunks + number_of_ta_chunks - 1] & filter) ==
-			(ta_state[pos] & filter);
+		if (cb_calculate_clause_output_without_literal_active(ta_state, number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks])) {
+			true_before++;
+			true_consecutive_before++;
+		} else {
+			true_consecutive_before = 0;
+		}
+	}
 
-		all_exclude = all_exclude && ((ta_state[pos] & filter) == 0);
+	unsigned int true_after = 0; 
+	unsigned int true_consecutive_after = 0;
+	for (int patch = number_of_patches-1; patch >= 0; --patch) {
+		// Set bits based on true_after and true_consecutive_after
+		if (cb_calculate_clause_output_without_literal_active(ta_state, number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks])) {
+			true_after++;
+			true_consecutive_after++;
+		} else {
+			true_consecutive_after = 0;
+		}
 	}
 }
 
