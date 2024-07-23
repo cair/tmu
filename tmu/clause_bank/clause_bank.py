@@ -177,7 +177,6 @@ class ClauseBank(BaseClauseBank):
                 self.number_of_state_bits_ta,
                 self.number_of_patches,
                 self.co_p,
-                self.cvip_p,
                 xi_p
             )
             return self.clause_output
@@ -239,7 +238,6 @@ class ClauseBank(BaseClauseBank):
             self.number_of_patches,
             self.co_p,
             la_p,
-            self.cvip_p,
             xi_p
         )
 
@@ -430,7 +428,7 @@ class ClauseBank(BaseClauseBank):
             X
     ):
         if self.spatio_temporal:
-            spatio_temporal_features = self.number_of_clauses*6
+            spatio_temporal_features = self.number_of_clauses*6 + self.number_of_patches*4
         else:
             spatio_temporal_features = 0
 
@@ -441,7 +439,7 @@ class ClauseBank(BaseClauseBank):
             self.number_of_ta_chunks,
             self.dim,
             self.patch_dim,
-            spatio_temporal_features + self.number_of_patches*4
+            spatio_temporal_features
         )
 
     def prepare_X_autoencoder(
