@@ -842,6 +842,7 @@ void cb_calculate_clause_outputs_predict(
         int number_of_state_bits,
         int number_of_patches,
         unsigned int *clause_output,
+        unsigned int *clause_value_in_patch,
         unsigned int *Xi
 )
 {
@@ -857,9 +858,7 @@ void cb_calculate_clause_outputs_predict(
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
 
 		// Calculate clause specific features
- 
- 		//cb_calculate_clause_specific_features(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
-
+ 		cb_calculate_clause_specific_features(&ta_state[clause_pos], number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
 
 		clause_output[j] = cb_calculate_clause_output_predict(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, Xi);
 	}
@@ -1057,6 +1056,7 @@ void cb_calculate_clause_outputs_update(
         int number_of_patches,
         unsigned int *clause_output,
         unsigned int *literal_active,
+        unsigned int *clause_value_in_patch,
         unsigned int *Xi
 )
 {
@@ -1071,6 +1071,10 @@ void cb_calculate_clause_outputs_update(
 
 	for (int j = 0; j < number_of_clauses; j++) {
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
+		
+		// Calculate clause specific features
+ 		cb_calculate_clause_specific_features(&ta_state[clause_pos], number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
+
 		clause_output[j] = cb_calculate_clause_output_update(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
 	}
 }
