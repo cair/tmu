@@ -55,12 +55,13 @@ class BaseClauseBank(CFFISerializable):
             self.patch_dim[0] * self.patch_dim[1] * self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (
                     self.dim[1] - self.patch_dim[1]))
 
+        self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))
+
         if self.spatio_temporal:
-            self.number_of_features += self.number_of_clauses*6
+            self.number_of_features += self.number_of_clauses*6 + self.number_of_patches*4;
 
         self.number_of_literals = self.number_of_features * 2
 
-        self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))
         self.number_of_ta_chunks = int((self.number_of_literals - 1) / 32 + 1)
 
         self.max_included_literals = max_included_literals if max_included_literals else self.number_of_literals
