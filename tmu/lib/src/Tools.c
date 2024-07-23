@@ -174,36 +174,36 @@ void tmu_encode(
 					encoded_Xi[chunk_nr] |= (1 << chunk_pos);
 				}
 
-				// Encode y coordinate of patch into feature vector 
-				for (int y_threshold = 0; y_threshold < dim_y - patch_dim_y; ++y_threshold) {
-					int patch_pos = spatio_temporal_features + y_threshold;
+				// // Encode y coordinate of patch into feature vector 
+				// for (int y_threshold = 0; y_threshold < dim_y - patch_dim_y; ++y_threshold) {
+				// 	int patch_pos = spatio_temporal_features + y_threshold;
 
-					if (y > y_threshold) {
-						int chunk_nr = patch_pos / 32;
-						int chunk_pos = patch_pos % 32;
-						encoded_Xi[chunk_nr] |= (1 << chunk_pos);
-					} else if (append_negated) {
-						int chunk_nr = (patch_pos + number_of_features) / 32;
-						int chunk_pos = (patch_pos + number_of_features) % 32;
-						encoded_Xi[chunk_nr] |= (1 << chunk_pos);
-					}
-				}
+				// 	if (y > y_threshold) {
+				// 		int chunk_nr = patch_pos / 32;
+				// 		int chunk_pos = patch_pos % 32;
+				// 		encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+				// 	} else if (append_negated) {
+				// 		int chunk_nr = (patch_pos + number_of_features) / 32;
+				// 		int chunk_pos = (patch_pos + number_of_features) % 32;
+				// 		encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+				// 	}
+				// }
 
-				// Encode x coordinate of patch into feature vector
-				for (int x_threshold = 0; x_threshold < dim_x - patch_dim_x; ++x_threshold) {
-					int patch_pos = spatio_temporal_features + (dim_y - patch_dim_y) + x_threshold;
+				// // Encode x coordinate of patch into feature vector
+				// for (int x_threshold = 0; x_threshold < dim_x - patch_dim_x; ++x_threshold) {
+				// 	int patch_pos = spatio_temporal_features + (dim_y - patch_dim_y) + x_threshold;
 
-					if (x > x_threshold) {
-						int chunk_nr = patch_pos / 32;
-						int chunk_pos = patch_pos % 32;
+				// 	if (x > x_threshold) {
+				// 		int chunk_nr = patch_pos / 32;
+				// 		int chunk_pos = patch_pos % 32;
 
-						encoded_Xi[chunk_nr] |= (1 << chunk_pos);
-					} else if (append_negated) {
-						int chunk_nr = (patch_pos + number_of_features) / 32;
-						int chunk_pos = (patch_pos + number_of_features) % 32;
-						encoded_Xi[chunk_nr] |= (1 << chunk_pos);
-					}
-				} 
+				// 		encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+				// 	} else if (append_negated) {
+				// 		int chunk_nr = (patch_pos + number_of_features) / 32;
+				// 		int chunk_pos = (patch_pos + number_of_features) % 32;
+				// 		encoded_Xi[chunk_nr] |= (1 << chunk_pos);
+				// 	}
+				// } 
 
 				// Encode patch content into feature vector
 				for (int p_y = 0; p_y < patch_dim_y; ++p_y) {
