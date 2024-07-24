@@ -10,6 +10,8 @@ from tmu.util.cuda_profiler import CudaProfiler
 
 _LOGGER = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
+
 def metrics(args):
     return dict(
         accuracy=[],
