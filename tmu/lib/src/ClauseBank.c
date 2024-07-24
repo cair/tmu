@@ -860,7 +860,7 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
 
 		// Calculate clause specific features
 		for (int patch = 0; patch < number_of_patches; ++patch) {
-			clause_value_in_patch[patch*number_of_clauses + j] = cb_calculate_clause_output_without_literal_active(ta_state, number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
+			clause_value_in_patch[patch*number_of_clauses + j] = cb_calculate_clause_output_without_literal_active(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
 		}
 
  		cb_calculate_clause_specific_features(j, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
@@ -1103,7 +1103,12 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
 		
 		// Calculate clause specific features
- 		cb_calculate_clause_specific_features(&ta_state[clause_pos], number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
+		for (int patch = 0; patch < number_of_patches; ++patch) {
+			clause_value_in_patch[patch*number_of_clauses + j] = cb_calculate_clause_output_without_literal_active(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
+		}
+
+		// Calculate clause specific features
+ 		cb_calculate_clause_specific_features(j, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
 
 		clause_output[j] = cb_calculate_clause_output_update(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
 	}
