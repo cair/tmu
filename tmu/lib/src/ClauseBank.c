@@ -709,17 +709,17 @@ void cb_calculate_spatio_temporal_features(
 	// Calculate spatio-temporal literals, patch by patch
 	for (int patch = 0; patch < number_of_patches; ++patch) {
 		for (int j = 0; j < number_of_clauses; j++) {
-			clause_value_in_patch[patch*number_of_clauses + j] = 1;
+			clause_value_in_patch[j*number_of_patches + patch] = 1;
 		}
 	}
 
 	for (int round = 0; round < number_of_rounds; ++round) {
 		// Calculate spatio-temporal literals, patch by patch
-		for (int patch = 0; patch < number_of_patches; ++patch) {
-			// Just before
-			if (patch > 0) {
-				for (int j = 0; j < number_of_clauses; ++j) {
-					if (clause_value_in_patch[(patch-1)*number_of_clauses + j]) {
+		for (int j = 0; j < number_of_clauses; ++j) {
+			for (int patch = 0; patch < number_of_patches; ++patch) {
+				// Just before
+				if (patch > 0) {
+					if (clause_value_in_patch[j*number_of_patches + (patch-1)]) {
 						chunk_nr = j / 32;
 						chunk_pos = j % 32;
 						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets left clause feature to True
@@ -736,13 +736,12 @@ void cb_calculate_spatio_temporal_features(
 						chunk_pos = (j + number_of_literals / 2) % 32;
 						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets left negated clause feature to True
 					}
+	
 				}
-			}
 
-			// Just after
-			if ((patch < number_of_patches-1)) {
-				for (int j = 0; j < number_of_clauses; ++j) {
-					if (clause_value_in_patch[(patch+1)*number_of_clauses + j]) {
+				// Just after
+				if ((patch < number_of_patches-1)) {
+					if (clause_value_in_patch[j*number_of_patches + (patch+1)]) {
 						chunk_nr = (j + number_of_clauses) / 32;
 						chunk_pos = (j + number_of_clauses) % 32;
 						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
@@ -760,13 +759,11 @@ void cb_calculate_spatio_temporal_features(
 						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
 					}
 				}
-			}
 
-			// Before
-			for (int j = 0; j < number_of_clauses; ++j) {
+				// Before
 				int clause_value = 0;
 				for (int patch_before = 0; patch_before < patch; ++patch_before) {
-					if (clause_value_in_patch[(patch_before)*number_of_clauses + j]) {
+					if (clause_value_in_patch[j*number_of_patches + patch_before]) {
 						clause_value = 1;
 						break;
 					}
@@ -789,13 +786,11 @@ void cb_calculate_spatio_temporal_features(
 					chunk_pos = (j + number_of_clauses*2 + number_of_literals / 2) % 32;
 					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
 				}
-			}
 
-			// After
-			for (int j = 0; j < number_of_clauses; ++j) {
-				int clause_value = 0;
+				// After
+				clause_value = 0;
 				for (int patch_after = patch+1; patch_after < number_of_patches; ++patch_after) {
-					if (clause_value_in_patch[(patch_after)*number_of_clauses + j]) {
+					if (clause_value_in_patch[j*number_of_patches + patch_after]) {
 						clause_value = 1;
 						break;
 					}
@@ -819,14 +814,17 @@ void cb_calculate_spatio_temporal_features(
 					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
 				}
 			}
+		}
 
-			for (int j = 0; j < number_of_clauses; j++) {
-				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
+		for (int j = 0; j < number_of_clauses; j++) {
+			unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
+
+			for (int patch = 0; patch < number_of_patches; ++patch) {
 				
 				// Calculate clause specific features
- 				//cb_calculate_clause_specific_features(j, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
+ 				// cb_calculate_clause_specific_features(j, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
 
-				clause_new_value_in_patch[patch*number_of_clauses + j] = cb_calculate_clause_output_without_literal_active(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
+				clause_new_value_in_patch[j*number_of_patches + patch] = cb_calculate_clause_output_without_literal_active(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
 			}
 		}
 
@@ -836,11 +834,11 @@ void cb_calculate_spatio_temporal_features(
 	}
 
 	if (number_of_rounds % 2) {
-		for (int patch = 0; patch < number_of_patches; ++patch) {
-			for (int j = 0; j < number_of_clauses; ++j) {
-				unsigned int tmp = clause_value_in_patch[patch*number_of_clauses + j];
-				clause_value_in_patch[patch*number_of_clauses + j] = clause_new_value_in_patch[patch*number_of_clauses + j];
-				clause_new_value_in_patch[patch*number_of_clauses + j] = tmp;
+		for (int j = 0; j < number_of_clauses; ++j) {
+			for (int patch = 0; patch < number_of_patches; ++patch) {
+				unsigned int tmp = clause_value_in_patch[j*number_of_patches + patch];
+				clause_value_in_patch[j*number_of_patches + patch] = clause_new_value_in_patch[j*number_of_patches + patch];
+				clause_new_value_in_patch[j*number_of_patches + patch] = tmp;
 			}
 		}
 	}
