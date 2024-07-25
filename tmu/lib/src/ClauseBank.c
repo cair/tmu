@@ -873,9 +873,7 @@ void cb_calculate_spatio_temporal_features(
 	if (!(number_of_rounds % 2)) {
 		for (int j = 0; j < number_of_clauses; ++j) {
 			for (int patch = 0; patch < number_of_patches; ++patch) {
-				unsigned int tmp = clause_value_in_patch[j*number_of_patches + patch];
 				clause_value_in_patch[j*number_of_patches + patch] = clause_new_value_in_patch[j*number_of_patches + patch];
-				clause_new_value_in_patch[j*number_of_patches + patch] = tmp;
 			}
 		}
 	}
