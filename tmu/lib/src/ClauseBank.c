@@ -130,7 +130,18 @@ static inline unsigned int cb_clause_all_exclude(
 }
 
 /* Calculate the output of each clause using the actions of each Tsetline Automaton. */
-static inline void cb_calculate_clause_output_feedback(unsigned int *ta_state, unsigned int *output_one_patches, unsigned int *clause_output, unsigned int *clause_patch, int number_of_ta_chunks, int number_of_state_bits, unsigned int filter, int number_of_patches, unsigned int *literal_active, unsigned int *Xi)
+static inline void cb_calculate_clause_output_feedback(
+	unsigned int *ta_state,
+	unsigned int *output_one_patches,
+	unsigned int *clause_output,
+	unsigned int *clause_patch,
+	int number_of_ta_chunks,
+	int number_of_state_bits,
+	unsigned int filter,
+	int number_of_patches,
+	unsigned int *literal_active,
+	unsigned int *Xi
+)
 {
 	int output_one_patches_count = 0;
 	for (int patch = 0; patch < number_of_patches; ++patch) {
@@ -841,23 +852,25 @@ void cb_calculate_spatio_temporal_features(
 			}
 		}
 
-		for (int j = 0; j < number_of_clauses; j++) {
-			unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
+		if (round < number_of_rounds-1) {
+			for (int j = 0; j < number_of_clauses; j++) {
+				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
 
-			// Calculate clause specific features
- 			cb_calculate_clause_specific_features(j, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
+				// Calculate clause specific features
+	 			cb_calculate_clause_specific_features(j, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
 
-			for (int patch = 0; patch < number_of_patches; ++patch) {
-				clause_new_value_in_patch[j*number_of_patches + patch] = cb_calculate_clause_output_without_literal_active(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
+				for (int patch = 0; patch < number_of_patches; ++patch) {
+					clause_new_value_in_patch[j*number_of_patches + patch] = cb_calculate_clause_output_without_literal_active(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
+				}
 			}
-		}
 
-		unsigned int *tmp = clause_value_in_patch;
-		clause_value_in_patch = clause_new_value_in_patch;
-		clause_new_value_in_patch = tmp; 
+			unsigned int *tmp = clause_value_in_patch;
+			clause_value_in_patch = clause_new_value_in_patch;
+			clause_new_value_in_patch = tmp;
+		} 
 	}
 
-	if (number_of_rounds % 2) {
+	if (!(number_of_rounds % 2)) {
 		for (int j = 0; j < number_of_clauses; ++j) {
 			for (int patch = 0; patch < number_of_patches; ++patch) {
 				unsigned int tmp = clause_value_in_patch[j*number_of_patches + patch];
@@ -877,7 +890,8 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
         int number_of_state_bits,
         int number_of_patches,
         unsigned int *clause_output,
-        unsigned int *clause_value_in_patch
+        unsigned int *clause_value_in_patch,
+        unsigned int *Xi
 )
 {
 	unsigned int filter;
@@ -892,21 +906,24 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
 	for (int j = 0; j < number_of_clauses; j++) {
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
 
-		clause_output[j] = 0;
+		// Calculate clause specific features
+ 		cb_calculate_clause_specific_features(
+ 			j,
+ 			number_of_clauses,
+ 			number_of_literals,
+ 			number_of_state_bits,
+ 			number_of_patches,
+ 			clause_value_in_patch,
+ 			Xi
+ 		);
 
-		if (!cb_clause_all_exclude(
+		clause_output[j] = cb_calculate_clause_output_predict(
 			&ta_state[clause_pos],
 			number_of_ta_chunks,
 			number_of_state_bits,
-			filter)
-		) {		
-			for (int patch = 0; patch < number_of_patches; ++patch) {
-				if (clause_value_in_patch[j*number_of_patches + patch]) {
-					clause_output[j] = 1;
-					break;
-				}
-			}
-		}
+			filter,
+			number_of_patches,
+		Xi);
 	}
 }
 
@@ -993,8 +1010,6 @@ void cb_initialize_incremental_clause_calculation(
 		}
 	}
 }
-
-
 
 // This function retrieves the count of literals from the given Tsetlin Automaton state.
 // ta_state: an array representing the state of the Tsetlin Automaton.
