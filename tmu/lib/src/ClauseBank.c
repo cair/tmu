@@ -60,7 +60,11 @@ static inline void cb_initialize_random_streams(unsigned int *feedback_to_ta, in
 }
 
 // Increment the states of each of those 32 Tsetlin Automata flagged in the active bit vector.
-static inline void cb_inc(unsigned int *ta_state, unsigned int active, int number_of_state_bits)
+static inline void cb_inc(
+	unsigned int *ta_state,
+	unsigned int active,
+	int number_of_state_bits
+)
 {
 	unsigned int carry, carry_next;
 
@@ -84,7 +88,8 @@ static inline void cb_dec(
         unsigned int *ta_state,
         unsigned int active,
         int number_of_state_bits
-){
+)
+{
 	unsigned int carry, carry_next;
     unsigned int ta_val;
 
@@ -103,6 +108,25 @@ static inline void cb_dec(
 			ta_state[b] &= ~carry;
 		}
 	}
+}
+
+static inline unsigned int cb_clause_all_exclude(
+	unsigned int *ta_state,
+	int number_of_ta_chunks,
+	int number_of_state_bits,
+	unsigned int filter
+)
+{
+	unsigned int all_exclude = 1;
+	for (int k = 0; k < number_of_ta_chunks-1; k++) {
+		unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
+		all_exclude = all_exclude && (ta_state[pos] == 0);
+	}
+
+	unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
+	all_exclude = all_exclude && ((ta_state[pos] & filter) == 0);
+
+	return(all_exclude);
 }
 
 /* Calculate the output of each clause using the actions of each Tsetline Automaton. */
@@ -476,7 +500,7 @@ void cb_type_iii_feedback(
 		    number_of_patches,
 		    literal_active,
 		    Xi
-        );
+        	);
 
 		if (clause_output) {
 			if (target) {
@@ -574,6 +598,7 @@ void cb_calculate_clause_specific_features(
 
 	// Counts how many times true before (#patches features)
 	// Counts how many times true before in sequence (#patches features)
+
 	unsigned int true_before = 0;
 	unsigned int true_consecutive_before = 0;
 	for (int patch = 0; patch < number_of_patches; ++patch) {
@@ -617,7 +642,7 @@ void cb_calculate_clause_specific_features(
 			}
 		}
 
-		if (clause_value_in_patch[patch*number_of_clauses + clause]) {
+		if (clause_value_in_patch[clause*number_of_patches + patch]) {
 			true_before++;
 			true_consecutive_before++;
 		} else {
@@ -865,14 +890,21 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	for (int j = 0; j < number_of_clauses; j++) {
+		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
+
 		clause_output[j] = 0;
 
-		// Needs to add all exclude....
-
-		for (int patch = 0; patch < number_of_patches; ++patch) {
-			if (clause_value_in_patch[patch*number_of_clauses + j]) {
-				clause_output[j] = 1;
-				break;
+		if (!cb_clause_all_exclude(
+			&ta_state[clause_pos],
+			number_of_ta_chunks,
+			number_of_state_bits,
+			filter)
+		) {		
+			for (int patch = 0; patch < number_of_patches; ++patch) {
+				if (clause_value_in_patch[j*number_of_patches + patch]) {
+					clause_output[j] = 1;
+					break;
+				}
 			}
 		}
 	}
@@ -1098,7 +1130,7 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
 		clause_output[j] = 0;
 		
 		for (int patch = 0; patch < number_of_patches; ++patch) {
-			if (clause_value_in_patch[patch*number_of_clauses + j]) {
+			if (clause_value_in_patch[j*number_of_patches + patch]) {
 				clause_output[j] = 1;
 				break;
 			}
