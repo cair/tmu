@@ -70,7 +70,6 @@ static inline void cb_inc(
 
 	carry = active;
 	for (int b = 0; b < number_of_state_bits; ++b) {
-
 		carry_next = ta_state[b] & carry; // Sets carry bits (overflow) passing on to next bit
 		ta_state[b] = ta_state[b] ^ carry; // Performs increments with XOR
 		carry = carry_next;
@@ -91,16 +90,12 @@ static inline void cb_dec(
 )
 {
 	unsigned int carry, carry_next;
-    unsigned int ta_val;
 
 	carry = active;
 	for (int b = 0; b < number_of_state_bits; ++b) {
-
-        ta_val = ta_state[b];
-        carry_next = (~ta_val) & carry; // Sets carry bits (overflow) passing on to next bit
-        ta_state[b] = ta_val ^ carry; // Performs increments with XOR
-        carry = carry_next;
-
+	        carry_next = (~ta_state[b]) & carry; // Sets carry bits (overflow) passing on to next bit
+	        ta_state[b] = ta_state[b] ^ carry; // Performs increments with XOR
+	        carry = carry_next;
 	}
 
 	if (carry > 0) {
@@ -342,6 +337,238 @@ static inline unsigned int cb_calculate_clause_output_predict(
 	return(0);
 }
 
+void cb_calculate_clause_specific_features(
+	int clause,
+	int number_of_clauses,
+        int number_of_literals,
+	int number_of_state_bits,
+	int number_of_patches,
+	unsigned int *clause_value_in_patch,
+	unsigned int *Xi
+)
+{
+	unsigned int chunk_nr;
+	unsigned int chunk_pos;
+
+	unsigned int filter;
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	// Counts how many times true before (#patches features)
+	// Counts how many times true before in sequence (#patches features)
+
+	unsigned int true_before = 0;
+	unsigned int true_consecutive_before = 0;
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		// Set bits based on true_before and true_consecutive_before
+
+		for (int l = 0; l < number_of_patches; ++l) {
+			if (l < true_before) { 
+				chunk_nr = (number_of_clauses*6 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			} else {
+				chunk_nr = (number_of_clauses*6 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+			}
+
+			if (l < true_consecutive_before) { 
+				chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			} else {
+				chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+			}
+		}
+
+		if (clause_value_in_patch[clause*number_of_patches + patch]) {
+			true_before++;
+			true_consecutive_before++;
+		} else {
+			true_consecutive_before = 0;
+		}
+	}
+
+	// Counts how many times true after (#patches features)
+	// Counts how many times true after in sequence (#patches features)
+
+	unsigned int true_after = 0; 
+	unsigned int true_consecutive_after = 0;
+	for (int patch = number_of_patches-1; patch >= 0; --patch) {
+		// Set bits based on true_after and true_consecutive_after
+
+		for (int l = 0; l < number_of_patches; ++l) {
+			if (l < true_after) { 
+				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			} else {
+				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l) % 32;
+				Xi[patch*number_of_ta_chunks + number_of_patches*2 + chunk_nr] &= ~(1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+			}
+
+			if (l < true_consecutive_after) { 
+				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			} else {
+				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) / 32;
+				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) % 32;
+				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+			}
+		}
+
+		if (clause_value_in_patch[clause*number_of_patches + patch]) {
+			true_after++;
+			true_consecutive_after++;
+		} else {
+			true_consecutive_after = 0;
+		}
+	}
+}
+
+void cb_type_i_feedback_spatio_temporal(
+        unsigned int *ta_state,
+        unsigned int *feedback_to_ta,
+        unsigned int *output_one_patches,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        float update_p,
+        float s,
+        unsigned int boost_true_positive_feedback,
+        unsigned int reuse_random_feedback,
+        unsigned int max_included_literals,
+        unsigned int *clause_active,
+        unsigned int *literal_active,
+        unsigned int *clause_value_in_patch,
+        unsigned int *Xi
+)
+{
+    // Lage mask/filter
+	unsigned int filter;
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	if (reuse_random_feedback && s > 1.0) {
+		cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
+	}
+
+	for (int j = 0; j < number_of_clauses; ++j) {
+		if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
+			continue;
+		}
+
+		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
+
+		// Calculate clause specific features
+ 	 	cb_calculate_clause_specific_features(
+ 	 		j,
+ 	 		number_of_clauses,
+ 	 		number_of_literals,
+ 	 		number_of_state_bits,
+ 	 		number_of_patches,
+ 	 		clause_value_in_patch,
+ 	 		Xi
+ 	 	);
+
+		unsigned int clause_output;
+		unsigned int clause_patch;
+		cb_calculate_clause_output_feedback(
+			&ta_state[clause_pos],
+			output_one_patches,
+			&clause_output,
+			&clause_patch,
+			number_of_ta_chunks,
+			number_of_state_bits,
+			filter,
+			number_of_patches,
+			literal_active,
+			Xi
+		);
+
+		if (!reuse_random_feedback && s > 1.0) {
+			cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
+		}
+
+		if (clause_output && cb_number_of_include_actions(ta_state, j, number_of_literals, number_of_state_bits) <= max_included_literals) {
+			// Type Ia Feedback
+			for (int k = 0; k < number_of_ta_chunks; ++k) {
+				unsigned int ta_pos = k*number_of_state_bits;
+
+				if (boost_true_positive_feedback == 1) {
+	 				cb_inc(&ta_state[clause_pos + ta_pos], literal_active[k] & Xi[clause_patch*number_of_ta_chunks + k], number_of_state_bits);
+				} else {
+					cb_inc(&ta_state[clause_pos + ta_pos], literal_active[k] & Xi[clause_patch*number_of_ta_chunks + k] & (~feedback_to_ta[k]), number_of_state_bits);
+				}
+
+				if (s > 1.0) {
+		 			cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]) & feedback_to_ta[k], number_of_state_bits);
+		 		} else {
+		 			cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]), number_of_state_bits);
+		 		}
+			}
+		} else {
+			// Type Ib Feedback
+				
+			for (int k = 0; k < number_of_ta_chunks; ++k) {
+				unsigned int ta_pos = k*number_of_state_bits;
+
+				if (s > 1.0) {
+					cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k] & feedback_to_ta[k], number_of_state_bits);
+				} else {
+					cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k], number_of_state_bits);
+				}
+			}
+		}
+	}
+}
 
 void cb_type_i_feedback(
         unsigned int *ta_state,
@@ -383,8 +610,18 @@ void cb_type_i_feedback(
 
 		unsigned int clause_output;
 		unsigned int clause_patch;
-
-		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
+		cb_calculate_clause_output_feedback(
+			&ta_state[clause_pos],
+			output_one_patches,
+			&clause_output,
+			&clause_patch,
+			number_of_ta_chunks,
+			number_of_state_bits,
+			filter,
+			number_of_patches,
+			literal_active,
+			Xi
+		);
 
 		if (!reuse_random_feedback && s > 1.0) {
 			cb_initialize_random_streams(feedback_to_ta, number_of_literals, number_of_ta_chunks, s);
@@ -418,6 +655,59 @@ void cb_type_i_feedback(
 				} else {
 					cb_dec(&ta_state[clause_pos + ta_pos], literal_active[k], number_of_state_bits);
 				}
+			}
+		}
+	}
+}
+
+void cb_type_ii_feedback_spatio_temporal(
+        unsigned int *ta_state,
+        unsigned int *output_one_patches,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        float update_p,
+        unsigned int *clause_active,
+        unsigned int *literal_active,
+        unsigned int *clause_value_in_patch,
+        unsigned int *Xi
+)
+{
+	unsigned int filter;
+	if (((number_of_literals) % 32) != 0) {
+		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
+	} else {
+		filter = 0xffffffff;
+	}
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+
+	for (int j = 0; j < number_of_clauses; j++) {
+		if ((((float)fast_rand())/((float)FAST_RAND_MAX) > update_p) || (!clause_active[j])) {
+			continue;
+		}
+
+		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
+
+		// Calculate clause specific features
+ 	 	cb_calculate_clause_specific_features(
+ 	 		j,
+ 	 		number_of_clauses,
+ 	 		number_of_literals,
+ 	 		number_of_state_bits,
+ 	 		number_of_patches,
+ 	 		clause_value_in_patch,
+ 	 		Xi
+ 	 	);
+
+		unsigned int clause_output;
+		unsigned int clause_patch;
+		cb_calculate_clause_output_feedback(&ta_state[clause_pos], output_one_patches, &clause_output, &clause_patch, number_of_ta_chunks, number_of_state_bits, filter, number_of_patches, literal_active, Xi);
+
+		if (clause_output) {				
+			for (int k = 0; k < number_of_ta_chunks; ++k) {
+				unsigned int ta_pos = k*number_of_state_bits;
+				cb_inc(&ta_state[clause_pos + ta_pos], literal_active[k] & (~Xi[clause_patch*number_of_ta_chunks + k]), number_of_state_bits);
 			}
 		}
 	}
@@ -582,137 +872,6 @@ void cb_type_iii_feedback(
 		}
 
 
-	}
-}
-
-void cb_calculate_clause_specific_features(
-	int clause,
-	int number_of_clauses,
-        int number_of_literals,
-	int number_of_state_bits,
-	int number_of_patches,
-	unsigned int *clause_value_in_patch,
-	unsigned int *Xi
-)
-{
-	unsigned int chunk_nr;
-	unsigned int chunk_pos;
-
-	unsigned int filter;
-	if (((number_of_literals) % 32) != 0) {
-		filter  = (~(0xffffffff << ((number_of_literals) % 32)));
-	} else {
-		filter = 0xffffffff;
-	}
-
-	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
-
-	// Counts how many times true before (#patches features)
-	// Counts how many times true before in sequence (#patches features)
-
-	unsigned int true_before = 0;
-	unsigned int true_consecutive_before = 0;
-	for (int patch = 0; patch < number_of_patches; ++patch) {
-		// Set bits based on true_before and true_consecutive_before
-
-		for (int l = 0; l < number_of_patches; ++l) {
-			if (l < true_before) { 
-				chunk_nr = (number_of_clauses*6 + l) / 32;
-				chunk_pos = (number_of_clauses*6 + l) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
-
-				chunk_nr = (number_of_clauses*6 + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
-			} else {
-				chunk_nr = (number_of_clauses*6 + l) / 32;
-				chunk_pos = (number_of_clauses*6 + l) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
-
-				chunk_nr = (number_of_clauses*6 + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
-			}
-
-			if (l < true_consecutive_before) { 
-				chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
-
-				chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
-			} else {
-				chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
-
-				chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
-			}
-		}
-
-		if (clause_value_in_patch[clause*number_of_patches + patch]) {
-			true_before++;
-			true_consecutive_before++;
-		} else {
-			true_consecutive_before = 0;
-		}
-	}
-
-	// Counts how many times true after (#patches features)
-	// Counts how many times true after in sequence (#patches features)
-
-	unsigned int true_after = 0; 
-	unsigned int true_consecutive_after = 0;
-	for (int patch = number_of_patches-1; patch >= 0; --patch) {
-		// Set bits based on true_after and true_consecutive_after
-
-		for (int l = 0; l < number_of_patches; ++l) {
-			if (l < true_after) { 
-				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
-
-				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
-			} else {
-				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l) % 32;
-				Xi[patch*number_of_ta_chunks + number_of_patches*2 + chunk_nr] &= ~(1 << chunk_pos);
-
-				chunk_nr = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches*2 + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
-			}
-
-			if (l < true_consecutive_after) { 
-				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
-
-				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
-			} else {
-				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
-
-				chunk_nr = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches*3 + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
-			}
-		}
-
-		if (clause_value_in_patch[clause*number_of_patches + patch]) {
-			true_after++;
-			true_consecutive_after++;
-		} else {
-			true_consecutive_after = 0;
-		}
 	}
 }
 
