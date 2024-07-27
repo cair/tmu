@@ -118,6 +118,17 @@ void cb_calculate_spatio_temporal_features(
         unsigned int *Xi
 );
 
+void cb_calculate_clause_outputs_predict_spatio_temporal(
+        unsigned int *ta_state,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        unsigned int *clause_output,
+        unsigned int *clause_value_in_patch,
+        unsigned int *Xi
+);
+
 void cb_calculate_clause_outputs_predict(
     unsigned int *ta_state,
     int number_of_clauses,
@@ -126,6 +137,18 @@ void cb_calculate_clause_outputs_predict(
     int number_of_patches,
     unsigned int *clause_output,
     unsigned int *Xi
+);
+
+void cb_calculate_clause_outputs_update_spatio_temporal(
+        unsigned int *ta_state,
+        int number_of_clauses,
+        int number_of_literals,
+        int number_of_state_bits,
+        int number_of_patches,
+        unsigned int *clause_output,
+        unsigned int *literal_active,
+        unsigned int *clause_value_in_patch,
+        unsigned int *Xi
 );
 
 void cb_calculate_clause_outputs_update(
