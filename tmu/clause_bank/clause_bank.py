@@ -192,8 +192,6 @@ class ClauseBank(BaseClauseBank):
                 )
             return self.clause_output
 
-        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
-
         if not self.incremental_clause_evaluation_initialized:
 
             lib.cb_initialize_incremental_clause_calculation(
@@ -304,23 +302,44 @@ class ClauseBank(BaseClauseBank):
         ptr_xi = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
         ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
         ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
-        lib.cb_type_i_feedback(
-            self.ptr_ta_state,
-            self.ptr_feedback_to_ta,
-            self.ptr_output_one_patches,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
-            self.number_of_patches,
-            update_p,
-            self.s,
-            self.boost_true_positive_feedback,
-            self.reuse_random_feedback,
-            self.max_included_literals,
-            ptr_clause_active,
-            ptr_literal_active,
-            ptr_xi
-        )
+
+        if self.spatio_temporal:
+            lib.cb_type_i_feedback_spatio_temporal(
+                self.ptr_ta_state,
+                self.ptr_feedback_to_ta,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                self.s,
+                self.boost_true_positive_feedback,
+                self.reuse_random_feedback,
+                self.max_included_literals,
+                ptr_clause_active,
+                ptr_literal_active,
+                self.cvip_p,
+                ptr_xi
+            )
+        else:
+            lib.cb_type_i_feedback(
+                self.ptr_ta_state,
+                self.ptr_feedback_to_ta,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                self.s,
+                self.boost_true_positive_feedback,
+                self.reuse_random_feedback,
+                self.max_included_literals,
+                ptr_clause_active,
+                ptr_literal_active,
+                ptr_xi
+            )
 
         self.incremental_clause_evaluation_initialized = False
 
@@ -336,18 +355,33 @@ class ClauseBank(BaseClauseBank):
         ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
         ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
 
-        lib.cb_type_ii_feedback(
-            self.ptr_ta_state,
-            self.ptr_output_one_patches,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
-            self.number_of_patches,
-            update_p,
-            ptr_clause_active,
-            ptr_literal_active,
-            ptr_xi
-        )
+        if self.spatio_temporal:
+            lib.cb_type_ii_feedback_spatio_temporal(
+                self.ptr_ta_state,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                ptr_clause_active,
+                ptr_literal_active,
+                self.cvip_p,
+                ptr_xi
+            )
+        else:
+            lib.cb_type_ii_feedback(
+                self.ptr_ta_state,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                ptr_clause_active,
+                ptr_literal_active,
+                ptr_xi
+            )
 
         self.incremental_clause_evaluation_initialized = False
 
