@@ -111,7 +111,7 @@ def main(args):
             X_test[i,0,position_3,0] = 0
             X_test[i,0,position_3,1] = 0
 
-    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=32)
+    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=args.max_included_literals)
 
     for i in range(args.epochs):
         tm.fit(X_train, Y_train)
@@ -220,6 +220,7 @@ def default_args(**kwargs):
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", default=1000, type=int)
     parser.add_argument("--number-of-clauses", default=10*2, type=int)
+    parser.add_argument("--max-included-literals", default=8, type=int)
     parser.add_argument("--platform", default='CPU', type=str)
     parser.add_argument("--T", default=100*2, type=int)
     parser.add_argument("--s", default=1.0, type=float)
