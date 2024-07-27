@@ -38,28 +38,28 @@ def main(args):
             X_train[i,0,position_1,0] = 1
             X_train[i,0,position_1,1] = 0
 
-            X_train[i,0,position_2,0] = 0
-            X_train[i,0,position_2,1] = 1
+            X_train[i,0,position_2,0] = 1
+            X_train[i,0,position_2,1] = 0
 
-            X_train[i,0,position_3,0] = 0
-            X_train[i,0,position_3,1] = 1
+            X_train[i,0,position_3,0] = 1
+            X_train[i,0,position_3,1] = 0
         elif Y_train[i] == 1:
-            X_train[i,0,position_1,0] = 0
-            X_train[i,0,position_1,1] = 1
+            X_train[i,0,position_1,0] = 1
+            X_train[i,0,position_1,1] = 0
 
             X_train[i,0,position_2,0] = 1
             X_train[i,0,position_2,1] = 0
 
             X_train[i,0,position_3,0] = 0
-            X_train[i,0,position_3,1] = 1
+            X_train[i,0,position_3,1] = 0
         else:
-            X_train[i,0,position_1,0] = 0
-            X_train[i,0,position_1,1] = 1
+            X_train[i,0,position_1,0] = 1
+            X_train[i,0,position_1,1] = 0
 
             X_train[i,0,position_2,0] = 0
-            X_train[i,0,position_2,1] = 1
+            X_train[i,0,position_2,1] = 0
 
-            X_train[i,0,position_3,0] = 1
+            X_train[i,0,position_3,0] = 0
             X_train[i,0,position_3,1] = 0
 
         if np.random.rand() <= args.noise:
@@ -79,28 +79,28 @@ def main(args):
             X_test[i,0,position_1,0] = 1
             X_test[i,0,position_1,1] = 0
 
-            X_test[i,0,position_2,0] = 0
-            X_test[i,0,position_2,1] = 1
+            X_test[i,0,position_2,0] = 1
+            X_test[i,0,position_2,1] = 0
 
-            X_test[i,0,position_3,0] = 0
-            X_test[i,0,position_3,1] = 1
+            X_test[i,0,position_3,0] = 1
+            X_test[i,0,position_3,1] = 0
         elif Y_test[i] == 1:
-            X_test[i,0,position_1,0] = 0
-            X_test[i,0,position_1,1] = 1
+            X_test[i,0,position_1,0] = 1
+            X_test[i,0,position_1,1] = 0
 
             X_test[i,0,position_2,0] = 1
             X_test[i,0,position_2,1] = 0
 
             X_test[i,0,position_3,0] = 0
-            X_test[i,0,position_3,1] = 1
+            X_test[i,0,position_3,1] = 0
         else:
-            X_test[i,0,position_1,0] = 0
-            X_test[i,0,position_1,1] = 1
+            X_test[i,0,position_1,0] = 1
+            X_test[i,0,position_1,1] = 0
 
             X_test[i,0,position_2,0] = 0
-            X_test[i,0,position_2,1] = 1
+            X_test[i,0,position_2,1] = 0
 
-            X_test[i,0,position_3,0] = 1
+            X_test[i,0,position_3,0] = 0
             X_test[i,0,position_3,1] = 0
 
     tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=32)
