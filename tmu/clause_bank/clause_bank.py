@@ -187,6 +187,14 @@ class ClauseBank(BaseClauseBank):
                     self.number_of_patches,
                     self.cvip_p,
                     self.cvipt_p,
+                    self.ctb_p,
+                    self.ctcb_p,
+                    self.cta_p,
+                    self.ctca_p,
+                    self.cfb_p,
+                    self.cfcb_p,
+                    self.cfa_p,
+                    self.cfca_p,
                     xi_p
                 )
 
@@ -256,6 +264,14 @@ class ClauseBank(BaseClauseBank):
                 self.number_of_patches,
                 self.cvip_p,
                 self.cvipt_p,
+                self.ctb_p,
+                self.ctcb_p,
+                self.cta_p,
+                self.ctca_p,
+                self.cfb_p,
+                self.cfcb_p,
+                self.cfa_p,
+                self.cfca_p,
                 xi_p
             )
 
@@ -296,6 +312,14 @@ class ClauseBank(BaseClauseBank):
                 self.number_of_patches,
                 self.cvip_p,
                 self.cvipt_p,
+                self.ctb_p,
+                self.ctcb_p,
+                self.cta_p,
+                self.ctca_p,
+                self.cfb_p,
+                self.cfcb_p,
+                self.cfa_p,
+                self.cfca_p,
                 xi_p
             )
 

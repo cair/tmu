@@ -881,8 +881,16 @@ void cb_calculate_spatio_temporal_features(
         int number_of_literals,
         int number_of_state_bits,
         int number_of_patches,
-        unsigned int *clause_new_value_in_patch,
         unsigned int *clause_value_in_patch,
+        unsigned int *clause_new_value_in_patch,
+        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive_before,
+        unsigned int *clause_true_after,
+        unsigned int *clause_true_consecutive_after,
+        unsigned int *clause_false_before,
+        unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_false_after,
+        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 )
 {
@@ -911,104 +919,104 @@ void cb_calculate_spatio_temporal_features(
 	for (int round = 0; round < number_of_rounds; ++round) {
 		// Calculate spatio-temporal literals, patch by patch
 		for (int j = 0; j < number_of_clauses; ++j) {
-			for (int patch = 0; patch < number_of_patches; ++patch) {
-				// Just before
-				if (patch > 0) {
-					if (clause_value_in_patch[j*number_of_patches + (patch-1)]) {
-						chunk_nr = j / 32;
-						chunk_pos = j % 32;
-						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets left clause feature to True
+			// for (int patch = 0; patch < number_of_patches; ++patch) {
+			// 	// Just before
+			// 	if (patch > 0) {
+			// 		if (clause_value_in_patch[j*number_of_patches + (patch-1)]) {
+			// 			chunk_nr = j / 32;
+			// 			chunk_pos = j % 32;
+			// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets left clause feature to True
 
-						chunk_nr = (j + number_of_literals / 2) / 32;
-						chunk_pos = (j + number_of_literals / 2) % 32;
-						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets left negated clause feature to False
-					} else {
-						chunk_nr = j / 32;
-						chunk_pos = j % 32;
-						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets left clause feature to False
+			// 			chunk_nr = (j + number_of_literals / 2) / 32;
+			// 			chunk_pos = (j + number_of_literals / 2) % 32;
+			// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets left negated clause feature to False
+			// 		} else {
+			// 			chunk_nr = j / 32;
+			// 			chunk_pos = j % 32;
+			// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets left clause feature to False
 
-						chunk_nr = (j + number_of_literals / 2) / 32;
-						chunk_pos = (j + number_of_literals / 2) % 32;
-						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets left negated clause feature to True
-					}
+			// 			chunk_nr = (j + number_of_literals / 2) / 32;
+			// 			chunk_pos = (j + number_of_literals / 2) % 32;
+			// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets left negated clause feature to True
+			// 		}
 	
-				}
+			// 	}
 
-				// Just after
-				if ((patch < number_of_patches-1)) {
-					if (clause_value_in_patch[j*number_of_patches + (patch+1)]) {
-						chunk_nr = (j + number_of_clauses) / 32;
-						chunk_pos = (j + number_of_clauses) % 32;
-						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
+			// 	// Just after
+			// 	if ((patch < number_of_patches-1)) {
+			// 		if (clause_value_in_patch[j*number_of_patches + (patch+1)]) {
+			// 			chunk_nr = (j + number_of_clauses) / 32;
+			// 			chunk_pos = (j + number_of_clauses) % 32;
+			// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
 
-						chunk_nr = (j + number_of_clauses + number_of_literals / 2) / 32;
-						chunk_pos = (j + number_of_clauses + number_of_literals / 2) % 32;
-						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right negated clause feature to False
-					} else {
-						chunk_nr = (j + number_of_clauses) / 32;
-						chunk_pos = (j + number_of_clauses) % 32;
-						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right clause feature to False
+			// 			chunk_nr = (j + number_of_clauses + number_of_literals / 2) / 32;
+			// 			chunk_pos = (j + number_of_clauses + number_of_literals / 2) % 32;
+			// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right negated clause feature to False
+			// 		} else {
+			// 			chunk_nr = (j + number_of_clauses) / 32;
+			// 			chunk_pos = (j + number_of_clauses) % 32;
+			// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right clause feature to False
 
-						chunk_nr = (j + number_of_clauses + number_of_literals / 2) / 32;
-						chunk_pos = (j + number_of_clauses + number_of_literals / 2) % 32;
-						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
-					}
-				}
+			// 			chunk_nr = (j + number_of_clauses + number_of_literals / 2) / 32;
+			// 			chunk_pos = (j + number_of_clauses + number_of_literals / 2) % 32;
+			// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
+			// 		}
+			// 	}
 
-				// Before
-				int clause_value = 0;
-				for (int patch_before = 0; patch_before < patch; ++patch_before) {
-					if (clause_value_in_patch[j*number_of_patches + patch_before]) {
-						clause_value = 1;
-						break;
-					}
-				}
+			// 	// Before
+			// 	int clause_value = 0;
+			// 	for (int patch_before = 0; patch_before < patch; ++patch_before) {
+			// 		if (clause_value_in_patch[j*number_of_patches + patch_before]) {
+			// 			clause_value = 1;
+			// 			break;
+			// 		}
+			// 	}
 
-				if (clause_value) {
-					chunk_nr = (j + number_of_clauses*2) / 32;
-					chunk_pos = (j + number_of_clauses*2) % 32;
-					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
+			// 	if (clause_value) {
+			// 		chunk_nr = (j + number_of_clauses*2) / 32;
+			// 		chunk_pos = (j + number_of_clauses*2) % 32;
+			// 		Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
 
-					chunk_nr = (j + number_of_clauses*2 + number_of_literals / 2) / 32;
-					chunk_pos = (j + number_of_clauses*2 + number_of_literals / 2) % 32;
-					Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right negated clause feature to False
-				} else {
-					chunk_nr = (j + number_of_clauses*2) / 32;
-					chunk_pos = (j + number_of_clauses*2) % 32;
-					Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right clause feature to False
+			// 		chunk_nr = (j + number_of_clauses*2 + number_of_literals / 2) / 32;
+			// 		chunk_pos = (j + number_of_clauses*2 + number_of_literals / 2) % 32;
+			// 		Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right negated clause feature to False
+			// 	} else {
+			// 		chunk_nr = (j + number_of_clauses*2) / 32;
+			// 		chunk_pos = (j + number_of_clauses*2) % 32;
+			// 		Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right clause feature to False
 
-					chunk_nr = (j + number_of_clauses*2 + number_of_literals / 2) / 32;
-					chunk_pos = (j + number_of_clauses*2 + number_of_literals / 2) % 32;
-					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
-				}
+			// 		chunk_nr = (j + number_of_clauses*2 + number_of_literals / 2) / 32;
+			// 		chunk_pos = (j + number_of_clauses*2 + number_of_literals / 2) % 32;
+			// 		Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
+			// 	}
 
-				// After
-				clause_value = 0;
-				for (int patch_after = patch+1; patch_after < number_of_patches; ++patch_after) {
-					if (clause_value_in_patch[j*number_of_patches + patch_after]) {
-						clause_value = 1;
-						break;
-					}
-				}
+			// 	// After
+			// 	clause_value = 0;
+			// 	for (int patch_after = patch+1; patch_after < number_of_patches; ++patch_after) {
+			// 		if (clause_value_in_patch[j*number_of_patches + patch_after]) {
+			// 			clause_value = 1;
+			// 			break;
+			// 		}
+			// 	}
 
-				if (clause_value) {
-					chunk_nr = (j + number_of_clauses*3) / 32;
-					chunk_pos = (j + number_of_clauses*3) % 32;
-					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
+			// 	if (clause_value) {
+			// 		chunk_nr = (j + number_of_clauses*3) / 32;
+			// 		chunk_pos = (j + number_of_clauses*3) % 32;
+			// 		Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos); // Sets right clause feature to True
 
-					chunk_nr = (j + number_of_clauses*3 + number_of_literals / 2) / 32;
-					chunk_pos = (j + number_of_clauses*3 + number_of_literals / 2) % 32;
-					Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right negated clause feature to False
-				} else {
-					chunk_nr = (j + number_of_clauses*3) / 32;
-					chunk_pos = (j + number_of_clauses*3) % 32;
-					Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right clause feature to False
+			// 		chunk_nr = (j + number_of_clauses*3 + number_of_literals / 2) / 32;
+			// 		chunk_pos = (j + number_of_clauses*3 + number_of_literals / 2) % 32;
+			// 		Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right negated clause feature to False
+			// 	} else {
+			// 		chunk_nr = (j + number_of_clauses*3) / 32;
+			// 		chunk_pos = (j + number_of_clauses*3) % 32;
+			// 		Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos); // Sets right clause feature to False
 
-					chunk_nr = (j + number_of_clauses*3 + number_of_literals / 2) / 32;
-					chunk_pos = (j + number_of_clauses*3 + number_of_literals / 2) % 32;
-					Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
-				}
-			}
+			// 		chunk_nr = (j + number_of_clauses*3 + number_of_literals / 2) / 32;
+			// 		chunk_pos = (j + number_of_clauses*3 + number_of_literals / 2) % 32;
+			// 		Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
+			// 	}
+			// }
 		}
 
 		if (round < number_of_rounds-1) {
