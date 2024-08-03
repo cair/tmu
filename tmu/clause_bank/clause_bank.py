@@ -115,18 +115,28 @@ class ClauseBank(BaseClauseBank):
             lib.xorshift128p_seed(self.seed)
 
     def _cffi_init(self):
-        self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)  # clause_output
-        self.cob_p = ffi.cast("unsigned int *", self.clause_output_batch.ctypes.data)  # clause_output_batch
-        self.ptr_clause_and_target = ffi.cast("unsigned int *", self.clause_and_target.ctypes.data)  # clause_and_target
-        self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)  # clause_output_patchwise
-        self.ptr_feedback_to_ta = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)  # feedback_to_ta
-        self.ptr_output_one_patches = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)  # output_one_patches
-        self.ptr_literal_clause_count = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)  # literal_clause_count
-        self.tiafc_p = ffi.cast("unsigned int *", self.type_ia_feedback_counter.ctypes.data)  # literal_clause_count
+        self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
+        self.cob_p = ffi.cast("unsigned int *", self.clause_output_batch.ctypes.data)
+        self.ptr_clause_and_target = ffi.cast("unsigned int *", self.clause_and_target.ctypes.data)
+        self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
+        self.ptr_feedback_to_ta = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)
+        self.ptr_output_one_patches = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
+        self.ptr_literal_clause_count = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)
+        self.tiafc_p = ffi.cast("unsigned int *", self.type_ia_feedback_counter.ctypes.data)
         
         if self.spatio_temporal:
-            self.cvip_p = ffi.cast("unsigned int *", self.clause_value_in_patch.ctypes.data)  # clause_value_in_patch
-            self.cvipt_p = ffi.cast("unsigned int *", self.clause_value_in_patch_tmp.ctypes.data)  # clause_value_in_patch_tmp
+            self.cvip_p = ffi.cast("unsigned int *", self.clause_value_in_patch.ctypes.data)
+            self.cvipt_p = ffi.cast("unsigned int *", self.clause_value_in_patch_tmp.ctypes.data)
+
+            self.ctb_p = ffi.cast("unsigned int *", self.clause_true_before.ctypes.data)
+            self.ctcb_p = ffi.cast("unsigned int *", self.clause_true_consecutive_before.ctypes.data)
+            self.cta_p = ffi.cast("unsigned int *", self.clause_true_after.ctypes.data)
+            self.ctca_p = ffi.cast("unsigned int *", self.clause_true_consecutive_after.ctypes.data)
+            
+            self.cfb_p = ffi.cast("unsigned int *", self.clause_false_before.ctypes.data)
+            self.cfcb_p = ffi.cast("unsigned int *", self.clause_false_consecutive_before.ctypes.data)
+            self.cfa_p = ffi.cast("unsigned int *", self.clause_false_after.ctypes.data)
+            self.cfca_p = ffi.cast("unsigned int *", self.clause_false_consecutive_after.ctypes.data)
 
         # Clause Initialization
         self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
