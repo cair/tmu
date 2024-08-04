@@ -364,6 +364,14 @@ class ClauseBank(BaseClauseBank):
                 ptr_clause_active,
                 ptr_literal_active,
                 self.cvip_p,
+                self.ctb_p,
+                self.ctcb_p,
+                self.cta_p,
+                self.ctca_p,
+                self.cfb_p,
+                self.cfcb_p,
+                self.cfa_p,
+                self.cfca_p,
                 ptr_xi
             )
         else:

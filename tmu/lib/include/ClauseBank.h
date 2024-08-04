@@ -41,6 +41,14 @@ void cb_type_i_feedback_spatio_temporal(
         unsigned int *clause_active,
         unsigned int *literal_active,
         unsigned int *clause_value_in_patch,
+        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive_before,
+        unsigned int *clause_true_after,
+        unsigned int *clause_true_consecutive_after,
+        unsigned int *clause_false_before,
+        unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_false_after,
+        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 );
 
