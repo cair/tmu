@@ -344,6 +344,14 @@ void cb_calculate_clause_specific_features(
 	int number_of_state_bits,
 	int number_of_patches,
 	unsigned int *clause_value_in_patch,
+	unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive_before,
+        unsigned int *clause_true_after,
+        unsigned int *clause_true_consecutive_after,
+        unsigned int *clause_false_before,
+        unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_false_after,
+        unsigned int *clause_false_consecutive_after,
 	unsigned int *Xi
 )
 {
@@ -523,6 +531,14 @@ void cb_type_i_feedback_spatio_temporal(
  	 		number_of_state_bits,
  	 		number_of_patches,
  	 		clause_value_in_patch,
+ 	 		clause_true_before,
+ 	 		clause_true_consecutive_before,
+ 	 		clause_true_after,
+ 	 		clause_true_consecutive_after,
+ 	 		clause_false_before,
+ 	 		clause_false_consecutive_before,
+ 	 		clause_false_after,
+ 	 		clause_false_consecutive_after,
  	 		Xi
  	 	);
 
@@ -713,6 +729,14 @@ void cb_type_ii_feedback_spatio_temporal(
  	 		number_of_state_bits,
  	 		number_of_patches,
  	 		clause_value_in_patch,
+ 	 		clause_true_before,
+ 	 		clause_true_consecutive_before,
+ 	 		clause_true_after,
+ 	 		clause_true_consecutive_after,
+ 	 		clause_false_before,
+ 	 		clause_false_consecutive_before,
+ 	 		clause_false_after,
+ 	 		clause_false_consecutive_after,
  	 		Xi
  	 	);
 
@@ -1040,7 +1064,23 @@ void cb_calculate_spatio_temporal_features(
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
 
 				// Calculate clause specific features
-	 			cb_calculate_clause_specific_features(j, number_of_clauses, number_of_literals, number_of_state_bits, number_of_patches, clause_value_in_patch, Xi);
+	 			cb_calculate_clause_specific_features(
+	 				j,
+	 				number_of_clauses,
+	 				number_of_literals,
+	 				number_of_state_bits,
+	 				number_of_patches,
+	 				clause_value_in_patch,
+	 				clause_true_before,
+		 	 		clause_true_consecutive_before,
+		 	 		clause_true_after,
+		 	 		clause_true_consecutive_after,
+		 	 		clause_false_before,
+		 	 		clause_false_consecutive_before,
+		 	 		clause_false_after,
+		 	 		clause_false_consecutive_after,
+	 				Xi
+	 			);
 
 				for (int patch = 0; patch < number_of_patches; ++patch) {
 					clause_new_value_in_patch[j*number_of_patches + patch] = cb_calculate_clause_output_without_literal_active(&ta_state[clause_pos], number_of_ta_chunks, number_of_state_bits, filter, &Xi[patch*number_of_ta_chunks]);
@@ -1103,6 +1143,14 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
  			number_of_state_bits,
  			number_of_patches,
  			clause_value_in_patch,
+ 			clause_true_before,
+ 	 		clause_true_consecutive_before,
+ 	 		clause_true_after,
+ 	 		clause_true_consecutive_after,
+ 	 		clause_false_before,
+ 	 		clause_false_consecutive_before,
+ 	 		clause_false_after,
+ 	 		clause_false_consecutive_after,
  			Xi
  		);
 
@@ -1333,6 +1381,14 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
         unsigned int *clause_output,
         unsigned int *literal_active,
         unsigned int *clause_value_in_patch,
+        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive_before,
+        unsigned int *clause_true_after,
+        unsigned int *clause_true_consecutive_after,
+        unsigned int *clause_false_before,
+        unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_false_after,
+        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 )
 {
@@ -1356,6 +1412,14 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
  			number_of_state_bits,
  			number_of_patches,
  			clause_value_in_patch,
+ 			clause_true_before,
+ 	 		clause_true_consecutive_before,
+ 	 		clause_true_after,
+ 	 		clause_true_consecutive_after,
+ 	 		clause_false_before,
+ 	 		clause_false_consecutive_before,
+ 	 		clause_false_after,
+ 	 		clause_false_consecutive_after,
  			Xi
  		);
 

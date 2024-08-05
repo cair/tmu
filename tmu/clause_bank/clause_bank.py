@@ -292,6 +292,14 @@ class ClauseBank(BaseClauseBank):
                 self.co_p,
                 la_p,
                 self.cvip_p,
+                self.ctb_p,
+                self.ctcb_p,
+                self.cta_p,
+                self.ctca_p,
+                self.cfb_p,
+                self.cfcb_p,
+                self.cfa_p,
+                self.cfca_p,
                 xi_p
             )
         else:
