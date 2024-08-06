@@ -345,8 +345,6 @@ void cb_calculate_clause_specific_features(
 	int number_of_patches,
 	unsigned int *clause_value_in_patch,
         unsigned int *clause_true_consecutive,
-        unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_false_consecutive_before,
 	unsigned int *Xi
 )
 {
@@ -490,8 +488,6 @@ void cb_type_i_feedback_spatio_temporal(
  	 		number_of_patches,
  	 		clause_value_in_patch,
  	 		clause_true_consecutive,
- 	 		clause_true_consecutive_before,
- 	 		clause_false_consecutive_before,
  	 		Xi
  	 	);
 
@@ -678,8 +674,6 @@ void cb_type_ii_feedback_spatio_temporal(
  	 		number_of_patches,
  	 		clause_value_in_patch,
  	 		clause_true_consecutive,
- 	 		clause_true_consecutive_before,
- 	 		clause_false_consecutive_before,
  	 		Xi
  	 	);
 
@@ -1030,7 +1024,6 @@ void cb_calculate_spatio_temporal_features(
 			for (int j = 0; j < number_of_clauses; j++) {
 				unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
 
-				// Calculate clause specific features
 	 			cb_calculate_clause_specific_features(
 	 				j,
 	 				number_of_clauses,
@@ -1039,8 +1032,6 @@ void cb_calculate_spatio_temporal_features(
 	 				number_of_patches,
 	 				clause_value_in_patch,
 	 	 			clause_true_consecutive,
- 	 				clause_true_consecutive_before,
- 	 				clause_false_consecutive_before,
 	 				Xi
 	 			);
 
@@ -1101,8 +1092,6 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
  			number_of_patches,
  			clause_value_in_patch,
   	 		clause_true_consecutive,
- 	 		clause_true_consecutive_before,
- 	 		clause_false_consecutive_before,
  			Xi
  		);
 
@@ -1360,8 +1349,6 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
  			number_of_patches,
  			clause_value_in_patch,
   	 		clause_true_consecutive,
- 	 		clause_true_consecutive_before,
- 	 		clause_false_consecutive_before,
  			Xi
  		);
 
