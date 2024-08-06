@@ -1340,7 +1340,6 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
 	for (int j = 0; j < number_of_clauses; j++) {
 		unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits;
 
-		// Calculate clause specific features
  		cb_calculate_clause_specific_features(
  			j,
  			number_of_clauses,
