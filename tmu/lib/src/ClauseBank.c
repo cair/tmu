@@ -859,7 +859,9 @@ void cb_identify_temporal_truth_value_transitions(
         int number_of_patches,
         unsigned int *clause_value_in_patch,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_false_consecutive_before
+        unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_truth_value_transitions,
+        unsigned int *clause_truth_value_transitions_length
 )
 {
 	for (int patch = 0; patch < number_of_patches; ++patch) {
@@ -1032,7 +1034,9 @@ void cb_calculate_spatio_temporal_features(
 			        number_of_patches,
 			        clause_value_in_patch,
 			        clause_true_consecutive_before,
-			       	clause_false_consecutive_before
+			       	clause_false_consecutive_before,
+			       	clause_truth_value_transitions,
+			       	clause_truth_value_transitions_length
 			);
 		}
 
