@@ -70,15 +70,15 @@ class ClauseBank(BaseClauseBank):
             self.clause_value_in_patch = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
             self.clause_value_in_patch_tmp = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
 
-            self.clause_true_before = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_true_consecutive_before = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_true_after = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_true_consecutive_after = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_true_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_true_consecutive_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_true_after = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_true_consecutive_after = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
 
-            self.clause_false_before = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_false_consecutive_before = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_false_after = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_false_consecutive_after = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_false_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_false_consecutive_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_false_after = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_false_consecutive_after = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
 
         # Incremental Clause Evaluation
         self.literal_clause_map = np.empty(
