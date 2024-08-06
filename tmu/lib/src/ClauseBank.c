@@ -456,6 +456,8 @@ void cb_type_i_feedback_spatio_temporal(
         unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
         unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_truth_value_transitions,
+        unsigned int *clause_truth_value_transitions_length,
         unsigned int *Xi
 )
 {
@@ -647,6 +649,8 @@ void cb_type_ii_feedback_spatio_temporal(
         unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
         unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_truth_value_transitions,
+        unsigned int *clause_truth_value_transitions_length,
         unsigned int *Xi
 )
 {
@@ -862,9 +866,19 @@ void cb_identify_temporal_truth_value_transitions(
 		for (int j = 0; j < number_of_clauses; ++j) {
 			if (clause_value_in_patch[j*number_of_patches + patch]) {
 				clause_true_consecutive_before[j]++;
+
+				if (clause_false_consecutive_before[j] > 0) {
+					// Add to list of transitions of patch: (j, false, clause_false_consecutive_before[j])
+				}
+
 				clause_false_consecutive_before[j] = 0;
 			} else {
+				if (clause_true_consecutive_before[j] > 0) {
+					// Add to list of transitions of patch: (j, true, clause_true_consecutive_before[j])
+				}
+
 				clause_true_consecutive_before[j] = 0;
+
 				clause_false_consecutive_before[j]++;
 			}
 		}
@@ -882,6 +896,8 @@ void cb_calculate_spatio_temporal_features(
         unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
         unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_truth_value_transitions,
+        unsigned int *clause_truth_value_transitions_length,
         unsigned int *Xi
 )
 {
@@ -1068,6 +1084,8 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
         unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
         unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_truth_value_transitions,
+        unsigned int *clause_truth_value_transitions_length,
         unsigned int *Xi
 )
 {
@@ -1325,6 +1343,8 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
         unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
         unsigned int *clause_false_consecutive_before,
+        unsigned int *clause_truth_value_transitions,
+        unsigned int *clause_truth_value_transitions_length,
         unsigned int *Xi
 )
 {
