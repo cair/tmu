@@ -851,10 +851,23 @@ void cb_type_iii_feedback(
 			    &ta_state[clause_pos_ta + ta_pos],
 			    literal_active[k] & (~ind_state[clause_pos_ind + ind_pos + number_of_state_bits_ind - 1]),
 			    number_of_state_bits_ta
-            );
+            		);
 		}
+	}
+}
 
+void cb_identify_temporal_truth_value_transitions(
+        int number_of_clauses,
+        int number_of_patches,
+        unsigned int *clause_value_in_patch,
+        unsigned int *clause_true_consecutive_before,
+        unsigned int *clause_false_consecutive_before
+)
+{
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		for (int j = 0; j < number_of_clauses; ++j) {
 
+		}
 	}
 }
 
@@ -995,6 +1008,16 @@ void cb_calculate_spatio_temporal_features(
 			// 		Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos); // Sets right negated clause feature to True
 			// 	}
 			// }
+		}
+
+		if (round > 0) {
+			cb_identify_temporal_truth_value_transitions(
+			        number_of_clauses,
+			        number_of_patches,
+			        clause_value_in_patch,
+			        clause_true_consecutive_before,
+			       	clause_false_consecutive_before
+			);
 		}
 
 		if (round < number_of_rounds-1) {
