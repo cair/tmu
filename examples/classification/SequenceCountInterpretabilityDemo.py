@@ -34,9 +34,6 @@ def main(args):
         #position_1 = np.random.randint(0, args.sequence_length-4)
         #position_2 = position_1+2
         #position_3 = position_1+4
-
-        #position_2 = np.random.randint(position_1+1, args.sequence_length-1)
-        #position_3 = np.random.randint(position_2+1, args.sequence_length)
         
         if Y_train[i] == 0:
             X_train[i,0,position_1,0] = 1
