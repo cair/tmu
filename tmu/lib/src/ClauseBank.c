@@ -866,7 +866,13 @@ void cb_identify_temporal_truth_value_transitions(
 {
 	for (int patch = 0; patch < number_of_patches; ++patch) {
 		for (int j = 0; j < number_of_clauses; ++j) {
-
+			if (clause_value_in_patch[j*number_of_patches + patch]) {
+				clause_true_consecutive_before[j]++;
+				clause_false_consecutive_before[j] = 0;
+			} else {
+				clause_true_consecutive_before[j] = 0;
+				clause_false_consecutive_before[j]++;
+			}
 		}
 	}
 }
