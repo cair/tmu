@@ -41,14 +41,9 @@ void cb_type_i_feedback_spatio_temporal(
         unsigned int *clause_active,
         unsigned int *literal_active,
         unsigned int *clause_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 );
 
@@ -81,14 +76,9 @@ void cb_type_ii_feedback_spatio_temporal(
         unsigned int *clause_active,
         unsigned int *literal_active,
         unsigned int *clause_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 );
 
@@ -131,14 +121,9 @@ void cb_calculate_spatio_temporal_features(
         int number_of_patches,
         unsigned int *clause_value_in_patch,
         unsigned int *clause_new_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 );
 
@@ -150,14 +135,9 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
         int number_of_patches,
         unsigned int *clause_output,
         unsigned int *clause_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 );
 
@@ -180,14 +160,9 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
         unsigned int *clause_output,
         unsigned int *literal_active,
         unsigned int *clause_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 );
 

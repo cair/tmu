@@ -70,15 +70,9 @@ class ClauseBank(BaseClauseBank):
             self.clause_value_in_patch = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
             self.clause_value_in_patch_tmp = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
 
-            self.clause_true_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_true_consecutive = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
             self.clause_true_consecutive_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_true_after = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_true_consecutive_after = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
-
-            self.clause_false_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
             self.clause_false_consecutive_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_false_after = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
-            self.clause_false_consecutive_after = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
 
         # Incremental Clause Evaluation
         self.literal_clause_map = np.empty(
@@ -128,15 +122,9 @@ class ClauseBank(BaseClauseBank):
             self.cvip_p = ffi.cast("unsigned int *", self.clause_value_in_patch.ctypes.data)
             self.cvipt_p = ffi.cast("unsigned int *", self.clause_value_in_patch_tmp.ctypes.data)
 
-            self.ctb_p = ffi.cast("unsigned int *", self.clause_true_before.ctypes.data)
+            self.ctc_p = ffi.cast("unsigned int *", self.clause_true_consecutive.ctypes.data)
             self.ctcb_p = ffi.cast("unsigned int *", self.clause_true_consecutive_before.ctypes.data)
-            self.cta_p = ffi.cast("unsigned int *", self.clause_true_after.ctypes.data)
-            self.ctca_p = ffi.cast("unsigned int *", self.clause_true_consecutive_after.ctypes.data)
-            
-            self.cfb_p = ffi.cast("unsigned int *", self.clause_false_before.ctypes.data)
             self.cfcb_p = ffi.cast("unsigned int *", self.clause_false_consecutive_before.ctypes.data)
-            self.cfa_p = ffi.cast("unsigned int *", self.clause_false_after.ctypes.data)
-            self.cfca_p = ffi.cast("unsigned int *", self.clause_false_consecutive_after.ctypes.data)
 
         # Clause Initialization
         self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
@@ -187,14 +175,9 @@ class ClauseBank(BaseClauseBank):
                     self.number_of_patches,
                     self.cvip_p,
                     self.cvipt_p,
-                    self.ctb_p,
+                    self.ctc_p,
                     self.ctcb_p,
-                    self.cta_p,
-                    self.ctca_p,
-                    self.cfb_p,
                     self.cfcb_p,
-                    self.cfa_p,
-                    self.cfca_p,
                     xi_p
                 )
 
@@ -206,14 +189,9 @@ class ClauseBank(BaseClauseBank):
                     self.number_of_patches,
                     self.co_p,
                     self.cvip_p,
-                    self.ctb_p,
+                    self.ctc_p,
                     self.ctcb_p,
-                    self.cta_p,
-                    self.ctca_p,
-                    self.cfb_p,
                     self.cfcb_p,
-                    self.cfa_p,
-                    self.cfca_p,
                     xi_p
                 )
             else:
@@ -272,14 +250,9 @@ class ClauseBank(BaseClauseBank):
                 self.number_of_patches,
                 self.cvip_p,
                 self.cvipt_p,
-                self.ctb_p,
+                self.ctc_p,
                 self.ctcb_p,
-                self.cta_p,
-                self.ctca_p,
-                self.cfb_p,
                 self.cfcb_p,
-                self.cfa_p,
-                self.cfca_p,
                 xi_p
             )
 
@@ -292,14 +265,9 @@ class ClauseBank(BaseClauseBank):
                 self.co_p,
                 la_p,
                 self.cvip_p,
-                self.ctb_p,
+                self.ctc_p,
                 self.ctcb_p,
-                self.cta_p,
-                self.ctca_p,
-                self.cfb_p,
                 self.cfcb_p,
-                self.cfa_p,
-                self.cfca_p,
                 xi_p
             )
         else:
@@ -328,14 +296,9 @@ class ClauseBank(BaseClauseBank):
                 self.number_of_patches,
                 self.cvip_p,
                 self.cvipt_p,
-                self.ctb_p,
+                self.ctc_p,
                 self.ctcb_p,
-                self.cta_p,
-                self.ctca_p,
-                self.cfb_p,
                 self.cfcb_p,
-                self.cfa_p,
-                self.cfca_p,
                 xi_p
             )
 
@@ -380,14 +343,9 @@ class ClauseBank(BaseClauseBank):
                 ptr_clause_active,
                 ptr_literal_active,
                 self.cvip_p,
-                self.ctb_p,
+                self.ctc_p,
                 self.ctcb_p,
-                self.cta_p,
-                self.ctca_p,
-                self.cfb_p,
                 self.cfcb_p,
-                self.cfa_p,
-                self.cfca_p,
                 ptr_xi
             )
         else:
@@ -435,14 +393,9 @@ class ClauseBank(BaseClauseBank):
                 ptr_clause_active,
                 ptr_literal_active,
                 self.cvip_p,
-                self.ctb_p,
+                self.ctc_p,
                 self.ctcb_p,
-                self.cta_p,
-                self.ctca_p,
-                self.cfb_p,
                 self.cfcb_p,
-                self.cfa_p,
-                self.cfca_p,
                 ptr_xi
             )
         else:

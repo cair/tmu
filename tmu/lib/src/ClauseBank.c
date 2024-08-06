@@ -344,14 +344,9 @@ void cb_calculate_clause_specific_features(
 	int number_of_state_bits,
 	int number_of_patches,
 	unsigned int *clause_value_in_patch,
-	unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
 	unsigned int *Xi
 )
 {
@@ -398,6 +393,50 @@ void cb_calculate_clause_specific_features(
 			}
 		}
 	}
+
+	unsigned int number_of_consecutive_matches = 0;
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		clause_true_consecutive[patch] = number_of_consecutive_matches;
+		if (clause_value_in_patch[clause*number_of_patches + patch]) {
+			number_of_consecutive_matches++;
+		} else {
+			number_of_consecutive_matches = 0;
+		}
+	}
+
+	// number_of_consecutive_matches = 0;
+	// for (int patch = number_of_patches-1; patch >= 0; --patch) {
+	// 	clause_true_consecutive[patch] += number_of_consecutive_matches;
+	// 	if (clause_value_in_patch[clause*number_of_patches + patch]) {
+	// 		number_of_consecutive_matches++;
+	// 	} else {
+	// 		number_of_consecutive_matches = 0;
+	// 	}
+	// }
+
+	// for (int patch = 0; patch < number_of_patches; ++patch) {
+	// 	// Set bits based on how many times true
+
+	// 	for (int l = 0; l < number_of_patches; ++l) {
+	// 		if (l < clause_true_consecutive[patch]) { 
+	// 			chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
+	// 			chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
+	// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+	// 			chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
+	// 			chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
+	// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+	// 		} else {
+	// 			chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
+	// 			chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
+	// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+	// 			chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
+	// 			chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
+	// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+	// 		}
+	// 	}
+	// }
 }
 
 void cb_type_i_feedback_spatio_temporal(
@@ -416,14 +455,9 @@ void cb_type_i_feedback_spatio_temporal(
         unsigned int *clause_active,
         unsigned int *literal_active,
         unsigned int *clause_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 )
 {
@@ -455,14 +489,9 @@ void cb_type_i_feedback_spatio_temporal(
  	 		number_of_state_bits,
  	 		number_of_patches,
  	 		clause_value_in_patch,
- 	 		clause_true_before,
+ 	 		clause_true_consecutive,
  	 		clause_true_consecutive_before,
- 	 		clause_true_after,
- 	 		clause_true_consecutive_after,
- 	 		clause_false_before,
  	 		clause_false_consecutive_before,
- 	 		clause_false_after,
- 	 		clause_false_consecutive_after,
  	 		Xi
  	 	);
 
@@ -619,14 +648,9 @@ void cb_type_ii_feedback_spatio_temporal(
         unsigned int *clause_active,
         unsigned int *literal_active,
         unsigned int *clause_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 )
 {
@@ -653,14 +677,9 @@ void cb_type_ii_feedback_spatio_temporal(
  	 		number_of_state_bits,
  	 		number_of_patches,
  	 		clause_value_in_patch,
- 	 		clause_true_before,
+ 	 		clause_true_consecutive,
  	 		clause_true_consecutive_before,
- 	 		clause_true_after,
- 	 		clause_true_consecutive_after,
- 	 		clause_false_before,
  	 		clause_false_consecutive_before,
- 	 		clause_false_after,
- 	 		clause_false_consecutive_after,
  	 		Xi
  	 	);
 
@@ -847,14 +866,9 @@ void cb_calculate_spatio_temporal_features(
         int number_of_patches,
         unsigned int *clause_value_in_patch,
         unsigned int *clause_new_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 )
 {
@@ -995,14 +1009,9 @@ void cb_calculate_spatio_temporal_features(
 	 				number_of_state_bits,
 	 				number_of_patches,
 	 				clause_value_in_patch,
-	 				clause_true_before,
-		 	 		clause_true_consecutive_before,
-		 	 		clause_true_after,
-		 	 		clause_true_consecutive_after,
-		 	 		clause_false_before,
-		 	 		clause_false_consecutive_before,
-		 	 		clause_false_after,
-		 	 		clause_false_consecutive_after,
+	 	 			clause_true_consecutive,
+ 	 				clause_true_consecutive_before,
+ 	 				clause_false_consecutive_before,
 	 				Xi
 	 			);
 
@@ -1036,14 +1045,9 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
         int number_of_patches,
         unsigned int *clause_output,
         unsigned int *clause_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 )
 {
@@ -1067,14 +1071,9 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
  			number_of_state_bits,
  			number_of_patches,
  			clause_value_in_patch,
- 			clause_true_before,
+  	 		clause_true_consecutive,
  	 		clause_true_consecutive_before,
- 	 		clause_true_after,
- 	 		clause_true_consecutive_after,
- 	 		clause_false_before,
  	 		clause_false_consecutive_before,
- 	 		clause_false_after,
- 	 		clause_false_consecutive_after,
  			Xi
  		);
 
@@ -1305,14 +1304,9 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
         unsigned int *clause_output,
         unsigned int *literal_active,
         unsigned int *clause_value_in_patch,
-        unsigned int *clause_true_before,
+        unsigned int *clause_true_consecutive,
         unsigned int *clause_true_consecutive_before,
-        unsigned int *clause_true_after,
-        unsigned int *clause_true_consecutive_after,
-        unsigned int *clause_false_before,
         unsigned int *clause_false_consecutive_before,
-        unsigned int *clause_false_after,
-        unsigned int *clause_false_consecutive_after,
         unsigned int *Xi
 )
 {
@@ -1336,14 +1330,9 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
  			number_of_state_bits,
  			number_of_patches,
  			clause_value_in_patch,
- 			clause_true_before,
+  	 		clause_true_consecutive,
  	 		clause_true_consecutive_before,
- 	 		clause_true_after,
- 	 		clause_true_consecutive_after,
- 	 		clause_false_before,
  	 		clause_false_consecutive_before,
- 	 		clause_false_after,
- 	 		clause_false_consecutive_after,
  			Xi
  		);
 
