@@ -345,6 +345,8 @@ void cb_calculate_clause_specific_features(
 	int number_of_patches,
 	unsigned int *clause_value_in_patch,
         unsigned int *clause_true_consecutive,
+        unsigned int *clause_truth_value_transitions,
+        unsigned int *clause_truth_value_transitions_length,
 	unsigned int *Xi
 )
 {
@@ -490,6 +492,8 @@ void cb_type_i_feedback_spatio_temporal(
  	 		number_of_patches,
  	 		clause_value_in_patch,
  	 		clause_true_consecutive,
+ 	 		clause_truth_value_transitions,
+  	 		clause_truth_value_transitions_length,
  	 		Xi
  	 	);
 
@@ -678,6 +682,8 @@ void cb_type_ii_feedback_spatio_temporal(
  	 		number_of_patches,
  	 		clause_value_in_patch,
  	 		clause_true_consecutive,
+ 	 		clause_truth_value_transitions,
+  	 		clause_truth_value_transitions_length,
  	 		Xi
  	 	);
 
@@ -875,7 +881,7 @@ void cb_identify_temporal_truth_value_transitions(
 				clause_true_consecutive_before[j]++;
 
 				if (clause_false_consecutive_before[j] > 0) {
-					// Add to list of transitions for patch: (j, false, clause_false_consecutive_before[j])
+					// Adds transition to list of transitions occuring patch: (j, false, clause_false_consecutive_before[j])
 					clause_truth_value_transitions[patch*number_of_clauses*3 + clause_truth_value_transitions_length[patch]*3] = j;
 					clause_truth_value_transitions[patch*number_of_clauses*3 + clause_truth_value_transitions_length[patch]*3 + 1] = 0;
 					clause_truth_value_transitions[patch*number_of_clauses*3 + clause_truth_value_transitions_length[patch]*3 + 2] = clause_false_consecutive_before[j];
@@ -885,7 +891,7 @@ void cb_identify_temporal_truth_value_transitions(
 				clause_false_consecutive_before[j] = 0;
 			} else {
 				if (clause_true_consecutive_before[j] > 0) {
-					// Add to list of transitions for patch: (j, true, clause_true_consecutive_before[j])
+					// Adds transition to list of transitions occuring in patch: (j, true, clause_true_consecutive_before[j])
 					clause_truth_value_transitions[patch*number_of_clauses*3 + clause_truth_value_transitions_length[patch]*3] = j;
 					clause_truth_value_transitions[patch*number_of_clauses*3 + clause_truth_value_transitions_length[patch]*3 + 1] = 1;
 					clause_truth_value_transitions[patch*number_of_clauses*3 + clause_truth_value_transitions_length[patch]*3 + 2] = clause_true_consecutive_before[j];
@@ -1065,6 +1071,8 @@ void cb_calculate_spatio_temporal_features(
 	 				number_of_patches,
 	 				clause_value_in_patch,
 	 	 			clause_true_consecutive,
+	 	 			clause_truth_value_transitions,
+  	 				clause_truth_value_transitions_length,
 	 				Xi
 	 			);
 
@@ -1127,6 +1135,8 @@ void cb_calculate_clause_outputs_predict_spatio_temporal(
  			number_of_patches,
  			clause_value_in_patch,
   	 		clause_true_consecutive,
+  	 		clause_truth_value_transitions,
+  	 		clause_truth_value_transitions_length,
  			Xi
  		);
 
@@ -1385,6 +1395,8 @@ void cb_calculate_clause_outputs_update_spatio_temporal(
  			number_of_patches,
  			clause_value_in_patch,
   	 		clause_true_consecutive,
+  	 		clause_truth_value_transitions,
+  	 		clause_truth_value_transitions_length,
  			Xi
  		);
 
