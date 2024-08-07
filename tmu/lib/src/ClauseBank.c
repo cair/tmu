@@ -362,7 +362,7 @@ void cb_calculate_clause_specific_features(
 
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
-	// Counts how many times true
+	// Number of matches
 	// unsigned int number_of_matches = 0;
 	// for (int patch = 0; patch < number_of_patches; ++patch) {
 	// 	if (clause_value_in_patch[clause*number_of_patches + patch]) {
@@ -394,46 +394,134 @@ void cb_calculate_clause_specific_features(
 	// 	}
 	// }
 
-	unsigned int number_of_consecutive_matches = 0;
-	for (int patch = 0; patch < number_of_patches; ++patch) {
-		clause_true_consecutive[patch] = number_of_consecutive_matches;
-		if (clause_value_in_patch[clause*number_of_patches + patch]) {
-			number_of_consecutive_matches++;
-		} else {
-			number_of_consecutive_matches = 0;
+	// Number of consecutive matches
+	// unsigned int number_of_consecutive_matches = 0;
+	// for (int patch = 0; patch < number_of_patches; ++patch) {
+	// 	clause_true_consecutive[patch] = number_of_consecutive_matches;
+	// 	if (clause_value_in_patch[clause*number_of_patches + patch]) {
+	// 		number_of_consecutive_matches++;
+	// 	} else {
+	// 		number_of_consecutive_matches = 0;
+	// 	}
+	// }
+
+	// number_of_consecutive_matches = 0;
+	// for (int patch = number_of_patches-1; patch >= 0; --patch) {
+	// 	clause_true_consecutive[patch] += number_of_consecutive_matches;
+	// 	if (clause_value_in_patch[clause*number_of_patches + patch]) {
+	// 		number_of_consecutive_matches++;
+	// 	} else {
+	// 		number_of_consecutive_matches = 0;
+	// 	}
+	// }
+
+	// for (int patch = 0; patch < number_of_patches; ++patch) {
+	// 	// Set bits based on how many times true
+
+	// 	for (int l = 0; l < number_of_patches; ++l) {
+	// 		if (l < clause_true_consecutive[patch]) { 
+	// 			chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
+	// 			chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
+	// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+	// 			chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
+	// 			chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
+	// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+	// 		} else {
+	// 			chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
+	// 			chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
+	// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+	// 			chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
+	// 			chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
+	// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+	// 		}
+	// 	}
+	// }
+
+	// True until
+	for (int patch = 1; patch < number_of_patches; ++patch) {
+		if ((!clause_value_in_patch[clause*number_of_patches + patch]) && clause_value_in_patch[clause*number_of_patches + patch - 1]) {
+			// Transition from True to False
+
+			int true_consecutive_before; 
+			for (int l = 0; l < clause_truth_value_transitions_length[patch]; ++l) {
+				if (clause_truth_value_transitions[(patch*number_of_clauses + l)*3] == clause) {
+					true_consecutive_before = clause_truth_value_transitions[(patch*number_of_clauses + l)*3 + 2];
+
+					if (!clause_truth_value_transitions[patch*number_of_clauses*3 + l*3 + 1]) {
+						printf("ERROR\n");
+						exit(-1);
+					}
+				} 
+			}
+
+			for (int l = 0; l < clause_truth_value_transitions_length[patch]; ++l) {
+				if (!clause_truth_value_transitions[(patch*number_of_clauses + l)*3 + 1]) {
+					if (clause_truth_value_transitions[(patch*number_of_clauses + l)*3 + 2] >= true_consecutive_before) {
+						// Set "turned off by" to True
+
+						chunk_nr = (number_of_clauses*4 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3]) / 32;
+						chunk_pos = (number_of_clauses*4 + number_of_patches + clause_truth_value_transitions[(patch*number_of_clauses + l)*3]) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+						chunk_nr = (number_of_clauses*4 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3] + number_of_literals/2) / 32;
+						chunk_pos = (number_of_clauses*4 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3] + number_of_literals/2) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+					} else {
+						// Set "turned off by" to False
+
+						chunk_nr = (number_of_clauses*4 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3]) / 32;
+						chunk_pos = (number_of_clauses*4 + number_of_patches + clause_truth_value_transitions[(patch*number_of_clauses + l)*3]) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+						chunk_nr = (number_of_clauses*4 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3] + number_of_literals/2) / 32;
+						chunk_pos = (number_of_clauses*4 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3] + number_of_literals/2) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+					}
+				} 
+			}
 		}
-	}
 
-	number_of_consecutive_matches = 0;
-	for (int patch = number_of_patches-1; patch >= 0; --patch) {
-		clause_true_consecutive[patch] += number_of_consecutive_matches;
-		if (clause_value_in_patch[clause*number_of_patches + patch]) {
-			number_of_consecutive_matches++;
-		} else {
-			number_of_consecutive_matches = 0;
-		}
-	}
+		if (clause_value_in_patch[clause*number_of_patches + patch] && (!clause_value_in_patch[clause*number_of_patches + patch - 1])) {
+			// Transition from False to True
 
-	for (int patch = 0; patch < number_of_patches; ++patch) {
-		// Set bits based on how many times true
+			int false_consecutive_before; 
+			for (int l = 0; l < clause_truth_value_transitions_length[patch]; ++l) {
+				if (clause_truth_value_transitions[(patch*number_of_clauses + l)*3] == clause) {
+					false_consecutive_before = clause_truth_value_transitions[(patch*number_of_clauses + l)*3 + 2];
 
-		for (int l = 0; l < number_of_patches; ++l) {
-			if (l < clause_true_consecutive[patch]) { 
-				chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+					if (clause_truth_value_transitions[patch*number_of_clauses*3 + l*3 + 1]) {
+						printf("ERROR\n");
+						exit(-1);
+					}
+				} 
+			}
 
-				chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
-			} else {
-				chunk_nr = (number_of_clauses*6 + number_of_patches + l) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches + l) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			for (int l = 0; l < clause_truth_value_transitions_length[patch]; ++l) {
+				if (clause_truth_value_transitions[(patch*number_of_clauses + l)*3 + 1]) {
+					if (clause_truth_value_transitions[(patch*number_of_clauses + l)*3 + 2] <= false_consecutive_before) {
+						// Set "turns off" to True
 
-				chunk_nr = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) / 32;
-				chunk_pos = (number_of_clauses*6 + number_of_patches + l + number_of_literals/2) % 32;
-				Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+						chunk_nr = (number_of_clauses*5 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3]) / 32;
+						chunk_pos = (number_of_clauses*5 + number_of_patches + clause_truth_value_transitions[(patch*number_of_clauses + l)*3]) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+						chunk_nr = (number_of_clauses*5 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3] + number_of_literals/2) / 32;
+						chunk_pos = (number_of_clauses*5 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3] + number_of_literals/2) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+					} else {
+						// Set "turns off" to False
+
+						chunk_nr = (number_of_clauses*5 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3]) / 32;
+						chunk_pos = (number_of_clauses*5 + number_of_patches + clause_truth_value_transitions[(patch*number_of_clauses + l)*3]) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+						chunk_nr = (number_of_clauses*5 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3] + number_of_literals/2) / 32;
+						chunk_pos = (number_of_clauses*5 + clause_truth_value_transitions[(patch*number_of_clauses + l)*3] + number_of_literals/2) % 32;
+						Xi[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+					}
+				} 
 			}
 		}
 	}
