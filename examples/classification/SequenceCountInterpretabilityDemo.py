@@ -338,7 +338,7 @@ def main(args):
                     if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
                         l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-               elif k in range(temporal_features, temporal_features + position_features):
+                elif k in range(temporal_features, temporal_features + position_features):
                     if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
                         l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
                     if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
