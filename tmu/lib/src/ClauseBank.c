@@ -1570,30 +1570,30 @@ void cb_calculate_spatio_temporal_features(
 					}
 				}
 
-				// if (clause_output) {
-				// 	// After
+				if (clause_output) {
+					// After
 
-				// 	for (int patch_before = 0; patch_before < patch; ++patch_before) {
-				// 		chunk_nr = (j + number_of_clauses*2) / 32;
-				// 		chunk_pos = (j + number_of_clauses*2) % 32;
-				// 		Xi[patch_before*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+					for (int patch_before = 0; patch_before < patch; ++patch_before) {
+						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses*2) / 32;
+						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses*2) % 32;
+						Xi[patch_before*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
 
-				// 		chunk_nr = (j + number_of_clauses*2 + number_of_literals/2) / 32;
-				// 		chunk_pos = (j + number_of_clauses*2 + number_of_literals/2) % 32;
-				// 		Xi[patch_before*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);		
-				// 	}
+						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses*2 + number_of_literals/2) / 32;
+						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses*2 + number_of_literals/2) % 32;
+						Xi[patch_before*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);		
+					}
 
-				// 	// Before
-				// 	for (int patch_after = patch + 1; patch_after < number_of_patches; ++patch_after) {
-				// 		chunk_nr = (j + number_of_clauses*3) / 32;
-				// 		chunk_pos = (j + number_of_clauses*3) % 32;
-				// 		Xi[patch_after*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+					// Before
+					for (int patch_after = patch + 1; patch_after < number_of_patches; ++patch_after) {
+						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses*3) / 32;
+						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses*3) % 32;
+						Xi[patch_after*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
 
-				// 		chunk_nr = (j + number_of_clauses*3 + number_of_literals/2) / 32;
-				// 		chunk_pos = (j + number_of_clauses*3 + number_of_literals/2) % 32;
-				// 		Xi[patch_after*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-				// 	}
-				// }
+						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses*3 + number_of_literals/2) / 32;
+						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses*3 + number_of_literals/2) % 32;
+						Xi[patch_after*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+					}
+				}
 			}
 
 		}
