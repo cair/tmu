@@ -544,7 +544,7 @@ class ClauseBank(BaseClauseBank):
             X
     ):
         if self.spatio_temporal:
-            spatio_temporal_features = self.number_of_clauses*4*self.depth + self.number_of_patches*2
+            spatio_temporal_features = self.number_of_clauses*4*self.depth
         else:
             spatio_temporal_features = 0
 

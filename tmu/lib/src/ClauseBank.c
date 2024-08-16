@@ -1474,7 +1474,7 @@ void cb_calculate_spatio_temporal_features(
 	unsigned int chunk_nr;
 	unsigned int chunk_pos;
 
-	int number_of_spatio_temporal_features = number_of_clauses*4*depth + number_of_patches*2;
+	int number_of_spatio_temporal_features = number_of_clauses*4*depth;
 
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {

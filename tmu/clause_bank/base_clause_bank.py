@@ -60,7 +60,7 @@ class BaseClauseBank(CFFISerializable):
         self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))
 
         if self.spatio_temporal:
-            self.number_of_features += self.number_of_clauses*4*self.depth + self.number_of_patches*2;
+            self.number_of_features += self.number_of_clauses*4*self.depth;
 
         self.number_of_literals = self.number_of_features * 2
 
