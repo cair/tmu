@@ -146,7 +146,7 @@ def main(args):
             X_test[i,0,position_5,0] = 0
             X_test[i,0,position_5,1] = 0
 
-    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=args.max_included_literals)
+    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, depth=args.depth, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=args.max_included_literals)
 
     for i in range(args.epochs):
         tm.fit(X_train, Y_train)
@@ -662,8 +662,9 @@ def default_args(**kwargs):
     parser.add_argument("--T", default=100*2, type=int)
     parser.add_argument("--s", default=1.0, type=float)
     parser.add_argument("--sequence-length", default=6, type=int)
-    parser.add_argument("--noise", default=0.01, type=float, help="Noisy XOR")
-    parser.add_argument("--examples", default=40000, type=int, help="Noisy XOR")
+    parser.add_argument("--noise", default=0.01, type=float)
+    parser.add_argument("--examples", default=40000, type=int)
+    parser.add_argument("--depth", default=2, type=int)
 
     args = parser.parse_args()
     for key, value in kwargs.items():

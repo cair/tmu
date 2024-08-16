@@ -95,7 +95,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             feedback_rate_excluded_literals=feedback_rate_excluded_literals,
             literal_insertion_state=literal_insertion_state,
             spatio_temporal=spatio_temporal,
-            depth=2,
+            depth=depth,
             seed=seed
         )
         MultiClauseBankMixin.__init__(self, seed=seed)
