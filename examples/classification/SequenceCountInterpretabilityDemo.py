@@ -27,9 +27,11 @@ def main(args):
     X_train = np.zeros((args.examples, 1, args.sequence_length, 2), dtype=np.uint32)
     Y_train = np.random.randint(0, 3, size=(args.examples), dtype=np.uint32)
     for i in range(args.examples):
-        position_1 = np.random.randint(0, args.sequence_length-2)
+        position_1 = np.random.randint(0, args.sequence_length-4)
         position_2 = position_1+1
         position_3 = position_1+2
+        position_4 = position_1+3
+        position_5 = position_1+4
 
         #position_1 = np.random.randint(0, args.sequence_length-4)
         #position_2 = position_1+2
@@ -44,7 +46,28 @@ def main(args):
 
             X_train[i,0,position_3,0] = 1
             X_train[i,0,position_3,1] = 0
+
+            X_train[i,0,position_4,0] = 1
+            X_train[i,0,position_4,1] = 0
+
+            X_train[i,0,position_5,0] = 0
+            X_train[i,0,position_5,1] = 0
         elif Y_train[i] == 1:
+            X_train[i,0,position_1,0] = 1
+            X_train[i,0,position_1,1] = 0
+
+            X_train[i,0,position_2,0] = 1
+            X_train[i,0,position_2,1] = 0
+
+            X_train[i,0,position_3,0] = 1
+            X_train[i,0,position_3,1] = 0
+
+            X_train[i,0,position_4,0] = 0
+            X_train[i,0,position_4,1] = 0
+
+            X_train[i,0,position_5,0] = 0
+            X_train[i,0,position_5,1] = 0
+        else:
             X_train[i,0,position_1,0] = 1
             X_train[i,0,position_1,1] = 0
 
@@ -53,15 +76,13 @@ def main(args):
 
             X_train[i,0,position_3,0] = 0
             X_train[i,0,position_3,1] = 0
-        else:
-            X_train[i,0,position_1,0] = 1
-            X_train[i,0,position_1,1] = 0
 
-            X_train[i,0,position_2,0] = 0
-            X_train[i,0,position_2,1] = 0
+            X_train[i,0,position_4,0] = 0
+            X_train[i,0,position_4,1] = 0
 
-            X_train[i,0,position_3,0] = 0
-            X_train[i,0,position_3,1] = 0
+            X_train[i,0,position_5,0] = 0
+            X_train[i,0,position_5,1] = 0
+
 
         if np.random.rand() <= args.noise:
             Y_train[i] = np.random.choice(np.setdiff1d([0,1,2], [Y_train[i]]))
@@ -69,9 +90,11 @@ def main(args):
     X_test = np.zeros((args.examples//10, 1, args.sequence_length, 2), dtype=np.uint32)
     Y_test = np.random.randint(0, 3, size=(args.examples//10), dtype=np.uint32)
     for i in range(args.examples//10):
-        position_1 = np.random.randint(0, args.sequence_length-2)
+        position_1 = np.random.randint(0, args.sequence_length-4)
         position_2 = position_1+1
         position_3 = position_1+2
+        position_4 = position_1+3
+        position_5 = position_1+4
 
         #position_1 = np.random.randint(0, args.sequence_length-4)
         #position_2 = position_1+2
@@ -86,6 +109,12 @@ def main(args):
 
             X_test[i,0,position_3,0] = 1
             X_test[i,0,position_3,1] = 0
+
+            X_test[i,0,position_4,0] = 1
+            X_test[i,0,position_4,1] = 0
+
+            X_test[i,0,position_5,0] = 0
+            X_test[i,0,position_5,1] = 0
         elif Y_test[i] == 1:
             X_test[i,0,position_1,0] = 1
             X_test[i,0,position_1,1] = 0
@@ -93,17 +122,29 @@ def main(args):
             X_test[i,0,position_2,0] = 1
             X_test[i,0,position_2,1] = 0
 
-            X_test[i,0,position_3,0] = 0
+            X_test[i,0,position_3,0] = 1
             X_test[i,0,position_3,1] = 0
+
+            X_test[i,0,position_4,0] = 0
+            X_test[i,0,position_4,1] = 0
+
+            X_test[i,0,position_5,0] = 0
+            X_test[i,0,position_5,1] = 0
         else:
             X_test[i,0,position_1,0] = 1
             X_test[i,0,position_1,1] = 0
 
             X_test[i,0,position_2,0] = 0
-            X_test[i,0,position_2,1] = 0
+            X_test[i,0,position_2,1] = 1
 
             X_test[i,0,position_3,0] = 0
             X_test[i,0,position_3,1] = 0
+
+            X_test[i,0,position_4,0] = 0
+            X_test[i,0,position_4,1] = 0
+
+            X_test[i,0,position_5,0] = 0
+            X_test[i,0,position_5,1] = 0
 
     tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=args.max_included_literals)
 

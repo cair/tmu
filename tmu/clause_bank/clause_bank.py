@@ -77,6 +77,8 @@ class ClauseBank(BaseClauseBank):
             self.clause_truth_value_transitions = np.empty(self.number_of_patches * self.number_of_clauses * 3, dtype=np.uint32, order="c")
             self.clause_truth_value_transitions_length = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
 
+            self.attention = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
+
         # Incremental Clause Evaluation
         self.literal_clause_map = np.empty(
             (int(self.number_of_literals * self.number_of_clauses)),
@@ -132,6 +134,8 @@ class ClauseBank(BaseClauseBank):
             self.ctvt_p = ffi.cast("unsigned int *", self.clause_truth_value_transitions.ctypes.data)
             self.ctvtl_p = ffi.cast("unsigned int *", self.clause_truth_value_transitions_length.ctypes.data)
 
+            self.a_p = ffi.cast("unsigned int *", self.attention.ctypes.data)
+
         # Clause Initialization
         self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
         self.ptr_ta_state_ind = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
@@ -179,6 +183,7 @@ class ClauseBank(BaseClauseBank):
                     self.number_of_literals,
                     self.number_of_state_bits_ta,
                     self.number_of_patches,
+                    self.depth,
                     self.cvip_p,
                     self.cvipt_p,
                     self.ctc_p,
@@ -186,6 +191,7 @@ class ClauseBank(BaseClauseBank):
                     self.cfcb_p,
                     self.ctvt_p,
                     self.ctvtl_p,
+                    self.a_p,
                     xi_p
                 )
 
@@ -258,6 +264,7 @@ class ClauseBank(BaseClauseBank):
                 self.number_of_literals,
                 self.number_of_state_bits_ta,
                 self.number_of_patches,
+                self.depth,
                 self.cvip_p,
                 self.cvipt_p,
                 self.ctc_p,
@@ -265,6 +272,7 @@ class ClauseBank(BaseClauseBank):
                 self.cfcb_p,
                 self.ctvt_p,
                 self.ctvtl_p,
+                self.a_p,
                 xi_p
             )
 
@@ -308,6 +316,7 @@ class ClauseBank(BaseClauseBank):
                 self.number_of_literals,
                 self.number_of_state_bits_ta,
                 self.number_of_patches,
+                self.depth,
                 self.cvip_p,
                 self.cvipt_p,
                 self.ctc_p,
@@ -315,6 +324,7 @@ class ClauseBank(BaseClauseBank):
                 self.cfcb_p,
                 self.ctvt_p,
                 self.ctvtl_p,
+                self.a_p,
                 xi_p
             )
 
@@ -534,7 +544,7 @@ class ClauseBank(BaseClauseBank):
             X
     ):
         if self.spatio_temporal:
-            spatio_temporal_features = self.number_of_clauses*6 + self.number_of_patches*2
+            spatio_temporal_features = self.number_of_clauses*4*self.depth + self.number_of_patches*2
         else:
             spatio_temporal_features = 0
 

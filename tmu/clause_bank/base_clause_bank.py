@@ -22,6 +22,7 @@ class BaseClauseBank(CFFISerializable):
             max_included_literals: int,
             patch_dim: typing.Union[tuple, None],
             spatio_temporal : bool,
+            depth : int,
             **kwargs
     ):
         self._warn_unknown_arguments(**kwargs)
@@ -38,6 +39,7 @@ class BaseClauseBank(CFFISerializable):
         self.reuse_random_feedback = int(reuse_random_feedback)
         self.type_ia_ii_feedback_ratio = type_ia_ii_feedback_ratio
         self.spatio_temporal = spatio_temporal
+        self.depth = depth
 
         if len(X_shape) == 2:
             self.dim = (X_shape[1], 1, 1)
@@ -58,7 +60,7 @@ class BaseClauseBank(CFFISerializable):
         self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))
 
         if self.spatio_temporal:
-            self.number_of_features += self.number_of_clauses*6 + self.number_of_patches*2;
+            self.number_of_features += self.number_of_clauses*4*self.depth + self.number_of_patches*2;
 
         self.number_of_literals = self.number_of_features * 2
 

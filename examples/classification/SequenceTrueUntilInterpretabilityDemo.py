@@ -51,7 +51,7 @@ def main(args):
             X_train[i,0,position_4,1] = 0
 
             X_train[i,0,position_5,0] = 0
-            X_train[i,0,position_5,1] = 1
+            X_train[i,0,position_5,1] = 0
         else:
             X_train[i,0,position_1,0] = 1
             X_train[i,0,position_1,1] = 0
@@ -98,7 +98,7 @@ def main(args):
             X_test[i,0,position_4,1] = 0
 
             X_test[i,0,position_5,0] = 0
-            X_test[i,0,position_5,1] = 1
+            X_test[i,0,position_5,1] = 0
         else:
             X_test[i,0,position_1,0] = 1
             X_test[i,0,position_1,1] = 0

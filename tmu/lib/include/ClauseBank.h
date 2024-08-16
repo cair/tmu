@@ -123,6 +123,7 @@ void cb_calculate_spatio_temporal_features(
         int number_of_literals,
         int number_of_state_bits,
         int number_of_patches,
+        int depth,
         unsigned int *clause_value_in_patch,
         unsigned int *clause_new_value_in_patch,
         unsigned int *clause_true_consecutive,
@@ -130,6 +131,7 @@ void cb_calculate_spatio_temporal_features(
         unsigned int *clause_false_consecutive_before,
         unsigned int *clause_truth_value_transitions,
         unsigned int *clause_truth_value_transitions_length,
+        unsigned int *attention,
         unsigned int *Xi
 );
 
