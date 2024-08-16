@@ -1613,68 +1613,6 @@ void cb_calculate_spatio_temporal_features(
 		}
 	}
 
-	// for (int j = 0; j < number_of_clauses; j++) {
-	// 	unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
-
-	// 	for (int patch = 0; patch < number_of_patches; ++patch) {
-	// 		unsigned int clause_output = cb_calculate_clause_output_with_literal_active(
-	// 			&ta_state[clause_pos],
-	// 			number_of_ta_chunks,
-	// 			number_of_state_bits,
-	// 			filter,
-	// 			attention,
-	// 			&Xi[patch*number_of_ta_chunks]
-	// 		);
-			
-	// 		// Just after
-	// 		if (clause_output && patch > 0) {
-	// 			chunk_nr = (j + number_of_clauses*4) / 32;
-	// 			chunk_pos = (j + number_of_clauses*4) % 32;
-	// 			Xi[(patch-1)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-
-	// 			chunk_nr = (j + number_of_clauses*4 + number_of_literals/2) / 32;
-	// 			chunk_pos = (j + number_of_clauses*4 + number_of_literals/2) % 32;
-	// 			Xi[(patch-1)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-	// 		} 
-
-	// 		// Just before
-	// 		if (clause_output && patch < number_of_patches - 1) {
-	// 			chunk_nr = (j + number_of_clauses*5) / 32;
-	// 			chunk_pos = (j + number_of_clauses*5) % 32;
-	// 			Xi[(patch+1)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-
-	// 			chunk_nr = (j + number_of_clauses*5 + number_of_literals/2) / 32;
-	// 			chunk_pos = (j + number_of_clauses*5 + number_of_literals/2) % 32;
-	// 			Xi[(patch+1)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-	// 		}
-			
-	// 		// if (clause_output) {
-	// 		// 	// After
-
-	// 		// 	for (int patch_before = 0; patch_before < patch; ++patch_before) {
-	// 		// 		chunk_nr = (j + number_of_clauses*6) / 32;
-	// 		// 		chunk_pos = (j + number_of_clauses*6) % 32;
-	// 		// 		Xi[patch_before*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-
-	// 		// 		chunk_nr = (j + number_of_clauses*6 + number_of_literals/2) / 32;
-	// 		// 		chunk_pos = (j + number_of_clauses*6 + number_of_literals/2) % 32;
-	// 		// 		Xi[patch_before*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);		
-	// 		// 	}
-
-	// 		// 	// Before
-	// 		// 	for (int patch_after = patch + 1; patch_after < number_of_patches; ++patch_after) {
-	// 		// 		chunk_nr = (j + number_of_clauses*7) / 32;
-	// 		// 		chunk_pos = (j + number_of_clauses*7) % 32;
-	// 		// 		Xi[patch_after*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-
-	// 		// 		chunk_nr = (j + number_of_clauses*7 + number_of_literals/2) / 32;
-	// 		// 		chunk_pos = (j + number_of_clauses*7 + number_of_literals/2) % 32;
-	// 		// 		Xi[patch_after*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-	// 		// 	}
-	// 		// }
-	// 	}
-	// }
-
 	return;
 }
 
