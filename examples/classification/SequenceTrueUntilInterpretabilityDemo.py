@@ -115,7 +115,7 @@ def main(args):
             X_test[i,0,position_5,0] = 0
             X_test[i,0,position_5,1] = 0
 
-    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=args.max_included_literals)
+    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, patch_dim=(1, 1), weighted_clauses=False, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=args.max_included_literals)
 
     for i in range(args.epochs):
         tm.fit(X_train, Y_train)
