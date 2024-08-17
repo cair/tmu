@@ -1529,7 +1529,7 @@ void cb_calculate_spatio_temporal_features(
 				);
 				
 				// Just after
-				if (patch > 0) {
+				if (patch > 0 && !(d % 2)) {
 					if (clause_output) {
 						chunk_nr = (number_of_clauses*4*d + j) / 32;
 						chunk_pos = (number_of_clauses*4*d + j) % 32;
@@ -1542,7 +1542,7 @@ void cb_calculate_spatio_temporal_features(
 				}
 
 				// Just before
-				if (patch < number_of_patches - 1) {
+				if (patch < number_of_patches - 1 && !(d % 2)) {
 					if (clause_output) {
 						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses) / 32;
 						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses) % 32;
@@ -1554,7 +1554,7 @@ void cb_calculate_spatio_temporal_features(
 					}
 				}
 
-				if (clause_output) {
+				if (clause_output && (d % 2)) {
 					// After
 
 					for (int patch_before = 0; patch_before < patch; ++patch_before) {

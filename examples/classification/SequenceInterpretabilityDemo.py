@@ -31,8 +31,8 @@ def main(args):
         position_2 = position_1+1
         position_3 = position_1+2
 
-        #position_2 = np.random.randint(position_1+1, args.sequence_length-1)
-        #position_3 = np.random.randint(position_2+1, args.sequence_length)
+#        position_2 = np.random.randint(position_1+1, args.sequence_length-1)
+#        position_3 = np.random.randint(position_2+1, args.sequence_length)
         
         if Y_train[i] == 0:
             X_train[i,0,position_1,0] = 1
@@ -72,8 +72,8 @@ def main(args):
         position_2 = position_1+1
         position_3 = position_1+2
 
-        #position_2 = np.random.randint(position_1+1, args.sequence_length-1)
-        #position_3 = np.random.randint(position_2+1, args.sequence_length)
+#        position_2 = np.random.randint(position_1+1, args.sequence_length-1)
+#        position_3 = np.random.randint(position_2+1, args.sequence_length)
         
         if Y_test[i] == 0:
             X_test[i,0,position_1,0] = 1
@@ -103,7 +103,7 @@ def main(args):
             X_test[i,0,position_3,0] = 1
             X_test[i,0,position_3,1] = 0
 
-    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=10, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=32)
+    tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=args.number_of_state_bits_ta, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=args.max_included_literals, depth=args.depth)
 
     for i in range(args.epochs):
         tm.fit(X_train, Y_train)
@@ -218,6 +218,9 @@ def default_args(**kwargs):
     parser.add_argument("--sequence-length", default=6, type=int)
     parser.add_argument("--noise", default=0.01, type=float, help="Noisy XOR")
     parser.add_argument("--examples", default=40000, type=int, help="Noisy XOR")
+    parser.add_argument("--depth", default=2, type=int)
+    parser.add_argument("--number-of-state-bits-ta", default=10, type=int)
+    parser.add_argument("--max-included-literals", default=32, type=int)
 
     args = parser.parse_args()
     for key, value in kwargs.items():
