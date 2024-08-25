@@ -31,8 +31,8 @@ def main(args):
         position_2 = position_1+1
         position_3 = position_1+2
 
-#        position_2 = np.random.randint(position_1+1, args.sequence_length-1)
-#        position_3 = np.random.randint(position_2+1, args.sequence_length)
+        #position_2 = np.random.randint(position_1+1, args.sequence_length-1)
+        #position_3 = np.random.randint(position_2+1, args.sequence_length)
         
         if Y_train[i] == 0:
             X_train[i,0,position_1,0] = 1
@@ -72,8 +72,8 @@ def main(args):
         position_2 = position_1+1
         position_3 = position_1+2
 
-#        position_2 = np.random.randint(position_1+1, args.sequence_length-1)
-#        position_3 = np.random.randint(position_2+1, args.sequence_length)
+        #position_2 = np.random.randint(position_1+1, args.sequence_length-1)
+        #position_3 = np.random.randint(position_2+1, args.sequence_length)
         
         if Y_test[i] == 0:
             X_test[i,0,position_1,0] = 1
@@ -215,10 +215,10 @@ def default_args(**kwargs):
     parser.add_argument("--platform", default='CPU', type=str)
     parser.add_argument("--T", default=100*2, type=int)
     parser.add_argument("--s", default=1.0, type=float)
-    parser.add_argument("--sequence-length", default=6, type=int)
-    parser.add_argument("--noise", default=0.01, type=float, help="Noisy XOR")
+    parser.add_argument("--sequence-length", default=10, type=int)
+    parser.add_argument("--noise", default=0.0, type=float, help="Noisy XOR")
     parser.add_argument("--examples", default=40000, type=int, help="Noisy XOR")
-    parser.add_argument("--depth", default=2, type=int)
+    parser.add_argument("--depth", default=1, type=int)
     parser.add_argument("--number-of-state-bits-ta", default=10, type=int)
     parser.add_argument("--max-included-literals", default=32, type=int)
 

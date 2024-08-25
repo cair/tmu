@@ -67,6 +67,8 @@ class ClauseBank(BaseClauseBank):
         self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
         
         if self.spatio_temporal:
+            self.xi_hypervector = np.empty(self.number_of_patches * self.number_of_ta_chunks, dtype=np.uint32, order="c")
+
             self.clause_value_in_patch = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
             self.clause_value_in_patch_tmp = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
 
@@ -78,6 +80,12 @@ class ClauseBank(BaseClauseBank):
             self.clause_truth_value_transitions_length = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
 
             self.attention = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
+
+            self.hypervectors = np.empty((self.number_of_clauses, self.hypervector_bits), dtype=np.uint32, order="c")
+            indexes = np.arange(self.hypervector_size, dtype=np.uint32)
+            for i in range(self.number_of_clauses):
+                self.hypervectors[i,:] = np.random.choice(indexes, size=(self.hypervector_bits), replace=False)
+            self.hypervectors = self.hypervectors.reshape(self.number_of_clauses*self.hypervector_bits)
 
         # Incremental Clause Evaluation
         self.literal_clause_map = np.empty(
@@ -122,7 +130,8 @@ class ClauseBank(BaseClauseBank):
         self.ptr_output_one_patches = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
         self.ptr_literal_clause_count = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)
         self.tiafc_p = ffi.cast("unsigned int *", self.type_ia_feedback_counter.ctypes.data)
-        
+        self.xih_p = ffi.cast("unsigned int *", self.xi_hypervector.ctypes.data)
+
         if self.spatio_temporal:
             self.cvip_p = ffi.cast("unsigned int *", self.clause_value_in_patch.ctypes.data)
             self.cvipt_p = ffi.cast("unsigned int *", self.clause_value_in_patch_tmp.ctypes.data)
@@ -135,6 +144,7 @@ class ClauseBank(BaseClauseBank):
             self.ctvtl_p = ffi.cast("unsigned int *", self.clause_truth_value_transitions_length.ctypes.data)
 
             self.a_p = ffi.cast("unsigned int *", self.attention.ctypes.data)
+            self.hv_p = ffi.cast("unsigned int *", self.hypervectors.ctypes.data)
 
         # Clause Initialization
         self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
@@ -177,13 +187,24 @@ class ClauseBank(BaseClauseBank):
 
         if not self.incremental or self.spatio_temporal:
             if self.spatio_temporal:
+                lib.cb_prepare_hypervector(
+                    self.number_of_input_features,
+                    self.number_of_patches,
+                    self.hypervector_size,
+                    self.depth,
+                    xi_p,
+                    self.xih_p
+                )
+
                 lib.cb_calculate_spatio_temporal_features(
                     self.ptr_ta_state,
                     self.number_of_clauses,
-                    self.number_of_literals,
+                    self.number_of_features,
                     self.number_of_state_bits_ta,
                     self.number_of_patches,
                     self.depth,
+                    self.hypervector_size,
+                    self.hypervector_bits,
                     self.cvip_p,
                     self.cvipt_p,
                     self.ctc_p,
@@ -192,7 +213,8 @@ class ClauseBank(BaseClauseBank):
                     self.ctvt_p,
                     self.ctvtl_p,
                     self.a_p,
-                    xi_p
+                    self.hv_p,
+                    self.xih_p
                 )
 
                 lib.cb_calculate_clause_outputs_predict_spatio_temporal(
@@ -208,7 +230,7 @@ class ClauseBank(BaseClauseBank):
                     self.cfcb_p,
                     self.ctvt_p,
                     self.ctvtl_p,
-                    xi_p
+                    self.xih_p
                 )
             else:
                 lib.cb_calculate_clause_outputs_predict(
@@ -218,7 +240,7 @@ class ClauseBank(BaseClauseBank):
                     self.number_of_state_bits_ta,
                     self.number_of_patches,
                     self.co_p,
-                    xi_p
+                    self.xih_p
                 )
             return self.clause_output
 
@@ -258,13 +280,24 @@ class ClauseBank(BaseClauseBank):
         la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
 
         if self.spatio_temporal:
+            lib.cb_prepare_hypervector(
+                self.number_of_input_features,
+                self.number_of_patches,
+                self.hypervector_size,
+                self.depth,
+                xi_p,
+                self.xih_p
+            )
+
             lib.cb_calculate_spatio_temporal_features(
                 self.ptr_ta_state,
                 self.number_of_clauses,
-                self.number_of_literals,
+                self.number_of_features,
                 self.number_of_state_bits_ta,
                 self.number_of_patches,
                 self.depth,
+                self.hypervector_size,
+                self.hypervector_bits,
                 self.cvip_p,
                 self.cvipt_p,
                 self.ctc_p,
@@ -273,7 +306,8 @@ class ClauseBank(BaseClauseBank):
                 self.ctvt_p,
                 self.ctvtl_p,
                 self.a_p,
-                xi_p
+                self.hv_p,
+                self.xih_p
             )
 
             lib.cb_calculate_clause_outputs_update_spatio_temporal(
@@ -290,7 +324,7 @@ class ClauseBank(BaseClauseBank):
                 self.cfcb_p,
                 self.ctvt_p,
                 self.ctvtl_p,
-                xi_p
+                self.xih_p
             )
         else:
             lib.cb_calculate_clause_outputs_update(
@@ -310,13 +344,24 @@ class ClauseBank(BaseClauseBank):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
 
         if self.spatio_temporal:
+            lib.cb_prepare_hypervector(
+                self.number_of_input_features,
+                self.number_of_patches,
+                self.hypervector_size,
+                self.depth,
+                xi_p,
+                self.xih_p
+            )
+
             lib.cb_calculate_spatio_temporal_features(
                 self.ptr_ta_state,
                 self.number_of_clauses,
-                self.number_of_literals,
+                self.number_of_features,
                 self.number_of_state_bits_ta,
                 self.number_of_patches,
                 self.depth,
+                self.hypervector_size,
+                self.hypervector_bits,
                 self.cvip_p,
                 self.cvipt_p,
                 self.ctc_p,
@@ -325,7 +370,8 @@ class ClauseBank(BaseClauseBank):
                 self.ctvt_p,
                 self.ctvtl_p,
                 self.a_p,
-                xi_p
+                self.hv_p,
+                self.xih_p
             )
 
         lib.cb_calculate_clause_outputs_patchwise(
@@ -374,7 +420,7 @@ class ClauseBank(BaseClauseBank):
                 self.cfcb_p,
                 self.ctvt_p,
                 self.ctvtl_p,
-                ptr_xi
+                self.xih_p
             )
         else:
             lib.cb_type_i_feedback(
@@ -426,7 +472,7 @@ class ClauseBank(BaseClauseBank):
                 self.cfcb_p,
                 self.ctvt_p,
                 self.ctvtl_p,
-                ptr_xi
+                self.xih_p
             )
         else:
             lib.cb_type_ii_feedback(
@@ -543,19 +589,14 @@ class ClauseBank(BaseClauseBank):
             self,
             X
     ):
-        if self.spatio_temporal:
-            spatio_temporal_features = self.number_of_clauses*4*self.depth
-        else:
-            spatio_temporal_features = 0
-
         return tmu.tools.encode(
             X,
             X.shape[0],
             self.number_of_patches,
-            self.number_of_ta_chunks,
+            self.number_of_input_ta_chunks,
             self.dim,
             self.patch_dim,
-            spatio_temporal_features
+            0
         )
 
     def prepare_X_autoencoder(
@@ -564,7 +605,7 @@ class ClauseBank(BaseClauseBank):
             X_csc,
             active_output
     ):
-        X = np.ascontiguousarray(np.empty(int(self.number_of_ta_chunks), dtype=np.uint32))
+        X = np.ascontiguousarray(np.empty(int(self.number_of_input_ta_chunks), dtype=np.uint32))
         return X_csr, X_csc, active_output, X
 
     def produce_autoencoder_example(

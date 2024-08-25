@@ -135,14 +135,14 @@ void tmu_encode(
 )
 {
 	int global_number_of_features = dim_x * dim_y * dim_z;
-	int number_of_features = spatio_temporal_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
+	int number_of_features = patch_dim_x * patch_dim_y * dim_z;
 	int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
 
 	int number_of_literal_chunks;
 	if (append_negated) {
-		number_of_literal_chunks= (((2*number_of_features-1)/32 + 1));
+		number_of_literal_chunks = (((2*number_of_features-1)/32 + 1));
 	} else {
-		number_of_literal_chunks= (((number_of_features-1)/32 + 1));
+		number_of_literal_chunks = (((number_of_features-1)/32 + 1));
 	}
 
 	unsigned int *Xi;
@@ -155,10 +155,8 @@ void tmu_encode(
 
 	memset(encoded_X, 0, number_of_examples * number_of_patches * number_of_literal_chunks * sizeof(unsigned int));
 
-	unsigned int encoded_pos = 0;
+	unsigned long long int encoded_pos = 0;
 	for (int i = 0; i < number_of_examples; ++i) {
-		//printf("%d\n", i);
-
 		int patch_nr = 0;
 		// Produce the patches of the current image
 		for (int y = 0; y < dim_y - patch_dim_y + 1; ++y) {
@@ -166,51 +164,12 @@ void tmu_encode(
 				Xi = &X[input_pos];
 				encoded_Xi = &encoded_X[encoded_pos];
 
-				// Encode spatio temporal features into feature vector 
-				for (int spatio_temporal_feature = 0; spatio_temporal_feature < spatio_temporal_features; ++spatio_temporal_feature) {
-
-					int chunk_nr = (spatio_temporal_feature + number_of_features) / 32;
-					int chunk_pos = (spatio_temporal_feature + number_of_features) % 32;
-					encoded_Xi[chunk_nr] |= (1 << chunk_pos);
-				}
-
-				// // Encode y coordinate of patch into feature vector 
-				// for (int y_threshold = 0; y_threshold < dim_y - patch_dim_y; ++y_threshold) {
-				// 	int patch_pos = spatio_temporal_features + y_threshold;
-
-				// 	if (y > y_threshold) {
-				// 		int chunk_nr = patch_pos / 32;
-				// 		int chunk_pos = patch_pos % 32;
-				// 		encoded_Xi[chunk_nr] |= (1 << chunk_pos);
-				// 	} else if (append_negated) {
-				// 		int chunk_nr = (patch_pos + number_of_features) / 32;
-				// 		int chunk_pos = (patch_pos + number_of_features) % 32;
-				// 		encoded_Xi[chunk_nr] |= (1 << chunk_pos);
-				// 	}
-				// }
-
-				// // Encode x coordinate of patch into feature vector
-				// for (int x_threshold = 0; x_threshold < dim_x - patch_dim_x; ++x_threshold) {
-				// 	int patch_pos = spatio_temporal_features + (dim_y - patch_dim_y) + x_threshold;
-
-				// 	if (x > x_threshold) {
-				// 		int chunk_nr = patch_pos / 32;
-				// 		int chunk_pos = patch_pos % 32;
-
-				// 		encoded_Xi[chunk_nr] |= (1 << chunk_pos);
-				// 	} else if (append_negated) {
-				// 		int chunk_nr = (patch_pos + number_of_features) / 32;
-				// 		int chunk_pos = (patch_pos + number_of_features) % 32;
-				// 		encoded_Xi[chunk_nr] |= (1 << chunk_pos);
-				// 	}
-				// } 
-
 				// Encode patch content into feature vector
 				for (int p_y = 0; p_y < patch_dim_y; ++p_y) {
 					for (int p_x = 0; p_x < patch_dim_x; ++p_x) {
 						for (int z = 0; z < dim_z; ++z) {
 							int image_pos = (y + p_y)*dim_x*dim_z + (x + p_x)*dim_z + z;
-							int patch_pos = spatio_temporal_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
+							int patch_pos = p_y * patch_dim_x * dim_z + p_x * dim_z + z;
 
 							if (Xi[image_pos] == 1) {
 								int chunk_nr = patch_pos / 32;

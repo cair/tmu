@@ -117,6 +117,15 @@ void cb_type_iii_feedback(
     unsigned int target
 );
 
+void cb_prepare_hypervector(
+    int number_of_input_features,
+    int number_of_patches,
+    int hypervector_size,
+    int depth,
+    unsigned int *Xi,
+    unsigned int *Xi_hypervector
+);
+
 void cb_calculate_spatio_temporal_features(
         unsigned int *ta_state,
         int number_of_clauses,
@@ -124,6 +133,8 @@ void cb_calculate_spatio_temporal_features(
         int number_of_state_bits,
         int number_of_patches,
         int depth,
+        int hypervector_size,
+        int hypervector_bits,
         unsigned int *clause_value_in_patch,
         unsigned int *clause_new_value_in_patch,
         unsigned int *clause_true_consecutive,
@@ -132,6 +143,7 @@ void cb_calculate_spatio_temporal_features(
         unsigned int *clause_truth_value_transitions,
         unsigned int *clause_truth_value_transitions_length,
         unsigned int *attention,
+        unsigned int *hypervectors,
         unsigned int *Xi
 );
 

@@ -40,6 +40,8 @@ class BaseClauseBank(CFFISerializable):
         self.type_ia_ii_feedback_ratio = type_ia_ii_feedback_ratio
         self.spatio_temporal = spatio_temporal
         self.depth = depth
+        self.hypervector_size = 256
+        self.hypervector_bits = 2
 
         if len(X_shape) == 2:
             self.dim = (X_shape[1], 1, 1)
@@ -53,17 +55,20 @@ class BaseClauseBank(CFFISerializable):
         if self.patch_dim is None:
             self.patch_dim = (self.dim[0] * self.dim[1] * self.dim[2], 1)
 
-        self.number_of_features = int(
-            self.patch_dim[0] * self.patch_dim[1] * self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (
-                    self.dim[1] - self.patch_dim[1]))
+        self.number_of_input_features = int(self.patch_dim[0] * self.patch_dim[1] * self.dim[2])
+
+        self.number_of_features = int(self.patch_dim[0] * self.patch_dim[1] * self.dim[2])
 
         self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1) * (self.dim[1] - self.patch_dim[1] + 1))
 
         if self.spatio_temporal:
-            self.number_of_features += self.number_of_clauses*4*self.depth;
+            self.number_of_features += self.depth*self.hypervector_size
+
+        self.number_of_input_literals = self.number_of_input_features * 2
 
         self.number_of_literals = self.number_of_features * 2
 
+        self.number_of_input_ta_chunks = int((self.number_of_input_literals - 1) / 32 + 1)
         self.number_of_ta_chunks = int((self.number_of_literals - 1) / 32 + 1)
 
         self.max_included_literals = max_included_literals if max_included_literals else self.number_of_literals

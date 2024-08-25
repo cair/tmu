@@ -1453,13 +1453,68 @@ void cb_identify_temporal_truth_value_transitions(
 	}
 }
 
+void cb_prepare_hypervector(
+	int number_of_input_features,
+	int number_of_patches,
+	int hypervector_size,
+	int depth,
+	unsigned int *Xi,
+	unsigned int *Xi_hypervector
+)
+{
+	int number_of_features = number_of_input_features + hypervector_size*depth;
+	int number_of_literals = number_of_features * 2;
+
+	int number_of_input_literals = number_of_input_features * 2;
+
+	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+	unsigned int number_of_input_ta_chunks = (number_of_input_literals-1)/32 + 1;
+
+	for (int patch = 0; patch < number_of_patches; ++patch) {
+		for (int k = 0; k < number_of_input_features; ++k) {
+			int chunk_nr = k / 32;
+			int chunk_pos = k % 32;
+
+			if (Xi[patch*number_of_input_ta_chunks + chunk_nr] & (1 << chunk_pos)) {
+				chunk_nr = (hypervector_size*depth + k) / 32;
+				chunk_pos = (hypervector_size*depth + k) % 32;
+				Xi_hypervector[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+
+				chunk_nr = (hypervector_size*depth + k + number_of_features) / 32;
+				chunk_pos = (hypervector_size*depth + k + number_of_features) % 32;
+				Xi_hypervector[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+			} else {
+				chunk_nr = (hypervector_size*depth + k) / 32;
+				chunk_pos = (hypervector_size*depth + k) % 32;
+				Xi_hypervector[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+				chunk_nr = (hypervector_size*depth + k + number_of_features) / 32;
+				chunk_pos = (hypervector_size*depth + k + number_of_features) % 32;
+				Xi_hypervector[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+			}
+		}
+
+		for (int k = 0; k < hypervector_size*depth; ++k) {
+			int chunk_nr = k / 32;
+			int chunk_pos = k % 32;
+			Xi_hypervector[patch*number_of_ta_chunks + chunk_nr] &= ~(1 << chunk_pos);
+
+			chunk_nr = (k + number_of_features) / 32;
+			chunk_pos = (k + number_of_features) % 32;
+			Xi_hypervector[patch*number_of_ta_chunks + chunk_nr] |= (1 << chunk_pos);
+		}
+	}
+}
+
 void cb_calculate_spatio_temporal_features(
         unsigned int *ta_state,
         int number_of_clauses,
-        int number_of_literals,
+        int number_of_features,
         int number_of_state_bits,
         int number_of_patches,
         int depth,
+        int hypervector_size,
+        int hypervector_bits,
         unsigned int *clause_value_in_patch,
         unsigned int *clause_new_value_in_patch,
         unsigned int *clause_true_consecutive,
@@ -1468,13 +1523,16 @@ void cb_calculate_spatio_temporal_features(
         unsigned int *clause_truth_value_transitions,
         unsigned int *clause_truth_value_transitions_length,
         unsigned int *attention,
+        unsigned int *hypervectors,
         unsigned int *Xi
 )
 {
+	int dim_x = 28;
+
 	unsigned int chunk_nr;
 	unsigned int chunk_pos;
 
-	int number_of_spatio_temporal_features = number_of_clauses*4*depth;
+	int number_of_literals = number_of_features * 2;
 
 	unsigned int filter;
 	if (((number_of_literals) % 32) != 0) {
@@ -1486,40 +1544,25 @@ void cb_calculate_spatio_temporal_features(
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
 
 	memset(attention, 0, number_of_ta_chunks * sizeof(unsigned int));
-	for (int k = number_of_spatio_temporal_features; k < number_of_literals/2; ++k) {
+	for (int k = hypervector_size*depth; k < number_of_features; ++k) {
 		int chunk_nr = k / 32;
 		int chunk_pos = k % 32;
 
 		attention[chunk_nr] |= (1U << chunk_pos);
 
-		chunk_nr = (k + number_of_literals / 2) / 32;
-		chunk_pos = (k + number_of_literals / 2) % 32;
+		chunk_nr = (k + number_of_features) / 32;
+		chunk_pos = (k + number_of_features) % 32;
 
 		attention[chunk_nr] |= (1U << chunk_pos);
-	}
-
-	// Set all spatio-temporal features to false
-	
-	// Initialize all spatio-temporal features to False
-
-	for (int k = 0; k < number_of_spatio_temporal_features; ++k) {
-		for (int patch = 0; patch < number_of_patches; ++patch) {
-			chunk_nr = k / 32;
-			chunk_pos = k % 32;
-			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-
-			chunk_nr = (k + number_of_literals/2) / 32;
-			chunk_pos = (k + number_of_literals/2) % 32;
-			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-		}
 	}
 
 	for (int d = 0; d < depth; ++d) {
 		for (int j = 0; j < number_of_clauses; j++) {
 			unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
 
+			// Evaluate clause in each patch
 			for (int patch = 0; patch < number_of_patches; ++patch) {
-				unsigned int clause_output = cb_calculate_clause_output_with_literal_active(
+				clause_value_in_patch[patch] = cb_calculate_clause_output_with_literal_active(
 					&ta_state[clause_pos],
 					number_of_ta_chunks,
 					number_of_state_bits,
@@ -1527,71 +1570,247 @@ void cb_calculate_spatio_temporal_features(
 					attention,
 					&Xi[patch*number_of_ta_chunks]
 				);
-				
-				// Just after
-				if (patch > 0 && !(d % 2)) {
-					if (clause_output) {
-						chunk_nr = (number_of_clauses*4*d + j) / 32;
-						chunk_pos = (number_of_clauses*4*d + j) % 32;
-						Xi[(patch-1)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-
-						chunk_nr = (number_of_clauses*4*d + j + number_of_literals/2) / 32;
-						chunk_pos = (number_of_clauses*4*d + j + number_of_literals/2) % 32;
-						Xi[(patch-1)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-					}
-				}
-
-				// Just before
-				if (patch < number_of_patches - 1 && !(d % 2)) {
-					if (clause_output) {
-						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses) / 32;
-						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses) % 32;
-						Xi[(patch+1)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-
-						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses + number_of_literals/2) / 32;
-						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses + number_of_literals/2) % 32;
-						Xi[(patch+1)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-					}
-				}
-
-				if (clause_output && (d % 2)) {
-					// After
-
-					for (int patch_before = 0; patch_before < patch; ++patch_before) {
-						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses*2) / 32;
-						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses*2) % 32;
-						Xi[patch_before*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-
-						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses*2 + number_of_literals/2) / 32;
-						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses*2 + number_of_literals/2) % 32;
-						Xi[patch_before*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);		
-					}
-
-					// Before
-					for (int patch_after = patch + 1; patch_after < number_of_patches; ++patch_after) {
-						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses*3) / 32;
-						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses*3) % 32;
-						Xi[patch_after*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-
-						chunk_nr = (number_of_clauses*4*d + j + number_of_clauses*3 + number_of_literals/2) / 32;
-						chunk_pos = (number_of_clauses*4*d + j + number_of_clauses*3 + number_of_literals/2) % 32;
-						Xi[patch_after*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-					}
-				}
 			}
 
+			// for (int patch = 0; patch < number_of_patches; ++patch) {
+			// 	if (clause_value_in_patch[patch] && (d < depth)) {
+			// 		// Right
+			// 		if (patch > 0) {
+			// 			for (int k = 0; k < hypervector_bits; ++k) {
+			// 				int feature_index = hypervector_size*d + (hypervectors[j*hypervector_bits + k]);
+						
+			// 				chunk_nr = feature_index / 32;
+			// 				chunk_pos = feature_index % 32;
+			// 				Xi[(patch-1)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+			// 				chunk_nr = (feature_index + number_of_features) / 32;
+			// 				chunk_pos = (feature_index + number_of_features) % 32;
+			// 				Xi[(patch-1)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+			// 			}
+			// 		}
+
+			// 		// Left
+			// 		if (patch < number_of_patches - 1) {
+			// 			for (int k = 0; k < hypervector_bits; ++k) {
+			// 				int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + 1) % hypervector_size);
+						
+			// 				chunk_nr = feature_index / 32;
+			// 				chunk_pos = feature_index % 32;
+			// 				Xi[(patch+1)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+			// 				chunk_nr = (feature_index + number_of_features) / 32;
+			// 				chunk_pos = (feature_index + number_of_features) % 32;
+			// 				Xi[(patch+1)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+			// 			}
+			// 		}
+
+			// 		// Below
+			// 		if (patch > dim_x) {
+			// 			for (int k = 0; k < hypervector_bits; ++k) {
+			// 				int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + 2) % hypervector_size);
+						
+			// 				chunk_nr = feature_index / 32;
+			// 				chunk_pos = feature_index % 32;
+			// 				Xi[(patch-dim_x)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+			// 				chunk_nr = (feature_index + number_of_features) / 32;
+			// 				chunk_pos = (feature_index + number_of_features) % 32;
+			// 				Xi[(patch-dim_x)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+			// 			}
+			// 		}
+
+			// 		// Above
+			// 		if (patch < number_of_patches - 1 - dim_x) {
+			// 			for (int k = 0; k < hypervector_bits; ++k) {
+			// 				int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + 3) % hypervector_size);
+						
+			// 				chunk_nr = feature_index / 32;
+			// 				chunk_pos = feature_index % 32;
+			// 				Xi[(patch+dim_x)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+			// 				chunk_nr = (feature_index + number_of_features) / 32;
+			// 				chunk_pos = (feature_index + number_of_features) % 32;
+			// 				Xi[(patch+dim_x)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+			// 			}
+			// 		}
+			// 	}
+			// }
+
+
+			if (1 || d == depth-1) {
+				for (int patch = 0; patch < number_of_patches; ++patch) {
+					if (clause_value_in_patch[patch]) {
+						int column = patch % dim_x;
+						int row = patch / dim_x;
+
+						for (int r = 1; r <= row; ++r) {
+							for (int k = 0; k < hypervector_bits; ++k) {
+								int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + r) % hypervector_size);
+							
+								chunk_nr = feature_index / 32;
+								chunk_pos = feature_index % 32;
+								Xi[(patch - r*dim_x)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+								chunk_nr = (feature_index + number_of_features) / 32;
+								chunk_pos = (feature_index + number_of_features) % 32;
+								Xi[(patch - r*dim_x)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+							}
+						}
+
+						for (int r = 1; r < (number_of_patches/dim_x - row); ++r) {
+							for (int k = 0; k < hypervector_bits; ++k) {
+								int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + r*number_of_patches) % hypervector_size);
+							
+								chunk_nr = feature_index / 32;
+								chunk_pos = feature_index % 32;
+								Xi[(patch + r*dim_x)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+								chunk_nr = (feature_index + number_of_features) / 32;
+								chunk_pos = (feature_index + number_of_features) % 32;
+								Xi[(patch + r*dim_x)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+							}
+						}
+
+						for (int c = 1; c <= column; ++c) {
+							for (int k = 0; k < hypervector_bits; ++k) {
+								int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + c*number_of_patches*number_of_patches) % hypervector_size);
+							
+								chunk_nr = feature_index / 32;
+								chunk_pos = feature_index % 32;
+								Xi[(patch - c)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+								chunk_nr = (feature_index + number_of_features) / 32;
+								chunk_pos = (feature_index + number_of_features) % 32;
+								Xi[(patch - c)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+							}
+						}
+
+						for (int c = 1; c < dim_x - column; ++c) {
+							for (int k = 0; k < hypervector_bits; ++k) {
+								int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + c*number_of_patches*number_of_patches*number_of_patches) % hypervector_size);
+							
+								chunk_nr = feature_index / 32;
+								chunk_pos = feature_index % 32;
+								Xi[(patch + c)*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+								chunk_nr = (feature_index + number_of_features) / 32;
+								chunk_pos = (feature_index + number_of_features) % 32;
+								Xi[(patch + c)*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+							}
+						}
+					}
+				}
+				// Left
+
+				// int clause_first_true_in_column = number_of_patches / dim_x;
+				// for (int patch = 0; patch < number_of_patches; ++patch) {
+				// 	if (clause_value_in_patch[patch] && (patch % dim_x) < clause_first_true_in_column) {
+				// 		clause_first_true_in_column = patch % dim_x;
+				// 	}
+				// }
+
+				// for (int patch = 0; patch < number_of_patches; ++patch) {
+				// 	if ((patch % dim_x) > clause_first_true_in_column) {
+				// 		for (int k = 0; k < hypervector_bits; ++k) {
+				// 			int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + (patch % dim_x) - clause_first_true_in_column) % hypervector_size);
+						
+				// 			chunk_nr = feature_index / 32;
+				// 			chunk_pos = feature_index % 32;
+				// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+				// 			chunk_nr = (feature_index + number_of_features) / 32;
+				// 			chunk_pos = (feature_index + number_of_features) % 32;
+				// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+				// 		}
+				// 	}
+				// }
+
+				// // Above
+
+				// int clause_first_true_in_row = number_of_patches / dim_x;
+				// for (int patch = 0; patch < number_of_patches; ++patch) {
+				// 	if (clause_value_in_patch[patch] && (patch / dim_x) < clause_first_true_in_row) {
+				// 		clause_first_true_in_row = patch / dim_x;
+				// 	}
+				// }
+
+				// for (int patch = 0; patch < number_of_patches; ++patch) {
+				// 	if ((patch / dim_x) > clause_first_true_in_row) {
+				// 		for (int k = 0; k < hypervector_bits; ++k) {
+				// 			int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + ((patch / dim_x) - clause_first_true_in_row)*number_of_patches) % hypervector_size);
+						
+				// 			chunk_nr = feature_index / 32;
+				// 			chunk_pos = feature_index % 32;
+				// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+				// 			chunk_nr = (feature_index + number_of_features) / 32;
+				// 			chunk_pos = (feature_index + number_of_features) % 32;
+				// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+				// 		}
+				// 	}
+				// }
+
+				// // Right
+
+				// int clause_last_true_in_column = -1;
+				// for (int patch = 0; patch < number_of_patches; ++patch) {
+				// 	if (clause_value_in_patch[patch] && (patch % dim_x) > clause_last_true_in_column) {
+				// 		clause_last_true_in_column = patch % dim_x;
+				// 	}
+				// }
+
+				// for (int patch = 0; patch < number_of_patches; ++patch) {
+				// 	if ((patch % dim_x) < clause_last_true_in_column) {
+				// 		for (int k = 0; k < hypervector_bits; ++k) {
+				// 			int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + (clause_last_true_in_column - (patch % dim_x))*number_of_patches*number_of_patches) % hypervector_size);
+						
+				// 			chunk_nr = feature_index / 32;
+				// 			chunk_pos = feature_index % 32;
+				// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+				// 			chunk_nr = (feature_index + number_of_features) / 32;
+				// 			chunk_pos = (feature_index + number_of_features) % 32;
+				// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+				// 		}
+				// 	}
+				// }
+
+				// // Below
+
+				// int clause_last_true_in_row = -1;
+				// for (int patch = 0; patch < number_of_patches; ++patch) {
+				// 	if (clause_value_in_patch[patch] && (patch / dim_x) > clause_last_true_in_row) {
+				// 		clause_last_true_in_row = patch / dim_x;
+				// 	}
+				// }
+
+				// for (int patch = 0; patch < number_of_patches; ++patch) {
+				// 	if ((patch / dim_x) < clause_last_true_in_row) {
+				// 		for (int k = 0; k < hypervector_bits; ++k) {
+				// 			int feature_index = hypervector_size*d + ((hypervectors[j*hypervector_bits + k] + (clause_last_true_in_row - (patch / dim_x))*number_of_patches*number_of_patches*number_of_patches) % hypervector_size);
+						
+				// 			chunk_nr = feature_index / 32;
+				// 			chunk_pos = feature_index % 32;
+				// 			Xi[patch*number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+
+				// 			chunk_nr = (feature_index + number_of_features) / 32;
+				// 			chunk_pos = (feature_index + number_of_features) % 32;
+				// 			Xi[patch*number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+				// 		}
+				// 	}
+				// }
+			}
 		}
 	
-
-		//Increase attention to next layer
-		for (int j = 0; j < number_of_clauses*4; ++j) {
-			int chunk_nr = (number_of_clauses*4*d + j) / 32;
-			int chunk_pos = (number_of_clauses*4*d + j) % 32;
+		// Increase attention to next layer
+		for (int j = 0; j < hypervector_size; ++j) {
+			int chunk_nr = (hypervector_size*d + j) / 32;
+			int chunk_pos = (hypervector_size*d + j) % 32;
 
 			attention[chunk_nr] |= (1U << chunk_pos);
 
-			chunk_nr = (number_of_clauses*4*d + j + number_of_literals / 2) / 32;
-			chunk_pos = (number_of_clauses*4*d + j +  number_of_literals / 2) % 32;
+			chunk_nr = (hypervector_size*d + j + number_of_features) / 32;
+			chunk_pos = (hypervector_size*d + j +  number_of_features) % 32;
 
 			attention[chunk_nr] |= (1U << chunk_pos);
 		}

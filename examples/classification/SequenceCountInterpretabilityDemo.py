@@ -661,7 +661,7 @@ def default_args(**kwargs):
     parser.add_argument("--platform", default='CPU', type=str)
     parser.add_argument("--T", default=100*2, type=int)
     parser.add_argument("--s", default=1.0, type=float)
-    parser.add_argument("--sequence-length", default=6, type=int)
+    parser.add_argument("--sequence-length", default=10, type=int)
     parser.add_argument("--noise", default=0.01, type=float)
     parser.add_argument("--examples", default=40000, type=int)
     parser.add_argument("--depth", default=2, type=int)

@@ -47,6 +47,8 @@ class TMCoalescedClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankM
         weighted_clauses=False,
         clause_drop_p=0.0,
         literal_drop_p=0.0,
+        spatio_temporal=False,
+        depth=0,
         seed=None
     ):
         super().__init__(
@@ -68,6 +70,8 @@ class TMCoalescedClassifier(TMBaseModel, SingleClauseBankMixin, MultiWeightBankM
             weighted_clauses=weighted_clauses,
             clause_drop_p=clause_drop_p,
             literal_drop_p=literal_drop_p,
+            spatio_temporal=spatio_temporal,
+            depth=depth,
             seed=seed
         )
         SingleClauseBankMixin.__init__(self)

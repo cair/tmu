@@ -13,6 +13,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 _LOGGER = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
 
 def preprocess_cifar10_data(resolution, animals):
     """
@@ -35,9 +36,9 @@ def preprocess_cifar10_data(resolution, animals):
     # Initialize empty arrays for quantized images
     X_train = np.empty(
         (X_train_org.shape[0], X_train_org.shape[1], X_train_org.shape[2], X_train_org.shape[3], resolution),
-        dtype=np.uint8)
+        dtype=np.uint32)
     X_test = np.empty((X_test_org.shape[0], X_test_org.shape[1], X_test_org.shape[2], X_test_org.shape[3], resolution),
-                      dtype=np.uint8)
+                      dtype=np.uint32)
 
     # Quantize pixel values
     for z in range(resolution):
@@ -73,17 +74,18 @@ def run_ensemble(ensemble_params):
     # Unpack parameters
     args, X_train, Y_train, X_test, Y_test, ensemble = ensemble_params
 
-    T = int(args.clauses * 0.75)
     tm = TMClassifier(
         args.clauses,
-        T,
+        args.T,
         args.s,
         platform=args.platform,
         patch_dim=(args.patch_size, args.patch_size),
         number_of_state_bits_ta=args.number_of_state_bits_ta,
         weighted_clauses=args.weighted_clauses,
         literal_drop_p=args.literal_drop_p,
-        max_included_literals=args.max_included_literals
+        max_included_literals=args.max_included_literals,
+        spatio_temporal=True,
+        depth=args.depth
     )
 
     ensemble_results = metrics(args)
@@ -149,18 +151,20 @@ def main(args):
 
 def default_args(**kwargs):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--max_included_literals", type=int, default=32)
-    parser.add_argument("--clauses", type=int, default=8000)
+    parser.add_argument("--max-included-literals", type=int, default=32)
+    parser.add_argument("--clauses", type=int, default=100)
+    parser.add_argument("--T", type=int, default=750)
     parser.add_argument("--s", type=float, default=10.0)
     parser.add_argument("--platform", type=str, default="GPU")
-    parser.add_argument("--patch_size", type=int, default=3)
+    parser.add_argument("--patch-size", type=int, default=3)
     parser.add_argument("--resolution", type=int, default=8)
-    parser.add_argument("--number_of_state_bits_ta", type=int, default=8)
-    parser.add_argument("--literal_drop_p", type=float, default=0.0)
+    parser.add_argument("--number-of-state-bits-ta", type=int, default=8)
+    parser.add_argument("--literal-drop-p", type=float, default=0.0)
+    parser.add_argument("--depth", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=250)
-    parser.add_argument("--ensembles", type=int, default=5)
+    parser.add_argument("--ensembles", type=int, default=1)
     parser.add_argument("--weighted-clauses", type=bool, default=True)
-    parser.add_argument("--use_multiprocessing", action='store_true', help="Use multiprocessing to run ensembles in parallel")
+    parser.add_argument("--use-multiprocessing", action='store_false', help="Use multiprocessing to run ensembles in parallel")
     args = parser.parse_args()
     for key, value in kwargs.items():
         if key in args.__dict__:
