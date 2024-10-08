@@ -263,6 +263,7 @@ class ClauseBankCUDA(BaseClauseBank):
             encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].nbytes)
             cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :])
 
+            self.attention[:] = 0
             for k in range(self.hypervector_size*self.depth, self.number_of_features):
                 chunk_nr = k // 32
                 chunk_pos = k % 32
