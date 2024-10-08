@@ -98,10 +98,8 @@ class ClauseBankCUDA(BaseClauseBank):
     ):
         super().__init__(seed=seed, **kwargs)
 
-        self.d = d
         assert isinstance(number_of_state_bits_ta, int)
         self.number_of_state_bits_ta = number_of_state_bits_ta
-        self.number_of_state_bits_ind = int(number_of_state_bits_ind)
         self.batch_size = batch_size
         self.incremental = incremental
 
@@ -196,7 +194,6 @@ class ClauseBankCUDA(BaseClauseBank):
 
         # Clause Initialization
         self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
-        self.ptr_ta_state_ind = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
 
         # Action Initialization
         self.ptr_actions = ffi.cast("unsigned int *", self.actions.ctypes.data)
@@ -220,13 +217,6 @@ class ClauseBankCUDA(BaseClauseBank):
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta)))
 
         self.actions = np.ascontiguousarray(np.zeros(self.number_of_ta_chunks, dtype=np.uint32))
-
-        self.clause_bank_ind = np.empty(
-            (self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ind), dtype=np.uint32)
-        self.clause_bank_ind[:, :, :] = np.uint32(~0)
-
-        self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape(
-            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))
 
         self.incremental_clause_evaluation_initialized = False
 
@@ -535,40 +525,6 @@ class ClauseBankCUDA(BaseClauseBank):
                 ptr_literal_active,
                 ptr_xi
             )
-
-        self.incremental_clause_evaluation_initialized = False
-
-
-    def type_iii_feedback(
-            self,
-            update_p,
-            clause_active,
-            literal_active,
-            encoded_X,
-            e,
-            target
-    ):
-        ptr_xi = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
-        ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
-        ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
-
-        lib.cb_type_iii_feedback(
-            self.ptr_ta_state,
-            self.ptr_ta_state_ind,
-            self.ptr_clause_and_target,
-            self.ptr_output_one_patches,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
-            self.number_of_state_bits_ind,
-            self.number_of_patches,
-            update_p,
-            self.d,
-            ptr_clause_active,
-            ptr_literal_active,
-            ptr_xi,
-            target
-        )
 
         self.incremental_clause_evaluation_initialized = False
 
