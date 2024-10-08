@@ -167,7 +167,6 @@ class ClauseBankCUDA(BaseClauseBank):
 
     def _cffi_init(self):
         self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
-        self.cob_p = ffi.cast("unsigned int *", self.clause_output_batch.ctypes.data)
         self.ptr_clause_and_target = ffi.cast("unsigned int *", self.clause_and_target.ctypes.data)
         self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
         self.ptr_feedback_to_ta = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)
