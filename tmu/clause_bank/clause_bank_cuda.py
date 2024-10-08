@@ -238,7 +238,7 @@ class ClauseBankCUDA(BaseClauseBank):
         self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape(
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta)))
 
-        self.ta_state_gpu = cuda.mem_alloc(clause_bank.nbytes)
+        self.ta_state_gpu = cuda.mem_alloc(self.clause_bank.nbytes)
 
         self.actions = np.ascontiguousarray(np.zeros(self.number_of_ta_chunks, dtype=np.uint32))
 
@@ -258,8 +258,7 @@ class ClauseBankCUDA(BaseClauseBank):
             current_clause_node_output = self.current_clause_node_output_test_gpu
             next_clause_node_output = self.current_clause_node_output_test_gpu
 
-            clause_bank = self.clause_bank.reshape(-1)
-            cuda.memcpy_htod(self.ta_state_gpu, clause_bank)
+            cuda.memcpy_htod(self.ta_state_gpu, self.clause_bank)
 
             encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].nbytes)
             cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :])
