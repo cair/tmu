@@ -93,11 +93,7 @@ class ClauseBankCUDA(BaseClauseBank):
     def __init__(
             self,
             seed: int,
-            d: float,
-            number_of_state_bits_ind: int,
             number_of_state_bits_ta: int,
-            batch_size: int,
-            incremental: bool,
             **kwargs
     ):
         super().__init__(seed=seed, **kwargs)
