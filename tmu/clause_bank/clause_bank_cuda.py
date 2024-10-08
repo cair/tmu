@@ -78,7 +78,7 @@ def load_cuda_kernel(parameters, file: str):
 
     return module
     
-class ClauseBank(BaseClauseBank):
+class ClauseBankCUDA(BaseClauseBank):
     clause_bank: np.ndarray
     incremental_clause_evaluation_initialized: bool
     co_p = None  # _cffi_backend._CDataBase
