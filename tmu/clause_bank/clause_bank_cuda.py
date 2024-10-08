@@ -269,7 +269,7 @@ class ClauseBankCUDA(BaseClauseBank):
                 self.attention[chunk_nr] |= (1 << chunk_pos)
 
                 chunk_nr = (k + self.number_of_features) // 32
-                chunk_pos = (k + number_of_features) % 32
+                chunk_pos = (k + self.number_of_features) % 32
 
                 self.attention[chunk_nr] |= (1 << chunk_pos);
             cuda.memcpy_htod(self.attention_gpu, self.attention)
@@ -371,7 +371,7 @@ class ClauseBankCUDA(BaseClauseBank):
                 self.attention[chunk_nr] |= (1 << chunk_pos)
 
                 chunk_nr = (k + self.number_of_features) // 32
-                chunk_pos = (k + number_of_features) % 32
+                chunk_pos = (k + self.number_of_features) % 32
 
                 self.attention[chunk_nr] |= (1 << chunk_pos);
             cuda.memcpy_htod(self.attention_gpu, self.attention)
