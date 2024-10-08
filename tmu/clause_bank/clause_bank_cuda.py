@@ -100,6 +100,24 @@ class ClauseBankCUDA(BaseClauseBank):
         assert isinstance(number_of_state_bits_ta, int)
         self.number_of_state_bits_ta = number_of_state_bits_ta
 
+        self.grid = (16 * 13, 1, 1)
+        self.block = (128, 1, 1)
+
+        self.rng_gen = curandom.XORWOWRandomNumberGenerator()
+        self.cuda_ctx: Context = pycuda.autoinit.context
+
+        self._profiler: CudaProfiler = CudaProfiler()
+
+        parameters = [
+            f"#define NUMBER_OF_PATCHES {self.number_of_patches}"
+        ]
+
+        mod = load_cuda_kernel(parameters, "cuda/calculate_clause_outputs_predict.cu")
+        self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
+        self.calculate_clause_outputs_predict_gpu.prepare("PiiiPPi")
+        self.calculate_literal_frequency_gpu = mod.get_function("calculate_literal_frequency")
+        self.calculate_literal_frequency_gpu.prepare("PiiiPP")
+
         self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
         self.clause_and_target = np.zeros(self.number_of_clauses * self.number_of_ta_chunks, dtype=np.uint32, order="c")
         self.clause_output_patchwise = np.empty(self.number_of_clauses * self.number_of_patches, dtype=np.uint32, order="c")
