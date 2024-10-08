@@ -263,6 +263,8 @@ class TMBaseModel:
             patch_dim=self.patch_dim,
             type_ia_ii_feedback_ratio=self.type_ia_ii_feedback_ratio,
             max_included_literals=self.max_included_literals,
+            spatio_temporal=self.spatio_temporal,
+            depth=self.depth,
             seed=self.seed,
         )
         return clause_bank_type, clause_bank_args
