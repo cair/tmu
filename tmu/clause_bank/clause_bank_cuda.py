@@ -381,7 +381,7 @@ class ClauseBankCUDA(BaseClauseBank):
                 self.grid,
                 self.block,
                 self.number_of_clauses,
-                self.number_of_features,
+                self.number_of_literals,
                 self.number_of_state_bits_ta,
                 self.ta_state_gpu,
                 current_clause_node_output,
