@@ -1,6 +1,4 @@
 # Copyright (c) 2023 Ole-Christoffer Granmo
-
-
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -21,6 +19,7 @@
 
 # This code implements the Convolutional Tsetlin Machine from paper arXiv:1905.09688
 # https://arxiv.org/abs/1905.09688
+
 import tmu.tools
 from tmu.tmulib import ffi, lib
 from tmu.tools import BenchmarkTimer
@@ -31,6 +30,7 @@ import numpy as np
 import logging
 import pathlib
 import tempfile
+import numpy as np
 
 from tmu.util.cuda_profiler import CudaProfiler
 
@@ -77,151 +77,357 @@ def load_cuda_kernel(parameters, file: str):
         module = cuda.module_from_file(str(ptx_file.absolute()))
 
     return module
-
-
-class ImplClauseBankCUDA(BaseClauseBank):
-    clause_bank_gpu = None
-    clause_bank_synchronized: bool
+    
+class ClauseBank(BaseClauseBank):
+    clause_bank: np.ndarray
+    incremental_clause_evaluation_initialized: bool
+    co_p = None  # _cffi_backend._CDataBase
+    cob_p = None  # _cffi_backend._CDataBase
+    ptr_clause_and_target = None  # _cffi_backend._CDataBase
+    cop_p = None  # _cffi_backend._CDataBase
+    ptr_feedback_to_ta = None  # _cffi_backend._CDataBase
+    ptr_output_one_patches = None  # _cffi_backend._CDataBase
+    ptr_literal_clause_count = None  # _cffi_backend._CDataBase
+    ptr_actions = None  # _cffi_backend._CDataBase
 
     def __init__(
             self,
             seed: int,
+            d: float,
+            number_of_state_bits_ind: int,
             number_of_state_bits_ta: int,
+            batch_size: int,
+            incremental: bool,
             **kwargs
     ):
         super().__init__(seed=seed, **kwargs)
-        self.grid = (16 * 13, 1, 1)
-        self.block = (128, 1, 1)
+
+        self.d = d
+        assert isinstance(number_of_state_bits_ta, int)
         self.number_of_state_bits_ta = number_of_state_bits_ta
+        self.number_of_state_bits_ind = int(number_of_state_bits_ind)
+        self.batch_size = batch_size
+        self.incremental = incremental
 
-        self.clause_output_patchwise = np.empty(
-            int(self.number_of_clauses * self.number_of_patches),
-            dtype=np.uint32,
-            order="C"
-        )
+        self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+        self.clause_output_batch = np.empty(self.number_of_clauses * batch_size, dtype=np.uint32, order="c")
+        self.clause_and_target = np.zeros(self.number_of_clauses * self.number_of_ta_chunks, dtype=np.uint32, order="c")
+        self.clause_output_patchwise = np.empty(self.number_of_clauses * self.number_of_patches, dtype=np.uint32, order="c")
+        self.feedback_to_ta = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
+        self.output_one_patches = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
+        self.literal_clause_count = np.empty(self.number_of_literals, dtype=np.uint32, order="c")
+        self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
+        
+        if self.spatio_temporal:
+            self.xi_hypervector = np.empty(self.number_of_patches * self.number_of_ta_chunks, dtype=np.uint32, order="c")
 
-        self.rng_gen = curandom.XORWOWRandomNumberGenerator()
-        self.cuda_ctx: Context = pycuda.autoinit.context
+            self.clause_value_in_patch = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_value_in_patch_tmp = np.empty(self.number_of_patches * self.number_of_clauses, dtype=np.uint32, order="c")
 
-        self._profiler: CudaProfiler = CudaProfiler()
+            self.clause_true_consecutive = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
+            self.clause_true_consecutive_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+            self.clause_false_consecutive_before = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
+            
+            self.clause_truth_value_transitions = np.empty(self.number_of_patches * self.number_of_clauses * 3, dtype=np.uint32, order="c")
+            self.clause_truth_value_transitions_length = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
 
-        parameters = [
-            f"#define NUMBER_OF_PATCHES {self.number_of_patches}"
-        ]
+            self.attention = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
 
-        mod = load_cuda_kernel(parameters, "cuda/calculate_clause_outputs_predict.cu")
-        self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
-        self.calculate_clause_outputs_predict_gpu.prepare("PiiiPPi")
-        self.calculate_literal_frequency_gpu = mod.get_function("calculate_literal_frequency")
-        self.calculate_literal_frequency_gpu.prepare("PiiiPP")
+            self.hypervectors = np.empty((self.number_of_clauses, self.hypervector_bits), dtype=np.uint32, order="c")
+            indexes = np.arange(self.hypervector_size, dtype=np.uint32)
+            for i in range(self.number_of_clauses):
+                self.hypervectors[i,:] = np.random.choice(indexes, size=(self.hypervector_bits), replace=False)
+            self.hypervectors = self.hypervectors.reshape(self.number_of_clauses*self.hypervector_bits)
 
-        mod = load_cuda_kernel(parameters, "cuda/calculate_clause_outputs_update.cu")
-        self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
-        self.calculate_clause_outputs_update_gpu.prepare("PiiiPPPi")
-
-        mod = load_cuda_kernel(parameters, "cuda/clause_feedback.cu")
-        self.type_i_feedback_gpu = mod.get_function("type_i_feedback")
-        self.type_i_feedback_gpu.prepare("PPiiiffiiPPPi")
-        self.type_ii_feedback_gpu = mod.get_function("type_ii_feedback")
-        self.type_ii_feedback_gpu.prepare("PPiiifPPPi")
-
-        mod = load_cuda_kernel(parameters, "cuda/tools.cu")
-        self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_example")
-        self.produce_autoencoder_examples_gpu.prepare("PPiPPiPPiPiii")
-
-        # self.prepare_encode_gpu = mod.get_function("prepare_encode")
-        # self.prepare_encode_gpu.prepare("PPiiiiiiii")
-
-        # self.encode_gpu = mod.get_function("encode")
-        # self.encode_gpu.prepare("PPiiiiiiii")
-
-        self.clause_output = np.empty(
-            int(self.number_of_clauses),
+        # Incremental Clause Evaluation
+        self.literal_clause_map = np.empty(
+            (int(self.number_of_literals * self.number_of_clauses)),
             dtype=np.uint32,
             order="c"
         )
-        self.clause_output_gpu = self._profiler.profile(cuda.mem_alloc, self.clause_output.nbytes)
-
-        self.clause_output_patchwise = np.empty(
+        self.literal_clause_map_pos = np.empty(
+            (int(self.number_of_literals)),
+            dtype=np.uint32,
+            order="c"
+        )
+        self.false_literals_per_clause = np.empty(
             int(self.number_of_clauses * self.number_of_patches),
             dtype=np.uint32,
             order="c"
         )
-
-        self.clause_active_gpu = self._profiler.profile(cuda.mem_alloc, self.clause_output.nbytes)
-        self.literal_active_gpu = self._profiler.profile(cuda.mem_alloc, self.number_of_ta_chunks * 4)
-
-        self.literal_clause_count = np.empty(
-            int(self.number_of_literals),
+        self.previous_xi = np.empty(
+            int(self.number_of_ta_chunks) * int(self.number_of_patches),
             dtype=np.uint32,
             order="c"
         )
-        self.literal_clause_count_gpu = self._profiler.profile(cuda.mem_alloc, self.literal_clause_count.nbytes)
 
+        self.initialize_clauses()
+
+        # Finally, map numpy arrays to CFFI compatible pointers.
         self._cffi_init()
 
+        # Set pcg32 seed
+        if self.seed is not None:
+            assert isinstance(self.seed, int), "Seed must be a integer"
+
+            lib.pcg32_seed(self.seed)
+            lib.xorshift128p_seed(self.seed)
+
     def _cffi_init(self):
+        self.co_p = ffi.cast("unsigned int *", self.clause_output.ctypes.data)
+        self.cob_p = ffi.cast("unsigned int *", self.clause_output_batch.ctypes.data)
+        self.ptr_clause_and_target = ffi.cast("unsigned int *", self.clause_and_target.ctypes.data)
+        self.cop_p = ffi.cast("unsigned int *", self.clause_output_patchwise.ctypes.data)
+        self.ptr_feedback_to_ta = ffi.cast("unsigned int *", self.feedback_to_ta.ctypes.data)
+        self.ptr_output_one_patches = ffi.cast("unsigned int *", self.output_one_patches.ctypes.data)
+        self.ptr_literal_clause_count = ffi.cast("unsigned int *", self.literal_clause_count.ctypes.data)
+        self.tiafc_p = ffi.cast("unsigned int *", self.type_ia_feedback_counter.ctypes.data)
+        self.xih_p = ffi.cast("unsigned int *", self.xi_hypervector.ctypes.data)
+
+        if self.spatio_temporal:
+            self.cvip_p = ffi.cast("unsigned int *", self.clause_value_in_patch.ctypes.data)
+            self.cvipt_p = ffi.cast("unsigned int *", self.clause_value_in_patch_tmp.ctypes.data)
+
+            self.ctc_p = ffi.cast("unsigned int *", self.clause_true_consecutive.ctypes.data)
+            self.ctcb_p = ffi.cast("unsigned int *", self.clause_true_consecutive_before.ctypes.data)
+            self.cfcb_p = ffi.cast("unsigned int *", self.clause_false_consecutive_before.ctypes.data)
+
+            self.ctvt_p = ffi.cast("unsigned int *", self.clause_truth_value_transitions.ctypes.data)
+            self.ctvtl_p = ffi.cast("unsigned int *", self.clause_truth_value_transitions_length.ctypes.data)
+
+            self.a_p = ffi.cast("unsigned int *", self.attention.ctypes.data)
+            self.hv_p = ffi.cast("unsigned int *", self.hypervectors.ctypes.data)
+
+        # Clause Initialization
+        self.ptr_ta_state = ffi.cast("unsigned int *", self.clause_bank.ctypes.data)
+        self.ptr_ta_state_ind = ffi.cast("unsigned int *", self.clause_bank_ind.ctypes.data)
+
+        # Action Initialization
+        self.ptr_actions = ffi.cast("unsigned int *", self.actions.ctypes.data)
+
+        # Incremental Clause Evaluation Initialization
+        self.lcm_p = ffi.cast("unsigned int *", self.literal_clause_map.ctypes.data)
+        self.lcmp_p = ffi.cast("unsigned int *", self.literal_clause_map_pos.ctypes.data)
+        self.flpc_p = ffi.cast("unsigned int *", self.false_literals_per_clause.ctypes.data)
+        self.previous_xi_p = ffi.cast("unsigned int *", self.previous_xi.ctypes.data)
+
+    def initialize_clauses(self):
         self.clause_bank = np.empty(
             shape=(self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ta),
             dtype=np.uint32,
             order="c"
         )
-        self.clause_bank[:, :, 0:self.number_of_state_bits_ta - 1] = np.uint32(~0)
+
+        self.clause_bank[:, :, 0: self.number_of_state_bits_ta - 1] = np.uint32(~0)
         self.clause_bank[:, :, self.number_of_state_bits_ta - 1] = 0
-        self.clause_bank = self.clause_bank.reshape(
-            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta),
-            order="c"
-        )
-        self.clause_bank_gpu = self._profiler.profile(cuda.mem_alloc, self.clause_bank.nbytes)
+        self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape(
+            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta)))
 
-        self._profiler.profile(cuda.memcpy_htod, self.clause_bank_gpu, self.clause_bank)
-        self.clause_bank_synchronized = True
+        self.actions = np.ascontiguousarray(np.zeros(self.number_of_ta_chunks, dtype=np.uint32))
 
-    def synchronize_clause_bank(self):
-        if not self.clause_bank_synchronized:
-            self._profiler.profile(cuda.memcpy_dtoh, self.clause_bank, self.clause_bank_gpu)
-            self.clause_bank_synchronized = True
+        self.clause_bank_ind = np.empty(
+            (self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ind), dtype=np.uint32)
+        self.clause_bank_ind[:, :, :] = np.uint32(~0)
+
+        self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape(
+            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))
+
+        self.incremental_clause_evaluation_initialized = False
 
     def calculate_clause_outputs_predict(self, encoded_X, e):
-        self.calculate_clause_outputs_predict_gpu.prepared_call(
-            self.grid,
-            self.block,
-            self.clause_bank_gpu,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
-            self.clause_output_gpu,
-            encoded_X,
-            np.int32(e)
-        )
-        self.cuda_ctx.synchronize()
-        self._profiler.profile(cuda.memcpy_dtoh, self.clause_output, self.clause_output_gpu)
-        return self.clause_output
+        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+
+        if not self.incremental or self.spatio_temporal:
+            if self.spatio_temporal:
+                lib.cb_prepare_hypervector(
+                    self.number_of_input_features,
+                    self.number_of_patches,
+                    self.hypervector_size,
+                    self.depth,
+                    xi_p,
+                    self.xih_p
+                )
+
+                lib.cb_calculate_spatio_temporal_features(
+                    self.ptr_ta_state,
+                    self.number_of_clauses,
+                    self.number_of_features,
+                    self.number_of_state_bits_ta,
+                    self.number_of_patches,
+                    self.depth,
+                    self.hypervector_size,
+                    self.hypervector_bits,
+                    self.cvip_p,
+                    self.cvipt_p,
+                    self.ctc_p,
+                    self.ctcb_p,
+                    self.cfcb_p,
+                    self.ctvt_p,
+                    self.ctvtl_p,
+                    self.a_p,
+                    self.hv_p,
+                    self.xih_p
+                )
+
+                lib.cb_calculate_clause_outputs_predict_spatio_temporal(
+                    self.ptr_ta_state,
+                    self.number_of_clauses,
+                    self.number_of_literals,
+                    self.number_of_state_bits_ta,
+                    self.number_of_patches,
+                    self.co_p,
+                    self.cvip_p,
+                    self.ctc_p,
+                    self.ctcb_p,
+                    self.cfcb_p,
+                    self.ctvt_p,
+                    self.ctvtl_p,
+                    self.xih_p
+                )
+            else:
+                lib.cb_calculate_clause_outputs_predict(
+                    self.ptr_ta_state,
+                    self.number_of_clauses,
+                    self.number_of_literals,
+                    self.number_of_state_bits_ta,
+                    self.number_of_patches,
+                    self.co_p,
+                    self.xih_p
+                )
+            return self.clause_output
+
+        if not self.incremental_clause_evaluation_initialized:
+
+            lib.cb_initialize_incremental_clause_calculation(
+                self.ptr_ta_state,
+                self.lcm_p,
+                self.lcmp_p,
+                self.flpc_p,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.previous_xi_p
+            )
+
+            self.incremental_clause_evaluation_initialized = True
+
+        if e % self.batch_size == 0:
+            lib.cb_calculate_clause_outputs_incremental_batch(
+                self.lcm_p,
+                self.lcmp_p,
+                self.flpc_p,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_patches,
+                self.cob_p,
+                self.previous_xi_p,
+                xi_p,
+                np.minimum(self.batch_size, encoded_X.shape[0] - e)
+            )
+
+        return self.clause_output_batch.reshape((self.batch_size, self.number_of_clauses))[e % self.batch_size, :]
 
     def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
-        self._profiler.profile(cuda.memcpy_htod, self.literal_active_gpu, literal_active)
+        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+        la_p = ffi.cast("unsigned int *", literal_active.ctypes.data)
 
-        self.calculate_clause_outputs_update_gpu.prepared_call(
-            self.grid,
-            self.block,
-            self.clause_bank_gpu,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
-            self.clause_output_gpu,
-            self.literal_active_gpu,
-            encoded_X,
-            np.int32(e)
-        )
+        if self.spatio_temporal:
+            lib.cb_prepare_hypervector(
+                self.number_of_input_features,
+                self.number_of_patches,
+                self.hypervector_size,
+                self.depth,
+                xi_p,
+                self.xih_p
+            )
 
-        self.cuda_ctx.synchronize()
-        self._profiler.profile(cuda.memcpy_dtoh, self.clause_output, self.clause_output_gpu)
+            lib.cb_calculate_spatio_temporal_features(
+                self.ptr_ta_state,
+                self.number_of_clauses,
+                self.number_of_features,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.depth,
+                self.hypervector_size,
+                self.hypervector_bits,
+                self.cvip_p,
+                self.cvipt_p,
+                self.ctc_p,
+                self.ctcb_p,
+                self.cfcb_p,
+                self.ctvt_p,
+                self.ctvtl_p,
+                self.a_p,
+                self.hv_p,
+                self.xih_p
+            )
+
+            lib.cb_calculate_clause_outputs_update_spatio_temporal(
+                self.ptr_ta_state,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.co_p,
+                la_p,
+                self.cvip_p,
+                self.ctc_p,
+                self.ctcb_p,
+                self.cfcb_p,
+                self.ctvt_p,
+                self.ctvtl_p,
+                self.xih_p
+            )
+        else:
+            lib.cb_calculate_clause_outputs_update(
+                self.ptr_ta_state,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.co_p,
+                la_p,
+                xi_p
+            )
+
         return self.clause_output
 
     def calculate_clause_outputs_patchwise(self, encoded_X, e):
-        xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
+        xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+
+        if self.spatio_temporal:
+            lib.cb_prepare_hypervector(
+                self.number_of_input_features,
+                self.number_of_patches,
+                self.hypervector_size,
+                self.depth,
+                xi_p,
+                self.xih_p
+            )
+
+            lib.cb_calculate_spatio_temporal_features(
+                self.ptr_ta_state,
+                self.number_of_clauses,
+                self.number_of_features,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.depth,
+                self.hypervector_size,
+                self.hypervector_bits,
+                self.cvip_p,
+                self.cvipt_p,
+                self.ctc_p,
+                self.ctcb_p,
+                self.cfcb_p,
+                self.ctvt_p,
+                self.ctvtl_p,
+                self.a_p,
+                self.hv_p,
+                self.xih_p
+            )
+
         lib.cb_calculate_clause_outputs_patchwise(
-            self.cb_p,
+            self.ptr_ta_state,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
@@ -229,206 +435,252 @@ class ImplClauseBankCUDA(BaseClauseBank):
             self.cop_p,
             xi_p
         )
+
         return self.clause_output_patchwise
 
     def type_i_feedback(
+        self,
+        update_p,
+        clause_active,
+        literal_active,
+        encoded_X,
+        e
+    ):
+        ptr_xi = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+        ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
+
+        if self.spatio_temporal:
+            lib.cb_type_i_feedback_spatio_temporal(
+                self.ptr_ta_state,
+                self.ptr_feedback_to_ta,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                self.s,
+                self.boost_true_positive_feedback,
+                self.reuse_random_feedback,
+                self.max_included_literals,
+                ptr_clause_active,
+                ptr_literal_active,
+                self.cvip_p,
+                self.ctc_p,
+                self.ctcb_p,
+                self.cfcb_p,
+                self.ctvt_p,
+                self.ctvtl_p,
+                self.xih_p
+            )
+        else:
+            lib.cb_type_i_feedback(
+                self.ptr_ta_state,
+                self.ptr_feedback_to_ta,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                self.s,
+                self.boost_true_positive_feedback,
+                self.reuse_random_feedback,
+                self.max_included_literals,
+                ptr_clause_active,
+                ptr_literal_active,
+                ptr_xi
+            )
+
+        self.incremental_clause_evaluation_initialized = False
+
+    def type_ii_feedback(
+        self,
+        update_p,
+        clause_active,
+        literal_active,
+        encoded_X,
+        e
+    ):
+        ptr_xi = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+        ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
+
+        if self.spatio_temporal:
+            lib.cb_type_ii_feedback_spatio_temporal(
+                self.ptr_ta_state,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                ptr_clause_active,
+                ptr_literal_active,
+                self.cvip_p,
+                self.ctc_p,
+                self.ctcb_p,
+                self.cfcb_p,
+                self.ctvt_p,
+                self.ctvtl_p,
+                self.xih_p
+            )
+        else:
+            lib.cb_type_ii_feedback(
+                self.ptr_ta_state,
+                self.ptr_output_one_patches,
+                self.number_of_clauses,
+                self.number_of_literals,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                update_p,
+                ptr_clause_active,
+                ptr_literal_active,
+                ptr_xi
+            )
+
+        self.incremental_clause_evaluation_initialized = False
+
+
+    def type_iii_feedback(
             self,
             update_p,
             clause_active,
             literal_active,
             encoded_X,
-            e):
-        self._profiler.profile(cuda.memcpy_htod, self.clause_active_gpu, clause_active)
-        self._profiler.profile(cuda.memcpy_htod, self.literal_active_gpu, literal_active)
+            e,
+            target
+    ):
+        ptr_xi = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
+        ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        ptr_literal_active = ffi.cast("unsigned int *", literal_active.ctypes.data)
 
-        self.type_i_feedback_gpu.prepared_call(
-            self.grid,
-            self.block,
-            self.rng_gen.state,
-            self.clause_bank_gpu,
+        lib.cb_type_iii_feedback(
+            self.ptr_ta_state,
+            self.ptr_ta_state_ind,
+            self.ptr_clause_and_target,
+            self.ptr_output_one_patches,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
+            self.number_of_state_bits_ind,
+            self.number_of_patches,
             update_p,
-            self.s,
-            self.boost_true_positive_feedback,
-            self.max_included_literals,
-            self.clause_active_gpu,
-            self.literal_active_gpu,
-            encoded_X,
-            np.int32(e)
+            self.d,
+            ptr_clause_active,
+            ptr_literal_active,
+            ptr_xi,
+            target
         )
 
-        self.cuda_ctx.synchronize()
-        self.clause_bank_synchronized = False
+        self.incremental_clause_evaluation_initialized = False
 
-    def type_ii_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
-        self._profiler.profile(cuda.memcpy_htod, self.clause_active_gpu, np.ascontiguousarray(clause_active))
-        self._profiler.profile(cuda.memcpy_htod, self.literal_active_gpu, literal_active)
-
-        self.type_ii_feedback_gpu.prepared_call(
-            self.grid,
-            self.block,
-            self.rng_gen.state,
-            self.clause_bank_gpu,
+    def calculate_literal_clause_frequency(
+            self,
+            clause_active
+    ):
+        ptr_clause_active = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        lib.cb_calculate_literal_frequency(
+            self.ptr_ta_state,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
-            update_p,
-            self.clause_active_gpu,
-            self.literal_active_gpu,
-            encoded_X,
-            np.int32(e)
+            ptr_clause_active,
+            self.ptr_literal_clause_count
         )
-
-        self.cuda_ctx.synchronize()
-        self.clause_bank_synchronized = False
-
-    def calculate_literal_clause_frequency(self, clause_active):
-        self._profiler.profile(cuda.memcpy_htod, self.clause_active_gpu, np.ascontiguousarray(clause_active))
-
-        self.calculate_literal_frequency_gpu.prepared_call(
-            self.grid,
-            self.block,
-            self.clause_bank_gpu,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
-            self.clause_active_gpu,
-            self.literal_clause_count_gpu
-        )
-
-        self.cuda_ctx.synchronize()
-
-        self._profiler.profile(cuda.memcpy_dtoh, self.literal_clause_count, self.literal_clause_count_gpu)
-
         return self.literal_clause_count
 
-    def get_ta_action(self, clause, ta):
-        self.synchronize_clause_bank()
-        return super().get_ta_action(clause, ta)
+    def included_literals(self):
+        lib.cb_included_literals(
+            self.ptr_ta_state,
+            self.number_of_clauses,
+            self.number_of_literals,
+            self.number_of_state_bits_ta,
+            self.ptr_actions
+        )
+        return self.actions
 
-    def number_of_include_actions(self, clause):
-        self.synchronize_clause_bank()
-        start = int(clause * self.number_of_ta_chunks * self.number_of_state_bits_ta + self.number_of_state_bits_ta - 1)
-        stop = int(
-            (clause + 1) * self.number_of_ta_chunks * self.number_of_state_bits_ta + self.number_of_state_bits_ta - 1)
-        return np.unpackbits(
-            np.ascontiguousarray(self.clause_bank[start:stop:self.number_of_state_bits_ta]).view('uint8')).sum()
+    def get_literals(self, independent=False):
 
-    def get_ta_state(self, clause, ta):
-        self.synchronize_clause_bank()
-        return super().get_ta_state(clause, ta)
+        result = np.zeros((self.number_of_clauses, self.number_of_literals), dtype=np.uint32, order="c")
+        result_p = ffi.cast("unsigned int *", result.ctypes.data)
+        lib.cb_get_literals(
+            self.ptr_ta_state_ind if independent else self.ptr_ta_state,
+            self.number_of_clauses,
+            self.number_of_literals,
+            self.number_of_state_bits_ta,
+            result_p
+        )
+        return result
 
-    def set_ta_state(self, clause, ta, state):
-        self.synchronize_clause_bank()
-        super().set_ta_state(clause, ta, state)
-        self._profiler.profile(cuda.memcpy_htod, self.clause_bank_gpu, self.clause_bank)
+    def calculate_independent_literal_clause_frequency(self, clause_active):
+        ca_p = ffi.cast("unsigned int *", clause_active.ctypes.data)
+        lib.cb_calculate_literal_frequency(
+            self.ptr_ta_state_ind,
+            self.number_of_clauses,
+            self.number_of_literals,
+            self.number_of_state_bits_ta,
+            ca_p,
+            self.ptr_literal_clause_count
+        )
+        return self.literal_clause_count
 
-    def prepare_X(self, X):
-        encoded_X = tmu.tools.encode(
+    def number_of_include_actions(
+            self,
+            clause
+    ):
+        return lib.cb_number_of_include_actions(
+            self.ptr_ta_state,
+            clause,
+            self.number_of_literals,
+            self.number_of_state_bits_ta
+        )
+
+    def prepare_X(
+            self,
+            X
+    ):
+        return tmu.tools.encode(
             X,
             X.shape[0],
             self.number_of_patches,
-            self.number_of_ta_chunks,
+            self.number_of_input_ta_chunks,
             self.dim,
             self.patch_dim,
             0
         )
 
-        encoded_X_gpu = self._profiler.profile(cuda.mem_alloc, encoded_X.nbytes)
-        self._profiler.profile(cuda.memcpy_htod, encoded_X_gpu, encoded_X)
-        return encoded_X_gpu
-
-    def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
-        _LOGGER.info("Copying sparse data to GPU memory")
-
-        X_csr_indptr_gpu = self._profiler.profile(cuda.mem_alloc, X_csr.indptr.nbytes)
-        self._profiler.profile(cuda.memcpy_htod, X_csr_indptr_gpu, X_csr.indptr)
-
-        X_csr_indices_gpu = self._profiler.profile(cuda.mem_alloc, X_csr.indices.nbytes)
-        self._profiler.profile(cuda.memcpy_htod, X_csr_indices_gpu, X_csr.indices)
-
-        X_csc_indptr_gpu = self._profiler.profile(cuda.mem_alloc, X_csc.indptr.nbytes)
-        self._profiler.profile(cuda.memcpy_htod, X_csc_indptr_gpu, X_csc.indptr)
-
-        X_csc_indices_gpu = self._profiler.profile(cuda.mem_alloc, X_csc.indices.nbytes)
-        self._profiler.profile(cuda.memcpy_htod, X_csc_indices_gpu, X_csc.indices)
-
-        active_output_gpu = self._profiler.profile(cuda.mem_alloc, active_output.nbytes)
-        self._profiler.profile(cuda.memcpy_htod, active_output_gpu, active_output)
-
-        X = np.ascontiguousarray(np.zeros(int(self.number_of_ta_chunks), dtype=np.uint32))
-        X_gpu = self._profiler.profile(cuda.mem_alloc, X.nbytes)
-
-        return (
-            active_output_gpu,
-            active_output,
-            int(active_output.shape[0]),
-            X_csr_indptr_gpu,
-            X_csr_indices_gpu,
-            int(X_csr.shape[0]),
-            X_csc_indptr_gpu,
-            X_csc_indices_gpu,
-            int(X_csc.shape[1]),
-            X_gpu
-        )
-
-    _logged_unknown_args = set()
+    def prepare_X_autoencoder(
+            self,
+            X_csr,
+            X_csc,
+            active_output
+    ):
+        X = np.ascontiguousarray(np.empty(int(self.number_of_input_ta_chunks), dtype=np.uint32))
+        return X_csr, X_csc, active_output, X
 
     def produce_autoencoder_example(
             self,
             encoded_X,
             target,
-            accumulation,
-            **kwargs
+            target_true_p,
+            accumulation
     ):
-        # Log unknown arguments only once
+        (X_csr, X_csc, active_output, X) = encoded_X
 
-        for key, value in kwargs.items():
-            if key not in self._logged_unknown_args:
-                self._logged_unknown_args.add(key)
-                _LOGGER.warning(
-                    f"Unknown positional argument for {self}: argument_name={key}, argument_value={value}, class={type(self)}")
+        target_value = self.rng.random() <= target_true_p
 
-        (
-            active_output_gpu,
-            active_output,
-            number_of_active_outputs,
-            X_csr_indptr_gpu,
-            X_csr_indices_gpu,
-            number_of_rows,
-            X_csc_indptr_gpu,
-            X_csc_indices_gpu,
-            number_of_columns,
-            X_gpu
-        ) = encoded_X
+        lib.tmu_produce_autoencoder_example(ffi.cast("unsigned int *", active_output.ctypes.data), active_output.shape[0],
+                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csr.indptr).ctypes.data),
+                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csr.indices).ctypes.data),
+                                             int(X_csr.shape[0]),
+                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indptr).ctypes.data),
+                                             ffi.cast("unsigned int *", np.ascontiguousarray(X_csc.indices).ctypes.data),
+                                             int(X_csc.shape[1]),
+                                             ffi.cast("unsigned int *", X.ctypes.data),
+                                             int(target),
+                                             int(target_value),
+                                             int(accumulation))
 
-        target_value = self.rng.choice(2)
-
-        self.produce_autoencoder_examples_gpu.prepared_call(
-            self.grid,
-            self.block,
-            self.rng_gen.state,
-            active_output_gpu,
-            number_of_active_outputs,
-            X_csr_indptr_gpu,
-            X_csr_indices_gpu,
-            number_of_rows,
-            X_csc_indptr_gpu,
-            X_csc_indices_gpu,
-            number_of_columns,
-            X_gpu,
-            int(target),
-            int(target_value),
-            int(accumulation))
-
-        self.cuda_ctx.synchronize()
-
-        return X_gpu, target_value
-
-
-if cuda_installed:
-    ClauseBankCUDA = ImplClauseBankCUDA
-else:
-    ClauseBankCUDA = ClauseBank
+        return X.reshape((1, -1)), target_value
