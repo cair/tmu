@@ -258,10 +258,10 @@ class ClauseBankCUDA(BaseClauseBank):
             current_clause_node_output = self.current_clause_node_output_test_gpu
             next_clause_node_output = self.current_clause_node_output_test_gpu
 
-            cuda.memcpy_htod(self.ta_state_gpu, self.clause_bank)
+            cuda.memcpy_htod(self.ta_state_gpu, self.clause_bank.reshape(-1))
 
             encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].nbytes)
-            cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :])
+            cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :].reshape(-1))
 
             self.attention[:] = 0
             for k in range(self.hypervector_size*self.depth, self.number_of_features):
@@ -364,7 +364,7 @@ class ClauseBankCUDA(BaseClauseBank):
             cuda.memcpy_htod(self.ta_state_gpu, clause_bank)
 
             encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].nbytes)
-            cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :])
+            cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :].reshape(-1))
 
             for k in range(self.hypervector_size*self.depth, self.number_of_features):
                 chunk_nr = k // 32
