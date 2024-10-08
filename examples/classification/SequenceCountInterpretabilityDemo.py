@@ -157,500 +157,500 @@ def main(args):
 
         np.set_printoptions(threshold=np.inf, linewidth=200, precision=2, suppress=True)
 
-        print("\nClass 0 Positive Clauses:\n")
+        # print("\nClass 0 Positive Clauses:\n")
 
-        the_class = 0
-        polarity = 0
+        # the_class = 0
+        # polarity = 0
 
-        precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
-        recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
+        # precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
+        # recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
 
-        for j in range(args.number_of_clauses // 2):
-            print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 0, j), precision[j], recall[j]), end=' ')
-            l = []
-            for k in range(tm.clause_banks[0].number_of_features):
-                if k in range(tm.clause_banks[0].number_of_clauses):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        # for j in range(args.number_of_clauses // 2):
+        #     print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(0, 0, j), precision[j], recall[j]), end=' ')
+        #     l = []
+        #     for k in range(tm.clause_banks[0].number_of_features):
+        #         if k in range(tm.clause_banks[0].number_of_clauses):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features, temporal_features + position_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features, temporal_features + position_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                else:
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         else:
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
            
-            print(" ∧ ".join(l))
-        print()
+        #     print(" ∧ ".join(l))
+        # print()
 
-        print("\nClass 0 Negative Clauses:\n")
+        # print("\nClass 0 Negative Clauses:\n")
 
-        the_class = 0
-        polarity = 1
+        # the_class = 0
+        # polarity = 1
 
-        precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
-        recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
+        # precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
+        # recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
 
-        for j in range(args.number_of_clauses // 2):
-            print("Clause #%d W:%d P:%.2f R:%.2f " % (j + args.number_of_clauses // 2, tm.get_weight(0, 1, j), precision[j], recall[j]), end=' ')
-            l = []
-            for k in range(tm.clause_banks[0].number_of_features):
-                if k in range(tm.clause_banks[0].number_of_clauses):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        # for j in range(args.number_of_clauses // 2):
+        #     print("Clause #%d W:%d P:%.2f R:%.2f " % (j + args.number_of_clauses // 2, tm.get_weight(0, 1, j), precision[j], recall[j]), end=' ')
+        #     l = []
+        #     for k in range(tm.clause_banks[0].number_of_features):
+        #         if k in range(tm.clause_banks[0].number_of_clauses):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features, temporal_features + position_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features, temporal_features + position_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                else:
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         else:
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
            
-            print(" ∧ ".join(l))
-        print()
+        #     print(" ∧ ".join(l))
+        # print()
 
-        print("\nClass 1 Positive Clauses:\n")
+        # print("\nClass 1 Positive Clauses:\n")
 
-        the_class = 1
-        polarity = 0
+        # the_class = 1
+        # polarity = 0
 
-        precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
-        recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
+        # precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
+        # recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
 
-        for j in range(args.number_of_clauses // 2):
-            print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 0, j), precision[j], recall[j]), end=' ')
-            l = []
-            for k in range(tm.clause_banks[0].number_of_features):
-                if k in range(tm.clause_banks[0].number_of_clauses):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        # for j in range(args.number_of_clauses // 2):
+        #     print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(1, 0, j), precision[j], recall[j]), end=' ')
+        #     l = []
+        #     for k in range(tm.clause_banks[0].number_of_features):
+        #         if k in range(tm.clause_banks[0].number_of_clauses):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features, temporal_features + position_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features, temporal_features + position_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                else:
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
-            print(" ∧ ".join(l))
-        print()
+        #         else:
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #     print(" ∧ ".join(l))
+        # print()
 
-        print("\nClass 1 Negative Clauses:\n")
+        # print("\nClass 1 Negative Clauses:\n")
 
-        the_class = 1
-        polarity = 1
+        # the_class = 1
+        # polarity = 1
 
-        precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
-        recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
+        # precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
+        # recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
 
-        for j in range(args.number_of_clauses // 2):
-            print("Clause #%d W:%d P:%.2f R:%.2f " % (j + args.number_of_clauses // 2, tm.get_weight(1, 1, j), precision[j], recall[j]), end=' ')
-            l = []
-            for k in range(tm.clause_banks[0].number_of_features):
-                if k in range(tm.clause_banks[0].number_of_clauses):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        # for j in range(args.number_of_clauses // 2):
+        #     print("Clause #%d W:%d P:%.2f R:%.2f " % (j + args.number_of_clauses // 2, tm.get_weight(1, 1, j), precision[j], recall[j]), end=' ')
+        #     l = []
+        #     for k in range(tm.clause_banks[0].number_of_features):
+        #         if k in range(tm.clause_banks[0].number_of_clauses):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
               
-                elif k in range(temporal_features, temporal_features + position_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features, temporal_features + position_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                else:
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
-            print(" ∧ ".join(l))
-        print()
+        #         else:
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #     print(" ∧ ".join(l))
+        # print()
 
-        print("\nClass 2 Positive Clauses:\n")
+        # print("\nClass 2 Positive Clauses:\n")
 
-        the_class = 2
-        polarity = 0
+        # the_class = 2
+        # polarity = 0
 
-        precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
-        recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
+        # precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
+        # recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
 
-        for j in range(args.number_of_clauses // 2):
-            print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(2, 0, j), precision[j], recall[j]), end=' ')
-            l = []
-            for k in range(tm.clause_banks[0].number_of_features):
-                if k in range(tm.clause_banks[0].number_of_clauses):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        # for j in range(args.number_of_clauses // 2):
+        #     print("Clause #%d W:%d P:%.2f R:%.2f " % (j, tm.get_weight(2, 0, j), precision[j], recall[j]), end=' ')
+        #     l = []
+        #     for k in range(tm.clause_banks[0].number_of_features):
+        #         if k in range(tm.clause_banks[0].number_of_clauses):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
                
-                elif k in range(temporal_features, temporal_features + position_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features, temporal_features + position_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                else:
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
-            print(" ∧ ".join(l))
-        print()
+        #         else:
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #     print(" ∧ ".join(l))
+        # print()
 
-        print("\nClass 2 Negative Clauses:\n")
+        # print("\nClass 2 Negative Clauses:\n")
 
-        the_class = 2
-        polarity = 1
+        # the_class = 2
+        # polarity = 1
 
-        precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
-        recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
+        # precision = tm.clause_precision(the_class, polarity, X_test, Y_test)
+        # recall = tm.clause_recall(the_class, polarity, X_test, Y_test)
 
-        for j in range(args.number_of_clauses // 2):
-            print("Clause #%d W:%d P:%.2f R:%.2f " % (j + args.number_of_clauses // 2, tm.get_weight(2, 1, j), precision[j], recall[j]), end=' ')
-            l = []
-            for k in range(tm.clause_banks[0].number_of_features):
-                if k in range(tm.clause_banks[0].number_of_clauses):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        # for j in range(args.number_of_clauses // 2):
+        #     print("Clause #%d W:%d P:%.2f R:%.2f " % (j + args.number_of_clauses // 2, tm.get_weight(2, 1, j), precision[j], recall[j]), end=' ')
+        #     l = []
+        #     for k in range(tm.clause_banks[0].number_of_features):
+        #         if k in range(tm.clause_banks[0].number_of_clauses):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JB%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JB%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*2):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬JA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*2, tm.clause_banks[0].number_of_clauses*3):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬B%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*2, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*3, tm.clause_banks[0].number_of_clauses*4):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬A%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*3, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*4, tm.clause_banks[0].number_of_clauses*5):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*4, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*5, tm.clause_banks[0].number_of_clauses*6):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬OffA%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*5, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses*6 + 2*tm.clause_banks[0].number_of_patches):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" #TCB%d(%d)" % (k  - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬#TCB%d(%d)" % (k - tm.clause_banks[0].number_of_clauses*6 - tm.clause_banks[0].number_of_patches, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features, temporal_features + position_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features, temporal_features + position_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" POS%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬POS%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #         elif k in range(temporal_features + position_features, tm.clause_banks[0].number_of_features):
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" x%d(%d)" % (k  - temporal_features - position_features, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬x%d(%d)" % (k - temporal_features - position_features, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
 
-                else:
-                    if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
-                        l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
-                    if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
-                        l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
-            print(" ∧ ".join(l))
-        print()
+        #         else:
+        #             if tm.get_ta_action(j, k, the_class=the_class, polarity=polarity):
+        #                 l.append(" U%d(%d)" % (k, tm.get_ta_state(j, k, the_class=the_class, polarity=polarity)))
+        #             if tm.get_ta_action(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity):
+        #                 l.append("¬U%d(%d)" % (k, tm.get_ta_state(j, k + tm.clause_banks[0].number_of_features, the_class=the_class, polarity=polarity)))
+        #     print(" ∧ ".join(l))
+        # print()
 
         #print("\nClause Co-Occurence Matrix:\n")
         #print(tm.clause_co_occurrence(X_test, percentage=True).toarray())
 
-        print("\nLiteral Frequency:\n")
-        print(tm.literal_clause_frequency())
-        experiment_results["literal_frequency"] = tm.literal_clause_frequency().tolist()
+        # print("\nLiteral Frequency:\n")
+        # print(tm.literal_clause_frequency())
+        # experiment_results["literal_frequency"] = tm.literal_clause_frequency().tolist()
 
         accuracy = 100 * (tm.predict(X_test) == Y_test).mean()
         experiment_results["accuracy"].append(accuracy)
-        print("\nAccuracy:", accuracy)
+        print("Epoch: %d Accuracy: %.3f" % (i, accuracy))
 
-        print(tm.clause_banks[0].number_of_features, tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches*2 + (tm.clause_banks[0].dim[0] - tm.clause_banks[0].patch_dim[0]) + (tm.clause_banks[0].dim[1] - tm.clause_banks[0].patch_dim[1]))
+        #print(tm.clause_banks[0].number_of_features, tm.clause_banks[0].number_of_patches, tm.clause_banks[0].number_of_clauses, tm.clause_banks[0].number_of_clauses*6 + tm.clause_banks[0].number_of_patches*2 + (tm.clause_banks[0].dim[0] - tm.clause_banks[0].patch_dim[0]) + (tm.clause_banks[0].dim[1] - tm.clause_banks[0].patch_dim[1]))
     return experiment_results
 
 def default_args(**kwargs):
