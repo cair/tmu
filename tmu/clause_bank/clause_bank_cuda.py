@@ -256,11 +256,11 @@ class ClauseBankCUDA(BaseClauseBank):
             )
 
             current_clause_node_output = self.current_clause_node_output_test_gpu
-            next_clause_node_output = self.current_clause_node_output_test_gpu
+            next_clause_node_output = self.next_clause_node_output_test_gpu
 
             cuda.memcpy_htod(self.ta_state_gpu, self.clause_bank.reshape(-1))
 
-            encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].nbytes)
+            encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].reshape(-1).nbytes)
             cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :].reshape(-1))
 
             self.attention[:] = 0
