@@ -118,7 +118,7 @@ class ClauseBankCUDA(BaseClauseBank):
         self.calculate_literal_frequency_gpu = mod.get_function("calculate_literal_frequency")
         self.calculate_literal_frequency_gpu.prepare("PiiiPP")
 
-        mod = load_cuda_kernel(parameters, "cuda/clause_value_in_patch.cu")
+        mod = load_cuda_kernel(parameters, "cuda/calculate_clause_value_in_patch.cu")
         self.clause_value_in_patch_gpu = mod.get_function("calculate_clause_value_in_patch")
         self.clause_value_in_patch_gpu.prepare("PiiiPPPPi")
 
