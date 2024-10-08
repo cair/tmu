@@ -118,6 +118,10 @@ class ClauseBankCUDA(BaseClauseBank):
         self.calculate_literal_frequency_gpu = mod.get_function("calculate_literal_frequency")
         self.calculate_literal_frequency_gpu.prepare("PiiiPP")
 
+        mod = load_cuda_kernel(parameters, "cuda/clause_value_in_patch.cu")
+        self.clause_value_in_patch_gpu = mod.get_function("calculate_clause_value_in_patch")
+        self.clause_value_in_patch_gpu.prepare("PiiiPPPPi")
+
         self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
         self.clause_and_target = np.zeros(self.number_of_clauses * self.number_of_ta_chunks, dtype=np.uint32, order="c")
         self.clause_output_patchwise = np.empty(self.number_of_clauses * self.number_of_patches, dtype=np.uint32, order="c")

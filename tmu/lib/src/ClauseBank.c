@@ -364,7 +364,7 @@ static inline unsigned int cb_calculate_clause_output_predict(
 
 		all_exclude = all_exclude && ((ta_state[pos] & filter) == 0);
 
-		if (output) { // && all_exclude == 0) {
+		if (output && all_exclude == 0) {
 			return(1);
 		}
 	}
