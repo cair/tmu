@@ -100,11 +100,9 @@ class ClauseBankCUDA(BaseClauseBank):
 
         assert isinstance(number_of_state_bits_ta, int)
         self.number_of_state_bits_ta = number_of_state_bits_ta
-        self.batch_size = batch_size
         self.incremental = incremental
 
         self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
-        self.clause_output_batch = np.empty(self.number_of_clauses * batch_size, dtype=np.uint32, order="c")
         self.clause_and_target = np.zeros(self.number_of_clauses * self.number_of_ta_chunks, dtype=np.uint32, order="c")
         self.clause_output_patchwise = np.empty(self.number_of_clauses * self.number_of_patches, dtype=np.uint32, order="c")
         self.feedback_to_ta = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
@@ -223,95 +221,64 @@ class ClauseBankCUDA(BaseClauseBank):
     def calculate_clause_outputs_predict(self, encoded_X, e):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
 
-        if not self.incremental or self.spatio_temporal:
-            if self.spatio_temporal:
-                lib.cb_prepare_hypervector(
-                    self.number_of_input_features,
-                    self.number_of_patches,
-                    self.hypervector_size,
-                    self.depth,
-                    xi_p,
-                    self.xih_p
-                )
+        if self.spatio_temporal:
+            lib.cb_prepare_hypervector(
+                self.number_of_input_features,
+                self.number_of_patches,
+                self.hypervector_size,
+                self.depth,
+                xi_p,
+                self.xih_p
+            )
 
-                lib.cb_calculate_spatio_temporal_features(
-                    self.ptr_ta_state,
-                    self.number_of_clauses,
-                    self.number_of_features,
-                    self.number_of_state_bits_ta,
-                    self.number_of_patches,
-                    self.depth,
-                    self.hypervector_size,
-                    self.hypervector_bits,
-                    self.cvip_p,
-                    self.cvipt_p,
-                    self.ctc_p,
-                    self.ctcb_p,
-                    self.cfcb_p,
-                    self.ctvt_p,
-                    self.ctvtl_p,
-                    self.a_p,
-                    self.hv_p,
-                    self.xih_p
-                )
-
-                lib.cb_calculate_clause_outputs_predict_spatio_temporal(
-                    self.ptr_ta_state,
-                    self.number_of_clauses,
-                    self.number_of_literals,
-                    self.number_of_state_bits_ta,
-                    self.number_of_patches,
-                    self.co_p,
-                    self.cvip_p,
-                    self.ctc_p,
-                    self.ctcb_p,
-                    self.cfcb_p,
-                    self.ctvt_p,
-                    self.ctvtl_p,
-                    self.xih_p
-                )
-            else:
-                lib.cb_calculate_clause_outputs_predict(
-                    self.ptr_ta_state,
-                    self.number_of_clauses,
-                    self.number_of_literals,
-                    self.number_of_state_bits_ta,
-                    self.number_of_patches,
-                    self.co_p,
-                    self.xih_p
-                )
-            return self.clause_output
-
-        if not self.incremental_clause_evaluation_initialized:
-
-            lib.cb_initialize_incremental_clause_calculation(
+            lib.cb_calculate_spatio_temporal_features(
                 self.ptr_ta_state,
-                self.lcm_p,
-                self.lcmp_p,
-                self.flpc_p,
+                self.number_of_clauses,
+                self.number_of_features,
+                self.number_of_state_bits_ta,
+                self.number_of_patches,
+                self.depth,
+                self.hypervector_size,
+                self.hypervector_bits,
+                self.cvip_p,
+                self.cvipt_p,
+                self.ctc_p,
+                self.ctcb_p,
+                self.cfcb_p,
+                self.ctvt_p,
+                self.ctvtl_p,
+                self.a_p,
+                self.hv_p,
+                self.xih_p
+            )
+
+            lib.cb_calculate_clause_outputs_predict_spatio_temporal(
+                self.ptr_ta_state,
                 self.number_of_clauses,
                 self.number_of_literals,
                 self.number_of_state_bits_ta,
-                self.previous_xi_p
+                self.number_of_patches,
+                self.co_p,
+                self.cvip_p,
+                self.ctc_p,
+                self.ctcb_p,
+                self.cfcb_p,
+                self.ctvt_p,
+                self.ctvtl_p,
+                self.xih_p
             )
-
-            self.incremental_clause_evaluation_initialized = True
-
-        if e % self.batch_size == 0:
-            lib.cb_calculate_clause_outputs_incremental_batch(
-                self.lcm_p,
-                self.lcmp_p,
-                self.flpc_p,
+        else:
+            lib.cb_calculate_clause_outputs_predict(
+                self.ptr_ta_state,
                 self.number_of_clauses,
                 self.number_of_literals,
+                self.number_of_state_bits_ta,
                 self.number_of_patches,
-                self.cob_p,
-                self.previous_xi_p,
-                xi_p,
-                np.minimum(self.batch_size, encoded_X.shape[0] - e)
+                self.co_p,
+                self.xih_p
             )
-
-        return self.clause_output_batch.reshape((self.batch_size, self.number_of_clauses))[e % self.batch_size, :]
+        
+        return self.clause_output
 
     def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
