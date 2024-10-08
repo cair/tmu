@@ -61,7 +61,7 @@ extern "C"
 
         for (int clause_node_chunk = index; clause_node_chunk < (number_of_clauses)*(number_of_node_chunks); clause_node_chunk += stride) {
             int clause = clause_node_chunk / number_of_node_chunks;
-            /int node_chunk = clause_node_chunk % number_of_node_chunks;
+            int node_chunk = clause_node_chunk % number_of_node_chunks;
 
             // unsigned int *ta_state = &global_ta_state[clause*number_of_ta_chunks*number_of_state_bits];
 
