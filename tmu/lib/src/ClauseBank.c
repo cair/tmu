@@ -1573,7 +1573,7 @@ void cb_calculate_spatio_temporal_features(
 					&Xi[patch*number_of_ta_chunks]
 				);
 
-				if (d == 0) {
+				if (d == 0 && j == 0) {
 					unsigned int patch_chunk = patch / 32;
 					unsigned int patch_pos = patch % 32;
 
