@@ -355,6 +355,44 @@ class ClauseBankCUDA(BaseClauseBank):
                 self.xih_p
             )
 
+            current_clause_node_output = self.current_clause_node_output_test_gpu
+            next_clause_node_output = self.current_clause_node_output_test_gpu
+
+            clause_bank = self.clause_bank.reshape(-1)
+            self.ta_state_gpu = cuda.mem_alloc(clause_bank.nbytes)
+            cuda.memcpy_htod(self.ta_state_gpu, clause_bank)
+
+            encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].nbytes)
+            cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :])
+
+            for k in range(self.hypervector_size*self.depth, self.number_of_features):
+                chunk_nr = k // 32
+                chunk_pos = k % 32
+                attention[chunk_nr] |= (1 << chunk_pos)
+
+                chunk_nr = (k + self.number_of_features) // 32
+                chunk_pos = (k + number_of_features) % 32
+
+                attention[chunk_nr] |= (1 << chunk_pos);
+            cuda.memcpy_htod(self.attention_gpu, self.attention)
+
+            self.calculate_clause_value_in_patch_gpu.prepared_call(
+                self.grid,
+                self.block,
+                self.number_of_clauses,
+                self.number_of_features,
+                self.number_of_state_bits_ta,
+                self.ta_state_gpu,
+                current_clause_node_output,
+                next_clause_node_output,
+                self.attention_gpu,
+                encoded_X_gpu
+            )
+            cuda.Context.synchronize()
+
+            cuda.memcpy_dtoh(self.current_clause_node_output_test, self.current_clause_node_output_test_gpu)
+            ccnot_p = ffi.cast("unsigned int *", self.current_clause_node_output_test.ctypes.data)
+
             lib.cb_calculate_spatio_temporal_features(
                 self.ptr_ta_state,
                 self.number_of_clauses,
@@ -373,7 +411,8 @@ class ClauseBankCUDA(BaseClauseBank):
                 self.ctvtl_p,
                 self.a_p,
                 self.hv_p,
-                self.xih_p
+                self.xih_p,
+                ccnot_p
             )
 
             lib.cb_calculate_clause_outputs_update_spatio_temporal(
