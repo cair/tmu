@@ -41,6 +41,11 @@ extern "C"
         int index = blockIdx.x * blockDim.x + threadIdx.x;
         int stride = blockDim.x * gridDim.x;
 
+
+        if (index != 0) {
+            return;
+        }
+
         unsigned int clause_node_output;
 
         unsigned int filter;
@@ -59,7 +64,7 @@ extern "C"
             node_filter = 0xffffffff;
         }
 
-        for (int clause_node_chunk = index; clause_node_chunk < (number_of_clauses)*(number_of_node_chunks); clause_node_chunk += stride) {
+        for (int clause_node_chunk = 0; clause_node_chunk < (number_of_clauses)*(number_of_node_chunks); clause_node_chunk += 1) {
             int clause = clause_node_chunk / number_of_node_chunks;
             int node_chunk = clause_node_chunk % number_of_node_chunks;
 
