@@ -266,12 +266,12 @@ class ClauseBankCUDA(BaseClauseBank):
             for k in range(self.hypervector_size*self.depth, self.number_of_features):
                 chunk_nr = k // 32
                 chunk_pos = k % 32
-                attention[chunk_nr] |= (1U << chunk_pos)
+                attention[chunk_nr] |= (1 << chunk_pos)
 
                 chunk_nr = (k + self.number_of_features) // 32
                 chunk_pos = (k + number_of_features) % 32
 
-                attention[chunk_nr] |= (1U << chunk_pos);
+                attention[chunk_nr] |= (1 << chunk_pos);
             cuda.memcpy_htod(self.attention_gpu, self.attention)
 
             self.calculate_clause_value_in_patch_gpu.prepared_call(
