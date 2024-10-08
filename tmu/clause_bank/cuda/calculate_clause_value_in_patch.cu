@@ -36,8 +36,7 @@ extern "C"
         int *global_clause_node_output,
         int *global_clause_node_output_next,
         unsigned int *literal_active,
-        unsigned int *global_X,
-        int e
+        unsigned int *X
     )
     {
         int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -60,8 +59,6 @@ extern "C"
         } else {
             node_filter = 0xffffffff;
         }
-
-        unsigned int *X = &global_X[e * number_of_ta_chunks * NUMBER_OF_PATCHES];
 
         for (int clause_node_chunk = index; clause_node_chunk < (number_of_clauses)*(number_of_node_chunks); clause_node_chunk += stride) {
             int clause = clause_node_chunk / number_of_node_chunks;

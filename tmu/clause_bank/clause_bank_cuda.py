@@ -120,7 +120,7 @@ class ClauseBankCUDA(BaseClauseBank):
 
         mod = load_cuda_kernel(parameters, "cuda/calculate_clause_value_in_patch.cu")
         self.clause_value_in_patch_gpu = mod.get_function("calculate_clause_value_in_patch")
-        self.clause_value_in_patch_gpu.prepare("PiiiPPPPPi")
+        self.clause_value_in_patch_gpu.prepare("PiiiPPPPP")
 
         self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
         self.clause_and_target = np.zeros(self.number_of_clauses * self.number_of_ta_chunks, dtype=np.uint32, order="c")
@@ -263,20 +263,19 @@ class ClauseBankCUDA(BaseClauseBank):
             self.encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].nbytes)
             cuda.memcpy_htod(self.encoded_X_gpu, encoded_X[e, :])
 
-            # self.calculate_clause_value_in_patch.prepared_call(
-            #     self.grid,
-            #     self.block,
-            #     self.number_of_clauses,
-            #     self.number_of_features,
-            #     self.number_of_state_bits_ta,
-            #     self.ta_state_gpu,
-            #     current_clause_node_output,
-            #     next_clause_node_output,
-            #     self.attention_gpu,
-            #     encoded_X_gpu,
-            #     e
-            # )
-            # cuda.Context.synchronize()
+            self.calculate_clause_value_in_patch.prepared_call(
+                self.grid,
+                self.block,
+                self.number_of_clauses,
+                self.number_of_features,
+                self.number_of_state_bits_ta,
+                self.ta_state_gpu,
+                current_clause_node_output,
+                next_clause_node_output,
+                self.attention_gpu,
+                encoded_X_gpu
+            )
+            cuda.Context.synchronize()
 
             lib.cb_calculate_spatio_temporal_features(
                 self.ptr_ta_state,
