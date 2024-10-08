@@ -144,7 +144,8 @@ void cb_calculate_spatio_temporal_features(
         unsigned int *clause_truth_value_transitions_length,
         unsigned int *attention,
         unsigned int *hypervectors,
-        unsigned int *Xi
+        unsigned int *Xi,
+        unsigned int *clause_node_output
 );
 
 void cb_calculate_clause_outputs_predict_spatio_temporal(

@@ -1524,7 +1524,8 @@ void cb_calculate_spatio_temporal_features(
         unsigned int *clause_truth_value_transitions_length,
         unsigned int *attention,
         unsigned int *hypervectors,
-        unsigned int *Xi
+        unsigned int *Xi,
+        unsigned int *clause_node_output
 )
 {
 	int dim_x = 26;
@@ -1542,6 +1543,7 @@ void cb_calculate_spatio_temporal_features(
 	}
 
 	unsigned int number_of_ta_chunks = (number_of_literals-1)/32 + 1;
+	unsigned int number_of_patch_chunks = (number_of_patches-1)/32 + 1;
 
 	memset(attention, 0, number_of_ta_chunks * sizeof(unsigned int));
 	for (int k = hypervector_size*depth; k < number_of_features; ++k) {
@@ -1570,6 +1572,15 @@ void cb_calculate_spatio_temporal_features(
 					attention,
 					&Xi[patch*number_of_ta_chunks]
 				);
+
+				if (d == 0) {
+					unsigned int patch_chunk = patch / 32;
+					unsigned int patch_pos = patch % 32;
+
+					if ((clause_output_node[clause*number_of_patch_chunks + patch_chunk] & (1 < patch_pos)) != clause_value_in_patch[patch] ) {
+						printf("ERROR\n");
+					}
+				}
 			}
 
 			for (int patch = 0; patch < number_of_patches; ++patch) {

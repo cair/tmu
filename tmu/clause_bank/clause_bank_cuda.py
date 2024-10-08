@@ -130,7 +130,8 @@ class ClauseBankCUDA(BaseClauseBank):
         self.literal_clause_count = np.empty(self.number_of_literals, dtype=np.uint32, order="c")
         self.type_ia_feedback_counter = np.zeros(self.number_of_clauses, dtype=np.uint32, order="c")
         
-        self.current_clause_node_output_test_gpu = cuda.mem_alloc(int(self.number_of_clauses * self.number_of_patch_chunks) * 4)
+        self.current_clause_node_output_test = np.empty((self.number_of_clauses, self.number_of_patch_chunks), dtype=np.uint32, order="c")
+        self.current_clause_node_output_test_gpu = cuda.mem_alloc(self.current_clause_node_output_test.nbytes)
         self.next_clause_node_output_test_gpu = cuda.mem_alloc(int(self.number_of_clauses * self.number_of_patch_chunks) * 4)
         
         if self.spatio_temporal:
@@ -147,6 +148,7 @@ class ClauseBankCUDA(BaseClauseBank):
             self.clause_truth_value_transitions_length = np.empty(self.number_of_patches, dtype=np.uint32, order="c")
 
             self.attention = np.empty(self.number_of_ta_chunks, dtype=np.uint32, order="c")
+            self.attention_gpu = cuda.mem_alloc(self.attention.nbytes)
 
             self.hypervectors = np.empty((self.number_of_clauses, self.hypervector_bits), dtype=np.uint32, order="c")
             indexes = np.arange(self.hypervector_size, dtype=np.uint32)
@@ -258,11 +260,19 @@ class ClauseBankCUDA(BaseClauseBank):
             self.ta_state_gpu = cuda.mem_alloc(clause_bank.nbytes)
             cuda.memcpy_htod(self.ta_state_gpu, clause_bank)
 
-            self.attention_gpu = cuda.mem_alloc(self.attention.nbytes)
-            cuda.memcpy_htod(self.attention_gpu, self.attention)
-
             encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].nbytes)
             cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :])
+
+            for k in range(self.hypervector_size*self.depth, self.number_of_features):
+                chunk_nr = k // 32
+                chunk_pos = k % 32
+                attention[chunk_nr] |= (1U << chunk_pos)
+
+                chunk_nr = (k + self.number_of_features) // 32
+                chunk_pos = (k + number_of_features) % 32
+
+                attention[chunk_nr] |= (1U << chunk_pos);
+            cuda.memcpy_htod(self.attention_gpu, self.attention)
 
             self.calculate_clause_value_in_patch_gpu.prepared_call(
                 self.grid,
@@ -277,6 +287,9 @@ class ClauseBankCUDA(BaseClauseBank):
                 encoded_X_gpu
             )
             cuda.Context.synchronize()
+
+            cuda.memcpy_dtoh(self.current_clause_node_output_test, self.current_clause_node_output_test_gpu)
+            ccnot_p = ffi.cast("unsigned int *", self.current_clause_node_output_test.ctypes.data)
 
             lib.cb_calculate_spatio_temporal_features(
                 self.ptr_ta_state,
@@ -296,7 +309,8 @@ class ClauseBankCUDA(BaseClauseBank):
                 self.ctvtl_p,
                 self.a_p,
                 self.hv_p,
-                self.xih_p
+                self.xih_p,
+                ccnot_p
             )
 
             lib.cb_calculate_clause_outputs_predict_spatio_temporal(
