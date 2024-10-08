@@ -65,20 +65,20 @@ extern "C"
 
             unsigned int *ta_state = &global_ta_state[clause*number_of_ta_chunks*number_of_state_bits];
 
-            // clause_node_output = ~0;
-            // for (int node_pos = 0; (node_pos < 32) && ((node_chunk * 32 + node_pos) < NUMBER_OF_PATCHES); ++node_pos) {
-            //     int node = node_chunk * 32 + node_pos;
+            clause_node_output = ~0;
+            for (int node_pos = 0; (node_pos < 32) && ((node_chunk * 32 + node_pos) < NUMBER_OF_PATCHES); ++node_pos) {
+                int node = node_chunk * 32 + node_pos;
 
-            //     for (int la_chunk = 0; la_chunk < number_of_ta_chunks-1; ++la_chunk) {
-            //         if ((ta_state[la_chunk*number_of_state_bits + number_of_state_bits - 1] & (X[node*number_of_ta_chunks + la_chunk] | (!literal_active[la_chunk]))) != ta_state[la_chunk*number_of_state_bits + number_of_state_bits - 1]) {
-            //             clause_node_output &= ~(1 << node_pos);
-            //         }
-            //     }
+                for (int la_chunk = 0; la_chunk < number_of_ta_chunks-1; ++la_chunk) {
+                    if ((ta_state[la_chunk*number_of_state_bits + number_of_state_bits - 1] & (X[node*number_of_ta_chunks + la_chunk] | (!literal_active[la_chunk]))) != ta_state[la_chunk*number_of_state_bits + number_of_state_bits - 1]) {
+                        clause_node_output &= ~(1 << node_pos);
+                    }
+                }
 
-            //     if ((ta_state[(number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits - 1] & (X[node*number_of_ta_chunks + number_of_ta_chunks-1] | (!literal_active[number_of_ta_chunks-1])) & filter) != (ta_state[(number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits - 1] & filter)) {
-            //         clause_node_output &= ~(1 << node_pos);
-            //     }
-            // }
+                if ((ta_state[(number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits - 1] & (X[node*number_of_ta_chunks + number_of_ta_chunks-1] | (!literal_active[number_of_ta_chunks-1])) & filter) != (ta_state[(number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits - 1] & filter)) {
+                    clause_node_output &= ~(1 << node_pos);
+                }
+            }
 
             if (node_chunk == number_of_node_chunks - 1) {
                 global_clause_node_output[clause*number_of_node_chunks + node_chunk] = clause_node_output & node_filter;

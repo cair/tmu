@@ -264,6 +264,8 @@ class ClauseBankCUDA(BaseClauseBank):
             encoded_X_gpu = cuda.mem_alloc(encoded_X[e, :].nbytes)
             cuda.memcpy_htod(encoded_X_gpu, encoded_X[e, :])
 
+            print( encoded_X[e, :].shape)
+
             self.calculate_clause_value_in_patch_gpu.prepared_call(
                 self.grid,
                 self.block,
