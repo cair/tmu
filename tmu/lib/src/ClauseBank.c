@@ -320,7 +320,7 @@ static inline unsigned int cb_calculate_clause_output_with_literal_active(
 	unsigned int output = 1;
 	for (int k = 0; k < number_of_ta_chunks-1; k++) {
 		unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
-		output = output && (ta_state[pos] & (Xi[number_of_ta_chunks + k] | (~literal_active[k]))) == ta_state[pos];
+		output = output && (ta_state[pos] & (Xi[k] | (~literal_active[k]))) == ta_state[pos];
 
 		if (!output) {
 			break;
@@ -329,7 +329,7 @@ static inline unsigned int cb_calculate_clause_output_with_literal_active(
 
 	unsigned int pos = (number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits-1;
 	output = output &&
-		(ta_state[pos] & (Xi[number_of_ta_chunks + number_of_ta_chunks - 1] | (~literal_active[number_of_ta_chunks - 1])) & filter) ==
+		(ta_state[pos] & (Xi[number_of_ta_chunks - 1] | (~literal_active[number_of_ta_chunks - 1])) & filter) ==
 		(ta_state[pos] & filter);	
 	
 	return output;
