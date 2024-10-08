@@ -33,8 +33,8 @@ extern "C"
         int number_of_literals,
         int number_of_state_bits,
         unsigned int *global_ta_state,
-        int *global_current_clause_node_output,
-        int *global_next_clause_node_output,
+        int *global_clause_node_output,
+        int *global_clause_node_output_next,
         unsigned int *literal_active,
         unsigned int *global_X,
         int e
