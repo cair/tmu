@@ -63,7 +63,7 @@ extern "C"
             int clause = clause_node_chunk / number_of_node_chunks;
             int node_chunk = clause_node_chunk % number_of_node_chunks;
 
-            // unsigned int *ta_state = &global_ta_state[clause*number_of_ta_chunks*number_of_state_bits];
+            unsigned int *ta_state = &global_ta_state[clause*number_of_ta_chunks*number_of_state_bits];
 
             // clause_node_output = ~0;
             // for (int node_pos = 0; (node_pos < 32) && ((node_chunk * 32 + node_pos) < NUMBER_OF_PATCHES); ++node_pos) {
