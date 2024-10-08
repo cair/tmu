@@ -80,7 +80,6 @@ def load_cuda_kernel(parameters, file: str):
     
 class ClauseBankCUDA(BaseClauseBank):
     clause_bank: np.ndarray
-    incremental_clause_evaluation_initialized: bool
     co_p = None  # _cffi_backend._CDataBase
     cob_p = None  # _cffi_backend._CDataBase
     ptr_clause_and_target = None  # _cffi_backend._CDataBase
@@ -100,7 +99,6 @@ class ClauseBankCUDA(BaseClauseBank):
 
         assert isinstance(number_of_state_bits_ta, int)
         self.number_of_state_bits_ta = number_of_state_bits_ta
-        self.incremental = incremental
 
         self.clause_output = np.empty(self.number_of_clauses, dtype=np.uint32, order="c")
         self.clause_and_target = np.zeros(self.number_of_clauses * self.number_of_ta_chunks, dtype=np.uint32, order="c")
@@ -214,8 +212,6 @@ class ClauseBankCUDA(BaseClauseBank):
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta)))
 
         self.actions = np.ascontiguousarray(np.zeros(self.number_of_ta_chunks, dtype=np.uint32))
-
-        self.incremental_clause_evaluation_initialized = False
 
     def calculate_clause_outputs_predict(self, encoded_X, e):
         xi_p = ffi.cast("unsigned int *", encoded_X[e, :].ctypes.data)
@@ -445,8 +441,6 @@ class ClauseBankCUDA(BaseClauseBank):
                 ptr_xi
             )
 
-        self.incremental_clause_evaluation_initialized = False
-
     def type_ii_feedback(
         self,
         update_p,
@@ -491,8 +485,6 @@ class ClauseBankCUDA(BaseClauseBank):
                 ptr_literal_active,
                 ptr_xi
             )
-
-        self.incremental_clause_evaluation_initialized = False
 
     def calculate_literal_clause_frequency(
             self,
