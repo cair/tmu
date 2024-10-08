@@ -78,7 +78,7 @@ extern "C"
                     }
                 }
 
-                if ((ta_state[(number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits - 1] & (X[node*number_of_ta_chunks + number_of_ta_chunks-1] | (!literal_active[la_chunk])) & filter) != (ta_state[(number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits - 1] & filter)) {
+                if ((ta_state[(number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits - 1] & (X[node*number_of_ta_chunks + number_of_ta_chunks-1] | (!literal_active[number_of_ta_chunks-1])) & filter) != (ta_state[(number_of_ta_chunks-1)*number_of_state_bits + number_of_state_bits - 1] & filter)) {
                     clause_node_output &= ~(1 << node_pos);
                 }
             }
