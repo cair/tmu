@@ -1585,6 +1585,17 @@ void cb_calculate_spatio_temporal_features(
 			                }
 			                printf("\n");
 
+			                printf("+");
+			                for (int k = 0; k < number_of_literals; ++k) {
+			                    int literal_chunk = k / 32;
+			                    int literal_pos = k % 32;
+
+			                    if (Xi[patch*number_of_ta_chunks + literal_chunk] & (1 << literal_pos)) {
+			                        printf(" %d", k);
+			                    }
+			                }
+			                printf("\n");
+
 					unsigned int patch_chunk = patch / 32;
 					unsigned int patch_pos = patch % 32;
 
