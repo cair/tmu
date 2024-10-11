@@ -321,7 +321,7 @@ static inline unsigned int cb_calculate_clause_output_with_literal_active(
 
 	if (print) {
 		printf("@");
-                for (int k = 0; k < 1028; ++k) {
+                for (int k = 0; k < 4; ++k) {
                     int literal_chunk = k / 32;
                     int literal_pos = k % 32;
 

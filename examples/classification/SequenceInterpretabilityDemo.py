@@ -35,22 +35,22 @@ def main(args):
         #position_3 = np.random.randint(position_2+1, args.sequence_length)
         
         if Y_train[i] == 0:
-            X_train[i,0,position_1,0] = 1
+            X_train[i,0,position_1,0] = 0
             X_train[i,0,position_1,1] = 0
 
             X_train[i,0,position_2,0] = 0
-            X_train[i,0,position_2,1] = 1
-
-            X_train[i,0,position_3,0] = 0
-            X_train[i,0,position_3,1] = 1
-        elif Y_train[i] == 1:
-            X_train[i,0,position_1,0] = 0
-            X_train[i,0,position_1,1] = 1
-
-            X_train[i,0,position_2,0] = 1
             X_train[i,0,position_2,1] = 0
 
             X_train[i,0,position_3,0] = 0
+            X_train[i,0,position_3,1] = 0
+        elif Y_train[i] == 1:
+            X_train[i,0,position_1,0] = 1
+            X_train[i,0,position_1,1] = 1
+
+            X_train[i,0,position_2,0] = 1
+            X_train[i,0,position_2,1] = 1
+
+            X_train[i,0,position_3,0] = 1
             X_train[i,0,position_3,1] = 1
         else:
             X_train[i,0,position_1,0] = 0
@@ -59,8 +59,8 @@ def main(args):
             X_train[i,0,position_2,0] = 0
             X_train[i,0,position_2,1] = 1
 
-            X_train[i,0,position_3,0] = 1
-            X_train[i,0,position_3,1] = 0
+            X_train[i,0,position_3,0] = 0
+            X_train[i,0,position_3,1] = 1
 
         if np.random.rand() <= args.noise:
             Y_train[i] = np.random.choice(np.setdiff1d([0,1,2], [Y_train[i]]))
