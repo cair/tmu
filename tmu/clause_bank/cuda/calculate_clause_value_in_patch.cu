@@ -70,7 +70,7 @@ extern "C"
 
             unsigned int *ta_state = &global_ta_state[clause*number_of_ta_chunks*number_of_state_bits];
 
-            if (clause == 0) {
+            if (0 && clause == 0) {
                 printf("*");
                 for (int k = 0; k < number_of_literals; ++k) {
                     int literal_chunk = k / 32;
@@ -108,7 +108,7 @@ extern "C"
                     clause_node_output &= ~(1 << node_pos);
                 }
 
-                if (clause == 0 && node == 0) {
+                if (0 && clause == 0 && node == 0) {
                     printf("V: %d\n", clause_node_output & (1 << node_pos));
                 }
             }

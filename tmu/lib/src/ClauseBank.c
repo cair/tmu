@@ -1580,37 +1580,37 @@ void cb_calculate_spatio_temporal_features(
 		filter,
 		attention,
 		Xi,
-		1
+		0
 	);
 
-        printf("-");
-        for (int k = 0; k < number_of_literals; ++k) {
-            int literal_chunk = k / 32;
-            int literal_pos = k % 32;
+        // printf("-");
+        // for (int k = 0; k < number_of_literals; ++k) {
+        //     int literal_chunk = k / 32;
+        //     int literal_pos = k % 32;
 
-            if (ta_state[literal_chunk*number_of_state_bits + number_of_state_bits - 1] & (1 << literal_pos)) {
-                printf(" %d", k);
-            }
-        }
-        printf("\n");
+        //     if (ta_state[literal_chunk*number_of_state_bits + number_of_state_bits - 1] & (1 << literal_pos)) {
+        //         printf(" %d", k);
+        //     }
+        // }
+        // printf("\n");
 
-        printf("+");
-        for (int k = 0; k < number_of_literals; ++k) {
-            int literal_chunk = k / 32;
-            int literal_pos = k % 32;
+        // printf("+");
+        // for (int k = 0; k < number_of_literals; ++k) {
+        //     int literal_chunk = k / 32;
+        //     int literal_pos = k % 32;
 
-            if (Xi[literal_chunk] & (1 << literal_pos)) {
-                printf(" %d", k);
-            }
-        }
-        printf("\n");
+        //     if (Xi[literal_chunk] & (1 << literal_pos)) {
+        //         printf(" %d", k);
+        //     }
+        // }
+        // printf("\n");
 
 
-	if (((clause_node_output[0] & 1) > 0) != clause_value) {
-		printf("ERROR %d %d\n", (clause_node_output[0] & 1) > 0, clause_value);
-	} else {
-		printf("CORRECT\n");
-	}
+	// if (((clause_node_output[0] & 1) > 0) != clause_value) {
+	// 	printf("ERROR %d %d\n", (clause_node_output[0] & 1) > 0, clause_value);
+	// } else {
+	// 	printf("CORRECT\n");
+	// }
 	
 	for (int d = 0; d < 0; ++d) {
 		for (int j = 0; j < number_of_clauses; j++) {
@@ -1625,41 +1625,8 @@ void cb_calculate_spatio_temporal_features(
 					filter,
 					attention,
 					&Xi[patch*number_of_ta_chunks],
-					(j == 0) && (d == 0) && (patch == 0)
+					0
 				);
-
-				if (d == 0 && j == 0 && patch == 0) {
-			                printf("-");
-			                for (int k = 0; k < number_of_literals; ++k) {
-			                    int literal_chunk = k / 32;
-			                    int literal_pos = k % 32;
-
-			                    if (ta_state[clause_pos + literal_chunk*number_of_state_bits + number_of_state_bits - 1] & (1 << literal_pos)) {
-			                        printf(" %d", k);
-			                    }
-			                }
-			                printf("\n");
-
-			                printf("+");
-			                for (int k = 0; k < number_of_literals; ++k) {
-			                    int literal_chunk = k / 32;
-			                    int literal_pos = k % 32;
-
-			                    if (Xi[literal_chunk] & (1 << literal_pos)) {
-			                        printf(" %d", k);
-			                    }
-			                }
-			                printf("\n");
-
-					unsigned int patch_chunk = patch / 32;
-					unsigned int patch_pos = patch % 32;
-
-					if (((clause_node_output[j*number_of_patch_chunks + patch_chunk] & (1 << patch_pos)) > 0) != clause_value_in_patch[patch] ) {
-						printf("ERROR %d %d %d %d %d %d\n", j, patch, patch_chunk, patch_pos, (clause_node_output[j*number_of_patch_chunks + patch_chunk] & (1 << patch_pos)) > 0, clause_value_in_patch[patch]);
-					} else {
-						printf("CORRECT\n");
-					}
-				}
 			}
 
 			for (int patch = 0; patch < number_of_patches; ++patch) {
