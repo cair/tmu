@@ -315,7 +315,7 @@ static inline unsigned int cb_calculate_clause_output_with_literal_active(
 	unsigned int filter,
 	unsigned int *literal_active,
 	unsigned int *Xi,
-	print
+	int print
 )
 {
 
