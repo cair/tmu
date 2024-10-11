@@ -1586,7 +1586,7 @@ void cb_calculate_spatio_temporal_features(
 					filter,
 					attention,
 					&Xi[patch*number_of_ta_chunks],
-					j == 0
+					(j == 0) && (d == 0) && (patch == 0)
 				);
 
 				if (d == 0 && j == 0 && patch == 0) {
