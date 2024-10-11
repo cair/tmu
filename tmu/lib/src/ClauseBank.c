@@ -1574,6 +1574,17 @@ void cb_calculate_spatio_temporal_features(
 				);
 
 				if (d == 0 && j == 0 && patch == 0) {
+			                printf("-");
+			                for (int k = 0; k < number_of_literals; ++k) {
+			                    int literal_chunk = k / 32;
+			                    int literal_pos = k % 32;
+
+			                    if (ta_state[clause_pos + literal_chunk*number_of_state_bits + number_of_state_bits - 1] & (1 << literal_pos)) {
+			                        printf(" %d", k);
+			                    }
+			                }
+			                printf("\n");
+
 					unsigned int patch_chunk = patch / 32;
 					unsigned int patch_pos = patch % 32;
 
