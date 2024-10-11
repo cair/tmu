@@ -76,22 +76,22 @@ def main(args):
         #position_3 = np.random.randint(position_2+1, args.sequence_length)
         
         if Y_test[i] == 0:
-            X_test[i,0,position_1,0] = 1
+            X_test[i,0,position_1,0] = 0
             X_test[i,0,position_1,1] = 0
 
             X_test[i,0,position_2,0] = 0
-            X_test[i,0,position_2,1] = 1
+            X_test[i,0,position_2,1] = 0
 
             X_test[i,0,position_3,0] = 0
-            X_test[i,0,position_3,1] = 1
+            X_test[i,0,position_3,1] = 0
         elif Y_test[i] == 1:
-            X_test[i,0,position_1,0] = 0
+            X_test[i,0,position_1,0] = 1
             X_test[i,0,position_1,1] = 1
 
             X_test[i,0,position_2,0] = 1
             X_test[i,0,position_2,1] = 0
 
-            X_test[i,0,position_3,0] = 0
+            X_test[i,0,position_3,0] = 1
             X_test[i,0,position_3,1] = 1
         else:
             X_test[i,0,position_1,0] = 0
@@ -100,8 +100,8 @@ def main(args):
             X_test[i,0,position_2,0] = 0
             X_test[i,0,position_2,1] = 1
 
-            X_test[i,0,position_3,0] = 1
-            X_test[i,0,position_3,1] = 0
+            X_test[i,0,position_3,0] = 0
+            X_test[i,0,position_3,1] = 1
 
     tm = TMClassifier(args.number_of_clauses, args.T, args.s, number_of_state_bits_ta=args.number_of_state_bits_ta, patch_dim=(1, 1), weighted_clauses=True, platform=args.platform, boost_true_positive_feedback=True, spatio_temporal=True, incremental=False, max_included_literals=args.max_included_literals, depth=args.depth)
 
