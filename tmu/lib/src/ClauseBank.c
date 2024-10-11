@@ -1605,11 +1605,9 @@ void cb_calculate_spatio_temporal_features(
         }
         printf("\n");
 
-	unsigned int patch_chunk = patch / 32;
-	unsigned int patch_pos = patch % 32;
 
-	if (((clause_node_output[j*number_of_patch_chunks + patch_chunk] & (1 << patch_pos)) > 0) != clause_value_in_patch[patch] ) {
-		printf("ERROR %d %d %d %d %d %d\n", j, patch, patch_chunk, patch_pos, (clause_node_output[j*number_of_patch_chunks + patch_chunk] & (1 << patch_pos)) > 0, clause_value_in_patch[patch]);
+	if (((clause_node_output[0] & 1) > 0) != clause_value) {
+		printf("ERROR %d %d\n", (clause_node_output[0] & 1) > 0, clause_value);
 	} else {
 		printf("CORRECT\n");
 	}
