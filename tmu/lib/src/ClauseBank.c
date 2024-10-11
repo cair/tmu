@@ -331,6 +331,7 @@ static inline unsigned int cb_calculate_clause_output_with_literal_active(
                 }
                 printf("\n");
 	}
+
 	unsigned int output = 1;
 	for (int k = 0; k < number_of_ta_chunks-1; k++) {
 		unsigned int pos = k*number_of_state_bits + number_of_state_bits-1;
@@ -1585,7 +1586,7 @@ void cb_calculate_spatio_temporal_features(
 					filter,
 					attention,
 					&Xi[patch*number_of_ta_chunks],
-					clause == 0
+					j == 0
 				);
 
 				if (d == 0 && j == 0 && patch == 0) {
