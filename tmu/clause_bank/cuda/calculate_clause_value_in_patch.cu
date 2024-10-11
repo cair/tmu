@@ -81,6 +81,17 @@ extern "C"
                     }
                 }
                 printf("\n");
+
+                printf("?");
+                for (int k = 0; k < number_of_literals; ++k) {
+                    int literal_chunk = k / 32;
+                    int literal_pos = k % 32;
+
+                    if (X[0*number_of_ta_chunks + literal_chunk*number_of_state_bits + number_of_state_bits - 1] & (1 << literal_pos)) {
+                        printf(" %d", k);
+                    }
+                }
+                printf("\n");
             }
 
             clause_node_output = ~0;
@@ -97,7 +108,7 @@ extern "C"
                     clause_node_output &= ~(1 << node_pos);
                 }
 
-                if (node == 0) {
+                if (clause == 0 && node == 0) {
                     printf("V: %d\n", clause_node_output & (1 << node_pos));
                 }
             }
