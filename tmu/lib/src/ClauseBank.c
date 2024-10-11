@@ -1573,7 +1573,48 @@ void cb_calculate_spatio_temporal_features(
 		attention[chunk_nr] |= (1U << chunk_pos);
 	}
 
-	for (int d = 0; d < 1; ++d) {
+	int clause_value = cb_calculate_clause_output_with_literal_active(
+		&ta_state[0],
+		number_of_ta_chunks,
+		number_of_state_bits,
+		filter,
+		attention,
+		Xi,
+		1
+	);
+
+        printf("-");
+        for (int k = 0; k < number_of_literals; ++k) {
+            int literal_chunk = k / 32;
+            int literal_pos = k % 32;
+
+            if (ta_state[literal_chunk*number_of_state_bits + number_of_state_bits - 1] & (1 << literal_pos)) {
+                printf(" %d", k);
+            }
+        }
+        printf("\n");
+
+        printf("+");
+        for (int k = 0; k < number_of_literals; ++k) {
+            int literal_chunk = k / 32;
+            int literal_pos = k % 32;
+
+            if (Xi[literal_chunk] & (1 << literal_pos)) {
+                printf(" %d", k);
+            }
+        }
+        printf("\n");
+
+	unsigned int patch_chunk = patch / 32;
+	unsigned int patch_pos = patch % 32;
+
+	if (((clause_node_output[j*number_of_patch_chunks + patch_chunk] & (1 << patch_pos)) > 0) != clause_value_in_patch[patch] ) {
+		printf("ERROR %d %d %d %d %d %d\n", j, patch, patch_chunk, patch_pos, (clause_node_output[j*number_of_patch_chunks + patch_chunk] & (1 << patch_pos)) > 0, clause_value_in_patch[patch]);
+	} else {
+		printf("CORRECT\n");
+	}
+	
+	for (int d = 0; d < 0; ++d) {
 		for (int j = 0; j < number_of_clauses; j++) {
 			unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
 
