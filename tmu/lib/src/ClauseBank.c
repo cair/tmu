@@ -1573,7 +1573,7 @@ void cb_calculate_spatio_temporal_features(
 		attention[chunk_nr] |= (1U << chunk_pos);
 	}
 
-	for (int d = 0; d < depth; ++d) {
+	for (int d = 0; d < 1; ++d) {
 		for (int j = 0; j < number_of_clauses; j++) {
 			unsigned int clause_pos = j*number_of_ta_chunks*number_of_state_bits; // Calculates the position of the Tsetlin automata states of the current clause
 
