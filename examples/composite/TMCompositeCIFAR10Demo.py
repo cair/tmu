@@ -50,10 +50,10 @@ def main(args):
 
     class TMCompositeCheckpointCallback(TMCompositeCallback):
 
-        def on_epoch_component_begin(self, component, epoch, logs=None):
+        def on_epoch_component_begin(self, component, epoch, logs=None, **kwargs):
             pass
 
-        def on_epoch_component_end(self, component, epoch, logs=None):
+        def on_epoch_component_end(self, component, epoch, logs=None, **kwargs):
             component.save(component_path / f"{component}-{epoch}.pkl")
 
     class TMCompositeEvaluationCallback(TMCompositeCallback):

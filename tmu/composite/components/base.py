@@ -1,4 +1,6 @@
 import abc
+import uuid
+
 import numpy as np
 from pathlib import Path
 from typing import Union, Tuple
@@ -13,6 +15,7 @@ class TMComponent(abc.ABC):
         self.model_cls = model_cls
         self.model_config = model_config
         self.epochs = epochs
+        self.uuid = uuid.uuid4()
 
         # Warn about unused kwargs
         if kwargs:
@@ -36,19 +39,23 @@ class TMComponent(abc.ABC):
         return data
 
     def fit(self, data: dict) -> None:
-        x_train, y_train = data["X"], data["Y"]
+        try:
+            x_train, y_train = data["X"], data["Y"]
 
-        # Check if type is uint32
-        if x_train.dtype != np.uint32:
-            x_train = x_train.astype(np.uint32)
+            # Check if type is uint32
+            if x_train.dtype != np.uint32:
+                x_train = x_train.astype(np.uint32)
 
-        if y_train.dtype != np.uint32:
-            y_train = y_train.astype(np.uint32)
+            if y_train.dtype != np.uint32:
+                y_train = y_train.astype(np.uint32)
 
-        self.model_instance.fit(
-            x_train,
-            y_train,
-        )
+            self.model_instance.fit(
+                x_train,
+                y_train,
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e
 
     def predict(self, data: dict) -> Tuple[np.array, np.array]:
         X_test = data["X"]
