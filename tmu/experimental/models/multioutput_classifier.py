@@ -305,30 +305,6 @@ class TMCoalesceMultiOuputClassifier(
             class_sums = np.clip(class_sums, -self.T, self.T).astype(np.int32)
         return class_sums
 
-    def to_cpu(self):
-        if self.platform in ["GPU", "CUDA"]:
-            arr = np.empty((self.X_shape))
-            clause_bank_gpu = self.clause_bank
-            clause_bank_gpu.synchronize_clause_bank()
-            clause_bank_type, clause_bank_args = self._build_cpu_bank(arr)
-            clause_bank_cpu = clause_bank_type(**clause_bank_args)
-
-            clause_bank_cpu.clause_bank = clause_bank_gpu.clause_bank
-            clause_bank_cpu.clause_output = clause_bank_gpu.clause_output
-            clause_bank_cpu.literal_clause_count = clause_bank_gpu.literal_clause_count
-
-            clause_bank_cpu._cffi_init()
-
-            self.clause_bank = clause_bank_cpu
-            self.platform = "CPU"
-            print("to_cpu(): Successful....")
-
-        elif self.platform == "CPU":
-            print("to_cpu(): Already CPU....")
-
-        else:
-            print("to_cpu(): Not implemented....")
-
     def clause_precision(self, the_class, X, Y):
         clause_outputs = self.transform(X)
         weights = self.weight_banks[the_class].get_weights()
