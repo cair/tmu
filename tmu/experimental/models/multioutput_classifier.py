@@ -20,7 +20,6 @@
 import numpy as np
 
 # import pandas as pd
-from tqdm import tqdm
 
 from tmu.models.base import MultiWeightBankMixin, SingleClauseBankMixin, TMBaseModel
 from tmu.util.encoded_data_cache import DataEncoderCache
@@ -52,7 +51,7 @@ class TMCoalesceMultiOuputClassifier(
         weighted_clauses=False,
         clause_drop_p=0.0,
         literal_drop_p=0.0,
-        q=-1,
+        q=1.0,
         seed=None,
     ):
         super().__init__(
@@ -95,8 +94,6 @@ class TMCoalesceMultiOuputClassifier(
 
     def init_weight_bank(self, X: np.ndarray, Y: np.ndarray):
         self.number_of_classes = Y.shape[1]
-        if self.q < 0:
-            self.q = max(1, self.number_of_classes - 1) / 2
         self.weight_banks.set_clause_init(
             WeightBank,
             dict(
@@ -114,7 +111,7 @@ class TMCoalesceMultiOuputClassifier(
         if self.max_positive_clauses is None:
             self.max_positive_clauses = self.number_of_clauses
 
-    def fit(self, X, Y, shuffle=True, progress_bar=False, met=False, **kwargs):
+    def fit(self, X, Y, shuffle=True, **kwargs):
         self.init(X, Y)
 
         encoded_X_train = self.train_encoder_cache.get_encoded_data(
@@ -154,8 +151,6 @@ class TMCoalesceMultiOuputClassifier(
         if shuffle:
             self.rng.shuffle(shuffled_index)
 
-        pbar = tqdm(shuffled_index) if progress_bar else shuffled_index
-
         # Combine all weight banks, to make use of faster numpy matrix operation
         self.wcomb = np.empty(
             (self.number_of_clauses, self.number_of_classes), dtype=np.int32
@@ -173,7 +168,7 @@ class TMCoalesceMultiOuputClassifier(
         self.update_p_per_sample = np.empty((X.shape[0], self.number_of_classes))
         # self.avg_n_neg_classes = 0
 
-        for e in pbar:
+        for e in shuffled_index:
             clause_outputs = self.clause_bank.calculate_clause_outputs_update(
                 self.literal_active, encoded_X_train, e
             )
@@ -259,30 +254,6 @@ class TMCoalesceMultiOuputClassifier(
                     self.wcomb[:, c] = self.weight_banks[c].get_weights()
                     self.update_ps[c] = 0.0
                     self.nf[c] += 1
-                    # self.avg_n_neg_classes += 1
-        # print(
-        #     f"Average num of neg classes selected = {self.avg_n_neg_classes / Y.shape[0]}"
-        # )
-        # print(
-        #     pd.DataFrame(
-        #         {
-        #             "n_pos": self.pf,
-        #             "n_neg": self.nf,
-        #             "R": self.pf / self.nf,
-        #             "n_lab": Y.sum(axis=0),
-        #             "n_lab_e": Y.sum(axis=0) / Y.shape[0],
-        #             "n_nlb": Y.shape[0] - Y.sum(axis=0),
-        #             "n_nlb_e": (Y.shape[0] - Y.sum(axis=0)) / Y.shape[0],
-        #         }
-        #     )
-        # )
-        if met:
-            return {
-                "pf": self.pf,
-                "nf": self.nf,
-                "class_sums": self.class_sums_per_sample,
-                "update_p": self.update_p_per_sample,
-            }
 
     def predict(
         self,
@@ -301,11 +272,10 @@ class TMCoalesceMultiOuputClassifier(
         shuffled_index = np.arange(X.shape[0])
         if shuffle:
             self.rng.shuffle(shuffled_index)
-        pbar = tqdm(shuffled_index) if progress_bar else shuffled_index
 
         # Compute class sums for all samples
         class_sums = np.empty((X.shape[0], self.number_of_classes))
-        for e in pbar:
+        for e in shuffled_index:
             class_sums[e, :] = self.compute_class_sums(
                 encoded_X_test, e, clip_class_sum
             )
