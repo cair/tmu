@@ -133,7 +133,8 @@ class ClauseBank(BaseClauseBank):
             order="c"
         )
 
-        self.clause_bank[:, :, 0: self.number_of_state_bits_ta - 1] = np.uint32(~0)
+        # TODO: MAKE issue for newer numpy version for np.uint32(-1)
+        self.clause_bank[:, :, 0: self.number_of_state_bits_ta - 1] = np.array(~0).astype(np.uint32)
         self.clause_bank[:, :, self.number_of_state_bits_ta - 1] = 0
         self.clause_bank = np.ascontiguousarray(self.clause_bank.reshape(
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta)))
@@ -142,7 +143,7 @@ class ClauseBank(BaseClauseBank):
 
         self.clause_bank_ind = np.empty(
             (self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ind), dtype=np.uint32)
-        self.clause_bank_ind[:, :, :] = np.uint32(~0)
+        self.clause_bank_ind[:, :, :] = np.array(~0).astype(np.uint32)
 
         self.clause_bank_ind = np.ascontiguousarray(self.clause_bank_ind.reshape(
             (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ind)))

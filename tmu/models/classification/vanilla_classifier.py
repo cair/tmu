@@ -24,6 +24,7 @@ from tmu.util.statistics import MetricRecorder
 from tmu.weight_bank import WeightBank
 import numpy as np
 import logging
+from tqdm import tqdm
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -396,7 +397,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
         if shuffle:
             self.rng.shuffle(sample_indices)
 
-        for sample_idx in sample_indices:
+        for sample_idx in tqdm( sample_indices ):
             target: int = Y[sample_idx]
             not_target: int | None = self.weight_banks.sample(exclude=[target])
 
@@ -436,7 +437,7 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
                 encoded_X_test=encoded_X_test,
                 ith_sample=i,
                 clip_class_sum=clip_class_sum
-            ) for i in range(X.shape[0])
+            ) for i in tqdm( range(X.shape[0]) )
         ])
 
         max_classes = np.argmax(class_sums, axis=1)

@@ -119,6 +119,10 @@ class ImplClauseBankCUDA(BaseClauseBank):
         self.calculate_clause_outputs_update_gpu = mod.get_function("calculate_clause_outputs_update")
         self.calculate_clause_outputs_update_gpu.prepare("PiiiPPPi")
 
+        mod = load_cuda_kernel(parameters, "cuda/calculate_clause_outputs_patchwise.cu")
+        self.calculate_clause_outputs_patchwise_gpu = mod.get_function("calculate_clause_outputs_patchwise")
+        self.calculate_clause_outputs_patchwise_gpu.prepare("PiiiPPi")
+
         mod = load_cuda_kernel(parameters, "cuda/clause_feedback.cu")
         self.type_i_feedback_gpu = mod.get_function("type_i_feedback")
         self.type_i_feedback_gpu.prepare("PPiiiffiiPPPi")
@@ -147,6 +151,7 @@ class ImplClauseBankCUDA(BaseClauseBank):
             dtype=np.uint32,
             order="c"
         )
+        self.clause_output_patchwise_gpu = self._profiler.profile(cuda.mem_alloc, self.clause_output_patchwise.nbytes)
 
         self.clause_active_gpu = self._profiler.profile(cuda.mem_alloc, self.clause_output.nbytes)
         self.literal_active_gpu = self._profiler.profile(cuda.mem_alloc, self.number_of_ta_chunks * 4)
@@ -219,17 +224,22 @@ class ImplClauseBankCUDA(BaseClauseBank):
         return self.clause_output
 
     def calculate_clause_outputs_patchwise(self, encoded_X, e):
-        xi_p = ffi.cast("unsigned int *", Xi.ctypes.data)
-        lib.cb_calculate_clause_outputs_patchwise(
-            self.cb_p,
+
+        self.calculate_clause_outputs_patchwise_gpu.prepared_call(
+            self.grid,
+            self.block,
+            self.clause_bank_gpu,
             self.number_of_clauses,
             self.number_of_literals,
             self.number_of_state_bits_ta,
-            self.number_of_patches,
-            self.cop_p,
-            xi_p
+            self.clause_output_patchwise_gpu,
+            encoded_X,
+            np.int32(e)
         )
+        self.cuda_ctx.synchronize()
+        self._profiler.profile(cuda.memcpy_dtoh, self.clause_output_patchwise, self.clause_output_patchwise_gpu)
         return self.clause_output_patchwise
+
 
     def type_i_feedback(
             self,
