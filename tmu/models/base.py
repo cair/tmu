@@ -189,7 +189,7 @@ class TMBaseModel:
     def fit(self, X, Y, *args, **kwargs):
         raise NotImplementedError("fit(self, X, Y, *args, **kwargs) is not implemented for your model")
 
-    def predict(self, X, shuffle=True):
+    def predict(self, X, shuffle=True) -> np.ndarray:
         raise NotImplementedError("predict(self, X: np.ndarray")
 
     def init_clause_bank(self, X: np.ndarray, Y: np.ndarray):
@@ -244,7 +244,6 @@ class TMBaseModel:
 
         if not cuda_installed:
             _LOGGER.warning("CUDA not installed, using CPU clause bank")
-            self.platform = "CPU"
             return self._build_cpu_bank(X=X)
 
         clause_bank_type = ClauseBankCUDA
