@@ -51,6 +51,8 @@ tests = [
 homepage = "https://github.com/cair/tmu/"
 repository = "https://github.com/cair/tmu/"
 
+[tool.basedpyright]
+typeCheckingMode = "standard"
 
 [tool.setuptools.package-dir]
 tmu = "tmu"

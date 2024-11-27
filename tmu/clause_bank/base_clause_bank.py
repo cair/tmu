@@ -91,3 +91,9 @@ class BaseClauseBank(CFFISerializable):
         pos = int(
             clause * self.number_of_ta_chunks * self.number_of_state_bits_ta + ta_chunk * self.number_of_state_bits_ta + self.number_of_state_bits_ta - 1)
         return (self.clause_bank[pos] & (1 << chunk_pos)) > 0
+
+    def get_literals(self):
+        nc, nl = self.number_of_clauses, self.number_of_literals
+        results = np.array([[self.get_ta_action(i, j) for j in range(nl)] for i in range(nc)])
+        return results.astype(np.int8)
+
