@@ -591,3 +591,12 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
     def number_of_absorbed_include_actions(self, the_class, clause):
         return self.clause_banks[the_class].number_of_absorbed_include_actions(clause)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Ensure all clause banks are synchronized before pickling
+        if hasattr(self, 'clause_banks'):
+            for bank in self.clause_banks:
+                if hasattr(bank, 'device') and bank.device is not None:
+                    bank.device.synchronize_clause_bank()
+        return state

@@ -79,35 +79,111 @@ def load_cuda_kernel(parameters, file: str):
     return module
 
 
-class ImplClauseBankCUDA(BaseClauseBank):
-    clause_bank_gpu = None
-    clause_bank_synchronized: bool
-
-    def __init__(
-            self,
-            seed: int,
-            number_of_state_bits_ta: int,
-            **kwargs
-    ):
+# Host branch: handles numpy based data and CPU operations
+class ClauseBankCudaHost(BaseClauseBank):
+    def __init__(self, seed: int, number_of_state_bits_ta: int, **kwargs):
         super().__init__(seed=seed, **kwargs)
-        self.grid = (16 * 13, 1, 1)
-        self.block = (128, 1, 1)
         self.number_of_state_bits_ta = number_of_state_bits_ta
+
+        # Initialize host arrays for clause outputs and literal counts
+        self.clause_output = np.empty(
+            int(self.number_of_clauses), 
+            dtype=np.uint32, 
+            order="C"
+        )
 
         self.clause_output_patchwise = np.empty(
             int(self.number_of_clauses * self.number_of_patches),
+            dtype=np.uint32, 
+            order="C"
+        )
+
+        self.literal_clause_count = np.empty(
+            int(self.number_of_literals), 
             dtype=np.uint32,
             order="C"
         )
 
+        self._initialize_clause_bank()
+
+    def _initialize_clause_bank(self):
+        self.clause_bank = np.empty(
+            shape=(self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ta),
+            dtype=np.uint32,
+            order="C"
+        )
+
+        self.clause_bank[:, :, 0:self.number_of_state_bits_ta - 1] = np.uint32(4294967295)  #np.uint32(~0)
+
+        self.clause_bank[:, :, self.number_of_state_bits_ta - 1] = 0
+        self.clause_bank = self.clause_bank.reshape(
+            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta),
+            order="C"
+        )
+
+    def get_ta_action(self, clause, ta):
+        return super().get_ta_action(clause, ta)
+
+    def number_of_include_actions(self, clause):
+        start = int(clause * self.number_of_ta_chunks * self.number_of_state_bits_ta +
+                    self.number_of_state_bits_ta - 1)
+        stop = int((clause + 1) * self.number_of_ta_chunks * self.number_of_state_bits_ta +
+                   self.number_of_state_bits_ta - 1)
+        return np.unpackbits(
+            np.ascontiguousarray(self.clause_bank[start:stop:self.number_of_state_bits_ta]).view('uint8')
+        ).sum()
+
+    def get_ta_state(self, clause, ta):
+        return super().get_ta_state(clause, ta)
+
+    def set_ta_state(self, clause, ta, state):
+        super().set_ta_state(clause, ta, state)
+
+    def _cffi_init(self):
+        # No extra CFFI initialization is required on the host side.
+        pass
+
+
+# Device branch: encapsulates all GPU related functions and memory
+class ClauseBankCudaDevice:
+    def __init__(self, coordinator):
+        self.coordinator = coordinator
+        self._profiler = CudaProfiler()
+        self.cuda_ctx = pycuda.autoinit.context
         self.rng_gen = curandom.XORWOWRandomNumberGenerator()
-        self.cuda_ctx: Context = pycuda.autoinit.context
+        # Allocate GPU memory for clause bank from host data
+        self.clause_bank_gpu = self._profiler.profile(
+            cuda.mem_alloc,
+            coordinator.host.clause_bank.nbytes
+        )
+        self._profiler.profile(
+            cuda.memcpy_htod, 
+            self.clause_bank_gpu,
+            coordinator.host.clause_bank
+        )
+        # Allocate other device memories
+        self.clause_output_gpu = self._profiler.profile(
+            cuda.mem_alloc,
+            coordinator.host.clause_output.nbytes
+        )
+        self.clause_output_patchwise_gpu = self._profiler.profile(
+            cuda.mem_alloc,
+            coordinator.host.clause_output_patchwise.nbytes
+        )
+        self.clause_active_gpu = self._profiler.profile(
+            cuda.mem_alloc,
+            coordinator.host.clause_output.nbytes
+        )
+        self.literal_active_gpu = self._profiler.profile(
+            cuda.mem_alloc,
+            coordinator.number_of_ta_chunks * 4
+        )
+        self.literal_clause_count_gpu = self._profiler.profile(
+            cuda.mem_alloc,
+            coordinator.host.literal_clause_count.nbytes
+        )
 
-        self._profiler: CudaProfiler = CudaProfiler()
-
-        parameters = [
-            f"#define NUMBER_OF_PATCHES {self.number_of_patches}"
-        ]
+        parameters = [f"#define NUMBER_OF_PATCHES {coordinator.number_of_patches}"]
 
         mod = load_cuda_kernel(parameters, "cuda/calculate_clause_outputs_predict.cu")
         self.calculate_clause_outputs_predict_gpu = mod.get_function("calculate_clause_outputs_predict")
@@ -133,244 +209,191 @@ class ImplClauseBankCUDA(BaseClauseBank):
         self.produce_autoencoder_examples_gpu = mod.get_function("produce_autoencoder_example")
         self.produce_autoencoder_examples_gpu.prepare("PPiPPiPPiPiii")
 
-        # self.prepare_encode_gpu = mod.get_function("prepare_encode")
-        # self.prepare_encode_gpu.prepare("PPiiiiiiii")
-
-        # self.encode_gpu = mod.get_function("encode")
-        # self.encode_gpu.prepare("PPiiiiiiii")
-
-        self.clause_output = np.empty(
-            int(self.number_of_clauses),
-            dtype=np.uint32,
-            order="c"
-        )
-        self.clause_output_gpu = self._profiler.profile(cuda.mem_alloc, self.clause_output.nbytes)
-
-        self.clause_output_patchwise = np.empty(
-            int(self.number_of_clauses * self.number_of_patches),
-            dtype=np.uint32,
-            order="c"
-        )
-        self.clause_output_patchwise_gpu = self._profiler.profile(cuda.mem_alloc, self.clause_output_patchwise.nbytes)
-
-        self.clause_active_gpu = self._profiler.profile(cuda.mem_alloc, self.clause_output.nbytes)
-        self.literal_active_gpu = self._profiler.profile(cuda.mem_alloc, self.number_of_ta_chunks * 4)
-
-        self.literal_clause_count = np.empty(
-            int(self.number_of_literals),
-            dtype=np.uint32,
-            order="c"
-        )
-        self.literal_clause_count_gpu = self._profiler.profile(cuda.mem_alloc, self.literal_clause_count.nbytes)
-
-        self._cffi_init()
-
-    def _cffi_init(self):
-        self.clause_bank = np.empty(
-            shape=(self.number_of_clauses, self.number_of_ta_chunks, self.number_of_state_bits_ta),
-            dtype=np.uint32,
-            order="c"
-        )
-        self.clause_bank[:, :, 0:self.number_of_state_bits_ta - 1] = np.uint32(~0)
-        self.clause_bank[:, :, self.number_of_state_bits_ta - 1] = 0
-        self.clause_bank = self.clause_bank.reshape(
-            (self.number_of_clauses * self.number_of_ta_chunks * self.number_of_state_bits_ta),
-            order="c"
-        )
-        self.clause_bank_gpu = self._profiler.profile(cuda.mem_alloc, self.clause_bank.nbytes)
-
-        self._profiler.profile(cuda.memcpy_htod, self.clause_bank_gpu, self.clause_bank)
-        self.clause_bank_synchronized = True
-
     def synchronize_clause_bank(self):
-        if not self.clause_bank_synchronized:
-            self._profiler.profile(cuda.memcpy_dtoh, self.clause_bank, self.clause_bank_gpu)
-            self.clause_bank_synchronized = True
+        # Synchronize all device state to host
+        self._profiler.profile(
+            cuda.memcpy_dtoh, 
+            self.coordinator.host.clause_bank,
+            self.clause_bank_gpu
+        )
+        self._profiler.profile(
+            cuda.memcpy_dtoh,
+            self.coordinator.host.clause_output,
+            self.clause_output_gpu
+        )
+        self._profiler.profile(
+            cuda.memcpy_dtoh,
+            self.coordinator.host.clause_output_patchwise,
+            self.clause_output_patchwise_gpu
+        )
+        self._profiler.profile(
+            cuda.memcpy_dtoh,
+            self.coordinator.host.literal_clause_count,
+            self.literal_clause_count_gpu
+        )
 
-    def calculate_clause_outputs_predict(self, encoded_X, e):
+    def upload_clause_bank(self, host_array):
+        self._profiler.profile(cuda.memcpy_htod, self.clause_bank_gpu, host_array)
+
+    def calculate_clause_outputs_predict(self, encoded_X, e, host_output):
+
         self.calculate_clause_outputs_predict_gpu.prepared_call(
-            self.grid,
-            self.block,
+            self.coordinator.grid,
+            self.coordinator.block,
             self.clause_bank_gpu,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
+            self.coordinator.host.number_of_clauses,
+            self.coordinator.host.number_of_literals,
+            self.coordinator.host.number_of_state_bits_ta,
             self.clause_output_gpu,
             encoded_X,
             np.int32(e)
         )
         self.cuda_ctx.synchronize()
-        self._profiler.profile(cuda.memcpy_dtoh, self.clause_output, self.clause_output_gpu)
-        return self.clause_output
+        self._profiler.profile(
+            cuda.memcpy_dtoh, 
+            host_output, 
+            self.clause_output_gpu
+        )
 
-    def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
-        self._profiler.profile(cuda.memcpy_htod, self.literal_active_gpu, literal_active)
-
+    def calculate_clause_outputs_update(self, literal_active, encoded_X, e, host_output):
+        self._profiler.profile(
+            cuda.memcpy_htod, 
+            self.literal_active_gpu, 
+            literal_active
+        )
         self.calculate_clause_outputs_update_gpu.prepared_call(
-            self.grid,
-            self.block,
+            self.coordinator.grid,
+            self.coordinator.block,
             self.clause_bank_gpu,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
+            self.coordinator.host.number_of_clauses,
+            self.coordinator.host.number_of_literals,
+            self.coordinator.host.number_of_state_bits_ta,
             self.clause_output_gpu,
             self.literal_active_gpu,
             encoded_X,
             np.int32(e)
         )
-
         self.cuda_ctx.synchronize()
-        self._profiler.profile(cuda.memcpy_dtoh, self.clause_output, self.clause_output_gpu)
-        return self.clause_output
+        self._profiler.profile(cuda.memcpy_dtoh, host_output, self.clause_output_gpu)
 
-    def calculate_clause_outputs_patchwise(self, encoded_X, e):
-
+    def calculate_clause_outputs_patchwise(self, encoded_X, e, host_output):
         self.calculate_clause_outputs_patchwise_gpu.prepared_call(
-            self.grid,
-            self.block,
+            self.coordinator.grid,
+            self.coordinator.block,
             self.clause_bank_gpu,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
+            self.coordinator.host.number_of_clauses,
+            self.coordinator.host.number_of_literals,
+            self.coordinator.host.number_of_state_bits_ta,
             self.clause_output_patchwise_gpu,
             encoded_X,
             np.int32(e)
         )
         self.cuda_ctx.synchronize()
-        self._profiler.profile(cuda.memcpy_dtoh, self.clause_output_patchwise, self.clause_output_patchwise_gpu)
-        return self.clause_output_patchwise
+        self._profiler.profile(cuda.memcpy_dtoh, host_output, self.clause_output_patchwise_gpu)
 
-
-    def type_i_feedback(
-            self,
-            update_p,
-            clause_active,
-            literal_active,
-            encoded_X,
-            e):
-        self._profiler.profile(cuda.memcpy_htod, self.clause_active_gpu, clause_active)
-        self._profiler.profile(cuda.memcpy_htod, self.literal_active_gpu, literal_active)
-
+    def type_i_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
+        self._profiler.profile(
+            cuda.memcpy_htod, 
+            self.clause_active_gpu, 
+            clause_active
+        )
+        self._profiler.profile(
+            cuda.memcpy_htod, 
+            self.literal_active_gpu,
+            literal_active
+        )
         self.type_i_feedback_gpu.prepared_call(
-            self.grid,
-            self.block,
+            self.coordinator.grid,
+            self.coordinator.block,
             self.rng_gen.state,
             self.clause_bank_gpu,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
+            self.coordinator.host.number_of_clauses,
+            self.coordinator.host.number_of_literals,
+            self.coordinator.host.number_of_state_bits_ta,
             update_p,
-            self.s,
-            self.boost_true_positive_feedback,
-            self.max_included_literals,
+            self.coordinator.host.s,
+            self.coordinator.host.boost_true_positive_feedback,
+            self.coordinator.host.max_included_literals,
             self.clause_active_gpu,
             self.literal_active_gpu,
             encoded_X,
             np.int32(e)
         )
-
         self.cuda_ctx.synchronize()
-        self.clause_bank_synchronized = False
 
     def type_ii_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
-        self._profiler.profile(cuda.memcpy_htod, self.clause_active_gpu, np.ascontiguousarray(clause_active))
-        self._profiler.profile(cuda.memcpy_htod, self.literal_active_gpu, literal_active)
-
+        self._profiler.profile(
+            cuda.memcpy_htod, 
+            self.clause_active_gpu, 
+            np.ascontiguousarray(clause_active)
+        )
+        self._profiler.profile(
+            cuda.memcpy_htod,
+            self.literal_active_gpu, 
+            literal_active
+        )
         self.type_ii_feedback_gpu.prepared_call(
-            self.grid,
-            self.block,
+            self.coordinator.grid,
+            self.coordinator.block,
             self.rng_gen.state,
             self.clause_bank_gpu,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
+            self.coordinator.host.number_of_clauses,
+            self.coordinator.host.number_of_literals,
+            self.coordinator.host.number_of_state_bits_ta,
             update_p,
             self.clause_active_gpu,
             self.literal_active_gpu,
             encoded_X,
             np.int32(e)
         )
-
         self.cuda_ctx.synchronize()
-        self.clause_bank_synchronized = False
 
-    def calculate_literal_clause_frequency(self, clause_active):
-        self._profiler.profile(cuda.memcpy_htod, self.clause_active_gpu, np.ascontiguousarray(clause_active))
-
+    def calculate_literal_clause_frequency(self, clause_active, host_literal_clause_count):
+        self._profiler.profile(
+            cuda.memcpy_htod,
+            self.clause_active_gpu,
+            np.ascontiguousarray(clause_active)
+        )
         self.calculate_literal_frequency_gpu.prepared_call(
-            self.grid,
-            self.block,
+            self.coordinator.grid,
+            self.coordinator.block,
             self.clause_bank_gpu,
-            self.number_of_clauses,
-            self.number_of_literals,
-            self.number_of_state_bits_ta,
+            self.coordinator.host.number_of_clauses,
+            self.coordinator.host.number_of_literals,
+            self.coordinator.host.number_of_state_bits_ta,
             self.clause_active_gpu,
             self.literal_clause_count_gpu
         )
-
         self.cuda_ctx.synchronize()
-
-        self._profiler.profile(cuda.memcpy_dtoh, self.literal_clause_count, self.literal_clause_count_gpu)
-
-        return self.literal_clause_count
-
-    def get_ta_action(self, clause, ta):
-        self.synchronize_clause_bank()
-        return super().get_ta_action(clause, ta)
-
-    def number_of_include_actions(self, clause):
-        self.synchronize_clause_bank()
-        start = int(clause * self.number_of_ta_chunks * self.number_of_state_bits_ta + self.number_of_state_bits_ta - 1)
-        stop = int(
-            (clause + 1) * self.number_of_ta_chunks * self.number_of_state_bits_ta + self.number_of_state_bits_ta - 1)
-        return np.unpackbits(
-            np.ascontiguousarray(self.clause_bank[start:stop:self.number_of_state_bits_ta]).view('uint8')).sum()
-
-    def get_ta_state(self, clause, ta):
-        self.synchronize_clause_bank()
-        return super().get_ta_state(clause, ta)
-
-    def set_ta_state(self, clause, ta, state):
-        self.synchronize_clause_bank()
-        super().set_ta_state(clause, ta, state)
-        self._profiler.profile(cuda.memcpy_htod, self.clause_bank_gpu, self.clause_bank)
+        self._profiler.profile(cuda.memcpy_dtoh, host_literal_clause_count, self.literal_clause_count_gpu)
 
     def prepare_X(self, X):
         encoded_X = tmu.tools.encode(
             X,
             X.shape[0],
-            self.number_of_patches,
-            self.number_of_ta_chunks,
-            self.dim,
-            self.patch_dim,
+            self.coordinator.number_of_patches,
+            self.coordinator.host.number_of_ta_chunks,
+            self.coordinator.dim,
+            self.coordinator.patch_dim,
             0
         )
-
         encoded_X_gpu = self._profiler.profile(cuda.mem_alloc, encoded_X.nbytes)
         self._profiler.profile(cuda.memcpy_htod, encoded_X_gpu, encoded_X)
         return encoded_X_gpu
 
     def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
-        _LOGGER.info("Copying sparse data to GPU memory")
-
         X_csr_indptr_gpu = self._profiler.profile(cuda.mem_alloc, X_csr.indptr.nbytes)
         self._profiler.profile(cuda.memcpy_htod, X_csr_indptr_gpu, X_csr.indptr)
-
         X_csr_indices_gpu = self._profiler.profile(cuda.mem_alloc, X_csr.indices.nbytes)
         self._profiler.profile(cuda.memcpy_htod, X_csr_indices_gpu, X_csr.indices)
-
         X_csc_indptr_gpu = self._profiler.profile(cuda.mem_alloc, X_csc.indptr.nbytes)
         self._profiler.profile(cuda.memcpy_htod, X_csc_indptr_gpu, X_csc.indptr)
-
         X_csc_indices_gpu = self._profiler.profile(cuda.mem_alloc, X_csc.indices.nbytes)
         self._profiler.profile(cuda.memcpy_htod, X_csc_indices_gpu, X_csc.indices)
-
         active_output_gpu = self._profiler.profile(cuda.mem_alloc, active_output.nbytes)
         self._profiler.profile(cuda.memcpy_htod, active_output_gpu, active_output)
-
-        X = np.ascontiguousarray(np.zeros(int(self.number_of_ta_chunks), dtype=np.uint32))
+        X = np.ascontiguousarray(np.zeros(int(self.coordinator.host.number_of_ta_chunks), dtype=np.uint32))
         X_gpu = self._profiler.profile(cuda.mem_alloc, X.nbytes)
-
         return (
             active_output_gpu,
             active_output,
@@ -384,61 +407,165 @@ class ImplClauseBankCUDA(BaseClauseBank):
             X_gpu
         )
 
-    _logged_unknown_args = set()
-
-    def produce_autoencoder_example(
-            self,
-            encoded_X,
-            target,
-            accumulation,
-            **kwargs
-    ):
-        # Log unknown arguments only once
-
-        for key, value in kwargs.items():
-            if key not in self._logged_unknown_args:
-                self._logged_unknown_args.add(key)
-                _LOGGER.warning(
-                    f"Unknown positional argument for {self}: argument_name={key}, argument_value={value}, class={type(self)}")
-
-        (
-            active_output_gpu,
-            active_output,
-            number_of_active_outputs,
-            X_csr_indptr_gpu,
-            X_csr_indices_gpu,
-            number_of_rows,
-            X_csc_indptr_gpu,
-            X_csc_indices_gpu,
-            number_of_columns,
-            X_gpu
-        ) = encoded_X
-
-        target_value = self.rng.choice(2)
-
+    def produce_autoencoder_example(self, encoded_X, target, accumulation):
+        target_value = self.rng_gen.choice(2)
         self.produce_autoencoder_examples_gpu.prepared_call(
-            self.grid,
-            self.block,
+            self.coordinator.grid,
+            self.coordinator.block,
             self.rng_gen.state,
-            active_output_gpu,
-            number_of_active_outputs,
-            X_csr_indptr_gpu,
-            X_csr_indices_gpu,
-            number_of_rows,
-            X_csc_indptr_gpu,
-            X_csc_indices_gpu,
-            number_of_columns,
-            X_gpu,
+            *encoded_X,
             int(target),
             int(target_value),
-            int(accumulation))
-
+            int(accumulation)
+        )
         self.cuda_ctx.synchronize()
-
+        X_gpu = encoded_X[-1]
         return X_gpu, target_value
 
 
-if cuda_installed:
-    ClauseBankCUDA = ImplClauseBankCUDA
-else:
-    ClauseBankCUDA = ClauseBank
+# Coordinator class that combines host and device branches.
+# This class exposes the same public API as before but delegates CPU (host) and GPU (device) operations.
+class ClauseBankCuda(BaseClauseBank):
+    def __init__(
+        self,
+        seed: int,
+        number_of_state_bits_ta: int,
+        grid: tuple = (16 * 13, 1, 1),
+        block: tuple = (128, 1, 1),
+        **kwargs
+    ):
+        self.grid = grid
+        self.block = block
+
+
+
+        self.number_of_state_bits_ta = number_of_state_bits_ta
+        # Initialize host part
+        self.host = ClauseBankCudaHost(seed, number_of_state_bits_ta, **kwargs)
+        # Copy additional attributes for easier access
+        self.number_of_clauses = self.host.number_of_clauses
+        self.number_of_literals = self.host.number_of_literals
+        self.number_of_ta_chunks = self.host.number_of_ta_chunks
+        self.number_of_patches = self.host.number_of_patches
+        self.dim = getattr(self.host, "dim", None)
+        self.patch_dim = getattr(self.host, "patch_dim", None)
+        self.s = getattr(self.host, "s", None)
+        self.boost_true_positive_feedback = getattr(self.host, "boost_true_positive_feedback", None)
+        self.max_included_literals = getattr(self.host, "max_included_literals", None)
+
+        if not cuda_installed:
+            raise RuntimeError("CUDA support is required for ClauseBankCuda")
+        self.device = ClauseBankCudaDevice(self)
+        # Ensure device is synchronized with host state
+        self.device.synchronize_clause_bank()
+
+    def calculate_clause_outputs_predict(self, encoded_X, e):
+        if self.device:
+            self.device.calculate_clause_outputs_predict(encoded_X, e, self.host.clause_output)
+            return self.host.clause_output
+        else:
+            return None
+
+    def calculate_clause_outputs_update(self, literal_active, encoded_X, e):
+        if self.device:
+            self.device.calculate_clause_outputs_update(literal_active, encoded_X, e,
+                                                          self.host.clause_output)
+            return self.host.clause_output
+        else:
+            return None
+
+    def calculate_clause_outputs_patchwise(self, encoded_X, e):
+        if self.device:
+            self.device.calculate_clause_outputs_patchwise(encoded_X, e,
+                                                            self.host.clause_output_patchwise)
+            return self.host.clause_output_patchwise
+        else:
+            return None
+
+    def type_i_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
+        if self.device:
+            self.device.type_i_feedback(update_p, clause_active, literal_active, encoded_X, e)
+
+    def type_ii_feedback(self, update_p, clause_active, literal_active, encoded_X, e):
+        if self.device:
+            self.device.type_ii_feedback(update_p, clause_active, literal_active, encoded_X, e)
+
+    def calculate_literal_clause_frequency(self, clause_active):
+        if self.device:
+            self.device.calculate_literal_clause_frequency(clause_active,
+                                                             self.host.literal_clause_count)
+            return self.host.literal_clause_count
+        else:
+            return None
+
+    def get_ta_action(self, clause, ta):
+        if self.device:
+            self.device.synchronize_clause_bank()
+        return self.host.get_ta_action(clause, ta)
+
+    def get_ta_state(self, clause, ta):
+        if self.device:
+            self.device.synchronize_clause_bank()
+        return self.host.get_ta_state(clause, ta)
+
+    def set_ta_state(self, clause, ta, state):
+        self.host.set_ta_state(clause, ta, state)
+        if self.device:
+            self.device.upload_clause_bank(self.host.clause_bank)
+
+    def prepare_X(self, X):
+        if self.device:
+            return self.device.prepare_X(X)
+        else:
+            return tmu.tools.encode(
+                X,
+                X.shape[0],
+                self.number_of_patches,
+                self.host.number_of_ta_chunks,
+                self.dim,
+                self.patch_dim,
+                0
+            )
+
+    def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
+        if self.device:
+            return self.device.prepare_X_autoencoder(X_csr, X_csc, active_output)
+        else:
+            return None
+
+    def produce_autoencoder_example(self, encoded_X, target, accumulation):
+        if self.device:
+            return self.device.produce_autoencoder_example(encoded_X, target, accumulation)
+        else:
+            return None
+
+    def synchronize_clause_bank(self):
+        if self.device:
+            self.device.synchronize_clause_bank()
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Synchronize the host's clause bank with device before pickling
+        if self.device is not None:
+            self.device.synchronize_clause_bank()
+
+        # Remove the device before pickling
+        if "device" in state:
+            del state["device"]
+        return state
+
+    def __setstate__(self, state):
+        # Restore all state except device
+        self.__dict__.update(state)
+
+        if not cuda_installed:
+            raise RuntimeError("CUDA support is required for ClauseBankCuda")
+            
+        # Create new device with the restored state
+        self.device = ClauseBankCudaDevice(self)
+
+    def _cffi_init(self):
+        # No extra CFFI initialization is needed because the host branch already handles it.
+        pass
+
+ClauseBankCUDA = ClauseBankCuda

@@ -45,13 +45,15 @@ class DataEncoderCache:
 
     def __getstate__(self):
         # This method controls what gets pickled.
-        # Return a dictionary of the object's state without the encoded_data attribute.
+        # Return a dictionary of the object's state without any cache-related attributes
         state = self.__dict__.copy()
         del state['encoded_data']
+        del state['array_hash']
         return state
 
     def __setstate__(self, state):
         # This method controls how the object is unpickled.
-        # Set the object's dictionary to the pickled state and initialize encoded_data to None.
+        # Set the object's dictionary to the pickled state and initialize cache attributes to None
         self.__dict__.update(state)
         self.encoded_data = None
+        self.array_hash = None

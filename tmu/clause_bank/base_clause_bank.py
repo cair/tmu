@@ -72,7 +72,9 @@ class BaseClauseBank(CFFISerializable):
             if state & (1 << b) > 0:
                 self.clause_bank[pos + b] |= (1 << chunk_pos)
             else:
-                self.clause_bank[pos + b] &= ~(1 << chunk_pos)
+                # Convert to uint32 to avoid overflow
+                mask = ~(1 << chunk_pos) & 0xFFFFFFFF
+                self.clause_bank[pos + b] &= mask
 
     def get_ta_state(self, clause, ta):
         ta_chunk = ta // 32
