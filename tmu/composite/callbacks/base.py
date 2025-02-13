@@ -10,10 +10,12 @@ class CallbackMethod(Enum):
     ON_EPOCH_COMPONENT_END = auto()
     UPDATE_PROGRESS = auto()
 
+
 @dataclass
 class CallbackMessage:
     method: CallbackMethod
     kwargs: Dict[str, Any]
+
 
 class TMCompositeCallback:
     def __init__(self):

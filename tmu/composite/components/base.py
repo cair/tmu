@@ -21,9 +21,7 @@ class TMComponent(abc.ABC):
         if kwargs:
             print(f"Warning: unused keyword arguments: {kwargs}")
 
-        self.model_instance = self.model_cls(
-            **self.model_config.model_dump()
-        )
+        self.model_instance = self.model_cls(**self.model_config.model_dump())
 
     def model(self):
         raise NotImplementedError
@@ -66,9 +64,12 @@ class TMComponent(abc.ABC):
 
         if format == "pkl":
             import pickle
+
             with open(path, "wb") as f:
                 pickle.dump(self, f)
 
     def __str__(self):
-        params = '-'.join([f"{k}={v}" for k, v in self.model_config.model_dump().items()])
+        params = "-".join(
+            [f"{k}={v}" for k, v in self.model_config.model_dump().items()]
+        )
         return f"{type(self).__name__}-{self.model_cls.__name__}-{params})"

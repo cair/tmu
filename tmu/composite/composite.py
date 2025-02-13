@@ -16,6 +16,8 @@ from tmu.composite.gating.linear_gate import LinearGate
 from tmu.composite.callbacks.base import CallbackMessage, CallbackMethod
 from enum import Enum, auto
 from datetime import datetime
+import time
+
 
 class ComponentStatus(Enum):
     PENDING = auto()
@@ -23,15 +25,19 @@ class ComponentStatus(Enum):
     COMPLETED = auto()
     FAILED = auto()
 
+
 @dataclass
 class ComponentState:
     """Tracks the complete state of a component during training."""
+
     status: ComponentStatus = ComponentStatus.PENDING
     current_epoch: int = 0
     total_epochs: int = 0
     last_update: float = 0.0  # timestamp
     error: Optional[Exception] = None
     metrics: Dict[str, float] = field(default_factory=dict)
+    component: Optional[TMComponent] = None  # Add this field to store component state
+
 
 class SharedDataManager:
     """
@@ -44,6 +50,7 @@ class SharedDataManager:
 
     The API can be extended seamlessly to add more shared data.
     """
+
     def __init__(self):
         self._manager = Manager()
         self.data = self._manager.dict()
@@ -94,16 +101,21 @@ class SharedDataManager:
     def __exit__(self, exc_type, exc_value, traceback):
         self.shutdown()
 
+
 @dataclass
 class ComponentTask:
     component: TMComponent
     data: Any
-    epochs: int
+    test_data: Optional[Dict[str, Any]] = None  # Add test data
+    test_frequency: int = 10  # Test every N epochs
+    epochs: int = 0
     progress: int = 0
     result: Any = None
+
     @property
     def component_id(self) -> uuid.UUID:
         return self.component.uuid
+
 
 @dataclass
 class FitResult:
@@ -111,10 +123,11 @@ class FitResult:
     success: bool
     error: Optional[Exception] = None
 
+
 def process_callbacks(
     callbacks: List[TMCompositeCallback],
     message: CallbackMessage,
-    composite: Optional[Any] = None
+    composite: Optional[Any] = None,
 ) -> None:
     """Helper to process a callback message on each callback."""
     for callback in callbacks:
@@ -126,8 +139,11 @@ def process_callbacks(
             else:
                 func(**message.kwargs)
         except Exception as e:
-            print(f"Error in callback {callback.__class__.__name__}.{message.method.name.lower()}: {e}")
+            print(
+                f"Error in callback {callback.__class__.__name__}.{message.method.name.lower()}: {e}"
+            )
             traceback.print_exc()
+
 
 def compute_scores(component: TMComponent, data: Dict[str, Any]) -> np.ndarray:
     """
@@ -142,6 +158,7 @@ def compute_scores(component: TMComponent, data: Dict[str, Any]) -> np.ndarray:
     normalized_scores = scores / denominator[:, np.newaxis]
     return normalized_scores
 
+
 class TMCompositeRunner(ABC):
     """Abstract base class for running composite training and prediction."""
 
@@ -149,30 +166,68 @@ class TMCompositeRunner(ABC):
         self.composite = composite
 
     @abstractmethod
-    def fit(self, data: Dict[str, Any], callbacks: Optional[List[TMCompositeCallback]] = None) -> None:
+    def fit(
+        self,
+        data: Dict[str, Any],
+        test_data: Optional[Dict[str, Any]] = None,
+        callbacks: Optional[List[TMCompositeCallback]] = None,
+    ) -> None:
         pass
 
     @abstractmethod
-    def predict(self, data: Dict[str, Any], votes: Dict[str, np.ndarray], gating_mask: np.ndarray) -> None:
+    def predict(
+        self,
+        data: Dict[str, Any],
+        votes: Dict[str, np.ndarray],
+        gating_mask: np.ndarray,
+    ) -> None:
         pass
 
-def _fit_component(task: ComponentTask, progress_dict, states_dict) -> FitResult:
+
+def _fit_component(
+    task: ComponentTask, progress_dict, states_dict, callback_queue
+) -> FitResult:
     try:
-        # Update state directly in the shared dict
-        state = ComponentState(
-            status=ComponentStatus.RUNNING,
-            total_epochs=task.epochs
-        )
+        # Initialize state
+        state = ComponentState(status=ComponentStatus.RUNNING, total_epochs=task.epochs)
         states_dict[task.component.uuid] = state
 
         pe_data = task.component.preprocess(task.data)
+
+        # Preprocess test data if available
+        pe_test_data = None
+        if task.test_data is not None:
+            pe_test_data = task.component.preprocess(task.test_data)
+
         for epoch in range(task.epochs):
             task.component.fit(data=pe_data)
-            # Update progress
+
+            # Update progress and state
             progress_dict[task.component.uuid] = epoch + 1
-            # Update state
             state.current_epoch = epoch + 1
+            state.component = task.component
+
+            # Calculate accuracy if test data is available and it's time to test
+            metrics = {}
+            if pe_test_data is not None:  # Calculate accuracy every epoch
+                y_pred = task.component.model_instance.predict(pe_test_data["X"])
+                y_true = pe_test_data["Y"].flatten()
+                accuracy = 100 * (y_pred == y_true).mean()
+                metrics["accuracy"] = accuracy
+                state.metrics = metrics
+
             states_dict[task.component.uuid] = state
+
+            # Send callback message through queue
+            callback_queue.put(
+                {
+                    "component_id": task.component.uuid,
+                    "epoch": epoch,
+                    "component": task.component,
+                    "status": state.status,
+                    "metrics": metrics,
+                }
+            )
 
         state.status = ComponentStatus.COMPLETED
         states_dict[task.component.uuid] = state
@@ -183,89 +238,140 @@ def _fit_component(task: ComponentTask, progress_dict, states_dict) -> FitResult
         states_dict[task.component.uuid] = state
         return FitResult(component=task.component, success=False, error=e)
 
+
 class TMCompositeMP(TMCompositeRunner):
     """Multiprocessing implementation of the composite runner."""
 
-    def __init__(self, composite: "TMComposite", remove_data_after_preprocess: bool = False) -> None:
+    def __init__(
+        self,
+        composite: "TMComposite",
+        test_frequency: int = 10,
+        max_workers: Optional[int] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(composite)
-        self.max_workers = min(cpu_count(), len(composite.components))
-        self.remove_data_after_preprocess = remove_data_after_preprocess
+        default_workers = min(cpu_count(), len(composite.components))
+        self.max_workers = (
+            min(max_workers, default_workers) if max_workers else default_workers
+        )
+        self.test_frequency = test_frequency
         multiprocessing.set_start_method("spawn", force=True)
         self.use_shared_progress = True
 
-    def fit(self, data: Dict[str, Any], callbacks: Optional[List[TMCompositeCallback]] = None) -> None:
+    def fit(
+        self,
+        data: Dict[str, Any],
+        test_data: Optional[Dict[str, Any]] = None,
+        callbacks: Optional[List[TMCompositeCallback]] = None,
+    ) -> None:
         tasks: List[ComponentTask] = [
-            ComponentTask(component=c, data=data, epochs=c.epochs) for c in self.composite.components
+            ComponentTask(
+                component=c,
+                data=data,
+                test_data=test_data,
+                test_frequency=self.test_frequency,
+                epochs=c.epochs,
+            )
+            for c in self.composite.components
         ]
 
+        # Split tasks into batches based on max_workers
+        remaining_tasks = tasks.copy()
+        results: List[FitResult] = []
+
         if callbacks:
-            process_callbacks(callbacks, CallbackMessage(CallbackMethod.ON_TRAIN_COMPOSITE_BEGIN, {}), composite=self.composite)
+            process_callbacks(
+                callbacks,
+                CallbackMessage(CallbackMethod.ON_TRAIN_COMPOSITE_BEGIN, {}),
+                composite=self.composite,
+            )
 
         with SharedDataManager() as shared:
             progress_dict = shared.data["progress"]
             states_dict = shared.data["states"]
-            for task in tasks:
-                # Initialize state
-                states_dict[task.component.uuid] = ComponentState(
-                    status=ComponentStatus.PENDING,
-                    total_epochs=task.epochs
-                )
-                progress_dict[task.component.uuid] = 0
+            callback_queue = Manager().Queue()
 
-            with Pool(processes=self.max_workers) as pool:
-                async_results = [
-                    pool.apply_async(_fit_component, (task, progress_dict, states_dict))
-                    for task in tasks
-                ]
+            while remaining_tasks:
+                # Take next batch of tasks
+                current_tasks = remaining_tasks[: self.max_workers]
+                remaining_tasks = remaining_tasks[self.max_workers :]
 
-                pending = list(async_results)
-                import time
-                last_reported_epochs = {task.component.uuid: -1 for task in tasks}
+                for task in current_tasks:
+                    states_dict[task.component.uuid] = ComponentState(
+                        status=ComponentStatus.PENDING, total_epochs=task.epochs
+                    )
+                    progress_dict[task.component.uuid] = 0
 
-                while pending:
-                    for async_res in pending.copy():
-                        if async_res.ready():
-                            pending.remove(async_res)
-                    if callbacks:
-                        for task in tasks:
-                            state = states_dict.get(task.component.uuid, ComponentState())
-                            if (state.current_epoch > 0 and
-                                state.current_epoch - 1 > last_reported_epochs[task.component.uuid]):
+                with Pool(processes=len(current_tasks)) as pool:
+                    async_results = [
+                        pool.apply_async(
+                            _fit_component,
+                            (task, progress_dict, states_dict, callback_queue),
+                        )
+                        for task in current_tasks
+                    ]
+
+                    pending = list(async_results)
+                    while pending:
+                        # Process any pending callback messages
+                        while not callback_queue.empty():
+                            msg = callback_queue.get()
+                            if callbacks:
                                 process_callbacks(
                                     callbacks,
                                     CallbackMessage(
                                         CallbackMethod.ON_EPOCH_COMPONENT_END,
                                         {
-                                            "component": task.component,
-                                            "epoch": state.current_epoch - 1,
-                                            "status": state.status,
-                                            "metrics": state.metrics
-                                        }
+                                            "component": msg["component"],
+                                            "epoch": msg["epoch"],
+                                            "status": msg["status"],
+                                            "metrics": msg["metrics"],
+                                        },
                                     ),
-                                    composite=self.composite
+                                    composite=self.composite,
                                 )
-                                last_reported_epochs[task.component.uuid] = state.current_epoch - 1
-                    time.sleep(0.5)
 
-                results: List[FitResult] = [r.get() for r in async_results]
+                        # Check if any tasks are complete
+                        for async_res in pending.copy():
+                            if async_res.ready():
+                                pending.remove(async_res)
 
+                        time.sleep(0.1)
+
+                    # Collect results from this batch
+                    batch_results = [r.get() for r in async_results]
+                    results.extend(batch_results)
+
+        # Process results
         for result in results:
             if not result.success:
                 print(f"Error fitting component {result.component}: {result.error}")
             else:
-                # Replace the component in the composite if needed.
                 for i, comp in enumerate(self.composite.components):
                     if comp.uuid == result.component.uuid:
                         self.composite.components[i] = result.component
                         break
 
         if callbacks:
-            process_callbacks(callbacks, CallbackMessage(CallbackMethod.ON_TRAIN_COMPOSITE_END, {}), composite=self.composite)
+            process_callbacks(
+                callbacks,
+                CallbackMessage(CallbackMethod.ON_TRAIN_COMPOSITE_END, {}),
+                composite=self.composite,
+            )
 
-    def predict(self, data: Dict[str, Any], votes: Dict[str, np.ndarray], gating_mask: np.ndarray) -> None:
-        with concurrent.futures.ProcessPoolExecutor(max_workers=self.max_workers) as executor:
+    def predict(
+        self,
+        data: Dict[str, Any],
+        votes: Dict[str, np.ndarray],
+        gating_mask: np.ndarray,
+    ) -> None:
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=self.max_workers
+        ) as executor:
             futures = {
-                executor.submit(self._predict_component, comp, data, gating_mask, idx): comp
+                executor.submit(
+                    self._predict_component, comp, data, gating_mask, idx
+                ): comp
                 for idx, comp in enumerate(self.composite.components)
             }
             for future in concurrent.futures.as_completed(futures):
@@ -278,46 +384,103 @@ class TMCompositeMP(TMCompositeRunner):
                             votes[key] = score
                 except Exception as e:
                     comp = futures[future]
-                    print(f"Error in prediction for component {comp.__class__.__name__}: {e}")
+                    print(
+                        f"Error in prediction for component {comp.__class__.__name__}: {e}"
+                    )
                     traceback.print_exc()
 
     def _predict_component(
-        self, component: TMComponent, data: Dict[str, Any], gating_mask: np.ndarray, idx: int
+        self,
+        component: TMComponent,
+        data: Dict[str, Any],
+        gating_mask: np.ndarray,
+        idx: int,
     ) -> Dict[str, np.ndarray]:
         scores = compute_scores(component, data)
         mask = gating_mask[:, idx].reshape(-1, 1)
         masked_scores = scores * mask
         return {"composite": masked_scores, str(component): masked_scores}
 
+
 class TMCompositeSingleCPU(TMCompositeRunner):
     """Single CPU (sequential) implementation of the composite runner."""
 
-    def fit(self, data: Dict[str, Any], callbacks: Optional[List[TMCompositeCallback]] = None) -> None:
+    def __init__(self, composite: "TMComposite", **kwargs) -> None:
+        super().__init__(composite)
+        self.test_frequency = kwargs.get("test_frequency", 10)
+
+    def fit(
+        self,
+        data: Dict[str, Any],
+        test_data: Optional[Dict[str, Any]] = None,
+        callbacks: Optional[List[TMCompositeCallback]] = None,
+    ) -> None:
         if callbacks is None:
             callbacks = []
-        preprocessed: List[Any] = [comp.preprocess(data) for comp in self.composite.components]
+        preprocessed: List[Any] = [
+            comp.preprocess(data) for comp in self.composite.components
+        ]
+
+        # Preprocess test data if available
+        preprocessed_test = None
+        if test_data is not None:
+            preprocessed_test = [
+                comp.preprocess(test_data) for comp in self.composite.components
+            ]
+
         epochs_left: List[int] = [comp.epochs for comp in self.composite.components]
-        process_callbacks(callbacks, CallbackMessage(CallbackMethod.ON_TRAIN_COMPOSITE_BEGIN, {}), composite=self.composite)
+        process_callbacks(
+            callbacks,
+            CallbackMessage(CallbackMethod.ON_TRAIN_COMPOSITE_BEGIN, {}),
+            composite=self.composite,
+        )
         epoch = 0
         while any(epochs_left):
             for i, comp in enumerate(self.composite.components):
                 if epochs_left[i] > 0:
                     process_callbacks(
                         callbacks,
-                        CallbackMessage(CallbackMethod.ON_EPOCH_COMPONENT_BEGIN, {"component": comp, "epoch": epoch}),
+                        CallbackMessage(
+                            CallbackMethod.ON_EPOCH_COMPONENT_BEGIN,
+                            {"component": comp, "epoch": epoch},
+                        ),
                         composite=self.composite,
                     )
                     comp.fit(data=preprocessed[i])
+
+                    # Calculate accuracy if test data is available
+                    metrics = {}
+                    if (
+                        preprocessed_test is not None
+                        and (epoch + 1) % self.test_frequency == 0
+                    ):
+                        y_pred = comp.model_instance.predict(preprocessed_test[i]["X"])
+                        y_true = preprocessed_test[i]["Y"].flatten()
+                        accuracy = 100 * (y_pred == y_true).mean()
+                        metrics["accuracy"] = accuracy
+
                     process_callbacks(
                         callbacks,
-                        CallbackMessage(CallbackMethod.ON_EPOCH_COMPONENT_END, {"component": comp, "epoch": epoch}),
+                        CallbackMessage(
+                            CallbackMethod.ON_EPOCH_COMPONENT_END,
+                            {"component": comp, "epoch": epoch, "metrics": metrics},
+                        ),
                         composite=self.composite,
                     )
                     epochs_left[i] -= 1
             epoch += 1
-        process_callbacks(callbacks, CallbackMessage(CallbackMethod.ON_TRAIN_COMPOSITE_END, {}), composite=self.composite)
+        process_callbacks(
+            callbacks,
+            CallbackMessage(CallbackMethod.ON_TRAIN_COMPOSITE_END, {}),
+            composite=self.composite,
+        )
 
-    def predict(self, data: Dict[str, Any], votes: Dict[str, np.ndarray], gating_mask: np.ndarray) -> None:
+    def predict(
+        self,
+        data: Dict[str, Any],
+        votes: Dict[str, np.ndarray],
+        gating_mask: np.ndarray,
+    ) -> None:
         for idx, comp in enumerate(self.composite.components):
             scores = compute_scores(comp, data)
             mask = gating_mask[:, idx].reshape(-1, 1)
@@ -332,6 +495,7 @@ class TMCompositeSingleCPU(TMCompositeRunner):
             else:
                 votes[key] = masked_scores
 
+
 class TMComposite:
     """
     The main composite class: It holds a list of TMComponents and a gating function.
@@ -344,29 +508,44 @@ class TMComposite:
         gate_function: Optional[Type[BaseGate]] = None,
         gate_function_params: Optional[Dict[str, Any]] = None,
         use_multiprocessing: bool = False,
-        **kwargs: Any
+        test_frequency: int = 10,
+        max_workers: Optional[int] = None,
+        **kwargs: Any,
     ) -> None:
         self.components: List[TMComponent] = components or []
         self.use_multiprocessing = use_multiprocessing
         if gate_function_params is None:
             gate_function_params = {}
         self.gate_function_instance: BaseGate = (
-            gate_function(self, **gate_function_params) if gate_function else LinearGate(self, **gate_function_params)
+            gate_function(self, **gate_function_params)
+            if gate_function
+            else LinearGate(self, **gate_function_params)
         )
         if use_multiprocessing:
-            self.runner: TMCompositeRunner = TMCompositeMP(self, **kwargs)
+            self.runner: TMCompositeRunner = TMCompositeMP(
+                self, test_frequency=test_frequency, max_workers=max_workers, **kwargs
+            )
         else:
             self.runner = TMCompositeSingleCPU(self, **kwargs)
 
-    def fit(self, data: Dict[str, Any], callbacks: Optional[List[TMCompositeCallback]] = None) -> None:
-        self.runner.fit(data, callbacks)
+    def fit(
+        self,
+        data: Dict[str, Any],
+        test_data: Optional[Dict[str, Any]] = None,
+        callbacks: Optional[List[TMCompositeCallback]] = None,
+    ) -> None:
+        self.runner.fit(data, test_data=test_data, callbacks=callbacks)
 
     def predict(self, data: Dict[str, Any]) -> Dict[str, np.ndarray]:
         votes: Dict[str, np.ndarray] = {}
         gating_mask: np.ndarray = self.gate_function_instance.predict(data)
         # Validate gating mask dimensions
-        assert gating_mask.shape[1] == len(self.components), "Gating mask column count must equal number of components"
-        assert gating_mask.shape[0] == data["Y"].shape[0], "Gating mask row count must equal number of samples"
+        assert gating_mask.shape[1] == len(
+            self.components
+        ), "Gating mask column count must equal number of components"
+        assert (
+            gating_mask.shape[0] == data["Y"].shape[0]
+        ), "Gating mask row count must equal number of samples"
         self.runner.predict(data, votes, gating_mask)
         return {k: v.argmax(axis=1) for k, v in votes.items()}
 
@@ -391,7 +570,9 @@ class TMComposite:
         else:
             raise NotImplementedError(f"Format {format} not supported")
 
-    def load_model_from_components(self, path: Union[Path, str], format: str = "pkl") -> None:
+    def load_model_from_components(
+        self, path: Union[Path, str], format: str = "pkl"
+    ) -> None:
         path = Path(path) if isinstance(path, str) else path
         if not path.is_dir():
             raise ValueError(f"{path} is not a directory.")
@@ -402,7 +583,10 @@ class TMComposite:
             epoch = int(parts[-1])
             component_name = "-".join(parts[:-1])
             component_groups[component_name].append((epoch, file))
-        latest_files = [sorted(group, key=lambda x: x[0], reverse=True)[0][1] for group in component_groups.values()]
+        latest_files = [
+            sorted(group, key=lambda x: x[0], reverse=True)[0][1]
+            for group in component_groups.values()
+        ]
         self.components = []
         if format == "pkl":
             import pickle
@@ -413,4 +597,3 @@ class TMComposite:
                     self.components.append(loaded_component)
         else:
             raise NotImplementedError(f"Format {format} not supported")
-
