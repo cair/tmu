@@ -144,7 +144,10 @@ class TMBaseModel:
         self.feedback_rate_excluded_literals = feedback_rate_excluded_literals
         self.literal_insertion_state = literal_insertion_state
         self.squared_weight_update_p = squared_weight_update_p
-
+        
+        self.X_train = np.zeros(0, dtype=np.uint32)
+        self.X_test = np.zeros(0, dtype=np.uint32)
+        
     def clause_co_occurrence(self, X, percentage=False):
         clause_outputs = csr_matrix(self.transform(X))
         if percentage:
