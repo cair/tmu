@@ -118,7 +118,7 @@ class TMAutoEncoder(TMBaseModel, SingleClauseBankMixin, MultiWeightBankMixin):
             clause_active,
             literal_active
     ):
-        all_literal_active = (np.zeros(self.clause_bank.number_of_ta_chunks, dtype=np.uint32) | ~0).astype(np.uint32)
+        all_literal_active = np.full(self.clause_bank.number_of_ta_chunks, np.iinfo(np.uint32).max, dtype=np.uint32)
         clause_outputs = self.clause_bank.calculate_clause_outputs_update(all_literal_active, encoded_X, 0)
 
         class_sum = np.dot(clause_active * self.weight_banks[target_output].get_weights(), clause_outputs).astype(
