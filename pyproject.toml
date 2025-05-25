@@ -63,7 +63,7 @@ version = {attr = "tmu.__version__"}
 [tool.cffi_builder]
 module_name = "tmu.tmulib"
 flags = [
-    "-O3", "-mrdrnd"
+    "-O3"
 ]
 sources = [
     "tmu/lib/src/ClauseBank.c",
