@@ -462,7 +462,6 @@ class ClauseBankCudaDevice:
         X_gpu = self._profiler.profile(cuda.mem_alloc, X.nbytes)
         return (
             active_output_gpu,
-            active_output,
             int(active_output.shape[0]),
             X_csr_indptr_gpu,
             X_csr_indices_gpu,
