@@ -474,18 +474,47 @@ class ClauseBankCudaDevice:
         )
 
     def produce_autoencoder_example(self, encoded_X, target, accumulation):
-        target_value = self.rng_gen.choice(2)
+        target_value = np.random.choice(2) 
         self._ensure_context()
         try:
+            (
+                active_output_gpu,
+                active_output,
+                number_of_active_outputs,
+                X_csr_indptr_gpu,
+                X_csr_indices_gpu,
+                number_of_rows,
+                X_csc_indptr_gpu,
+                X_csc_indices_gpu,
+                number_of_columns,
+                X_gpu
+            ) = encoded_X
             self.produce_autoencoder_examples_gpu.prepared_call(
                 self.coordinator.grid,
                 self.coordinator.block,
                 self.rng_gen.state,
-                *encoded_X,
+                active_output_gpu,
+                number_of_active_outputs,
+                X_csr_indptr_gpu,
+                X_csr_indices_gpu,
+                number_of_rows,
+                X_csc_indptr_gpu,
+                X_csc_indices_gpu,
+                number_of_columns,
+                X_gpu,
                 int(target),
                 int(target_value),
-                int(accumulation)
-            )
+                int(accumulation))
+             
+            # self.produce_autoencoder_examples_gpu.prepared_call(
+            #     self.coordinator.grid,
+            #     self.coordinator.block,
+            #     self.rng_gen.state,
+            #     *encoded_X,
+            #     int(target),
+            #     int(target_value),
+            #     int(accumulation)
+            # )
             self.cuda_ctx.synchronize()
             X_gpu = encoded_X[-1]
             return X_gpu, target_value
@@ -619,7 +648,7 @@ class ClauseBankCuda(BaseClauseBank):
         else:
             return None
 
-    def produce_autoencoder_example(self, encoded_X, target, accumulation):
+    def produce_autoencoder_example(self, encoded_X, target, accumulation, **kwargs):
         if self.device:
             return self.device.produce_autoencoder_example(encoded_X, target, accumulation)
         else:
