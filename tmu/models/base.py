@@ -284,6 +284,11 @@ class TMBaseModel:
         )
         return clause_bank_type, clause_bank_args
 
+    def _build_tensor_core_bank(self, X: np.ndarray):
+        from tmu.clause_bank.clause_bank_tensor_core import ClauseBankTensorCore
+        _clause_bank_type, clause_bank_args = self._build_cpu_bank(X=X)
+        return ClauseBankTensorCore, clause_bank_args
+
     def build_clause_bank(self, X: np.ndarray):
         if self.platform == "CPU":
             clause_bank_type, clause_bank_args = self._build_cpu_bank(X=X)
@@ -291,6 +296,8 @@ class TMBaseModel:
             clause_bank_type, clause_bank_args = self._build_gpu_bank(X=X)
         elif self.platform == "CPU_sparse":
             clause_bank_type, clause_bank_args = self._build_cpu_sparse_bank(X=X)
+        elif self.platform == "tensor":
+            clause_bank_type, clause_bank_args = self._build_tensor_core_bank(X=X)
         else:
             raise NotImplementedError(f"Could not find platform of type {self.platform}.")
 

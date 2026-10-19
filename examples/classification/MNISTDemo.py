@@ -69,7 +69,7 @@ def default_args(**kwargs):
     parser.add_argument("--T", default=5000, type=int)
     parser.add_argument("--s", default=10.0, type=float)
     parser.add_argument("--max_included_literals", default=32, type=int)
-    parser.add_argument("--platform", default="CPU", type=str, choices=["CPU", "CPU_sparse", "CUDA"])
+    parser.add_argument("--platform", default="CPU", type=str, choices=["CPU", "CPU_sparse", "CUDA", "tensor"])
     parser.add_argument("--weighted_clauses", default=True, type=bool)
     parser.add_argument("--epochs", default=60, type=int)
     args = parser.parse_args()
