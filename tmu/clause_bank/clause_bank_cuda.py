@@ -462,7 +462,6 @@ class ClauseBankCudaDevice:
         X_gpu = self._profiler.profile(cuda.mem_alloc, X.nbytes)
         return (
             active_output_gpu,
-            active_output,
             int(active_output.shape[0]),
             X_csr_indptr_gpu,
             X_csr_indices_gpu,
@@ -473,8 +472,8 @@ class ClauseBankCudaDevice:
             X_gpu
         )
 
-    def produce_autoencoder_example(self, encoded_X, target, accumulation):
-        target_value = self.rng_gen.choice(2)
+    def produce_autoencoder_example(self, encoded_X, target, target_true_p, accumulation):
+        target_value = int(self.coordinator.host.rng.random() <= target_true_p)
         self._ensure_context()
         try:
             self.produce_autoencoder_examples_gpu.prepared_call(
@@ -619,9 +618,9 @@ class ClauseBankCuda(BaseClauseBank):
         else:
             return None
 
-    def produce_autoencoder_example(self, encoded_X, target, accumulation):
+    def produce_autoencoder_example(self, encoded_X, target, target_true_p, accumulation):
         if self.device:
-            return self.device.produce_autoencoder_example(encoded_X, target, accumulation)
+            return self.device.produce_autoencoder_example(encoded_X, target, target_true_p, accumulation)
         else:
             return None
 
