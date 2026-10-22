@@ -82,12 +82,11 @@ extern "C"
 
 		unsigned int number_of_literal_chunks = (number_of_literals-1)/32 + 1;
 
-		// Initialize example vector X
-		
-		for (int k = 0; k < number_of_features; ++k) {
-			int chunk_nr = k / 32;
-			int chunk_pos = k % 32;
-			X[chunk_nr] &= ~(1U << chunk_pos);
+		// Initialize example vector X to the empty-example state, matching the CPU path (Tools.c):
+		// zero the whole buffer with number_of_literal_chunks (so the final-chunk padding bits
+		// are 0), then set the negated-literal bits below.
+		for (unsigned int c = 0; c < number_of_literal_chunks; ++c) {
+			X[c] = 0;
 		}
 
 		for (int k = number_of_features; k < number_of_literals; ++k) {
