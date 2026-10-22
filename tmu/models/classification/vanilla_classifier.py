@@ -364,6 +364,53 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             update_p_target=update_p_target
         )
 
+    def _fit_tensor(self, X, Y, shuffle):
+        clause_active = self.mechanism_clause_active()
+        literal_active = self.mechanism_literal_active()
+        encoded = self.clause_banks[0].prepare_X(X)
+        sample_index = np.arange(X.shape[0])
+        if shuffle:
+            self.rng.shuffle(sample_index)
+        targets = Y[sample_index].astype(np.int32, copy=False)
+        not_targets = np.empty(len(sample_index), dtype=np.int32)
+        for row, target in enumerate(targets.tolist()):
+            other = self.weight_banks.sample(exclude=[int(target)])
+            not_targets[row] = -1 if other is None else int(other)
+        class_ids = list(self.weight_banks.classes())
+        banks = [self.clause_banks[class_id] for class_id in class_ids]
+        weight_rows = [self.weight_banks[class_id].get_weights() for class_id in class_ids]
+        banks[0].run_epoch(
+            class_ids,
+            banks,
+            weight_rows,
+            encoded,
+            sample_index.astype(np.int32, copy=False),
+            targets,
+            not_targets,
+            clause_active,
+            literal_active,
+            self.T,
+            self.type_i_p,
+            self.type_ii_p,
+            self.weighted_clauses,
+            self.type_i_feedback,
+            self.type_ii_feedback,
+        )
+
+    def _predict_tensor(self, X, clip_class_sum, return_class_sums):
+        encoded = self.clause_banks[0].prepare_X(X)
+        class_ids = list(self.weight_banks.classes())
+        banks = [self.clause_banks[class_id] for class_id in class_ids]
+        weight_rows = [self.weight_banks[class_id].get_weights() for class_id in class_ids]
+        sums = self.clause_banks[0].predict_class_sums(class_ids, banks, weight_rows, encoded)
+        ordered = np.column_stack([sums[:, int(class_id)] for class_id in class_ids]).astype(np.int32, copy=False)
+        if clip_class_sum:
+            ordered = np.clip(ordered, -self.T, self.T)
+        prediction = np.argmax(ordered, axis=1).astype(np.uint32)
+        if return_class_sums:
+            return prediction, ordered
+        return prediction
+
     def fit(
             self,
             X: np.ndarray[np.uint32],
@@ -382,6 +429,10 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
 
         self.init(X, Y)
         self.metrics.clear()
+
+        if self.platform == "tensor" and not self.type_iii_feedback:
+            self._fit_tensor(X, Y, shuffle)
+            return self.metrics.export(mean=True, std=True)
 
         encoded_X_train: np.ndarray = self.train_encoder_cache.get_encoded_data(
             data=X,
@@ -425,6 +476,9 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             return_class_sums: bool = False,
             **kwargs
     ):
+
+        if self.platform == "tensor":
+            return self._predict_tensor(X, clip_class_sum, return_class_sums)
 
         encoded_X_test = self.test_encoder_cache.get_encoded_data(
             data=X,
