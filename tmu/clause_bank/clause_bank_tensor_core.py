@@ -6,6 +6,12 @@
 # The match grid is one block per row tile, class, and 8-clause panel, so the
 # streaming multiprocessors share the work. The model batch_size controls how
 # long the include mask stays fixed.
+# More than one patch is a convolutional clause: it fires if any patch matches,
+# and feedback uses one of those matching patches. One image is updated before
+# the next. The block width follows the patch grid and the device thread limit.
+# The patch bitset and the live-word index are sized from the device shared
+# memory. A literal row of 12 words or more skips empty words when that index
+# fits beside the bitset. One block owns eight clauses.
 #
 # This bank stands on BaseClauseBank. The device state and the kernels live in
 # this module and cuda/tensor_core.cu.
@@ -50,10 +56,113 @@ class FeedbackLaunch:
 
 
 @dataclass(frozen=True)
+class ConvLaunch:
+    """Block width and shared memory for one convolution image.
+
+    One block owns one 8-clause panel. ``groups`` is the grid X size.
+    ``bit_words`` is the patch-bitset stride for this image. ``shared_bytes``
+    covers that bitset, plus the live-word index when ``skip_empty_words``
+    is set.
+    """
+
+    threads: int
+    groups: int
+    skip_empty_words: int
+    bit_words: int
+    shared_bytes: int
+
+    def grid(self, slots, images):
+        return int(self.groups), int(slots), int(images)
+
+
+def conv_bitset_words(patches):
+    """Shared-memory words for one clause's patch bitset."""
+    return max(1, (max(1, int(patches)) + 31) // 32)
+
+
+def conv_live_index_bytes(chunks):
+    """Bytes after the bitset for the live-word flag, list, and count.
+
+    One byte per literal word, then a 4-byte-aligned int list of that length
+    plus the count. The same layout is ``tc_conv_live_index`` in tensor_core.cu.
+    """
+    chunks = int(chunks)
+    if chunks <= 0:
+        return 0
+    aligned = (chunks + 3) & ~3
+    return aligned + chunks * 4 + 4
+
+
+def conv_shared_bytes(bit_words, chunks=0):
+    """Dynamic shared memory for eight clause bitsets and an optional index."""
+    total = 8 * int(bit_words) * 4
+    if int(chunks) > 0:
+        total += conv_live_index_bytes(chunks)
+    return total
+
+
+def conv_max_patches(shared_memory):
+    """Patches an eight-clause bitset can hold in this many shared bytes."""
+    words = int(shared_memory) // (8 * 4)
+    if words < 1:
+        return 0
+    return words * 32
+
+
+@dataclass(frozen=True)
+class ConvImageCache:
+    """How one convolution image is launched.
+
+    ``x_words`` stays zero: the image is read from device memory. ``groups``
+    is one block per 8-clause panel.
+    """
+
+    shared_bytes: int
+    prefix_words: int
+    x_words: int
+    panels_per: int
+    groups: int
+
+
+def conv_image_cache(
+        shared_memory,
+        threads,
+        threads_per_sm,
+        sms,
+        bitset_bytes,
+        panels,
+        patches,
+        chunks,
+        classes,
+        images):
+    """Launch one block per clause panel and read the image from device memory."""
+    del shared_memory, threads, threads_per_sm, sms, patches, chunks, classes, images
+    panels = max(1, int(panels))
+    bitset_bytes = max(0, int(bitset_bytes))
+    return ConvImageCache(
+        shared_bytes=bitset_bytes,
+        prefix_words=bitset_bytes // 4,
+        x_words=0,
+        panels_per=1,
+        groups=panels,
+    )
+
+
+def conv_skips_empty_words(chunks):
+    """Rows shorter than 12 words stay on the dense tiles.
+
+    Longer rows skip empty words when the live-word index fits beside the
+    patch bitset.
+    """
+    return int(chunks) >= 12
+
+
+@dataclass(frozen=True)
 class TensorCoreRuntime:
     compute_capability: tuple
     matcher: str
     max_threads_per_block: int
+    max_threads_per_multiprocessor: int
     shared_memory_per_block: int
     multiprocessor_count: int
     max_grid_z: int
@@ -99,6 +208,42 @@ class TensorCoreRuntime:
             batch_limit=batch_limit,
         )
 
+    def max_conv_patches(self):
+        """How many patches the fused matcher can OR on this device."""
+        return conv_max_patches(self.shared_memory_per_block)
+
+    def conv_launch(self, clauses, slots, patches, chunks, images):
+        """Pick the convolution block and its shared memory for this device.
+
+        A warp covers 16 patches. Wider patch grids get more warps, up to
+        four, and never past the device block limit. Each block owns one
+        8-clause panel. The patch bitset uses one bit per patch and stops
+        at the device shared-memory limit. A long literal row skips words
+        the panel does not include when that index fits beside the bitset.
+        """
+        del slots, images
+        patches = max(1, int(patches))
+        chunks = max(0, int(chunks))
+        clause_panels = (max(1, int(clauses)) + 7) // 8
+        max_warps = max(1, min(4, self.max_threads_per_block // 32))
+        patch_warps = max(1, (patches + 15) // 16)
+        warps = 1
+        for candidate in (2, 4):
+            if patch_warps >= candidate and candidate <= max_warps:
+                warps = candidate
+        bit_words = conv_bitset_words(patches)
+        skip = (
+            conv_skips_empty_words(chunks)
+            and conv_shared_bytes(bit_words, chunks) <= int(self.shared_memory_per_block)
+        )
+        return ConvLaunch(
+            threads=warps * 32,
+            groups=clause_panels,
+            skip_empty_words=int(skip),
+            bit_words=bit_words,
+            shared_bytes=conv_shared_bytes(bit_words, chunks if skip else 0),
+        )
+
     def prediction_batch_rows(self, rows, chunks, slots):
         rows = max(1, int(rows))
         bytes_per_row = max(4, int(chunks) * 4 + int(slots) * 4)
@@ -139,6 +284,7 @@ def build_tensor_core_runtime(
     optin_shared = _runtime_attribute(
         attributes, "MAX_SHARED_MEMORY_PER_BLOCK_OPTIN", default_shared)
     max_threads = _runtime_attribute(attributes, "MAX_THREADS_PER_BLOCK", 1024)
+    threads_per_sm = _runtime_attribute(attributes, "MAX_THREADS_PER_MULTIPROCESSOR", 2048)
     multiprocessors = _runtime_attribute(attributes, "MULTIPROCESSOR_COUNT", 1)
     max_grid_z = _runtime_attribute(attributes, "MAX_GRID_DIM_Z", 65535)
     shared_memory = max(default_shared, optin_shared)
@@ -156,6 +302,7 @@ def build_tensor_core_runtime(
         compute_capability=capability,
         matcher=selected,
         max_threads_per_block=max_threads,
+        max_threads_per_multiprocessor=threads_per_sm,
         shared_memory_per_block=shared_memory,
         multiprocessor_count=multiprocessors,
         max_grid_z=max_grid_z,
@@ -168,6 +315,7 @@ def _runtime_for_device(device):
     attributes = {}
     for name in (
             "MAX_THREADS_PER_BLOCK",
+            "MAX_THREADS_PER_MULTIPROCESSOR",
             "MAX_SHARED_MEMORY_PER_BLOCK",
             "MAX_SHARED_MEMORY_PER_BLOCK_OPTIN",
             "MULTIPROCESSOR_COUNT",
@@ -201,8 +349,8 @@ def validate_tensor_core_configuration(
         type_ia_ii_feedback_ratio,
 ):
     """Reject modes that the batched Tensor Core implementation cannot preserve."""
-    if int(number_of_patches) != 1:
-        raise ValueError("TensorCore currently supports exactly one patch")
+    if int(number_of_patches) < 1:
+        raise ValueError("TensorCore requires at least one patch")
     if not 1 <= int(number_of_state_bits_ta) <= 16:
         raise ValueError("number_of_state_bits_ta must be between 1 and 16 for TensorCore")
     if int(batch_size) < 1:
@@ -333,6 +481,7 @@ class ClauseBankTensorCore(BaseClauseBank):
         self._x_gpu = None
         self._x_bytes = 0
         self._tc_scratch = {}
+        self._enc_cache = None
         mod = _tc_module()
         self._ex_fn = mod.get_function("tc_extract")
         self._ex_fn.prepare("PPPPPiiiiIi")
@@ -345,7 +494,15 @@ class ClauseBankTensorCore(BaseClauseBank):
         self._reduce_fn = mod.get_function("tc_reduce")
         self._reduce_fn.prepare("PPiiii")
         self._fb_fn = mod.get_function("tc_feedback")
-        self._fb_fn.prepare("PPPPPPPPPPiiiiiifiiiffiiiII")
+        self._fb_fn.prepare("PPPPPPPPPPiiiiiifiiiffiiiIIPi")
+        self._encode_fn = mod.get_function("tc_encode_patches")
+        self._encode_fn.prepare("PPiiiiiiii")
+        self._or_fn = mod.get_function("tc_or_patches")
+        self._or_fn.prepare("PPPPPiiiiI")
+        self._conv_fn = mod.get_function("tc_conv_bmma")
+        self._conv_fn.prepare("PPPPPPPiiiiiiiiiiiI")
+        self._conv_live_fn = mod.get_function("tc_conv_bmma_live")
+        self._conv_live_fn.prepare("PPPPPPPiiiiiiiiiiiI")
 
     def _cffi_init(self):
         return None
@@ -354,8 +511,9 @@ class ClauseBankTensorCore(BaseClauseBank):
         if hasattr(self, "_host_valid") and not self._host_valid:
             self._pull()
         transient = {
-            "_ta_gpu", "_x_gpu", "_x_bytes", "_tc_scratch",
+            "_ta_gpu", "_x_gpu", "_x_bytes", "_tc_scratch", "_enc_cache",
             "_ex_fn", "_gather_fn", "_imma_fn", "_bmma_fn", "_reduce_fn", "_fb_fn",
+            "_encode_fn", "_or_fn", "_conv_fn", "_conv_live_fn",
             "_runtime", "_profile_enabled", "_timings",
         }
         return {key: value for key, value in self.__dict__.items() if key not in transient}
@@ -375,7 +533,7 @@ class ClauseBankTensorCore(BaseClauseBank):
 
     def _require_imma(self):
         if not self._tc_ok():
-            raise RuntimeError("TensorCore matching currently requires exactly one patch")
+            raise RuntimeError("TensorCore matching requires at least one patch")
 
     def _push(self):
         if self._host_newer or not self._host_valid:
@@ -513,7 +671,7 @@ class ClauseBankTensorCore(BaseClauseBank):
         }
 
     def _tc_ok(self):
-        return int(self.number_of_patches) == 1
+        return int(self.number_of_patches) >= 1
 
     def _pack_slots(self, class_ids, banks, weights, clause_active):
         n_slots = int(max(class_ids)) + 1
@@ -625,6 +783,175 @@ class ClauseBankTensorCore(BaseClauseBank):
             )
             done += group
 
+    def _or_patches(self, patch_fired_gpu, weights_gpu, fired_gpu, patch_gpu, sums_gpu, n, n_slots, seed, patches=None):
+        threads = 128
+        if patches is None:
+            patches = self.number_of_patches
+        cuda.memset_d8(sums_gpu, 0, max(int(n) * int(n_slots) * 4, 4))
+        self._time_call(
+            "or_patches",
+            self._or_fn.prepared_call,
+            ((int(self.number_of_clauses) + threads - 1) // threads, int(n), int(n_slots)),
+            (threads, 1, 1),
+            patch_fired_gpu,
+            weights_gpu,
+            fired_gpu,
+            patch_gpu,
+            sums_gpu,
+            int(n),
+            int(self.number_of_clauses),
+            int(n_slots),
+            int(patches),
+            int(seed) & 0xFFFFFFFF,
+        )
+
+    def _uses_fused_conv(self):
+        runtime = getattr(self, "_runtime", None)
+        return (
+            runtime is not None
+            and runtime.matcher == "bmma"
+            and 1 < int(self.number_of_patches) <= runtime.max_conv_patches()
+        )
+
+    def _conv_match(
+            self, x_gpu, masks_gpu, counts_gpu, weights_gpu, fired_gpu, patch_gpu,
+            sums_gpu, n, n_slots, n_patches, reject_empty, seed, write_outputs,
+            chunks=None, reset_sums=True):
+        """OR every patch inside the tensor-core match.
+
+        One block owns one 8-clause panel and reads that panel's included
+        words from device memory.
+        """
+        n = int(n)
+        n_slots = int(n_slots)
+        panels = (int(self.number_of_clauses) + 7) // 8
+        if n <= 0 or n_slots <= 0 or panels <= 0 or int(n_patches) <= 0:
+            return
+        runtime = getattr(self, "_runtime", None)
+        chunks = int(self.number_of_ta_chunks if chunks is None else chunks)
+        if runtime is None:
+            shared = 48 * 1024
+            bit_words = conv_bitset_words(n_patches)
+            skip = (
+                conv_skips_empty_words(chunks)
+                and conv_shared_bytes(bit_words, chunks) <= shared
+            )
+            launch = ConvLaunch(
+                threads=128,
+                groups=panels,
+                skip_empty_words=int(skip),
+                bit_words=bit_words,
+                shared_bytes=conv_shared_bytes(bit_words, chunks if skip else 0),
+            )
+            cache = conv_image_cache(
+                shared, launch.threads, 2048, 1, launch.shared_bytes,
+                panels, int(n_patches), chunks, n_slots, n,
+            )
+        else:
+            launch = runtime.conv_launch(
+                self.number_of_clauses,
+                n_slots,
+                int(n_patches),
+                chunks,
+                n,
+            )
+            cache = conv_image_cache(
+                runtime.shared_memory_per_block,
+                launch.threads,
+                runtime.max_threads_per_multiprocessor,
+                runtime.multiprocessor_count,
+                launch.shared_bytes,
+                panels,
+                int(n_patches),
+                chunks,
+                n_slots,
+                n,
+            )
+        if reset_sums:
+            cuda.memset_d8(sums_gpu, 0, max(n * n_slots * 4, 4))
+        match_fn = self._conv_live_fn if launch.skip_empty_words else self._conv_fn
+        if cache.shared_bytes > 48 * 1024:
+            attribute = getattr(
+                getattr(cuda, "function_attribute", object()),
+                "MAX_DYNAMIC_SHARED_SIZE_BYTES",
+                None,
+            )
+            if attribute is not None:
+                match_fn.set_attribute(attribute, int(cache.shared_bytes))
+        self._time_call(
+            "conv_bmma",
+            match_fn.prepared_call,
+            (int(cache.groups), n_slots, n),
+            (launch.threads, 1, 1),
+            x_gpu,
+            masks_gpu,
+            counts_gpu,
+            weights_gpu,
+            fired_gpu,
+            patch_gpu,
+            sums_gpu,
+            n,
+            int(self.number_of_clauses),
+            n_slots,
+            int(chunks),
+            int(n_patches),
+            int(reject_empty),
+            int(write_outputs),
+            int(launch.bit_words),
+            int(cache.panels_per),
+            int(cache.prefix_words),
+            int(cache.x_words),
+            int(seed) & 0xFFFFFFFF,
+            shared_size=int(cache.shared_bytes),
+        )
+
+    def stage_images(self, X):
+        """Pack X on the device once and reuse that buffer while the array is unchanged.
+
+        The bit layout matches tmu.tools.encode. Training and prediction then read
+        the packed rows with the tensor-core matcher, including one row per
+        convolutional patch.
+        """
+        raw = np.ascontiguousarray(X, dtype=np.uint32)
+        key = (int(raw.ctypes.data), tuple(raw.shape), int(raw.nbytes))
+        cached = getattr(self, "_enc_cache", None)
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        dim_x, dim_y, dim_z = (int(v) for v in self.dim)
+        patch_w, patch_h = int(self.patch_dim[0]), int(self.patch_dim[1])
+        features = patch_w * patch_h * dim_z + (dim_x - patch_w) + (dim_y - patch_h)
+        chunks = (2 * features - 1) // 32 + 1
+        n_patches = (dim_x - patch_w + 1) * (dim_y - patch_h + 1)
+        if chunks != int(self.number_of_ta_chunks) or n_patches != int(self.number_of_patches):
+            raise RuntimeError("Device patch packing does not match this clause bank")
+        if int(raw.size) != int(raw.shape[0]) * dim_x * dim_y * dim_z:
+            raise RuntimeError("Image tensor does not match the clause-bank dimensions")
+        n = int(raw.shape[0])
+        nbytes = n * n_patches * chunks * 4
+        self._require_imma()
+        _ensure_context()
+        encoded_gpu = cuda.mem_alloc(max(nbytes, 4))
+        raw_gpu = self._tc_buf("raw_images", raw.nbytes)
+        cuda.memcpy_htod(raw_gpu, np.ascontiguousarray(raw.reshape(n, -1)))
+        jobs = n * n_patches
+        self._encode_fn.prepared_call(
+            ((jobs + 255) // 256, 1, 1),
+            (256, 1, 1),
+            raw_gpu,
+            encoded_gpu,
+            n,
+            dim_x,
+            dim_y,
+            dim_z,
+            patch_w,
+            patch_h,
+            1,
+            0,
+        )
+        _CTX.synchronize()
+        self._enc_cache = (key, encoded_gpu, nbytes)
+        return encoded_gpu
+
     def imma_match(self, encoded, weights, reject_empty=True, literal_active=None):
         """Clause outputs and weighted sums using the runtime-selected matcher."""
         self._require_imma()
@@ -666,16 +993,72 @@ class ClauseBankTensorCore(BaseClauseBank):
         )
         w_gpu = self._tc_buf("w1", weights.nbytes)
         cuda.memcpy_htod(w_gpu, weights)
+        patches = int(self.number_of_patches)
+        image_count = n
+        if patches > 1 and n > 0:
+            encoded = np.ascontiguousarray(
+                encoded.reshape(image_count, patches, chunks).reshape(image_count * patches, chunks)
+            )
+            n = image_count * patches
         x_gpu = self._upload_x(encoded)
-        fired = np.empty((n_clauses, n), dtype=np.uint8)
+        if patches > 1 and self._uses_fused_conv():
+            fired_or = np.empty((n_clauses, image_count), dtype=np.uint8)
+            patch_index = np.empty((n_clauses, image_count), dtype=np.int32)
+            image_sums = np.empty(image_count, dtype=np.int32)
+            step = 4096
+            fired_or_gpu = self._tc_buf("fired_or", max(n_clauses * step, 4))
+            patch_gpu = self._tc_buf("patch_index", max(n_clauses * step * 4, 4))
+            sums_or_gpu = self._tc_buf("sums_or", max(step * 4, 4))
+            for start in range(0, image_count, step):
+                stop = min(start + step, image_count)
+                batch_n = stop - start
+                x_ptr = int(x_gpu) + start * patches * chunks * 4
+                self._conv_match(
+                    x_ptr, masks_gpu, counts_gpu, w_gpu, fired_or_gpu, patch_gpu, sums_or_gpu,
+                    batch_n, 1, patches, int(reject_empty),
+                    int(self.rng.randint(1, 2**31 - 1)), 1,
+                )
+                host_fired = np.empty((n_clauses, batch_n), dtype=np.uint8)
+                host_patch = np.empty((n_clauses, batch_n), dtype=np.int32)
+                host_sums = np.empty(batch_n, dtype=np.int32)
+                _CTX.synchronize()
+                cuda.memcpy_dtoh(host_fired, fired_or_gpu)
+                cuda.memcpy_dtoh(host_patch, patch_gpu)
+                cuda.memcpy_dtoh(host_sums, sums_or_gpu)
+                fired_or[:, start:stop] = host_fired
+                patch_index[:, start:stop] = host_patch
+                image_sums[start:stop] = host_sums
+            return np.ascontiguousarray(fired_or.T), image_sums
+        if patches == 1:
+            fired = np.empty((n_clauses, n), dtype=np.uint8)
+            fired_nbytes = fired.nbytes
+        else:
+            fired = None
+            fired_nbytes = n_clauses * n
         sums = np.empty(n, dtype=np.int32)
-        fired_gpu = self._tc_buf("fired1", fired.nbytes)
+        fired_gpu = self._tc_buf("fired1", max(int(fired_nbytes), 4))
         sums_gpu = self._tc_buf("sums1", max(sums.nbytes, 4))
         self._imma(x_gpu, masks_gpu, counts_gpu, w_gpu, fired_gpu, sums_gpu, n, 1, int(reject_empty), 1)
+        if patches == 1:
+            _CTX.synchronize()
+            cuda.memcpy_dtoh(fired, fired_gpu)
+            cuda.memcpy_dtoh(sums, sums_gpu)
+            return np.ascontiguousarray(fired.T), sums
+        fired_or = np.empty((n_clauses, image_count), dtype=np.uint8)
+        patch_index = np.empty((n_clauses, image_count), dtype=np.int32)
+        image_sums = np.empty(image_count, dtype=np.int32)
+        fired_or_gpu = self._tc_buf("fired_or", fired_or.nbytes)
+        patch_gpu = self._tc_buf("patch_index", patch_index.nbytes)
+        sums_or_gpu = self._tc_buf("sums_or", max(image_sums.nbytes, 4))
+        self._or_patches(
+            fired_gpu, w_gpu, fired_or_gpu, patch_gpu, sums_or_gpu,
+            image_count, 1, int(self.rng.randint(1, 2**31 - 1)),
+        )
         _CTX.synchronize()
-        cuda.memcpy_dtoh(fired, fired_gpu)
-        cuda.memcpy_dtoh(sums, sums_gpu)
-        return np.ascontiguousarray(fired.T), sums
+        cuda.memcpy_dtoh(fired_or, fired_or_gpu)
+        cuda.memcpy_dtoh(patch_index, patch_gpu)
+        cuda.memcpy_dtoh(image_sums, sums_or_gpu)
+        return np.ascontiguousarray(fired_or.T), image_sums
 
     def calculate_clause_outputs_predict(self, encoded_X, e):
         row = np.ascontiguousarray(encoded_X[e], dtype=np.uint32).reshape(1, -1)
@@ -712,6 +1095,7 @@ class ClauseBankTensorCore(BaseClauseBank):
             do_type_ii,
             confidence_driven=False,
             collect_update_p=False,
+            device_x=None,
     ):
         self._require_imma()
         _ensure_context()
@@ -731,7 +1115,8 @@ class ClauseBankTensorCore(BaseClauseBank):
         cuda.memcpy_htod(act_gpu, np.ascontiguousarray(packed_active))
         lit_gpu = self._tc_buf("lit", literal.nbytes)
         cuda.memcpy_htod(lit_gpu, literal)
-        x_gpu = self._upload_x(np.ascontiguousarray(encoded, dtype=np.uint32))
+        x_gpu = device_x if device_x is not None else self._upload_x(
+            np.ascontiguousarray(encoded, dtype=np.uint32))
         masks_gpu = self._tc_buf("masks", self._mask_bytes(n_slots))
         counts_gpu = self._tc_buf("counts", n_slots * n_clauses * 4)
         included_counts_gpu = self._tc_buf("included_counts", n_slots * n_clauses * 4)
@@ -750,26 +1135,43 @@ class ClauseBankTensorCore(BaseClauseBank):
                 runtime.feedback_launch(1, chunks).batch_limit,
                 _MASK_BATCH,
             )
+        patches = int(self.number_of_patches)
+        per_image = patches > 1 and device_x is not None
+        if patches > 1:
+            # One image per step. Every patch of that image shares the mask,
+            # and the next image sees the updated automata.
+            feedback_batch_size = 1
+        if per_image:
+            tgt_all = self._tc_buf("tgt", targets.nbytes)
+            neg_all = self._tc_buf("neg", not_targets.nbytes)
+            cuda.memcpy_htod(tgt_all, targets)
+            cuda.memcpy_htod(neg_all, not_targets)
         for start in range(0, len(sample_index), feedback_batch_size):
             stop = min(start + feedback_batch_size, len(sample_index))
             n = stop - start
             idx = np.ascontiguousarray(sample_index[start:stop])
             tgt = np.ascontiguousarray(targets[start:stop])
             neg = np.ascontiguousarray(not_targets[start:stop])
-            idx_gpu = self._tc_buf("idx", idx.nbytes)
-            tgt_gpu = self._tc_buf("tgt", tgt.nbytes)
-            neg_gpu = self._tc_buf("neg", neg.nbytes)
-            cuda.memcpy_htod(idx_gpu, idx)
-            cuda.memcpy_htod(tgt_gpu, tgt)
-            cuda.memcpy_htod(neg_gpu, neg)
-            batch_x = self._tc_buf("batch_x", n * chunks * 4)
-            self._time_call(
-                "gather",
-                self._gather_fn.prepared_call,
-                ((n * chunks + 255) // 256, 1, 1),
-                (256, 1, 1),
-                x_gpu, idx_gpu, batch_x, int(n), chunks,
-            )
+            row_stride = chunks * patches
+            if per_image:
+                tgt_gpu = int(tgt_all) + start * 4
+                neg_gpu = int(neg_all) + start * 4
+                batch_x = int(device_x) + int(idx[0]) * row_stride * 4
+            else:
+                idx_gpu = self._tc_buf("idx", idx.nbytes)
+                tgt_gpu = self._tc_buf("tgt", tgt.nbytes)
+                neg_gpu = self._tc_buf("neg", neg.nbytes)
+                cuda.memcpy_htod(idx_gpu, idx)
+                cuda.memcpy_htod(tgt_gpu, tgt)
+                cuda.memcpy_htod(neg_gpu, neg)
+                batch_x = self._tc_buf("batch_x", n * row_stride * 4)
+                self._time_call(
+                    "gather",
+                    self._gather_fn.prepared_call,
+                    ((n * row_stride + 255) // 256, 1, 1),
+                    (256, 1, 1),
+                    x_gpu, idx_gpu, batch_x, int(n), int(row_stride),
+                )
             self._extract(
                 ptrs_gpu,
                 lit_gpu,
@@ -779,10 +1181,34 @@ class ClauseBankTensorCore(BaseClauseBank):
                 n_slots,
                 1,
             )
-            fired_gpu = self._tc_buf("fired", n_slots * n_clauses * n)
             sums = np.empty((n, n_slots), dtype=np.int32)
             sums_gpu = self._tc_buf("sums", sums.nbytes)
-            self._imma(batch_x, masks_gpu, counts_gpu, w_gpu, fired_gpu, sums_gpu, n, n_slots, 0, 1)
+            if patches == 1:
+                fired_gpu = self._tc_buf("fired", n_slots * n_clauses * n)
+                self._imma(batch_x, masks_gpu, counts_gpu, w_gpu, fired_gpu, sums_gpu, n, n_slots, 0, 1)
+                patch_gpu = self._tc_buf("patch_index", 4)
+                n_patches_arg = 1
+            else:
+                fired_gpu = self._tc_buf("fired_or", max(n_slots * n_clauses * n, 4))
+                patch_gpu = self._tc_buf("patch_index", max(n_slots * n_clauses * n * 4, 4))
+                if self._uses_fused_conv():
+                    self._conv_match(
+                        batch_x, masks_gpu, counts_gpu, w_gpu, fired_gpu, patch_gpu, sums_gpu,
+                        n, n_slots, patches, 0,
+                        int(self.rng.randint(1, 2**31 - 1)), 1,
+                    )
+                else:
+                    patch_fired_gpu = self._tc_buf("fired", n_slots * n_clauses * n * patches)
+                    patch_sums_gpu = self._tc_buf("patch_sums", n * patches * n_slots * 4)
+                    self._imma(
+                        batch_x, masks_gpu, counts_gpu, w_gpu, patch_fired_gpu, patch_sums_gpu,
+                        n * patches, n_slots, 0, 1,
+                    )
+                    self._or_patches(
+                        patch_fired_gpu, w_gpu, fired_gpu, patch_gpu, sums_gpu,
+                        n, n_slots, int(self.rng.randint(1, 2**31 - 1)),
+                    )
+                n_patches_arg = patches
             if collect_update_p:
                 _CTX.synchronize()
                 cuda.memcpy_dtoh(sums, sums_gpu)
@@ -849,6 +1275,8 @@ class ClauseBankTensorCore(BaseClauseBank):
                 int(bool(confidence_driven)),
                 int(self._filter) & 0xFFFFFFFF,
                 int(self.rng.randint(1, 2**31 - 1)),
+                patch_gpu,
+                int(n_patches_arg),
                 shared_size=launch.shared_bytes,
             )
         _CTX.synchronize()
@@ -859,15 +1287,19 @@ class ClauseBankTensorCore(BaseClauseBank):
             "update_p_not_target": not_target_update_p,
         }
 
-    def predict_class_sums(self, class_ids, banks, weights, encoded):
+    def predict_class_sums(self, class_ids, banks, weights, encoded, device_x=None, n_rows=None):
         self._require_imma()
         _ensure_context()
         for bank in banks:
             bank._push()
-        encoded = np.ascontiguousarray(encoded, dtype=np.uint32)
-        n = int(encoded.shape[0])
+        if device_x is None:
+            encoded = np.ascontiguousarray(encoded, dtype=np.uint32)
+            n = int(encoded.shape[0])
+        else:
+            n = int(n_rows)
         n_clauses = int(self.number_of_clauses)
         chunks = int(self.number_of_ta_chunks)
+        patches = int(self.number_of_patches)
         n_slots, ta_ptrs, packed_w, _packed_active = self._pack_slots(
             class_ids, banks, weights, np.ones(n_clauses, dtype=np.int32))
         literal = np.full(chunks, np.uint32(0xFFFFFFFF))
@@ -896,24 +1328,60 @@ class ClauseBankTensorCore(BaseClauseBank):
         runtime = getattr(self, "_runtime", None)
         row_limit = n if runtime is None else runtime.prediction_batch_rows(
             n, chunks, n_slots)
+        if patches > 1 and not self._uses_fused_conv():
+            per_image = patches * n_slots * n_clauses
+            row_limit = min(row_limit, max(1, (256 * 1024 * 1024) // max(per_image, 1)))
+        elif patches > 1:
+            row_limit = min(row_limit, 2048, int(getattr(runtime, "max_grid_z", 65535)))
         for start in range(0, n, row_limit):
             stop = min(start + row_limit, n)
-            batch = np.ascontiguousarray(encoded[start:stop])
-            x_gpu = self._upload_x(batch)
-            batch_sums = np.empty((stop - start, n_slots), dtype=np.int32)
+            images = stop - start
+            batch_sums = np.empty((images, n_slots), dtype=np.int32)
             sums_gpu = self._tc_buf("sums", batch_sums.nbytes)
-            self._imma(
-                x_gpu,
-                masks_gpu,
-                counts_gpu,
-                w_gpu,
-                fired_gpu,
-                sums_gpu,
-                stop - start,
-                n_slots,
-                1,
-                0,
-            )
+            if patches == 1:
+                x_gpu = self._upload_x(np.ascontiguousarray(encoded[start:stop]))
+                self._imma(
+                    x_gpu,
+                    masks_gpu,
+                    counts_gpu,
+                    w_gpu,
+                    fired_gpu,
+                    sums_gpu,
+                    images,
+                    n_slots,
+                    1,
+                    0,
+                )
+            else:
+                if device_x is not None:
+                    x_ptr = int(device_x) + start * chunks * patches * 4
+                else:
+                    batch = np.ascontiguousarray(encoded[start:stop])
+                    flat = np.ascontiguousarray(
+                        batch.reshape(images, patches, chunks).reshape(images * patches, chunks)
+                    )
+                    x_ptr = self._upload_x(flat)
+                if self._uses_fused_conv():
+                    fired_or_gpu = self._tc_buf("fired_dummy", 4)
+                    patch_gpu = self._tc_buf("patch_dummy", 4)
+                    self._conv_match(
+                        x_ptr, masks_gpu, counts_gpu, w_gpu, fired_or_gpu, patch_gpu, sums_gpu,
+                        images, n_slots, patches, 1,
+                        int(self.rng.randint(1, 2**31 - 1)), 0,
+                    )
+                else:
+                    patch_fired_gpu = self._tc_buf("fired", n_slots * n_clauses * images * patches)
+                    patch_sums_gpu = self._tc_buf("patch_sums", images * patches * n_slots * 4)
+                    self._imma(
+                        x_ptr, masks_gpu, counts_gpu, w_gpu, patch_fired_gpu, patch_sums_gpu,
+                        images * patches, n_slots, 1, 1,
+                    )
+                    patch_gpu = self._tc_buf("patch_index", n_slots * n_clauses * images * 4)
+                    fired_or_gpu = self._tc_buf("fired_or", n_slots * n_clauses * images)
+                    self._or_patches(
+                        patch_fired_gpu, w_gpu, fired_or_gpu, patch_gpu, sums_gpu,
+                        images, n_slots, int(self.rng.randint(1, 2**31 - 1)),
+                    )
             _CTX.synchronize()
             cuda.memcpy_dtoh(batch_sums, sums_gpu)
             sums[start:stop] = batch_sums

@@ -367,7 +367,13 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
     def _fit_tensor(self, X, Y, shuffle):
         clause_active = self.mechanism_clause_active()
         literal_active = self.mechanism_literal_active()
-        encoded = self.clause_banks[0].prepare_X(X)
+        patches = int(self.clause_banks[0].number_of_patches)
+        if patches > 1:
+            device_x = self.clause_banks[0].stage_images(X)
+            encoded = np.empty(0, dtype=np.uint32)
+        else:
+            device_x = None
+            encoded = self.clause_banks[0].prepare_X(X)
         sample_index = np.arange(X.shape[0])
         if shuffle:
             self.rng.shuffle(sample_index)
@@ -395,14 +401,20 @@ class TMClassifier(TMBaseModel, MultiClauseBankMixin, MultiWeightBankMixin):
             self.weighted_clauses,
             self.type_i_feedback,
             self.type_ii_feedback,
+            device_x=device_x,
         )
 
     def _predict_tensor(self, X, clip_class_sum, return_class_sums):
-        encoded = self.clause_banks[0].prepare_X(X)
         class_ids = list(self.weight_banks.classes())
         banks = [self.clause_banks[class_id] for class_id in class_ids]
         weight_rows = [self.weight_banks[class_id].get_weights() for class_id in class_ids]
-        sums = self.clause_banks[0].predict_class_sums(class_ids, banks, weight_rows, encoded)
+        if int(self.clause_banks[0].number_of_patches) > 1:
+            device_x = self.clause_banks[0].stage_images(X)
+            sums = self.clause_banks[0].predict_class_sums(
+                class_ids, banks, weight_rows, None, device_x=device_x, n_rows=int(X.shape[0]))
+        else:
+            encoded = self.clause_banks[0].prepare_X(X)
+            sums = self.clause_banks[0].predict_class_sums(class_ids, banks, weight_rows, encoded)
         ordered = np.column_stack([sums[:, int(class_id)] for class_id in class_ids]).astype(np.int32, copy=False)
         if clip_class_sum:
             ordered = np.clip(ordered, -self.T, self.T)
