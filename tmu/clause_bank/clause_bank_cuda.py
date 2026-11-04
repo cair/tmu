@@ -45,6 +45,19 @@ except Exception as e:
                     "install pycuda'. Fallback to CPU ClauseBanks.")
     cuda_installed = False
 
+_shared_cuda_context = None
+
+
+def get_shared_cuda_context():
+    global _shared_cuda_context
+    if _shared_cuda_context is None:
+        _shared_cuda_context = cuda.Context.get_current()
+        if _shared_cuda_context is None:
+            import pycuda.autoinit
+            _shared_cuda_context = pycuda.autoinit.context
+    return _shared_cuda_context
+
+
 def load_cuda_kernel(parameters, file: str):
     import pycuda.compiler
     path = current_dir.joinpath(file)
@@ -155,8 +168,8 @@ class ClauseBankCudaDevice:
 
     def _initialize_cuda(self):
         """Initialize CUDA context and resources"""
-        # Create context
-        self.cuda_ctx = self.device.make_context()
+        self.cuda_ctx = get_shared_cuda_context()
+        self.cuda_ctx.push()
         try:
             import pycuda.curandom as curandom
             self.rng_gen = curandom.XORWOWRandomNumberGenerator()
@@ -223,22 +236,11 @@ class ClauseBankCudaDevice:
             # Pop context after initialization
             self.cuda_ctx.pop()
 
-    def __del__(self):
-        """Clean up CUDA resources"""
-        if hasattr(self, 'cuda_ctx') and self.cuda_ctx is not None:
-            try:
-                self.cuda_ctx.pop()
-                self.cuda_ctx.detach() # Detach context from this thread
-            except:
-                pass
-            self.cuda_ctx = None
-
     def _ensure_context(self):
         """Ensure CUDA context is initialized"""
         if self.cuda_ctx is None:
             self._initialize_cuda()
-        else:
-            self.cuda_ctx.push()
+        self.cuda_ctx.push()
 
     def synchronize_clause_bank(self):
         try:
@@ -434,18 +436,21 @@ class ClauseBankCudaDevice:
 
     def prepare_X(self, X):
         self._ensure_context()
-        encoded_X = tmu.tools.encode(
-            X,
-            X.shape[0],
-            self.coordinator.number_of_patches,
-            self.coordinator.host.number_of_ta_chunks,
-            self.coordinator.dim,
-            self.coordinator.patch_dim,
-            0
-        )
-        encoded_X_gpu = self._profiler.profile(cuda.mem_alloc, encoded_X.nbytes)
-        self._profiler.profile(cuda.memcpy_htod, encoded_X_gpu, encoded_X)
-        return encoded_X_gpu
+        try:
+            encoded_X = tmu.tools.encode(
+                X,
+                X.shape[0],
+                self.coordinator.number_of_patches,
+                self.coordinator.host.number_of_ta_chunks,
+                self.coordinator.dim,
+                self.coordinator.patch_dim,
+                0
+            )
+            encoded_X_gpu = self._profiler.profile(cuda.mem_alloc, encoded_X.nbytes)
+            self._profiler.profile(cuda.memcpy_htod, encoded_X_gpu, encoded_X)
+            return encoded_X_gpu
+        finally:
+            self.cuda_ctx.pop()
 
     def prepare_X_autoencoder(self, X_csr, X_csc, active_output):
         X_csr_indptr_gpu = self._profiler.profile(cuda.mem_alloc, X_csr.indptr.nbytes)
@@ -494,18 +499,8 @@ class ClauseBankCudaDevice:
                 self.cuda_ctx.pop()
 
     def cleanup(self):
-        """Clean up all CUDA resources"""
-        try:
-            self._ensure_context()
-
-            # Clean up context
-            if hasattr(self, 'cuda_ctx') and self.cuda_ctx is not None:
-                self.cuda_ctx.pop()
-                self.cuda_ctx.detach()
-                self.cuda_ctx = None
-
-        except Exception as e:
-            _LOGGER.warning(f"Error during CUDA cleanup: {e}")
+        """Release this bank's reference without destroying the shared context."""
+        self.cuda_ctx = None
 
 
 # Coordinator class that combines host and device branches.
